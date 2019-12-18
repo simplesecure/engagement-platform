@@ -1,6 +1,9 @@
 import React, { setGlobal } from 'reactn';
 import StickyNav from './StickyNav';
 import Modal from 'react-bootstrap/Modal';
+import Accordion from 'react-bootstrap/Accordion';
+import Card from 'react-bootstrap/Card';
+import DemoTable from './DemoTable';
 
 export default class Segments extends React.Component {
   constructor(props) {
@@ -72,7 +75,20 @@ export default class Segments extends React.Component {
                   {
                     currentSegments.map(seg => {
                       return (
-                        <li className="card" key={seg.id}><span className="card-body standard-tile">{seg.name}</span><span className="seg-count">{seg.userCount} users</span><span onClick={() => this.deleteSegment(seg, false)} className="right clickable text-danger">Delete</span></li>
+                        <Accordion className="clickable accordion-tile" key={seg.id} defaultActiveKey="1">
+                          <Card className="standard-tile">
+                            <Card.Header>
+                              <Accordion.Toggle as={"li"} variant="link" eventKey="0">
+                                <span className="seg-title">{seg.name}</span><br/><span className="seg-count">{seg.userCount} users</span><span onClick={() => this.deleteSegment(seg, false)} className="right clickable text-danger">Delete</span>
+                              </Accordion.Toggle>
+                            </Card.Header>   
+                            <Card.Body>
+                              <Accordion.Collapse eventKey="0">
+                                <DemoTable />
+                              </Accordion.Collapse>  
+                            </Card.Body>     
+                          </Card>                       
+                        </Accordion>
                       )
                     })   
                   }

@@ -21,8 +21,8 @@ section {
 
 .right {
   position: absolute;
-  right: 5px;
-  top: 2px;
+  right: 15px;
+  top: 8px;
 }
 
 .clickable {
@@ -34,9 +34,14 @@ section {
 }
 
 .seg-count {
-  margin-left: 5px;
-  margin-bottom: 5px;
+  position: absolute;
+  bottom: 15px;
+  left: 20px;
   font-weight: 900;
+}
+
+.seg-title {
+  font-size: 18px;
 }
 
 .click-rate {
@@ -63,4 +68,12 @@ section {
 
 .template-name {
   margin-bottom: 10px;
+}
+
+.standard-tile {
+  border-radius: 8px!important;
+}
+
+.accordion-tile {
+  margin: 10px;
 }
