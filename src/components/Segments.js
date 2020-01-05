@@ -4,16 +4,18 @@ import Modal from 'react-bootstrap/Modal';
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
 import DemoTable from './DemoTable';
+import { getFromAnalyticsDataTable,
+         putInAnalyticsDataTable } from '../awsUtils.js';
 
 export default class Segments extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      show: false, 
-      seg: "", 
-      existingSeg: false, 
-      allUsers: true, 
-      filterType: "Choose...", 
+      show: false,
+      seg: "",
+      existingSeg: false,
+      allUsers: true,
+      filterType: "Choose...",
       newSegName: ""
     }
   }
@@ -39,15 +41,42 @@ export default class Segments extends React.Component {
     this.setState({ show: false });
   }
 
-  createSegment = () => {
+  createSegment = async () => {
     const { currentSegments } = this.global;
     const { newSegName } = this.state;
     const newSegment = {
-      id: "23456", 
-      name: newSegName, 
+      id: "23456",
+      name: newSegName,
       userCount: 2302
     }
     currentSegments.push(newSegment);
+
+    // Put the new segment in the analytics data for the user signed in to this
+    // id:
+    //      Each App (SimpleID Customer) will have an app_id
+    //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
+    //      A segment will be stored in the DB under the primary key 'app_id' in
+    //      the appropriate user_id's segment storage:
+    //
+    const app_id = 'This should be a UUID for the App.'
+    const user_id = 'This should be systum UUID or the Cognito identity pool sub.'
+    //
+    // TODO: probably want to wait on this to finish and throw a status/activity
+    //       bar in the app:
+    try {
+      const anObject = {
+        users: {
+        }
+      }
+      anObject.users[user_id] = {
+        segments: currentSegments
+      }
+      anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
+      await putInAnalyticsDataTable(anObject)
+    } catch (suppressedError) {
+      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    }
+
     setGlobal({ currentSegments });
     this.setState({ newSegName: "", filterType: "Choose..." });
   }
@@ -81,18 +110,18 @@ export default class Segments extends React.Component {
                               <Accordion.Toggle as={"li"} variant="link" eventKey="0">
                                 <span className="seg-title">{seg.name}</span><br/><span className="seg-count">{seg.userCount} users</span><span onClick={() => this.deleteSegment(seg, false)} className="right clickable text-danger">Delete</span>
                               </Accordion.Toggle>
-                            </Card.Header>   
+                            </Card.Header>
                             <Card.Body>
                               <Accordion.Collapse eventKey="0">
                                 <DemoTable />
-                              </Accordion.Collapse>  
-                            </Card.Body>     
-                          </Card>                       
+                              </Accordion.Collapse>
+                            </Card.Body>
+                          </Card>
                         </Accordion>
                       )
-                    })   
+                    })
                   }
-                </ul> : 
+                </ul> :
                <ul className="tile-list">
                  <li className="card"><span className="card-body">You haven't created any segments yet, let's do that now!.</span></li>
                </ul>
@@ -128,7 +157,7 @@ export default class Segments extends React.Component {
                   </fieldset>
                 </div>
                 {
-                  existingSeg ? 
+                  existingSeg ?
                   <div class="form-group col-md-12">
                     <label htmlFor="inputSeg">Now, Choose a Segment</label>
                     <select id="inputSeg" class="form-control">
@@ -141,7 +170,7 @@ export default class Segments extends React.Component {
                         })
                       }
                     </select>
-                  </div> : 
+                  </div> :
                   <div />
                 }
                 <div class="form-group col-md-12">
@@ -155,11 +184,11 @@ export default class Segments extends React.Component {
                   </select>
                 </div>
                 {
-                  filterType === "contract" ? 
+                  filterType === "contract" ?
                   <div class="form-group col-md-12">
                     <label htmlFor="tileName">Enter The Contract Address</label>
                     <input type="text" class="form-control" id="tileName" placeholder="Contract Address" />
-                  </div> : 
+                  </div> :
                   <div />
                 }
                 <div class="form-group col-md-12">
