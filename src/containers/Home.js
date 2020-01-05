@@ -36,7 +36,11 @@ export default class Home extends React.Component {
           <BrowserRouter>
             <div className="container-fluid">
               <div className="row">
-                <SideNav />
+                {
+                  !window.location.href.includes('notifications/appId') ?
+                  <SideNav /> : 
+                  <div/>
+                }
                 <Route exact path='/' component={Dashboard} />
                 <Route path='/new-search' component={Search} />
                 <Route path='/segments' component={Segments} />
@@ -44,7 +48,9 @@ export default class Home extends React.Component {
                 <Route path='/notifications' component={Notifications} />
                 <Route path='/account' component={Account} />
                 <Route path='/communications' component={Communications} />
-                
+                {/*
+                  //This is the component that will render the in-app notifications
+                */}
               </div>
             </div>
           </BrowserRouter>
