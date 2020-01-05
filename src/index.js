@@ -18,66 +18,7 @@ const simple = new SimpleID({
 setGlobal({ 
   simple, 
   signedIn: simple.getUserData() ? true : false, 
-  currentTiles: [
-    {
-      name: "Total Users"
-    }, 
-    {
-      name: "Daily Active Users"
-    }, 
-    {
-      name: "Total Transactions"
-    }
-  ],
-  customTiles: [
-    {
-      name: "Contract Transactions"
-    }, 
-    {
-      name: "Current AUM"
-    }
-  ], 
-  standardTiles: [
-    {
-      name: "Total Users"
-    }, 
-    {
-      name: "Daily Active Users"
-    }, 
-    {
-      name: "Total Transactions"
-    }
-  ],
-  currentSegments: [
-    {
-      id: "1234", 
-      name: "AUM Greater Than $10k", 
-      userCount: 38
-    }
-  ], 
-  campaigns: [
-    {
-      id: "1234", 
-      name: "Welcome", 
-      userCount: 2048, 
-      clickRate: "38%", 
-      openRate: "42%"
-    }, 
-    {
-      id: "1235", 
-      name: "Come Back", 
-      userCount: 206, 
-      clickRate: "18%", 
-      openRate: "22%"
-    }
-  ], 
-  currentTemplates: [
-    {
-      id: "1234", 
-      name: "Welcome", 
-      html: "<div></div>"
-    }
-  ]
+  sessionData: {}, 
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));
@@ -86,3 +27,81 @@ ReactDOM.render(<App />, document.getElementById('root'));
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
 serviceWorker.unregister();
+//sessionData: {
+// currentTiles: [
+//   {
+//     name: "Total Users"
+//   }, 
+//   {
+//     name: "Daily Active Users"
+//   }, 
+//   {
+//     name: "Total Transactions"
+//   }
+// ],
+// customTiles: [
+//   {
+//     name: "Contract Transactions"
+//   }, 
+//   {
+//     name: "Current AUM"
+//   }
+// ], 
+// standardTiles: [
+//   {
+//     name: "Total Users"
+//   }, 
+//   {
+//     name: "Daily Active Users"
+//   }, 
+//   {
+//     name: "Total Transactions"
+//   }
+// ],
+// currentSegments: [
+//   {
+//     id: "1234", 
+//     name: "AUM Greater Than $10k", 
+//     userCount: 38
+//   }
+// ], 
+// campaigns: [
+//   {
+//     id: "1234", 
+//     name: "Welcome", 
+//     userCount: 2048, 
+//     clickRate: "38%", 
+//     openRate: "42%"
+//   }, 
+//   {
+//     id: "1235", 
+//     name: "Come Back", 
+//     userCount: 206, 
+//     clickRate: "18%", 
+//     openRate: "22%"
+//   }
+// ], 
+// currentTemplates: [
+//   {
+//     id: "1234", 
+//     name: "Welcome", 
+//     html: "<div></div>"
+//   }
+// ], 
+// notifications: [
+//   {
+//     id: "1234", 
+//     name: "DAI Migration", 
+//     content: "Lorem ipsum", 
+//     segmentId: "1234", 
+//     active: true
+//   },
+//   {
+//     id: "1235", 
+//     name: "Scheduled Maintenance", 
+//     content: "Lorem ipsum", 
+//     segmentId: "1234", 
+//     active: false
+//   } 
+// ]
+//}

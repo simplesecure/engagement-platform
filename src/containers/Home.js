@@ -26,7 +26,8 @@ export default class Home extends React.Component {
     }
   }
   render() {
-    const { signedIn } = this.global;
+    const { signedIn, sessionData } = this.global;
+    console.log(sessionData);
     return (
       
       <div>

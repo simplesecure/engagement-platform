@@ -77,3 +77,32 @@ section {
 .accordion-tile {
   margin: 10px;
 }
+
+.green {
+  color: green;
+}
+
+.seg-name {
+  margin-bottom: 10px;
+}
+
+.quill {
+  background: #fff!important;
+}
+
+.preview {
+  margin-left: 5px;
+}
+
+.message-banner {
+  background: #fff;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2000;
+  min-height: 100px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 .46875rem 2.1875rem rgba(90,97,105,.1),0 .9375rem 1.40625rem rgba(90,97,105,.1),0 .25rem .53125rem rgba(90,97,105,.12),0 .125rem .1875rem rgba(90,97,105,.1);
+}

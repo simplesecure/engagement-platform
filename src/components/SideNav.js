@@ -59,6 +59,12 @@ export default class SideNav extends React.Component {
               </Link>
             </li>
             <li className="nav-item">
+              <Link onClick={() => this.setState({ pathname: '/notifications' })} className={`nav-link ${pathname.includes('/notifications') ? "active" : ""}`} to="/notifications">
+                <i className="material-icons">notifications</i>
+                <span>Notifications</span>
+              </Link>
+            </li>
+            <li className="nav-item">
               <Link onClick={() => this.setState({ pathname: '/communications' })} className={`nav-link ${pathname.includes('/communications') ? "active" : ""}`} to="/communications">
                 <i className="material-icons">email</i>
                 <span>Communications</span>
