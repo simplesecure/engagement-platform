@@ -8,17 +8,22 @@ const simple = new SimpleID({
   appOrigin: window.location.origin,
   appName: "Demo Dashboard",
   scopes: ['email'],
-  apiKey: "123456",
+  appId: "123456",
   devId: "justin.email.email@email.com",
   development: true, 
   network: 'ropsten', 
   localRPCServer: 'http://localhost:7545'
 });
+const SESSION_FROM_LOCAL = 'sessionData';
 
 setGlobal({ 
+  SESSION_FROM_LOCAL,
   simple, 
+  appConnected: false, 
   signedIn: simple.getUserData() ? true : false, 
-  sessionData: {}, 
+  sessionData: {},
+  user_id: "", 
+  app_id: "" 
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

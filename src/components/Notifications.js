@@ -2,6 +2,9 @@ import React, { setGlobal } from 'reactn';
 import StickyNav from './StickyNav';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import uuid from 'uuid/v4'
+import { putInAnalyticsDataTable } from '../utils/awsUtils';
+import { setLocalStorage } from '../utils/misc';
 
 export default class Notifications extends React.Component {
   constructor(props) {
@@ -9,7 +12,8 @@ export default class Notifications extends React.Component {
     this.state = {
       message: "", 
       notificationName: "", 
-      preview: false
+      preview: false, 
+      selectedSegment: "Choose..."
     }
   }
 
@@ -25,20 +29,77 @@ export default class Notifications extends React.Component {
     this.setState({ preview: true });
   }
 
-  makeActive = (not) => {
-    const { notifications } = this.global;
+  makeActive = async (not) => {
+    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { notifications } = sessionData;
     let allNotifications = notifications;
     let thisNotification = allNotifications.filter(a => a === not)[0];
     thisNotification.active = true;
-    setGlobal({ notifications: allNotifications });
+    sessionData.notifications = allNotifications;
+    setGlobal({ sessionData });
+    //Now we update the DB
+        // Put the new segment in the analytics data for the user signed in to this
+    // id:
+    //      Each App (SimpleID Customer) will have an app_id
+    //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
+    //      A segment will be stored in the DB under the primary key 'app_id' in
+    //      the appropriate user_id's segment storage:
+    //
+    //
+    // TODO: probably want to wait on this to finish and throw a status/activity
+    //       bar in the app:
+    try {
+      const anObject = {
+        users: {
+        }
+      }
+      anObject.users[user_id] = {
+        appData: sessionData
+      }
+      anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
+      await putInAnalyticsDataTable(anObject)
+      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+      setGlobal({ selectedSegment: "Choose...", message: "", notificationName: ""})
+    } catch (suppressedError) {
+      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    }
   }
 
-  makeInactive = (not) => {
-    const { notifications } = this.global;
+  makeInactive = async (not) => {
+    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { notifications } = sessionData;
     let allNotifications = notifications;
     let thisNotification = allNotifications.filter(a => a === not)[0];
     thisNotification.active = false;
-    setGlobal({ notifications: allNotifications });
+    sessionData.notifications = allNotifications;
+    setGlobal({ sessionData });
+
+    //Now we update the DB
+        // Put the new segment in the analytics data for the user signed in to this
+    // id:
+    //      Each App (SimpleID Customer) will have an app_id
+    //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
+    //      A segment will be stored in the DB under the primary key 'app_id' in
+    //      the appropriate user_id's segment storage:
+    //
+    //
+    // TODO: probably want to wait on this to finish and throw a status/activity
+    //       bar in the app:
+    try {
+      const anObject = {
+        users: {
+        }
+      }
+      anObject.users[user_id] = {
+        appData: sessionData
+      }
+      anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
+      await putInAnalyticsDataTable(anObject)
+      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+      setGlobal({ selectedSegment: "Choose...", message: "", notificationName: ""})
+    } catch (suppressedError) {
+      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    }
   }
 
   createMarkup = () => {
@@ -48,25 +109,59 @@ export default class Notifications extends React.Component {
     };
   }
 
-  saveNotification = () => {
-    const { notifications } = this.global;
-    const { notificationName, message } = this.state;
+  saveNotification = async () => {
+    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { notifications } = sessionData;
+    const noti = notifications ? notifications : [];
+    const { notificationName, message, selectedSegment } = this.state;
     const newNotification = {
-      id: "1236", 
+      id: uuid(), 
       name: notificationName, 
       content: message, 
-      segmentId: "1234", 
+      segmentId: selectedSegment, 
       active: false
     } 
-    notifications.push(newNotification);
-    setGlobal({ notifications });
+    noti.push(newNotification);
+    sessionData.notifications = noti;
+
+    setGlobal({ sessionData });
+
+    //Now we update the DB
+        // Put the new segment in the analytics data for the user signed in to this
+    // id:
+    //      Each App (SimpleID Customer) will have an app_id
+    //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
+    //      A segment will be stored in the DB under the primary key 'app_id' in
+    //      the appropriate user_id's segment storage:
+    //
+    //
+    // TODO: probably want to wait on this to finish and throw a status/activity
+    //       bar in the app:
+    try {
+      const anObject = {
+        users: {
+        }
+      }
+      anObject.users[user_id] = {
+        appData: sessionData
+      }
+      anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
+      await putInAnalyticsDataTable(anObject)
+      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+      setGlobal({ selectedSegment: "Choose...", message: "", notificationName: ""})
+    } catch (suppressedError) {
+      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    }
   }
   
   render() {
-    const { notifications, currentSegments } = this.global;
-    const { message, preview, notificationName } = this.state;
-    const inactiveNotifications = notifications.filter(a => a.active === false);
-    const activeNotifications = notifications.filter(a => a.active === true);
+    const { sessionData } = this.global;
+    const { notifications, currentSegments } = sessionData;
+    const { message, preview, notificationName, selectedSegment } = this.state;
+    const noti = notifications ? notifications : [];
+    const inactiveNotifications = noti.filter(a => a.active === false);
+    const activeNotifications = noti.filter(a => a.active === true);
+    const segments = currentSegments ? currentSegments : [];
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
@@ -100,7 +195,7 @@ export default class Notifications extends React.Component {
                 }
                 </ul> : 
                 <ul className="tile-list">
-                  <li className="card"><span className="card-body">You haven't created any in-app notifications yet, let's do that now!</span></li>
+                  <li className="card"><span className="card-body">You haven't activated any in-app notifications yet. Once you have a notification created, you can activate it below.</span></li>
                 </ul>
               }
               <div>
@@ -126,12 +221,12 @@ export default class Notifications extends React.Component {
               <h5>Create a Notification</h5>
               <div className="form-group col-md-12">
                 <label htmlFor="inputSeg">First, Choose a Segment</label>
-                <select id="inputSeg" className="form-control">
-                  <option selected>Choose...</option>
+                <select value={selectedSegment} onChange={(e) => this.setState({ selectedSegment: e.target.value })} id="inputSeg" className="form-control">
+                  <option value="Choose...">Choose...</option>
                   {
-                    currentSegments.map(seg => {
+                    segments.map(seg => {
                       return (
-                      <option key={seg.id}>{seg.name}</option>
+                      <option value={seg.id} key={seg.id}>{seg.name}</option>
                       )
                     })
                   }

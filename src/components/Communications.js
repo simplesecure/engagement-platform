@@ -1,19 +1,118 @@
-import React from 'reactn';
+import React, { setGlobal } from 'reactn';
 import StickyNav from './StickyNav';
 import EmailEditor from 'react-email-editor';
 import Modal from 'react-bootstrap/Modal';
+import uuid from 'uuid/v4';
+import { putInAnalyticsDataTable } from '../utils/awsUtils';
+import { setLocalStorage } from '../utils/misc';
 
 export default class Communications extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      show: false
+      show: false, 
+      selectedSegment: "Choose...", 
+      selectedTemplate: "Choose...", 
+      campaignName: "",
+      templateName: ""
     }
+  }
+
+  saveTemplate = () => {
+    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { currentTemplates } = sessionData;
+    const { templateName } = this.state;
+    const templates = currentTemplates ? currentTemplates : [];
+    this.editor.exportHtml(async data => {
+      const { design, html } = data
+      const newTemplate = {
+        id: uuid(), 
+        name: templateName,
+        design, 
+        html
+      }
+      templates.push(newTemplate);
+      sessionData.currentTemplates = templates;
+      setGlobal({ sessionData });
+      this.setState({ show: false });
+      //Now we save to the DB
+    
+      //
+      // TODO: probably want to wait on this to finish and throw a status/activity
+      //       bar in the app:
+      try {
+        const anObject = {
+          users: {
+          }
+        }
+        anObject.users[user_id] = {
+          appData: sessionData
+        }
+        anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
+        console.log(anObject);
+        await putInAnalyticsDataTable(anObject)
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+        setGlobal({ templateName: ""})
+      } catch (suppressedError) {
+        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      }
+    })
+  }
+
+  deleteTemplate = async (temp) => {
+    const { sessionData, user_id, app_id, SESSION_FROM_LOCAL } = this.global;
+    const { currentTemplates } = sessionData;
+    const index = currentTemplates.map(a => a.id).indexOf(temp.id);
+    if(index > -1) {
+      currentTemplates.splice(index, 1);
+      setGlobal({ sessionData });
+      //Update in DB
+      try {
+        const anObject = {
+          users: {
+          }
+        }
+        anObject.users[user_id] = {
+          appData: sessionData
+        }
+        anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
+        await putInAnalyticsDataTable(anObject)
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+      } catch (suppressedError) {
+        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      }
+
+    } else {
+      console.log("Error with index")
+    }
+  }
+
+  sendCampaign = () => {
+    const { sessionData, simple } = this.global;
+    const { selectedSegment, selectedTemplate, campaignName } = this.state;
+    const { campaigns } = sessionData;
+    const camps = campaigns ? campaigns : [];
+    //First we need to take the campaign data and send it to the iframe to process
+    const newCampaign = {
+      id: uuid(), 
+      name: campaignName, 
+      template: selectedTemplate, 
+      segment: selectedSegment, 
+      dateSent: new Date()
+    }
+    simple.processData('email messaging', newCampaign);
+    camps.push(newCampaign);
+    sessionData.campaigns = camps;
+    setGlobal({ sessionData, campaignName: "", selectedTemplate: "Choose...", selectedSegment: "Choose..." })
   }
 
   render() {
     const { show } = this.state;
-    const { campaigns, currentSegments, currentTemplates } = this.global;
+    const { sessionData } = this.global;
+    const { selectedSegment, selectedTemplate, templateName, campaignName } = this.state;
+    const { campaigns, currentSegments, currentTemplates } = sessionData;
+    const templates = currentTemplates ? currentTemplates : [];
+    const segments = currentSegments ? currentSegments : [];
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
@@ -29,7 +128,7 @@ export default class Communications extends React.Component {
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <h5>Campaigns</h5>
               {
-                campaigns.length > 0 ?
+                campaigns && campaigns.length > 0 ?
                 <ul className="tile-list">
                 {
                   campaigns.map(camp => {
@@ -46,7 +145,7 @@ export default class Communications extends React.Component {
               <div>
                 <h5>Templates</h5>
                 {
-                currentTemplates.length > 0 ?
+                currentTemplates && currentTemplates.length > 0 ?
                 <ul className="tile-list">
                 {
                   currentTemplates.map(temp => {
@@ -66,12 +165,12 @@ export default class Communications extends React.Component {
               <h5>Create a Campaign</h5>
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">First, Choose a Segment</label>
-                <select id="inputSeg" class="form-control">
-                  <option selected>Choose...</option>
+                <select value={selectedSegment} onChange={(e) => this.setState({ selectedSegment: e.target.value })} id="inputSeg" class="form-control">
+                  <option value="Choose...">Choose...</option>
                   {
-                    currentSegments.map(seg => {
+                    segments.map(seg => {
                       return (
-                      <option key={seg.id}>{seg.name}</option>
+                      <option value={seg.id} key={seg.id}>{seg.name}</option>
                       )
                     })
                   }
@@ -79,16 +178,16 @@ export default class Communications extends React.Component {
               </div>
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">Next, Choose a Template</label>
-                <select id="inputSeg" class="form-control">
-                  <option selected>Choose...</option>
+                <select value={selectedTemplate} onChange={(e) => this.setState({ selectedTemplate: e.target.value })} id="inputSeg" class="form-control">
+                  <option value="Choose...">Choose...</option>
                   {
-                    currentTemplates.map(temp => {
+                    templates.map(temp => {
                       return (
-                      <option key={temp.id}>{temp.name}</option>
+                      <option value={temp.id} key={temp.id}>{temp.name}</option>
                       )
                     })
                   }
-                </select>                
+                </select>             
               </div>
               <div class="form-group col-md-12">
                 <label>Or Create A New Template</label><br/>
@@ -96,11 +195,11 @@ export default class Communications extends React.Component {
               </div>
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">Now, Give Your Campaign A Name</label> 
-                <input type="text" class="form-control" id="tileName" placeholder="Give it a name" />                           
+                <input value={campaignName} onChange={(e) => this.setState({ campaignName: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Give it a name" />                           
               </div>
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">Finally, Send The Campaign</label><br/>
-                <button className="btn btn-primary">Send Campaign</button>         
+                <button onClick={this.sendCampaign} className="btn btn-primary">Send Campaign</button>         
               </div>
             </div>
           </div>
@@ -111,7 +210,7 @@ export default class Communications extends React.Component {
           </Modal.Header>
           <Modal.Body>
             <p>Give your template a name</p>
-            <input type="text" className="form-control template-name" id="tileName" placeholder="Give it a name" />                           
+            <input value={templateName} onChange={(e) => this.setState({ templateName: e.target.value })} type="text" className="form-control template-name" id="tileName" placeholder="Give it a name" />                           
             <EmailEditor
               ref={editor => this.editor = editor}
               // onLoad={this.onLoad}
@@ -122,7 +221,7 @@ export default class Communications extends React.Component {
             <button className="btn btn-secondary" onClick={() => this.setState({ show: false })}>
               Cancel
             </button>
-            <button className="btn btn-primary" onClick={() => this.deleteSegment()}>
+            <button className="btn btn-primary" onClick={this.saveTemplate}>
               Save
             </button>
           </Modal.Footer>

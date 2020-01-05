@@ -1,0 +1,22 @@
+[
+  {
+    "filter": "All Users", 
+    "type": "Count"
+  }, 
+  {
+    "filter": "Last Seen", 
+    "type": "Date Range"
+  }, 
+  {
+    "filter": "Wallet Balance", 
+    "type": "Number Range"
+  }, 
+  {
+    "filter": "Total Transactions", 
+    "type": "Count"
+  }, 
+  {
+    "filter": "Smart Contract Transactions", 
+    "type": "Contract"
+  }
+]

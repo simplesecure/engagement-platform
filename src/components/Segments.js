@@ -4,8 +4,11 @@ import Modal from 'react-bootstrap/Modal';
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
 import DemoTable from './DemoTable';
-import { getFromAnalyticsDataTable,
-         putInAnalyticsDataTable } from '../awsUtils.js';
+import { putInAnalyticsDataTable, updateInAnalyticsDataTable } from '../utils/awsUtils.js';
+import filters from '../utils/filterOptions.json';
+import DatePicker from 'react-date-picker';
+import uuid from 'uuid/v4';
+import { setLocalStorage } from '../utils/misc';
 
 export default class Segments extends React.Component {
   constructor(props) {
@@ -16,18 +19,46 @@ export default class Segments extends React.Component {
       existingSeg: false,
       allUsers: true,
       filterType: "Choose...",
-      newSegName: ""
+      rangeType: "Choose...",
+      operatorType: "Choose...", 
+      newSegName: "", 
+      date: new Date(), 
+      amount: 0, 
+      contractAddress: "", 
+      existingSegmentToFilter: "Choose...", 
     }
   }
 
-  deleteSegment = (seg, confirm) => {
-    const { currentSegments } = this.global;
+  deleteSegment = async(seg, confirm) => {
+    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { currentSegments } = sessionData;
     this.setState({ seg });
     if(confirm) {
       const index = currentSegments.map(a => a.id).indexOf(seg.id);
       if(index > -1) {
         currentSegments.splice(index, 1);
-        setGlobal({ currentSegments });
+        sessionData.currentSegments = currentSegments;
+        setGlobal({ sessionData });
+        //Update in DB
+        
+        try {
+          const anObject = {
+            // keyValue: 'segments', 
+            // primaryKey: app_id,
+            // userKey: user_id,
+            users: {
+            }
+          }
+          anObject.users[user_id] = {
+            appData: sessionData
+          }
+          anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
+          await putInAnalyticsDataTable(anObject)
+        } catch (suppressedError) {
+          console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+        }
+
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
         this.setState({ show: false });
       } else {
         console.log("Error with index");
@@ -42,15 +73,43 @@ export default class Segments extends React.Component {
   }
 
   createSegment = async () => {
-    const { currentSegments } = this.global;
-    const { newSegName } = this.state;
-    const newSegment = {
-      id: "23456",
-      name: newSegName,
-      userCount: 2302
+    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { currentSegments } = sessionData;
+    const { newSegName, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter } = this.state;
+    const segments = currentSegments ? currentSegments : [];
+    const filterToUse = filters.filter(a => a.filter === filterType)[0];
+    const segId = uuid();
+    //First we set the segment criteria to be stored
+    const segmentCriteria = {
+      id: segId,
+      name: newSegName, 
+      startWithExisting: !allUsers, 
+      existingSegmentToFilter: allUsers === false ? existingSegmentToFilter : null, 
+      filter: filterToUse,
+      dateRange: filterToUse.type === "Date Range" ? {
+        rangeType, 
+        date
+      } : null, 
+      numberRange: filterToUse.type === "Number Range" ? {
+        operatorType, 
+        amount
+      } : null, 
+      contractAddress: filterToUse.type === "Contract" ? contractAddress : null
     }
-    currentSegments.push(newSegment);
 
+    //Now we fetch the actual results
+    //This state should trigger a UI element showing the segment being created (could take a while)
+    setGlobal({ processingSegment: true });
+    
+    //Here we need to use the iframe to process the segment criteria and return the necessary data
+
+    //Then we store the segment with an empty slot for the user count
+    //TODO: we need to also look at showing the wallets and other meta data (see demo app)
+
+    segments.push(segmentCriteria);
+    sessionData.currentSegments = segments;
+    setGlobal({ sessionData });
+    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     // Put the new segment in the analytics data for the user signed in to this
     // id:
     //      Each App (SimpleID Customer) will have an app_id
@@ -58,8 +117,6 @@ export default class Segments extends React.Component {
     //      A segment will be stored in the DB under the primary key 'app_id' in
     //      the appropriate user_id's segment storage:
     //
-    const app_id = 'This should be a UUID for the App.'
-    const user_id = 'This should be systum UUID or the Cognito identity pool sub.'
     //
     // TODO: probably want to wait on this to finish and throw a status/activity
     //       bar in the app:
@@ -69,7 +126,7 @@ export default class Segments extends React.Component {
         }
       }
       anObject.users[user_id] = {
-        segments: currentSegments
+        appData: sessionData
       }
       anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
       await putInAnalyticsDataTable(anObject)
@@ -77,13 +134,21 @@ export default class Segments extends React.Component {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }
 
-    setGlobal({ currentSegments });
-    this.setState({ newSegName: "", filterType: "Choose..." });
+    //setGlobal({ currentSegments });
+    this.setState({ newSegName: "", filterType: "Choose...", contractAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 });
+  }
+
+  handleDateChange = (date) => {
+    this.setState({ date });
   }
 
   render() {
-    const { currentSegments } = this.global;
-    const { show, seg, existingSeg, allUsers, filterType, newSegName } = this.state;
+    const { sessionData } = this.global;
+    const { currentSegments } = sessionData;
+    const { show, seg, existingSeg, allUsers, filterType, newSegName, rangeType, operatorType, amount, contractAddress, existingSegmentToFilter } = this.state;
+    const segments = currentSegments ? currentSegments : [];
+    const filterToUse = filters.filter(a => a.filter === filterType)[0];
+
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
@@ -99,10 +164,10 @@ export default class Segments extends React.Component {
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <h5>Current Segments</h5>
               {
-                currentSegments.length > 0 ?
+                segments.length > 0 ?
                 <ul className="tile-list">
                   {
-                    currentSegments.map(seg => {
+                    segments.map(seg => {
                       return (
                         <Accordion className="clickable accordion-tile" key={seg.id} defaultActiveKey="1">
                           <Card className="standard-tile">
@@ -160,12 +225,12 @@ export default class Segments extends React.Component {
                   existingSeg ?
                   <div class="form-group col-md-12">
                     <label htmlFor="inputSeg">Now, Choose a Segment</label>
-                    <select id="inputSeg" class="form-control">
-                      <option selected>Choose...</option>
+                    <select value={existingSegmentToFilter} onChange={(e) => this.setState({ existingSegmentToFilter: e.target.value })} id="inputSeg" class="form-control">
+                      <option value="Choose...">Choose...</option>
                       {
-                        currentSegments.map(seg => {
+                        segments.map(seg => {
                           return (
-                          <option key={seg.id}>{seg.name}</option>
+                          <option value={seg.name} key={seg.id}>{seg.name}</option>
                           )
                         })
                       }
@@ -175,19 +240,57 @@ export default class Segments extends React.Component {
                 }
                 <div class="form-group col-md-12">
                   <label htmlFor="chartSty">Next, Choose a Filter</label>
-                  <select value={filterType} onChange={(e) => this.setState({ filterType: e.target.value })} id="chartSty" class="form-control">
+                  <select value={filterType} onChange={(e) => this.setState({ filterType: e.target.value })} id="chartSty" className="form-control">
                     <option value="Choose...">Choose...</option>
-                    <option value="contract">Contract Transactions</option>
-                    <option value=">7">Last Activity > 7 Days</option>
-                    <option value="AUM>10k">AUM > $10,000</option>
-                    <option value="act>100">Total Activities > 100</option>
+                    {
+                      filters.map(filter => {
+                        return (
+                          <option key={filter.filter} value={filter.filter}>{filter.filter}</option>
+                        )
+                      })
+                    }
                   </select>
                 </div>
                 {
-                  filterType === "contract" ?
+                  filterToUse && filterToUse.type === "Contract" ?
                   <div class="form-group col-md-12">
                     <label htmlFor="tileName">Enter The Contract Address</label>
-                    <input type="text" class="form-control" id="tileName" placeholder="Contract Address" />
+                    <input value={contractAddress} onChange={(e) => this.setState({ contractAddress: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Contract Address" />
+                  </div> :
+                  filterToUse && filterToUse.type === "Date Range" ? 
+                  <div className="row form-group col-md-12">
+                    <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                      <label htmlFor="chartSty">Make a Selection</label>
+                      <select value={rangeType} onChange={(e) => this.setState({ rangeType: e.target.value })} id="chartSty" class="form-control">
+                        <option value="Choose...">Choose...</option>
+                        <option value="Before">Before</option>
+                        <option value="After">After</option>
+                        {/* TODO: Add this later <option value="Between">Between</option>*/}
+                      </select>
+                    </div>
+                    <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                      <DatePicker
+                        className="date-picker"
+                        onChange={this.handleDateChange}
+                        value={this.state.date}
+                      />
+                    </div>
+                  </div> : 
+                  filterToUse && filterToUse.type === "Number Range" ?
+                  <div className="row form-group col-md-12">
+                    <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                      <label htmlFor="chartSty">Make a Selection</label>
+                      <select value={operatorType} onChange={(e) => this.setState({ operatorType: e.target.value })} id="chartSty" class="form-control">
+                        <option value="Choose...">Choose...</option>
+                        <option value="More Than">More Than</option>
+                        <option value="Less Than">Less Than</option>
+                        {/* TODO: Add this later <option value="Between">Between</option>*/}
+                      </select>
+                    </div>
+                    <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                      <label htmlFor="tileName">Enter Amount</label>
+                      <input value={amount} onChange={(e) => this.setState({ amount: e.target.value })} type="number" class="form-control" id="tileName" placeholder="Wallet Balance Amount" />
+                    </div>
                   </div> :
                   <div />
                 }

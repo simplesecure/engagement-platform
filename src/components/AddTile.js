@@ -1,47 +1,96 @@
 import React, { setGlobal } from 'reactn';
 import StickyNav from './StickyNav';
+import uuid from 'uuid/v4'
+import { setLocalStorage } from '../utils/misc';
+import { putInAnalyticsDataTable } from '../utils/awsUtils';
 
 export default class AddTile extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tileName: "", 
+      selectedSegment: "Choose..."
+    }
+  }
 
-  deleteStandardTile = (name) => {
-    const { currentTiles } = this.global;
+  addTile = async () => {
+    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id, simple } = this.global;
+    const { tileName, selectedSegment } = this.state;
+    const { currentTiles } = sessionData;
+    const tiles = currentTiles ? currentTiles : [];
+    const newTile = {
+      id: uuid(), 
+      name: tileName, 
+      segment: selectedSegment
+    }
+    tiles.push(newTile);
+    sessionData.currentTiles = tiles;
+    setGlobal({ sessionData });
+    //Now we update the DB
+    // Put the new segment in the analytics data for the user signed in to this
+    // id:
+    //      Each App (SimpleID Customer) will have an app_id
+    //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
+    //      A segment will be stored in the DB under the primary key 'app_id' in
+    //      the appropriate user_id's segment storage:
+    //
+    
+    //
+    // TODO: probably want to wait on this to finish and throw a status/activity
+    //       bar in the app:
+    try {
+      const anObject = {
+        users: {
+        }
+      }
+      anObject.users[user_id] = {
+        appData: sessionData
+      }
+      anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
+      await putInAnalyticsDataTable(anObject)
+    } catch (suppressedError) {
+      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    }
+
+    sessionData.currentTiles = tiles;
+    setGlobal({ tileName: "", selectedSegment: "Choose..." });
+    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+  }
+
+  deleteTile = async (name) => {
+    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { currentTiles } = sessionData;
     const index = currentTiles.map(a => a.name).indexOf(name);
     if(index > -1) {
       currentTiles.splice(index, 1);
-      setGlobal({ currentTiles });
+      setGlobal({ sessionData });
+      //Update in DB
+      try {
+        const anObject = {
+          users: {
+          }
+        }
+        anObject.users[user_id] = {
+          appData: sessionData
+        }
+        anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
+        await putInAnalyticsDataTable(anObject)
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+      } catch (suppressedError) {
+        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      }
+
     } else {
       console.log("Error with index")
     }
   }
 
-  deleteCustomTile = (name) => {
-    const { customTiles, standardTiles } = this.global;
-    const index = customTiles.map(a => a.name).indexOf(name);
-    if(index > -1) {
-      const thisTile = customTiles[index];
-      standardTiles.push(thisTile);
-      customTiles.splice(index, 1);
-      setGlobal({ customTiles, standardTiles });
-    } else {
-      console.log("Error with index")
-    }
-  }
-
-  addStadardTile = (name) => {
-    const { currentTiles } = this.global;
-    const newTile = {
-      name
-    }
-    currentTiles.push(newTile);
-    setGlobal({ currentTiles });
-  }
   render() {
-    const { currentTiles, customTiles, standardTiles, currentSegments } = this.global;
-
-    const nonJsonAvailableTiles = standardTiles.map(a => a.name)
-    const nonJsonCurrentTiles = currentTiles.map(a => a.name);
-    const availableTiles = nonJsonAvailableTiles.filter(function(obj) { return nonJsonCurrentTiles.indexOf(obj) == -1; });
-    const totalTiles = currentTiles.concat(customTiles);
+    const { sessionData } = this.global;
+    const { selectedSegment, tileName } = this.state;
+    const { currentTiles, currentSegments } = sessionData;
+    const segments = currentSegments ? currentSegments : [];
+    console.log(currentTiles);
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
@@ -57,58 +106,39 @@ export default class AddTile extends React.Component {
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <h5>Current Tiles</h5>
               {
-                totalTiles.length > 0 ?
+                currentTiles && currentTiles.length > 0 ?
                 <ul className="tile-list">
                 {
                   currentTiles.map(tile => {
                     return (
-                      <li className="card" key={tile.name}><span className="card-body standard-tile">{tile.name}</span><span onClick={() => this.deleteStandardTile(tile.name)} className="right clickable text-danger">Remove</span></li>
+                      <li className="card" key={tile.name}><span className="card-body standard-tile">{tile.name}</span><span onClick={() => this.deleteTile(tile.name)} className="right clickable text-danger">Remove</span></li>
                     )
                   })                  
                 }
-                {
-                  customTiles.map(customTile => {
-                    return (
-                      <li className="card" key={customTile.name}><span className="card-body custom-tile">{customTile.name}</span><span onClick={() => this.deleteCustomTile(customTile.name)} className="right clickable text-danger">Remove</span></li>
-                    )
-                  })  
-                }
               </ul> : 
               <ul className="tile-list">
-                <li className="card"><span className="card-body">No tiles selected yet. Pick a standard tile or create a custom one.</span></li>
+                <li className="card"><span className="card-body">No tiles selected yet. Add a new custom tile that you can display on your dashboard.</span></li>
               </ul>
               }
             </div>
 
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-              <h5>Add New Tiles</h5>
-              <ul className="tile-list">
-                {
-                  availableTiles.length > 0 ? 
-                  availableTiles.map(aTile => {
-                    return (
-                      <li onClick={() => this.addStadardTile(aTile)} className="card clickable" key={aTile}><span className="card-body">{aTile}</span></li>
-                    )
-                  }) : 
-                  <li className="card clickable"><span className="card-body text-muted">You have selected all the standard tiles, try creating a custom one.</span></li>
-                }
-              </ul>
               <div>
-                <h5>Create a Custom Tile</h5>
+                <h5>Add a Custom Data Tile</h5>
                 <div class="form-group col-md-12">
                   <label htmlFor="inputSeg">First, Choose a Segment</label>
-                  <select id="inputSeg" class="form-control">
-                    <option selected>Choose...</option>
+                  <select value={selectedSegment} onChange={(e) => this.setState({ selectedSegment: e.target.value })} id="inputSeg" class="form-control">
+                    <option value="Choose...">Choose...</option>
                     {
-                      currentSegments.map(seg => {
+                      segments.map(seg => {
                         return (
-                        <option key={seg.id}>{seg.name}</option>
+                        <option value={seg.id} key={seg.id}>{seg.name}</option>
                         )
                       })
                     }
                   </select>
                 </div>
-                <div class="form-group col-md-12">
+                {/* TODO: advance feature: custom charts <div class="form-group col-md-12">
                   <label htmlFor="chartSty">Next, Choose Chart Style</label>
                   <select id="chartSty" class="form-control">
                     <option selected>Choose...</option>
@@ -118,14 +148,14 @@ export default class AddTile extends React.Component {
                     <option>Pie</option>
                     <option>Donut</option>
                   </select>
-                </div>
+                </div>*/}
                 <div class="form-group col-md-12">
                   <label htmlFor="tileName">Then, Give It A Name</label>
-                  <input type="text" class="form-control" id="tileName" placeholder="Give it a name" />
+                  <input value={tileName} onChange={(e) => this.setState({ tileName: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Give it a name" />
                 </div>
                 <div class="form-group col-md-12">
                   <label htmlFor="chartSty">Finally, Add The Tile</label><br/>
-                  <button className="btn btn-primary">Add Tile</button>
+                  <button onClick={this.addTile} className="btn btn-primary">Add Tile</button>
                 </div>
               </div>
             </div>

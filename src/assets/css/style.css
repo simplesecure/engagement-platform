@@ -106,3 +106,22 @@ section {
   text-align: center;
   box-shadow: 0 .46875rem 2.1875rem rgba(90,97,105,.1),0 .9375rem 1.40625rem rgba(90,97,105,.1),0 .25rem .53125rem rgba(90,97,105,.12),0 .125rem .1875rem rgba(90,97,105,.1);
 }
+
+.date-picker {
+  padding-top: 25px!important;
+}
+
+.react-date-picker__wrapper {
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 0;
+  border: 1px solid #e1e5eb!important;
+  border-radius: 5px!important;
+  background: #fff!important;
+  padding: 5px!important;
+
+}
+
+#editor iframe {
+  min-width: 850px!important;
+}
