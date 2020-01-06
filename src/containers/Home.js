@@ -9,6 +9,7 @@ import Notifications from '../components/Notifications';
 import Communications from '../components/Communications';
 import Account from '../components/Account';
 import Segments from '../components/Segments';
+import Message from '../components/Message';
 
 export default class Home extends React.Component {
   renderRoute(route) {
@@ -27,7 +28,6 @@ export default class Home extends React.Component {
   }
   render() {
     const { signedIn, sessionData } = this.global;
-    console.log(sessionData);
     return (
       
       <div>
@@ -45,17 +45,27 @@ export default class Home extends React.Component {
                 <Route path='/new-search' component={Search} />
                 <Route path='/segments' component={Segments} />
                 <Route path='/new-tile' component={AddTile} />
-                <Route path='/notifications' component={Notifications} />
+                <Route exact path='/notifications' component={Notifications} />
                 <Route path='/account' component={Account} />
                 <Route path='/communications' component={Communications} />
                 {/*
                   //This is the component that will render the in-app notifications
                 */}
+                <Route path='/notifications/appId=:id&messageIds=:id' component={Message} />
               </div>
             </div>
           </BrowserRouter>
            : 
-          <Auth />
+           !window.location.href.includes('notifications/appId') ? 
+          <Auth /> : 
+          <BrowserRouter>
+            <div>
+              {/*
+                //This is the component that will render the in-app notifications
+              */}
+              <Route path='/notifications/appId=:id&messageIds=:id' component={Message} />
+            </div>
+          </BrowserRouter>
         }
       </div>
     )
