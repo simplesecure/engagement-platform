@@ -1,3 +1,6 @@
+// TODO: Long term make this a lib / private npm package
+// TODO: Mimic this api: https://github.com/ChenLi0830/dynamoLight#readme
+
 const AWS = require("aws-sdk")
 AWS.config.update({
   accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID,
@@ -5,8 +8,6 @@ AWS.config.update({
   region: process.env.REACT_APP_REGION
 })
 const docClient = new AWS.DynamoDB.DocumentClient({convertEmptyValues: true})
-
-//TODO: @ac do we need to wrap these functions in try/catches? 
 
 async function getFromDb(aTable, aKeyName, aKeyValue) {
   const params = {
