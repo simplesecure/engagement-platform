@@ -30,7 +30,7 @@ export default class Segments extends React.Component {
   }
 
   deleteSegment = async(seg, confirm) => {
-    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { sessionData, SESSION_FROM_LOCAL, apps, org_id } = this.global;
     const { currentSegments } = sessionData;
     this.setState({ seg });
     if(confirm) {
@@ -38,22 +38,17 @@ export default class Segments extends React.Component {
       if(index > -1) {
         currentSegments.splice(index, 1);
         sessionData.currentSegments = currentSegments;
-        setGlobal({ sessionData });
         //Update in DB
-        
+        const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+        thisApp.currentSegments = currentSegments;
+        setGlobal({ sessionData, apps });
         try {
           const anObject = {
-            // keyValue: 'segments', 
-            // primaryKey: app_id,
-            // userKey: user_id,
-            users: {
-            }
+            apps: []
           }
-          anObject.users[user_id] = {
-            appData: sessionData
-          }
-          anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
-          //await putInAnalyticsDataTable(anObject)
+          anObject.apps = apps;
+          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+          await putInOrganizationDataTable(anObject)
         } catch (suppressedError) {
           console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
         }
@@ -111,7 +106,6 @@ export default class Segments extends React.Component {
     const thisApp = apps.filter(a => a.id === sessionData.id)[0];
     thisApp.currentSegments = segments;
     setGlobal({ sessionData, apps });
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     // Put the new segment in the analytics data for the user signed in to this
     // id:
     //      Each App (SimpleID Customer) will have an app_id
@@ -129,6 +123,7 @@ export default class Segments extends React.Component {
       anObject.apps = apps;
       anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
       await putInOrganizationDataTable(anObject)
+      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }

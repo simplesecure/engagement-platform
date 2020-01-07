@@ -4,6 +4,7 @@ import StickyNav from './StickyNav';
 import Modal from 'react-bootstrap/Modal'
 import uuid from 'uuid/v4';
 import { putInOrganizationDataTable } from '../utils/awsUtils';
+import { setLocalStorage } from '../utils/misc';
 
 export default class Projects extends React.Component {
   constructor(props) {
@@ -16,7 +17,7 @@ export default class Projects extends React.Component {
   }
 
   createProject = async () => {
-    const { apps, org_id } = this.global;
+    const { apps, org_id, SESSION_FROM_LOCAL } = this.global;
     const { projectName } = this.state;
     const newProject = {
       id: uuid(), 
@@ -34,13 +35,15 @@ export default class Projects extends React.Component {
       anObject.apps.push(newProject);
       anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id;
       await putInOrganizationDataTable(anObject);  
+      const data = apps[0];
+      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }
   }
 
   deleteProject = async (proj, confirm) => {
-    const { apps, org_id, app_id } = this.global;
+    const { apps, org_id, SESSION_FROM_LOCAL } = this.global;
   
     if(confirm === false) {
       this.setState({ proj, show: true });
@@ -58,6 +61,8 @@ export default class Projects extends React.Component {
           }
           anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
           await putInOrganizationDataTable(anObject)
+          const data = apps.length > 0 ? apps[0] : {}
+          setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
         } catch (suppressedError) {
           console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
         }

@@ -3,7 +3,7 @@ import StickyNav from './StickyNav';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import uuid from 'uuid/v4'
-import { putInAnalyticsDataTable } from '../utils/awsUtils';
+import { putInOrganizationDataTable } from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
 
 export default class Notifications extends React.Component {
@@ -30,13 +30,16 @@ export default class Notifications extends React.Component {
   }
 
   makeActive = async (not) => {
-    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { notifications } = sessionData;
     let allNotifications = notifications;
     let thisNotification = allNotifications.filter(a => a === not)[0];
     thisNotification.active = true;
     sessionData.notifications = allNotifications;
-    setGlobal({ sessionData });
+    const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+    thisApp.notifications = allNotifications;
+
+    setGlobal({ sessionData, apps });
     //Now we update the DB
         // Put the new segment in the analytics data for the user signed in to this
     // id:
@@ -50,29 +53,29 @@ export default class Notifications extends React.Component {
     //       bar in the app:
     try {
       const anObject = {
-        users: {
-        }
+        apps: []
       }
-      anObject.users[user_id] = {
-        appData: sessionData
-      }
-      anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
-      await putInAnalyticsDataTable(anObject)
+      anObject.apps = apps;
+      anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+      await putInOrganizationDataTable(anObject)
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      setGlobal({ selectedSegment: "Choose...", message: "", notificationName: ""})
+      this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }
   }
 
   makeInactive = async (not) => {
-    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { notifications } = sessionData;
     let allNotifications = notifications;
     let thisNotification = allNotifications.filter(a => a === not)[0];
     thisNotification.active = false;
     sessionData.notifications = allNotifications;
-    setGlobal({ sessionData });
+    const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+    thisApp.notifications = allNotifications;
+
+    setGlobal({ sessionData, apps });
 
     //Now we update the DB
         // Put the new segment in the analytics data for the user signed in to this
@@ -87,16 +90,13 @@ export default class Notifications extends React.Component {
     //       bar in the app:
     try {
       const anObject = {
-        users: {
-        }
+        apps: []
       }
-      anObject.users[user_id] = {
-        appData: sessionData
-      }
-      anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
-      await putInAnalyticsDataTable(anObject)
+      anObject.apps = apps;
+      anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+      await putInOrganizationDataTable(anObject)
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      setGlobal({ selectedSegment: "Choose...", message: "", notificationName: ""})
+      this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }
@@ -110,7 +110,7 @@ export default class Notifications extends React.Component {
   }
 
   saveNotification = async () => {
-    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { notifications } = sessionData;
     const noti = notifications ? notifications : [];
     const { notificationName, message, selectedSegment } = this.state;
@@ -123,8 +123,9 @@ export default class Notifications extends React.Component {
     } 
     noti.push(newNotification);
     sessionData.notifications = noti;
-
-    setGlobal({ sessionData });
+    const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+    thisApp.notifications = noti;
+    setGlobal({ sessionData, apps });
 
     //Now we update the DB
         // Put the new segment in the analytics data for the user signed in to this
@@ -139,16 +140,13 @@ export default class Notifications extends React.Component {
     //       bar in the app:
     try {
       const anObject = {
-        users: {
-        }
+        apps: []
       }
-      anObject.users[user_id] = {
-        appData: sessionData
-      }
-      anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
-      await putInAnalyticsDataTable(anObject)
+      anObject.apps = apps;
+      anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+      await putInOrganizationDataTable(anObject)
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      setGlobal({ selectedSegment: "Choose...", message: "", notificationName: ""})
+      this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }

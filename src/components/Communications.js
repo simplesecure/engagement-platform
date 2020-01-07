@@ -3,7 +3,7 @@ import StickyNav from './StickyNav';
 import EmailEditor from 'react-email-editor';
 import Modal from 'react-bootstrap/Modal';
 import uuid from 'uuid/v4';
-import { putInAnalyticsDataTable } from '../utils/awsUtils';
+import { putInOrganizationDataTable } from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
 
 export default class Communications extends React.Component {
@@ -14,69 +14,104 @@ export default class Communications extends React.Component {
       selectedSegment: "Choose...", 
       selectedTemplate: "Choose...", 
       campaignName: "",
-      templateName: ""
+      templateName: "", 
+      templateToUpdate: {}
     }
   }
 
-  saveTemplate = () => {
-    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+  saveTemplate = (temp) => {
+    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { currentTemplates } = sessionData;
     const { templateName } = this.state;
     const templates = currentTemplates ? currentTemplates : [];
-    this.editor.exportHtml(async data => {
-      const { design, html } = data
-      const newTemplate = {
-        id: uuid(), 
-        name: templateName,
-        design, 
-        html
-      }
-      templates.push(newTemplate);
-      sessionData.currentTemplates = templates;
-      setGlobal({ sessionData });
-      this.setState({ show: false });
-      //Now we save to the DB
-    
-      //
-      // TODO: probably want to wait on this to finish and throw a status/activity
-      //       bar in the app:
-      try {
-        const anObject = {
-          users: {
+    if(temp) {
+      this.editor.exportHtml(async data => {
+        const { design, html } = data
+        const thisTemplate = templates.filter(a => a.id === temp.id)[0];
+        thisTemplate.design = design;
+        thisTemplate.html = html;
+
+        sessionData.currentTemplates = templates;
+        const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+        thisApp.currentTemplates = templates;
+  
+        setGlobal({ sessionData, apps });
+        this.setState({ showExisting: false });
+        //Now we save to the DB
+      
+        //
+        // TODO: probably want to wait on this to finish and throw a status/activity
+        //       bar in the app:
+        try {
+          const anObject = {
+            apps: []
           }
+          anObject.apps = apps;
+          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+  
+          await putInOrganizationDataTable(anObject)
+          setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+          setGlobal({ templateName: ""})
+        } catch (suppressedError) {
+          console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
         }
-        anObject.users[user_id] = {
-          appData: sessionData
+      })
+    } else {
+      this.editor.exportHtml(async data => {
+        const { design, html } = data
+        const newTemplate = {
+          id: uuid(), 
+          name: templateName,
+          design, 
+          html
         }
-        anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
-        console.log(anObject);
-        await putInAnalyticsDataTable(anObject)
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-        setGlobal({ templateName: ""})
-      } catch (suppressedError) {
-        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-      }
-    })
+        templates.push(newTemplate);
+        sessionData.currentTemplates = templates;
+        const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+        thisApp.currentTemplates = templates;
+  
+        setGlobal({ sessionData, apps });
+        this.setState({ show: false });
+        //Now we save to the DB
+      
+        //
+        // TODO: probably want to wait on this to finish and throw a status/activity
+        //       bar in the app:
+        try {
+          const anObject = {
+            apps: []
+          }
+          anObject.apps = apps;
+          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+  
+          await putInOrganizationDataTable(anObject)
+          setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+          setGlobal({ templateName: ""})
+        } catch (suppressedError) {
+          console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+        }
+      })
+    }
   }
 
   deleteTemplate = async (temp) => {
-    const { sessionData, user_id, app_id, SESSION_FROM_LOCAL } = this.global;
+    const { sessionData, org_id, apps, SESSION_FROM_LOCAL } = this.global;
     const { currentTemplates } = sessionData;
     const index = currentTemplates.map(a => a.id).indexOf(temp.id);
     if(index > -1) {
       currentTemplates.splice(index, 1);
-      setGlobal({ sessionData });
+      const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+      thisApp.currentTemplates = currentTemplates;
+
+      setGlobal({ sessionData, apps });
       //Update in DB
       try {
         const anObject = {
-          users: {
-          }
+          apps: []
         }
-        anObject.users[user_id] = {
-          appData: sessionData
-        }
-        anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
-        await putInAnalyticsDataTable(anObject)
+        anObject.apps = apps;
+        anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+        await putInOrganizationDataTable(anObject)
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
       } catch (suppressedError) {
         console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
@@ -87,8 +122,18 @@ export default class Communications extends React.Component {
     }
   }
 
+  loadTemplate = async (temp) => {
+    await this.setState({ templateToUpdate: temp, templateName: temp.name });
+    this.setState({ showExisting: true });
+  }
+
+  onLoad = () => {
+    const { templateToUpdate } = this.state;
+    this.editor.loadDesign(templateToUpdate.design);
+  }
+
   sendCampaign = () => {
-    const { sessionData, simple } = this.global;
+    const { sessionData, simple, apps } = this.global;
     const { selectedSegment, selectedTemplate, campaignName } = this.state;
     const { campaigns } = sessionData;
     const camps = campaigns ? campaigns : [];
@@ -103,11 +148,16 @@ export default class Communications extends React.Component {
     simple.processData('email messaging', newCampaign);
     camps.push(newCampaign);
     sessionData.campaigns = camps;
+    const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+    thisApp.campaigns = camps;
+
+    //TODO: Actually send the campaign
+    // On a successful send, we can then update the db to reflect the sent campaigns and set this.state.
     setGlobal({ sessionData, campaignName: "", selectedTemplate: "Choose...", selectedSegment: "Choose..." })
   }
 
   render() {
-    const { show } = this.state;
+    const { show, templateToUpdate, showExisting } = this.state;
     const { sessionData } = this.global;
     const { selectedSegment, selectedTemplate, templateName, campaignName } = this.state;
     const { campaigns, currentSegments, currentTemplates } = sessionData;
@@ -150,7 +200,7 @@ export default class Communications extends React.Component {
                 {
                   currentTemplates.map(temp => {
                     return (
-                    <li className="clickable card" key={temp.id}><span className="card-body standard-tile">{temp.name}</span><span onClick={() => this.deleteTemplate(temp)} className="right clickable text-danger">Remove</span></li>
+                    <li className="clickable card" key={temp.id}><span onClick={() => this.loadTemplate(temp)} className="card-body standard-tile">{temp.name}</span><span onClick={() => this.deleteTemplate(temp)} className="right clickable text-danger">Remove</span></li>
                     )
                   })
                 }
@@ -204,6 +254,7 @@ export default class Communications extends React.Component {
             </div>
           </div>
         </div>
+        {/*CREATE NEW TEMPLATE*/}
         <Modal className="email-modal" show={show} onHide={() => this.setState({ show: false })}>
           <Modal.Header closeButton>
             <Modal.Title>Create a New Email Template</Modal.Title>
@@ -222,6 +273,30 @@ export default class Communications extends React.Component {
               Cancel
             </button>
             <button className="btn btn-primary" onClick={this.saveTemplate}>
+              Save
+            </button>
+          </Modal.Footer>
+        </Modal>
+        
+        {/*UPDATE OR VIEW EXISTING TEMPLATE*/}
+        <Modal className="email-modal" show={showExisting} onHide={() => this.setState({ showExisting: false })}>
+          <Modal.Header closeButton>
+            <Modal.Title>Create a New Email Template</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p>Give your template a name</p>
+            <input value={templateName} onChange={(e) => this.setState({ templateName: e.target.value })} type="text" className="form-control template-name" id="tileName" placeholder="Give it a name" />                           
+            <EmailEditor
+              ref={editor => this.editor = editor}
+              onLoad={this.onLoad}
+              // onDesignLoad={this.onDesignLoad}
+            />
+          </Modal.Body>
+          <Modal.Footer>
+            <button className="btn btn-secondary" onClick={() => this.setState({ showExisting: false })}>
+              Cancel
+            </button>
+            <button className="btn btn-primary" onClick={() => this.saveTemplate(templateToUpdate)}>
               Save
             </button>
           </Modal.Footer>

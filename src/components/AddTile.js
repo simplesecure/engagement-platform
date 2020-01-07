@@ -2,7 +2,7 @@ import React, { setGlobal } from 'reactn';
 import StickyNav from './StickyNav';
 import uuid from 'uuid/v4'
 import { setLocalStorage } from '../utils/misc';
-import { putInAnalyticsDataTable } from '../utils/awsUtils';
+import { putInOrganizationDataTable } from '../utils/awsUtils';
 
 export default class AddTile extends React.Component {
   constructor(props) {
@@ -14,7 +14,7 @@ export default class AddTile extends React.Component {
   }
 
   addTile = async () => {
-    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id, simple } = this.global;
+    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { tileName, selectedSegment } = this.state;
     const { currentTiles } = sessionData;
     const tiles = currentTiles ? currentTiles : [];
@@ -25,7 +25,10 @@ export default class AddTile extends React.Component {
     }
     tiles.push(newTile);
     sessionData.currentTiles = tiles;
-    setGlobal({ sessionData });
+    const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+    thisApp.currentTiles = tiles;
+
+    setGlobal({ sessionData, apps });
     //Now we update the DB
     // Put the new segment in the analytics data for the user signed in to this
     // id:
@@ -40,14 +43,12 @@ export default class AddTile extends React.Component {
     //       bar in the app:
     try {
       const anObject = {
-        users: {
-        }
+        apps: []
       }
-      anObject.users[user_id] = {
-        appData: sessionData
-      }
-      anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
-      await putInAnalyticsDataTable(anObject)
+      anObject.apps = apps;
+      anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+      await putInOrganizationDataTable(anObject)
+      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }
@@ -58,23 +59,22 @@ export default class AddTile extends React.Component {
   }
 
   deleteTile = async (name) => {
-    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { currentTiles } = sessionData;
     const index = currentTiles.map(a => a.name).indexOf(name);
     if(index > -1) {
       currentTiles.splice(index, 1);
-      setGlobal({ sessionData });
+      const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+      thisApp.currentTiles = currentTiles;
+      setGlobal({ sessionData, apps });
       //Update in DB
       try {
         const anObject = {
-          users: {
-          }
+          apps: []
         }
-        anObject.users[user_id] = {
-          appData: sessionData
-        }
-        anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
-        await putInAnalyticsDataTable(anObject)
+        anObject.apps = apps;
+        anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+        await putInOrganizationDataTable(anObject)
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
       } catch (suppressedError) {
         console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
@@ -90,7 +90,7 @@ export default class AddTile extends React.Component {
     const { selectedSegment, tileName } = this.state;
     const { currentTiles, currentSegments } = sessionData;
     const segments = currentSegments ? currentSegments : [];
-    console.log(currentTiles);
+
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />

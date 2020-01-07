@@ -32,6 +32,7 @@ export default class Home extends React.Component {
     const { id } = sessionData;
     console.log("LOADING: ", loading);
     console.log("SIGNED IN: ", signedIn);
+    console.log("ID: ", id);
     return (
       <div>
         {
