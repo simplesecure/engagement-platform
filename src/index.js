@@ -23,7 +23,7 @@ setGlobal({
   signedIn: simple.getUserData() ? true : false, 
   sessionData: {},
   user_id: "", 
-  app_id: "" 
+  app_id: simple.config.appId 
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

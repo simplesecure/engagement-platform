@@ -10,7 +10,7 @@ import { setLocalStorage } from './utils/misc';
 export default class App extends React.Component {
 
   async componentDidMount() {
-    const { sessionData, simple, SESSION_FROM_LOCAL, signedIn } = this.global;
+    const { sessionData, simple, SESSION_FROM_LOCAL, signedIn, app_id } = this.global;
     let currentSegments = [];
     //Check local storage for quick loading first
     const sessionFromLocal = localStorage.getItem(SESSION_FROM_LOCAL);
@@ -19,10 +19,12 @@ export default class App extends React.Component {
     } 
 
     if(signedIn) {
+      //Need to check if the user is part of an organization from the org table
       const user_id = simple.getUserData().wallet.ethAddr;
-      const app_id = simple.config.appId;
+      
       //regardless of whether there is data in local storage, we need to fetch from db
-      const appData = await getFromAnalyticsDataTable(user_id);
+      const appData = await getFromAnalyticsDataTable(app_id);
+      console.log(appData);
       setGlobal({ user_id, app_id });
       if(appData && appData.Item) {
         setGlobal({ sessionData: appData.Item.users[user_id].appData });

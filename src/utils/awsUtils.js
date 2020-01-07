@@ -64,3 +64,15 @@ export async function putInAnalyticsDataTable(anObject) {
 export async function updateInAnalyticsDataTable(anObject) {
   return updateInDb(process.env.REACT_APP_AD_TABLE, process.env.REACT_APP_AD_TABLE_PK, anObject)
 }
+
+export async function getFromOrganizationDataTable(aKeyValue) {
+  return getFromDb(process.env.REACT_APP_OD_TABLE, process.env.REACT_APP_OD_TABLE_PK, aKeyValue)
+}
+
+export async function putInOrganizationDataTable(anObject) {
+  return putInDb(process.env.REACT_APP_OD_TABLE, anObject)
+}
+
+export async function updateInOrganizationDataTable(anObject) {
+  return updateInDb(process.env.REACT_APP_OD_TABLE, process.env.REACT_APP_OD_TABLE_PK, anObject)
+}

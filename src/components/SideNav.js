@@ -49,7 +49,7 @@ export default class SideNav extends React.Component {
             <li className="nav-item">
               <Link onClick={() => this.setState({ pathname: '/new-tile' })} className={`nav-link ${pathname.includes('/new-tile') ? "active" : ""}`} to="/new-tile">
                 <i className="material-icons">note_add</i>
-                <span>Add Dashboard Tile</span>
+                <span>Customize</span>
               </Link>
             </li>
             <li className="nav-item">

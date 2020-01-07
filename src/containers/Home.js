@@ -10,6 +10,7 @@ import Communications from '../components/Communications';
 import Account from '../components/Account';
 import Segments from '../components/Segments';
 import Message from '../components/Message';
+import Projects from '../components/Projects';
 
 export default class Home extends React.Component {
   renderRoute(route) {
@@ -28,11 +29,12 @@ export default class Home extends React.Component {
   }
   render() {
     const { signedIn, sessionData } = this.global;
+    const { appIds } = sessionData;
+    const apps = appIds ? appIds : [];
     return (
-      
       <div>
         {
-          signedIn ?
+          signedIn && apps.length > 0 ?
           <BrowserRouter>
             <div className="container-fluid">
               <div className="row">
@@ -48,6 +50,7 @@ export default class Home extends React.Component {
                 <Route exact path='/notifications' component={Notifications} />
                 <Route path='/account' component={Account} />
                 <Route path='/communications' component={Communications} />
+                <Route path='/projects' component={Projects} />
                 {/*
                   //This is the component that will render the in-app notifications
                 */}
@@ -56,6 +59,15 @@ export default class Home extends React.Component {
             </div>
           </BrowserRouter>
            : 
+           signedIn && apps.length === 0 ? 
+           <BrowserRouter>
+            <div className="container-fluid">
+              <div className="row">
+                <SideNav />
+                <Projects />
+              </div>
+              </div>
+            </BrowserRouter> : 
            !window.location.href.includes('notifications/appId') ? 
           <Auth /> : 
           <BrowserRouter>
