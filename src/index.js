@@ -7,9 +7,7 @@ import SimpleID from 'simpleid-js-sdk';
 const simple = new SimpleID({
   appOrigin: window.location.origin,
   appName: "Demo Dashboard",
-  scopes: ['email'],
-  appId: "123456",
-  devId: "justin.email.email@email.com",
+  appId: "00000000000000000000000000000000",
   development: true, 
   network: 'ropsten', 
   localRPCServer: 'http://localhost:7545'
@@ -17,13 +15,15 @@ const simple = new SimpleID({
 const SESSION_FROM_LOCAL = 'sessionData';
 
 setGlobal({ 
+  loading: true,
   SESSION_FROM_LOCAL,
   simple, 
   appConnected: false, 
   signedIn: simple.getUserData() ? true : false, 
   sessionData: {},
   user_id: "", 
-  app_id: simple.config.appId 
+  app_id: simple.config.appId, 
+  apps: [] 
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

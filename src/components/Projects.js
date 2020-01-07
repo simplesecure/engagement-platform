@@ -3,7 +3,7 @@ import { Redirect } from 'react-router-dom';
 import StickyNav from './StickyNav';
 import Modal from 'react-bootstrap/Modal'
 import uuid from 'uuid/v4';
-import { putInAnalyticsDataTable } from '../utils/awsUtils';
+import { putInOrganizationDataTable } from '../utils/awsUtils';
 
 export default class Projects extends React.Component {
   constructor(props) {
@@ -16,42 +16,31 @@ export default class Projects extends React.Component {
   }
 
   createProject = async () => {
-    const { sessionData, user_id, app_id } = this.global;
-    const { appIds } = sessionData;
-    const apps = appIds ? appIds : [];
+    const { apps, org_id } = this.global;
     const { projectName } = this.state;
     const newProject = {
       id: uuid(), 
       dateCreated: new Date(), 
       projectName
     }
-    console.log(newProject);
     apps.push(newProject);
-    sessionData.appIds = apps;
-    setGlobal({ sessionData, projectName: "" });
+    setGlobal({ sessionData: apps[0], apps });
+    this.setState({ projectName: "" });
     //Now update the DB
     try {
       const anObject = {
-        // keyValue: 'segments', 
-        // primaryKey: app_id,
-        // userKey: user_id,
-        users: {
-        }
+        apps: []
       }
-      anObject.users[user_id] = {
-        appData: sessionData
-      }
-      anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
-      await putInAnalyticsDataTable(anObject)
+      anObject.apps.push(newProject);
+      anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id;
+      await putInOrganizationDataTable(anObject);  
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }
   }
 
   deleteProject = async (proj, confirm) => {
-    const { sessionData, user_id, app_id } = this.global;
-    const { appIds } = sessionData;
-    const apps = appIds ? appIds : [];
+    const { apps, org_id, app_id } = this.global;
   
     if(confirm === false) {
       this.setState({ proj, show: true });
@@ -59,23 +48,16 @@ export default class Projects extends React.Component {
       const index = apps.map(a => a.id).indexOf(proj.id);
       if(index > -1) {
         apps.splice(index, 1);
-        sessionData.appIds = apps;
-        setGlobal({ sessionData });
+        const data = apps[0];
+        setGlobal({ sessionData: data ? data : [], apps });
         this.setState({ show: false });
         //Now we update in the DB
         try {
           const anObject = {
-            // keyValue: 'segments', 
-            // primaryKey: app_id,
-            // userKey: user_id,
-            users: {
-            }
+            apps
           }
-          anObject.users[user_id] = {
-            appData: sessionData
-          }
-          anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
-          await putInAnalyticsDataTable(anObject)
+          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+          await putInOrganizationDataTable(anObject)
         } catch (suppressedError) {
           console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
         }
@@ -90,10 +72,10 @@ export default class Projects extends React.Component {
   }
 
   render() {
-    const { sessionData } = this.global;
+    const { apps } = this.global;
+    console.log(apps);
     const { projectName, proj, show } = this.state;
-    const { appIds } = sessionData;
-    const apps = appIds ? appIds : [];
+    const applications = apps ? apps : [];
     if (!window.location.href.includes('/projects')) {
       return <Redirect to='/projects' />
     }
@@ -103,7 +85,7 @@ export default class Projects extends React.Component {
         <StickyNav />
         <div className="main-content-container container-fluid px-4">
           {
-            apps ?
+            applications ?
             <div className="page-header row no-gutters py-4">
               <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
                 <span className="text-uppercase page-subtitle">Projects</span>
@@ -120,12 +102,12 @@ export default class Projects extends React.Component {
             <div className="row">
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
                 {
-                  apps.length > 0 ? 
+                  applications.length > 0 ? 
                   <div>
                     <h5>Projects</h5>
                     <ul className="tile-list">
                     {
-                      apps.map(app => {
+                      applications.map(app => {
                         return (
                           <li className="clickable card text-center" key={app.id}>
                             <span className="card-body standard-tile project-title">{app.projectName}</span><br/>
@@ -139,7 +121,7 @@ export default class Projects extends React.Component {
                   </div> : 
                   <div>
                     <h5>No Projects Created Yet</h5>
-                    <p>Add a new project to get started.</p>
+                    <p>Add a new project to get started. Once you do and once your app is integrated, you'll be able use SimpleID.</p>
                   </div>
                 }
               </div>

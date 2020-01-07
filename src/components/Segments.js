@@ -4,7 +4,7 @@ import Modal from 'react-bootstrap/Modal';
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
 import DemoTable from './DemoTable';
-import { putInAnalyticsDataTable, updateInAnalyticsDataTable } from '../utils/awsUtils.js';
+import { putInOrganizationDataTable } from '../utils/awsUtils.js';
 import filters from '../utils/filterOptions.json';
 import DatePicker from 'react-date-picker';
 import uuid from 'uuid/v4';
@@ -53,7 +53,7 @@ export default class Segments extends React.Component {
             appData: sessionData
           }
           anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
-          await putInAnalyticsDataTable(anObject)
+          //await putInAnalyticsDataTable(anObject)
         } catch (suppressedError) {
           console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
         }
@@ -73,7 +73,7 @@ export default class Segments extends React.Component {
   }
 
   createSegment = async () => {
-    const { sessionData, SESSION_FROM_LOCAL, user_id, app_id } = this.global;
+    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { currentSegments } = sessionData;
     const { newSegName, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter } = this.state;
     const segments = currentSegments ? currentSegments : [];
@@ -108,7 +108,9 @@ export default class Segments extends React.Component {
 
     segments.push(segmentCriteria);
     sessionData.currentSegments = segments;
-    setGlobal({ sessionData });
+    const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+    thisApp.currentSegments = segments;
+    setGlobal({ sessionData, apps });
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     // Put the new segment in the analytics data for the user signed in to this
     // id:
@@ -116,25 +118,20 @@ export default class Segments extends React.Component {
     //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
     //      A segment will be stored in the DB under the primary key 'app_id' in
     //      the appropriate user_id's segment storage:
-    //
-    //
+    
+    
     // TODO: probably want to wait on this to finish and throw a status/activity
     //       bar in the app:
     try {
       const anObject = {
-        users: {
-        }
+        apps: []
       }
-      anObject.users[user_id] = {
-        appData: sessionData
-      }
-      anObject[process.env.REACT_APP_AD_TABLE_PK] = app_id
-      await putInAnalyticsDataTable(anObject)
+      anObject.apps = apps;
+      anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+      await putInOrganizationDataTable(anObject)
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }
-
-    //setGlobal({ currentSegments });
     this.setState({ newSegName: "", filterType: "Choose...", contractAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 });
   }
 

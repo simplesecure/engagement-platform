@@ -28,13 +28,20 @@ export default class Home extends React.Component {
     }
   }
   render() {
-    const { signedIn, sessionData } = this.global;
-    const { appIds } = sessionData;
-    const apps = appIds ? appIds : [];
+    const { signedIn, sessionData, loading } = this.global;
+    const { id } = sessionData;
+    console.log("LOADING: ", loading);
+    console.log("SIGNED IN: ", signedIn);
     return (
       <div>
         {
-          signedIn && apps.length > 0 ?
+          loading ? 
+          <div>
+            <div className="container-fluid">
+              <div className="row">LOADING</div>
+            </div>
+          </div> : 
+          signedIn && id && !loading ?
           <BrowserRouter>
             <div className="container-fluid">
               <div className="row">
@@ -59,7 +66,7 @@ export default class Home extends React.Component {
             </div>
           </BrowserRouter>
            : 
-           signedIn && apps.length === 0 ? 
+           signedIn && !id ? 
            <BrowserRouter>
             <div className="container-fluid">
               <div className="row">
