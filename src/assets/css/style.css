@@ -125,3 +125,17 @@ section {
 #editor iframe {
   min-width: 850px!important;
 }
+
+.message-body {
+  padding: 15px;
+}
+
+.message-body div p, .message-body p {
+  font-size: 16px!important;
+  margin-bottom: 10px!important;
+}
+
+.message-body h2 {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
