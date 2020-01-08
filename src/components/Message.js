@@ -8,8 +8,8 @@ export default class Message extends React.Component {
     }
   }
   componentDidMount() {
-    const appId = window.location.href.split('/appId=')[1].split('&')[0];
-    const messageId = window.location.href.split('/appId=')[1].split('messageId=')[1]
+    //const appId = window.location.href.split('/appId=')[1].split('&')[0];
+    //const messageId = window.location.href.split('/appId=')[1].split('messageId=')[1]
     document.body.style.background = "#fff";
   }
 

@@ -23,7 +23,8 @@ setGlobal({
   sessionData: {},
   user_id: "", 
   app_id: simple.config.appId, 
-  apps: [] 
+  apps: [], 
+  showDemo: true 
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

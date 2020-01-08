@@ -31,10 +31,13 @@ export default class App extends React.Component {
         const currentAppId = appData.Item.apps[0].id;
         const data = appData.Item.apps.filter(a => a.id === currentAppId)[0];
         setGlobal({ loading: false, currentAppId, apps: appData.Item.apps, sessionData: data });
+        //This needs to be async/await
         simple.processData('segment data', currentSegments);
         //TODO: When this returns, need to update currentSegments with user counts
+
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
       } else {
+        setGlobal({ loading: false });
         //If there's nothing returned from the DB but something is still in local storage, what do we do?
         //TODO: should we remove from localstorage here?
       }

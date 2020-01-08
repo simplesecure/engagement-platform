@@ -24,9 +24,9 @@ export default class SideNav extends React.Component {
                 <img id="main-logo" className="d-inline-block align-top mr-1" style={{maxWidth: "25px"}} src={require('../assets/img/logo.png')} alt="SimpleID Dashboard" />                
               </div>
             </Link>
-            <a className="toggle-sidebar d-sm-inline d-md-none d-lg-none">
+            <button className="a-el-fix toggle-sidebar d-sm-inline d-md-none d-lg-none">
               <i className="material-icons">&#xE5C4;</i>
-            </a>
+            </button>
           </nav>
         </div>
         <form action="#" className="main-sidebar__search w-100 border-right d-sm-flex d-md-none d-lg-none">

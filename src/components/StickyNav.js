@@ -17,14 +17,14 @@ export default class StickyNav extends React.Component {
           </form>
           <ul className="navbar-nav border-left flex-row ">
             <li className="nav-item border-right dropdown notifications">
-              <a className="nav-link nav-link-icon text-center" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <button className="a-el-fix nav-link nav-link-icon text-center" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <div className="nav-link-icon__wrapper">
                   <i className="material-icons">&#xE7F4;</i>
                   <span className="badge badge-pill badge-danger">2</span>
                 </div>
-              </a>
+              </button>
               <div className="dropdown-menu dropdown-menu-small" aria-labelledby="dropdownMenuLink">
-                <a className="dropdown-item" href="#">
+                <button className="a-el-fix dropdown-item">
                   <div className="notification__icon-wrapper">
                     <div className="notification__icon">
                       <i className="material-icons">&#xE6E1;</i>
@@ -35,8 +35,8 @@ export default class StickyNav extends React.Component {
                     <p>Your website’s active users count increased by
                       <span className="text-success text-semibold"> 12.4%</span> in the last week.</p>
                   </div>
-                </a>
-                <a className="dropdown-item" href="#">
+                </button>
+                <button className="a-el-fix dropdown-item">
                   <div className="notification__icon-wrapper">
                     <div className="notification__icon">
                       <i className="material-icons">email</i>
@@ -47,28 +47,28 @@ export default class StickyNav extends React.Component {
                     <p>Last week, you sent 
                       <span className="text-danger text-semibold"> 5.52%</span> fewer emails or notifications to your users.</p>
                   </div>
-                </a>
-                <a className="dropdown-item notification__all text-center" href="#"> View all Notifications </a>
+                </button>
+                <button className="a-el-fix dropdown-item notification__all text-center"> View all Notifications </button>
               </div>
             </li>
             <li className="nav-item dropdown">
-              <a className="nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+              <button className="a-el-fix nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <img className="user-avatar rounded-circle mr-2" src={require('../assets/img/female-2.jpg')} alt="User Avatar" />
                 <span className="d-none d-md-inline-block">Sierra Brooks</span>
-              </a>
+              </button>
               <div className="dropdown-menu dropdown-menu-small">
-                <a className="dropdown-item" href="user-profile-lite.html">
-                  <i className="material-icons">&#xE7FD;</i> Account</a>
+                <button className="a-el-fix dropdown-item">
+                  <i className="material-icons">&#xE7FD;</i> Account</button>
                 <div className="dropdown-divider"></div>
-                <a onClick={() => simple.signOut()} className="dropdown-item text-danger" href="#">
-                  <i className="material-icons text-danger">&#xE879;</i> Logout </a>
+                <button onClick={() => simple.signOut()} className="a-el-fix dropdown-item text-danger">
+                  <i className="material-icons text-danger">&#xE879;</i> Logout </button>
               </div>
             </li>
           </ul>
           <nav className="nav">
-            <a href="#" className="nav-link nav-link-icon toggle-sidebar d-md-inline d-lg-none text-center border-left" data-toggle="collapse" data-target=".header-navbar" aria-expanded="false" aria-controls="header-navbar">
+            <button className="a-el-fix nav-link nav-link-icon toggle-sidebar d-md-inline d-lg-none text-center border-left" data-toggle="collapse" data-target=".header-navbar" aria-expanded="false" aria-controls="header-navbar">
               <i className="material-icons">&#xE5D2;</i>
-            </a>
+            </button>
           </nav>
         </nav>
       </div>

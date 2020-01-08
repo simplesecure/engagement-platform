@@ -143,3 +143,9 @@ section {
 .project-title {
   font-size: 20px!important;
 }
+
+.a-el-fix {
+  background: none;
+  border: none;
+  color: #007bff;
+}

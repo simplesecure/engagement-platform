@@ -20,6 +20,7 @@ export default class Communications extends React.Component {
   }
 
   saveTemplate = (temp) => {
+    console.log(temp);
     const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { currentTemplates } = sessionData;
     const { templateName } = this.state;
@@ -272,7 +273,7 @@ export default class Communications extends React.Component {
             <button className="btn btn-secondary" onClick={() => this.setState({ show: false })}>
               Cancel
             </button>
-            <button className="btn btn-primary" onClick={this.saveTemplate}>
+            <button className="btn btn-primary" onClick={() => this.saveTemplate(null)}>
               Save
             </button>
           </Modal.Footer>

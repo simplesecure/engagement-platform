@@ -2,7 +2,7 @@ import React from 'reactn';
 
 export default class Auth extends React.Component {
   handleSignIn = async (e) => {
-    const { simple, signedIn } = this.global;
+    const { simple } = this.global;
     e.preventDefault();
     simple.signUserIn();
   
