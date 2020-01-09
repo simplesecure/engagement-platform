@@ -24,6 +24,7 @@ setGlobal({
   user_id: "", 
   app_id: simple.config.appId, 
   apps: [], 
+  selectedProject: {},
   showDemo: true 
 })
 

@@ -1,8 +1,10 @@
 import React from 'reactn';
+import { Link } from 'react-router-dom';
 
 export default class StickyNav extends React.Component {
   render() {
-    const { simple } = this.global;
+    const { simple, apps, sessionData } = this.global;
+    const projects = apps ? apps : [];
     return(
       <div className="main-navbar sticky-top bg-white">
         <nav className="navbar align-items-stretch navbar-light flex-md-nowrap p-0">
@@ -51,14 +53,51 @@ export default class StickyNav extends React.Component {
                 <button className="a-el-fix dropdown-item notification__all text-center"> View all Notifications </button>
               </div>
             </li>
+            {
+              projects.length > 0 ? 
+              <li className="nav-item dropdown border-right">
+                <button className="a-el-fix project-drop nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <span className="d-md-inline-block">Current Project: {sessionData.projectName}</span>
+                </button>
+                <div className="dropdown-menu dropdown-menu-small">
+                  {
+                    apps.length > 1 ? 
+                    <div>
+                      { 
+                        apps.map(app => {
+                        return (
+                          <button className="a-el-fix dropdown-item">
+                            <i className="material-icons">web</i> {app.projectName}
+                          </button>
+                        )
+                        }) 
+                      }
+                      <div className="dropdown-divider"></div>
+                      <Link to='/projects'><button className="a-el-fix dropdown-item">
+                        <i className="material-icons">web</i> Add or View Projects</button></Link>
+                      </div> : 
+                    <div>
+                    <Link to='/projects'><button className="a-el-fix dropdown-item">
+                      <i className="material-icons">web</i> Add or View Projects</button></Link>
+                    </div>
+                  }
+                  
+                </div>
+              </li> : 
+              <li className="nav-item dropdown border-right">
+                <Link to='/projects'><button className="a-el-fix project-drop nav-link text-nowrap px-3" aria-haspopup="true" aria-expanded="false">
+                  <span className="d-md-inline-block">Create a Project</span>
+                </button></Link>
+              </li>
+            }
+
             <li className="nav-item dropdown">
-              <button className="a-el-fix nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <img className="user-avatar rounded-circle mr-2" src={require('../assets/img/female-2.jpg')} alt="User Avatar" />
-                <span className="d-none d-md-inline-block">Sierra Brooks</span>
+              <button className="a-el-fix project-drop nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">                
+                <span className="d-none d-md-inline-block">{simple.getUserData() && simple.getUserData().wallet ? `${simple.getUserData().wallet.ethAddr.substring(0, 8)}...` : ""}</span>
               </button>
               <div className="dropdown-menu dropdown-menu-small">
-                <button className="a-el-fix dropdown-item">
-                  <i className="material-icons">&#xE7FD;</i> Account</button>
+                <Link to="/account"><button className="a-el-fix dropdown-item">
+                  <i className="material-icons">&#xE7FD;</i> Account</button></Link>
                 <div className="dropdown-divider"></div>
                 <button onClick={() => simple.signOut()} className="a-el-fix dropdown-item text-danger">
                   <i className="material-icons text-danger">&#xE879;</i> Logout </button>

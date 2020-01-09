@@ -149,3 +149,11 @@ section {
   border: none;
   color: #007bff;
 }
+
+.project-drop {
+  margin-top: 10px!important;
+}
+
+.account-card {
+  font-size: 14px;
+}

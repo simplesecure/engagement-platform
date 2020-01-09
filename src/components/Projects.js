@@ -114,9 +114,9 @@ export default class Projects extends React.Component {
                     {
                       applications.map(app => {
                         return (
-                          <li className="clickable card text-center" key={app.id}>
+                          <li className="card text-center" key={app.id}>
                             <span className="card-body standard-tile project-title">{app.projectName}</span><br/>
-                            <span className="card-body standard-tile">{app.id}</span>
+                            <span className="card-body standard-tile">App ID: <br/>{app.id}</span>
                             <span onClick={() => this.deleteProject(app, false)} className="right clickable text-danger">Delete</span>
                           </li>
                           )
@@ -132,15 +132,29 @@ export default class Projects extends React.Component {
               </div>
 
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-                <h5>Add a Project</h5>
-                <div className="form-group col-md-12">
-                  <label htmlFor="inputSeg">First, Give Your Project a Name</label>
-                  <input type="text" value={projectName} onChange={(e) => this.setState({ projectName: e.target.value })} class="form-control" id="tileName" placeholder="Give it a name" />                           
-                </div>
-                <div className="form-group col-md-12">
-                  <label htmlFor="inputSeg">Then, Create It</label><br/>
-                  <button onClick={this.createProject} className="btn btn-primary">Create Project</button>
-                </div>
+
+                {
+                  applications.length === 1 ? 
+                  <div>
+                    <h5>Upgrade to Create More Projects</h5>
+                    <div className="form-group col-md-12">
+                      <label htmlFor="inputSeg">Please contact us to discuss upgrading</label><br/>
+                      <a href="mailto:hello@simpleid.xyz"><button className="btn btn-primary">Contact Us</button></a>
+                    </div> 
+                  </div> : 
+                  <div>
+                    <h5>Add a Project</h5>
+                    <div className="form-group col-md-12">
+                      <label htmlFor="inputSeg">First, Give Your Project a Name</label>
+                      <input type="text" value={projectName} onChange={(e) => this.setState({ projectName: e.target.value })} class="form-control" id="tileName" placeholder="Give it a name" />                           
+                    </div>
+                    <div className="form-group col-md-12">
+                      <label htmlFor="inputSeg">Then, Create It</label><br/>
+                      <button onClick={this.createProject} className="btn btn-primary">Create Project</button>
+                    </div>
+                  </div>
+                }
+                
               </div>
 
               <Modal show={show} onHide={this.closeModal}>
