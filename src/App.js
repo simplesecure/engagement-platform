@@ -31,8 +31,14 @@ export default class App extends React.Component {
         const currentAppId = appData.Item.apps[0].id;
         const data = appData.Item.apps.filter(a => a.id === currentAppId)[0];
         setGlobal({ loading: false, currentAppId, apps: appData.Item.apps, sessionData: data });
-        //This needs to be async/await
-        simple.processData('segment data', currentSegments);
+        
+        //Check what pieces of data need to be processed: 
+        if(data.currentSegments) {
+          currentSegments = data.currentSegments;
+          const segmentData = await simple.processData('segment data', currentSegments);
+          console.log(segmentData);
+        } 
+
         //TODO: When this returns, need to update currentSegments with user counts
 
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
