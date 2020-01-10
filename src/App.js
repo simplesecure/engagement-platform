@@ -17,9 +17,12 @@ export default class App extends React.Component {
     const sessionFromLocal = localStorage.getItem(SESSION_FROM_LOCAL);
     if(sessionFromLocal) {
       setGlobal({ sessionData: JSON.parse(sessionFromLocal), loading: false });
-    } 
+    }
 
     if(signedIn) {
+      console.log('SimpleID user data')
+      console.log(simple.getUserData())
+      
       //Need to check if the user is part of an organization from the org table
       const user_id = simple.getUserData().wallet.ethAddr;
       const org_id = simple.getUserData().orgId.org_id;
@@ -31,13 +34,13 @@ export default class App extends React.Component {
         const currentAppId = appData.Item.apps[0].id;
         const data = appData.Item.apps.filter(a => a.id === currentAppId)[0];
         setGlobal({ loading: false, currentAppId, apps: appData.Item.apps, sessionData: data });
-        
-        //Check what pieces of data need to be processed: 
+
+        //Check what pieces of data need to be processed:
         if(data.currentSegments) {
           currentSegments = data.currentSegments;
           const segmentData = await simple.processData('segment data', currentSegments);
           console.log(segmentData);
-        } 
+        }
 
         //TODO: When this returns, need to update currentSegments with user counts
 
@@ -50,9 +53,9 @@ export default class App extends React.Component {
     } else {
       setGlobal({ loading: false });
     }
-    
+
   }
-  
+
   render() {
     return (
       <Home />

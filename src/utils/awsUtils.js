@@ -54,26 +54,32 @@ async function updateInDb(aTable, aKeyName, anObject) {
 //       adjacent row elements or do updates)
 //
 export async function getFromAnalyticsDataTable(aKeyValue) {
+  console.log(`DBG: getFromAnalyticsDataTable ${aKeyValue}`)
   return getFromDb(
     process.env.REACT_APP_AD_TABLE, process.env.REACT_APP_AD_TABLE_PK, aKeyValue)
 }
 
 export async function putInAnalyticsDataTable(anObject) {
+  console.log(`DBG: putInAnalyticsDataTable`)
   return putInDb(process.env.REACT_APP_AD_TABLE, anObject)
 }
 
 export async function updateInAnalyticsDataTable(anObject) {
+  console.log(`DBG: updateInAnalyticsDataTable`)
   return updateInDb(process.env.REACT_APP_AD_TABLE, process.env.REACT_APP_AD_TABLE_PK, anObject)
 }
 
 export async function getFromOrganizationDataTable(aKeyValue) {
+  console.log(`DBG: getFromOrganizationDataTable ${aKeyValue}`)
   return getFromDb(process.env.REACT_APP_OD_TABLE, process.env.REACT_APP_OD_TABLE_PK, aKeyValue)
 }
 
 export async function putInOrganizationDataTable(anObject) {
+  console.log(`DBG: putInOrganizationDataTable`)
   return putInDb(process.env.REACT_APP_OD_TABLE, anObject)
 }
 
 export async function updateInOrganizationDataTable(anObject) {
+  console.log(`DBG: updateInOrganizationDataTable`)
   return updateInDb(process.env.REACT_APP_OD_TABLE, process.env.REACT_APP_OD_TABLE_PK, anObject)
 }
