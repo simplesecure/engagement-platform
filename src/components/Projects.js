@@ -57,7 +57,7 @@ export default class Projects extends React.Component {
         app_id: newProject.id,
         org_id: org_id,
         public_key: 'TODO',
-        analyics: {},
+        analytics: {},
       }
 
       await putInAnalyticsDataTable(walletAnalyticsDataRow)

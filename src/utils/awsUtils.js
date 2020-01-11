@@ -50,7 +50,7 @@ async function updateInDb(aTable, aKeyName, anObject) {
 }
 
 // TODO: Expand these accessors to be more functional (i.e. get specific items
-//       from the analyics table as needed, put new items in that don't affect
+//       from the analytics table as needed, put new items in that don't affect
 //       adjacent row elements or do updates)
 //
 export async function getFromAnalyticsDataTable(aKeyValue) {
