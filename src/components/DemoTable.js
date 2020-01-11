@@ -4,6 +4,9 @@ import Nav from 'react-bootstrap/Nav';
 
 export default class DemoTable extends React.Component {
   render() {
+    const { seg } = this.props;
+    console.log(seg);
+    let users = seg.users ? seg.users : []
     return (
       <div>
         <Table responsive>
@@ -15,49 +18,21 @@ export default class DemoTable extends React.Component {
               <th>Last Sign In</th>
             </tr>
           </thead>
+
           <tbody>
-            <tr>
-              <td>0xf023...</td>
-              <td>True</td>
-              <td>SimpleID</td>
-              <td>12/20/2019</td>
-            </tr>
-            <tr>
-              <td>0xf023...</td>
-              <td>False</td>
-              <td>Portis</td>
-              <td>12/20/2019</td>
-            </tr>
-            <tr>
-              <td>0xf023...</td>
-              <td>True</td>
-              <td>Metamask</td>
-              <td>12/20/2019</td>
-            </tr>
-            <tr>
-              <td>0xf023...</td>
-              <td>True</td>
-              <td>Fortmatic</td>
-              <td>12/20/2019</td>
-            </tr>
-            <tr>
-              <td>0xf023...</td>
-              <td>False</td>
-              <td>Fortmatic</td>
-              <td>12/20/2019</td>
-            </tr>
-            <tr>
-              <td>0xf023...</td>
-              <td>True</td>
-              <td>SimpleID</td>
-              <td>12/20/2019</td>
-            </tr>
-            <tr>
-              <td>0xf023...</td>
-              <td>True</td>
-              <td>Argent</td>
-              <td>12/20/2019</td>
-            </tr>
+            {
+              //TODO: the users returned here are just addresses right now. Need more info to be included
+              users.map(user => {
+                return (
+                  <tr>
+                    <td title={user}>{user.substring(0,8)}...</td>
+                    <td>True</td>
+                    <td>SimpleID</td>
+                    <td>12/20/2019</td>
+                  </tr>
+                )
+              })
+            }
           </tbody>
         </Table>
         <Nav className="justify-content-center" activeKey="link-0">

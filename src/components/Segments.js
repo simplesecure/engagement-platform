@@ -68,7 +68,7 @@ export default class Segments extends React.Component {
   }
 
   createSegment = async () => {
-    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
+    const { sessionData, SESSION_FROM_LOCAL, org_id, apps, simple } = this.global;
     const { currentSegments } = sessionData;
     const { newSegName, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter } = this.state;
     const segments = currentSegments ? currentSegments : [];
@@ -76,6 +76,7 @@ export default class Segments extends React.Component {
     const segId = uuid();
     //First we set the segment criteria to be stored
     const segmentCriteria = {
+      appId: sessionData.id,
       id: segId,
       name: newSegName, 
       startWithExisting: !allUsers, 
@@ -89,14 +90,28 @@ export default class Segments extends React.Component {
         operatorType, 
         amount
       } : null, 
-      contractAddress: filterToUse.type === "Contract" ? contractAddress : null
+      contractAddress: filterToUse.type === "Contract" ? contractAddress : null, 
+      userCount: null
     }
 
+    console.log(segmentCriteria);
+
     //Now we fetch the actual results
+
     //This state should trigger a UI element showing the segment being created (could take a while)
     setGlobal({ processingSegment: true });
     
     //Here we need to use the iframe to process the segment criteria and return the necessary data
+    const data = await simple.processData('segment', segmentCriteria);
+    console.log("FROM THE ENGAGEMENT APP: ", data);
+    if(data) {
+      if(filterToUse.filter === "Total Transactions") {
+        segmentCriteria.totalTransactions = data;
+      } else {
+        segmentCriteria.userCount = data.length;
+        segmentCriteria.users = data;
+      }
+    }
 
     //Then we store the segment with an empty slot for the user count
     //TODO: we need to also look at showing the wallets and other meta data (see demo app)
@@ -165,12 +180,12 @@ export default class Segments extends React.Component {
                           <Card className="standard-tile">
                             <Card.Header>
                               <Accordion.Toggle as={"li"} variant="link" eventKey="0">
-                                <span className="seg-title">{seg.name}</span><br/><span className="seg-count">{seg.userCount} users</span><span onClick={() => this.deleteSegment(seg, false)} className="right clickable text-danger">Delete</span>
+                                <span className="seg-title">{seg.name}</span><br/><span className="seg-count">{seg.totalTransactions ? seg.totalTransactions : seg.userCount} {seg.totalTransactions ? "transactions" : "users"}</span><span onClick={() => this.deleteSegment(seg, false)} className="right clickable text-danger">Delete</span>
                               </Accordion.Toggle>
                             </Card.Header>
                             <Card.Body>
                               <Accordion.Collapse eventKey="0">
-                                <DemoTable />
+                                <DemoTable seg={seg} />
                               </Accordion.Collapse>
                             </Card.Body>
                           </Card>

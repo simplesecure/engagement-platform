@@ -187,7 +187,7 @@ export default class Notifications extends React.Component {
                 {
                   activeNotifications.map(not => {
                     return (
-                    <li className="clickable card text-center" key={not.id}><span className="card-body standard-tile seg-title">{not.name}</span><span className="seg-name"><strong>Segment:</strong> {currentSegments.filter(a => a.id === not.segmentId)[0].name}</span><span onClick={() => this.makeInactive(not)} className="right clickable text-danger">Make Inactive</span></li>
+                    <li className="clickable card text-center" key={not.id}><span className="card-body standard-tile seg-title">{not.name}</span><span className="seg-name"><strong>Segment:</strong> {currentSegments.filter(a => a.id === not.segmentId)[0] ? currentSegments.filter(a => a.id === not.segmentId)[0].name : ""}</span><span onClick={() => this.makeInactive(not)} className="right clickable text-danger">Make Inactive</span></li>
                     )
                   })
                 }

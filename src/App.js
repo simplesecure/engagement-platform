@@ -12,7 +12,7 @@ export default class App extends React.Component {
   async componentDidMount() {
     const { simple, SESSION_FROM_LOCAL, signedIn } = this.global;
     setGlobal({ loading: true });
-    let currentSegments = [];
+    //let currentSegments = [];
     //Check local storage for quick loading first
     const sessionFromLocal = localStorage.getItem(SESSION_FROM_LOCAL);
     if(sessionFromLocal) {
@@ -37,9 +37,13 @@ export default class App extends React.Component {
 
         //Check what pieces of data need to be processed:
         if(data.currentSegments) {
-          currentSegments = data.currentSegments;
-          const segmentData = await simple.processData('segment data', currentSegments);
-          console.log(segmentData);
+          
+          //TODO: This is terrible, like really bad. Commented out because it breaks the world more than it helps
+          //Just like Prabhaav
+
+          //currentSegments = data.currentSegments;
+          //const segmentData = await simple.processData('segment data', currentSegments);
+          //console.log(segmentData);
         }
 
         //TODO: When this returns, need to update currentSegments with user counts
