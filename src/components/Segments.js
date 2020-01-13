@@ -118,6 +118,7 @@ export default class Segments extends React.Component {
 
     segments.push(segmentCriteria);
     sessionData.currentSegments = segments;
+
     const thisApp = apps.filter(a => a.id === sessionData.id)[0];
     thisApp.currentSegments = segments;
     setGlobal({ sessionData, apps });
@@ -142,6 +143,8 @@ export default class Segments extends React.Component {
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }
+    
+    
     this.setState({ newSegName: "", filterType: "Choose...", contractAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 });
   }
 

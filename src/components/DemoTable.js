@@ -5,7 +5,6 @@ import Nav from 'react-bootstrap/Nav';
 export default class DemoTable extends React.Component {
   render() {
     const { seg } = this.props;
-    console.log(seg);
     let users = seg.users ? seg.users : []
     return (
       <div>

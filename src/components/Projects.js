@@ -4,7 +4,8 @@ import StickyNav from './StickyNav';
 import Modal from 'react-bootstrap/Modal'
 import uuid from 'uuid/v4';
 import { putInOrganizationDataTable,
-         putInAnalyticsDataTable } from '../utils/awsUtils';
+         putInAnalyticsDataTable, 
+         getFromOrganizationDataTable} from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
 
 export default class Projects extends React.Component {
@@ -29,15 +30,24 @@ export default class Projects extends React.Component {
     setGlobal({ sessionData: apps[0], apps });
     this.setState({ projectName: "" });
     //Now update the DB
+
+    //First fetch from the org table
+    //This is a hack to avoid overwriting important data
+    //This should also be moved to the iframe
+
+    const orgData = await getFromOrganizationDataTable(org_id);
     try {
-      const anObject = {
-        apps: []
+      const anObject = orgData.Item
+      if(anObject.apps.length > 0) {
+        anObject.apps.push(newProject)
+      } else {
+        anObject.apps = [];
+        anObject.apps.push(newProject)
       }
-      anObject.apps.push(newProject);
       anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id;
       await putInOrganizationDataTable(anObject);
-      const data = apps[0];
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
+      const appData = apps[0];
+      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(appData));
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
       // TODO: Justin ... (We should run these calls concurrent and retry on fail n times--then report the problem to the user)
@@ -52,6 +62,9 @@ export default class Projects extends React.Component {
     //     from the user profile in the 'sid' data.
     //   - However, the keypair needs to be accessible to all authorized users
     //     of the tool.  Cognito will def be needed.
+
+    //now fetch from the wallet analytics table
+
     try {
       const walletAnalyticsDataRow = {
         app_id: newProject.id,
@@ -103,7 +116,7 @@ export default class Projects extends React.Component {
 
   render() {
     const { apps } = this.global;
-    console.log(apps);
+
     const { projectName, proj, show } = this.state;
     const applications = apps ? apps : [];
     if (!window.location.href.includes('/projects')) {

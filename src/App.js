@@ -6,7 +6,8 @@ import './assets/css/style.css';
 import Home from './containers/Home';
 import { getFromOrganizationDataTable } from './utils/awsUtils';
 import { setLocalStorage } from './utils/misc';
-import { spawn, Thread, Worker } from "threads"
+import worker from './workers/segmentProcess';
+import WebWorker from "./workers/workerSetup";
 
 export default class App extends React.Component {
 
@@ -23,7 +24,6 @@ export default class App extends React.Component {
     if(signedIn) {
       console.log('SimpleID user data')
       console.log(simple.getUserData())
-      
       //Need to check if the user is part of an organization from the org table
       const user_id = simple.getUserData().wallet.ethAddr;
       const org_id = simple.getUserData().orgId.org_id;
@@ -38,13 +38,9 @@ export default class App extends React.Component {
 
         //Check what pieces of data need to be processed:
         if(data.currentSegments) {
-          
-          //TODO: This is terrible, like really bad. Commented out because it breaks the world more than it helps
-          //Just like Prabhaav
-
-          //currentSegments = data.currentSegments;
-          //const segmentData = await simple.processData('segment data', currentSegments);
-          //console.log(segmentData);
+          //WORKER TEST: 
+          this.worker = new WebWorker(worker);
+          this.fetchSegmentData();
         }
 
         //TODO: When this returns, need to update currentSegments with user counts
@@ -59,6 +55,14 @@ export default class App extends React.Component {
       setGlobal({ loading: false });
     }
 
+  }
+
+  fetchSegmentData = async () => {
+    this.worker.postMessage("Fetch Users");
+
+    this.worker.addEventListener("message", event => {
+      console.log(event);
+    });
   }
 
   render() {
