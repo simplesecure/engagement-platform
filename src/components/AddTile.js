@@ -2,7 +2,7 @@ import React, { setGlobal } from 'reactn';
 import StickyNav from './StickyNav';
 import uuid from 'uuid/v4'
 import { setLocalStorage } from '../utils/misc';
-import { putInOrganizationDataTable } from '../utils/awsUtils';
+import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils';
 
 export default class AddTile extends React.Component {
   constructor(props) {
@@ -41,10 +41,10 @@ export default class AddTile extends React.Component {
     //
     // TODO: probably want to wait on this to finish and throw a status/activity
     //       bar in the app:
+
+    const orgData = await getFromOrganizationDataTable(org_id);
+    const anObject = orgData.Item
     try {
-      const anObject = {
-        apps: []
-      }
       anObject.apps = apps;
       anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
       await putInOrganizationDataTable(anObject)
@@ -68,10 +68,10 @@ export default class AddTile extends React.Component {
       thisApp.currentTiles = currentTiles;
       setGlobal({ sessionData, apps });
       //Update in DB
+      const orgData = await getFromOrganizationDataTable(org_id);
+
       try {
-        const anObject = {
-          apps: []
-        }
+        const anObject = orgData.Item
         anObject.apps = apps;
         anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
         await putInOrganizationDataTable(anObject)

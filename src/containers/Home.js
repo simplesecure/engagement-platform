@@ -30,9 +30,6 @@ export default class Home extends React.Component {
   render() {
     const { signedIn, sessionData, loading } = this.global;
     const { id } = sessionData;
-    console.log("LOADING: ", loading);
-    console.log("SIGNED IN: ", signedIn);
-    console.log("ID: ", id);
     return (
       <div>
         {

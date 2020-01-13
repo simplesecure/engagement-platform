@@ -3,7 +3,7 @@ import StickyNav from './StickyNav';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import uuid from 'uuid/v4'
-import { putInOrganizationDataTable } from '../utils/awsUtils';
+import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
 
 export default class Notifications extends React.Component {
@@ -51,10 +51,10 @@ export default class Notifications extends React.Component {
     //
     // TODO: probably want to wait on this to finish and throw a status/activity
     //       bar in the app:
+    const orgData = await getFromOrganizationDataTable(org_id);
+
     try {
-      const anObject = {
-        apps: []
-      }
+      const anObject = orgData.Item
       anObject.apps = apps;
       anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
       await putInOrganizationDataTable(anObject)
@@ -88,10 +88,10 @@ export default class Notifications extends React.Component {
     //
     // TODO: probably want to wait on this to finish and throw a status/activity
     //       bar in the app:
+    const orgData = await getFromOrganizationDataTable(org_id);
+
     try {
-      const anObject = {
-        apps: []
-      }
+      const anObject = orgData.Item
       anObject.apps = apps;
       anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
       await putInOrganizationDataTable(anObject)
@@ -138,10 +138,10 @@ export default class Notifications extends React.Component {
     //
     // TODO: probably want to wait on this to finish and throw a status/activity
     //       bar in the app:
+    const orgData = await getFromOrganizationDataTable(org_id);
+
     try {
-      const anObject = {
-        apps: []
-      }
+      const anObject = orgData.Item
       anObject.apps = apps;
       anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
       await putInOrganizationDataTable(anObject)
@@ -160,6 +160,7 @@ export default class Notifications extends React.Component {
     const inactiveNotifications = noti.filter(a => a.active === false);
     const activeNotifications = noti.filter(a => a.active === true);
     const segments = currentSegments ? currentSegments : [];
+    console.log(notifications);
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />

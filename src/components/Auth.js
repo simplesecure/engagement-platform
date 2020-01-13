@@ -11,7 +11,7 @@ export default class Auth extends React.Component {
 
   checkForAuth = () => {
     const { simple, signedIn } = this.global;
-    console.log("CHECKING AUTH: ", simple.getUserData());
+    //This is checking is a user is already signed in
     if(!simple.getUserData() && !signedIn) {
       this.checkForAuth();
     }

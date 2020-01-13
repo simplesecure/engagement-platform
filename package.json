@@ -15,8 +15,7 @@
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.2.0",
     "reactn": "^2.2.4",
-    "simpleid-js-sdk": "file:../ssa-sdk",
-    "threads": "^1.0.0"
+    "simpleid-js-sdk": "file:../ssa-sdk"
   },
   "scripts": {
     "start": "react-scripts start",

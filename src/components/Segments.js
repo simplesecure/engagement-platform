@@ -4,7 +4,7 @@ import Modal from 'react-bootstrap/Modal';
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
 import DemoTable from './DemoTable';
-import { putInOrganizationDataTable } from '../utils/awsUtils.js';
+import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils.js';
 import filters from '../utils/filterOptions.json';
 import DatePicker from 'react-date-picker';
 import uuid from 'uuid/v4';
@@ -42,10 +42,10 @@ export default class Segments extends React.Component {
         const thisApp = apps.filter(a => a.id === sessionData.id)[0];
         thisApp.currentSegments = currentSegments;
         setGlobal({ sessionData, apps });
+        const orgData = await getFromOrganizationDataTable(org_id);
+
         try {
-          const anObject = {
-            apps: []
-          }
+          const anObject = orgData.Item
           anObject.apps = apps;
           anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
           await putInOrganizationDataTable(anObject)
@@ -94,8 +94,6 @@ export default class Segments extends React.Component {
       userCount: null
     }
 
-    console.log(segmentCriteria);
-
     //Now we fetch the actual results
 
     //This state should trigger a UI element showing the segment being created (could take a while)
@@ -103,7 +101,7 @@ export default class Segments extends React.Component {
     
     //Here we need to use the iframe to process the segment criteria and return the necessary data
     const data = await simple.processData('segment', segmentCriteria);
-    console.log("FROM THE ENGAGEMENT APP: ", data);
+    
     if(data) {
       if(filterToUse.filter === "Total Transactions") {
         segmentCriteria.totalTransactions = data;
@@ -132,10 +130,10 @@ export default class Segments extends React.Component {
     
     // TODO: probably want to wait on this to finish and throw a status/activity
     //       bar in the app:
+    const orgData = await getFromOrganizationDataTable(org_id);
+
     try {
-      const anObject = {
-        apps: []
-      }
+      const anObject = orgData.Item
       anObject.apps = apps;
       anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
       await putInOrganizationDataTable(anObject)

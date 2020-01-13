@@ -6,8 +6,6 @@ import './assets/css/style.css';
 import Home from './containers/Home';
 import { getFromOrganizationDataTable } from './utils/awsUtils';
 import { setLocalStorage } from './utils/misc';
-import worker from './workers/segmentProcess';
-import WebWorker from "./workers/workerSetup";
 
 export default class App extends React.Component {
 
@@ -22,28 +20,26 @@ export default class App extends React.Component {
     }
 
     if(signedIn) {
-      console.log('SimpleID user data')
-      console.log(simple.getUserData())
       //Need to check if the user is part of an organization from the org table
       const user_id = simple.getUserData().wallet.ethAddr;
       const org_id = simple.getUserData().orgId.org_id;
       //regardless of whether there is data in local storage, we need to fetch from db
       const appData = await getFromOrganizationDataTable(org_id);
-      console.log(appData);
+
       setGlobal({ user_id, org_id });
+
       if(appData && appData.Item && appData.Item.apps.length > 0) {
         const currentAppId = appData.Item.apps[0].id;
         const data = appData.Item.apps.filter(a => a.id === currentAppId)[0];
         setGlobal({ loading: false, currentAppId, apps: appData.Item.apps, sessionData: data });
 
-        //Check what pieces of data need to be processed:
+        //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to 
+        //Get the correct results
+        //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the fetchSegmentData function
+        //Will update state as necessary
         if(data.currentSegments) {
-          //WORKER TEST: 
-          this.worker = new WebWorker(worker);
-          this.fetchSegmentData();
+          this.fetchSegmentData(data.currentSegments);
         }
-
-        //TODO: When this returns, need to update currentSegments with user counts
 
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
       } else {
@@ -57,12 +53,26 @@ export default class App extends React.Component {
 
   }
 
-  fetchSegmentData = async () => {
-    this.worker.postMessage("Fetch Users");
-
-    this.worker.addEventListener("message", event => {
-      console.log(event);
-    });
+  fetchSegmentData = async (segments) => {
+    const { simple, sessionData, SESSION_FROM_LOCAL } = this.global;
+    const { currentSegments } = sessionData
+    let segs = currentSegments;
+    for (const seg of segments) {
+      console.log("Processing...")
+      const thisData = await simple.processData('segment', seg);
+      const iframe = document.getElementById('sid-widget');
+      iframe.parentNode.removeChild(iframe);
+      if(thisData.length > seg.userCount) {
+        console.log("New Users in the Segment")
+        const thisSegment = segs.filter(a => a.id === seg.id)[0];
+        thisSegment.userCount = thisData.length;
+        sessionData.currentSegments = segs
+        await setGlobal({ sessionData });
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+      } else {
+        console.log("It's all the same")
+      }
+    }
   }
 
   render() {

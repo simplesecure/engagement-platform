@@ -3,7 +3,7 @@ import StickyNav from './StickyNav';
 import EmailEditor from 'react-email-editor';
 import Modal from 'react-bootstrap/Modal';
 import uuid from 'uuid/v4';
-import { putInOrganizationDataTable } from '../utils/awsUtils';
+import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
 
 export default class Communications extends React.Component {
@@ -20,7 +20,6 @@ export default class Communications extends React.Component {
   }
 
   saveTemplate = (temp) => {
-    console.log(temp);
     const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { currentTemplates } = sessionData;
     const { templateName } = this.state;
@@ -43,10 +42,10 @@ export default class Communications extends React.Component {
         //
         // TODO: probably want to wait on this to finish and throw a status/activity
         //       bar in the app:
+        const orgData = await getFromOrganizationDataTable(org_id);
+
         try {
-          const anObject = {
-            apps: []
-          }
+          const anObject = orgData.Item
           anObject.apps = apps;
           anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
   
@@ -78,10 +77,10 @@ export default class Communications extends React.Component {
         //
         // TODO: probably want to wait on this to finish and throw a status/activity
         //       bar in the app:
+        const orgData = await getFromOrganizationDataTable(org_id);
+
         try {
-          const anObject = {
-            apps: []
-          }
+          const anObject = orgData.Item
           anObject.apps = apps;
           anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
   
@@ -106,10 +105,10 @@ export default class Communications extends React.Component {
 
       setGlobal({ sessionData, apps });
       //Update in DB
+      const orgData = await getFromOrganizationDataTable(org_id);
+
       try {
-        const anObject = {
-          apps: []
-        }
+        const anObject = orgData.Item
         anObject.apps = apps;
         anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
         await putInOrganizationDataTable(anObject)
