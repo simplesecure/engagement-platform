@@ -6,6 +6,7 @@ import './assets/css/style.css';
 import Home from './containers/Home';
 import { getFromOrganizationDataTable } from './utils/awsUtils';
 import { setLocalStorage } from './utils/misc';
+import { spawn, Thread, Worker } from "threads"
 
 export default class App extends React.Component {
 

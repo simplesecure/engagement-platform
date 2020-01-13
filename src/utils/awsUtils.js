@@ -1,3 +1,4 @@
+import { getGlobal } from 'reactn';
 // TODO: Long term make this a lib / private npm package
 // TODO: Mimic this api: https://github.com/ChenLi0830/dynamoLight#readme
 
@@ -60,13 +61,23 @@ export async function getFromAnalyticsDataTable(aKeyValue) {
 }
 
 export async function putInAnalyticsDataTable(anObject) {
+  //Let's process this on the iframe side
+  const { simple } = getGlobal();
   console.log(`DBG: putInAnalyticsDataTable`)
-  return putInDb(process.env.REACT_APP_AD_TABLE, anObject)
+  const dataType = 'analytics-table-put'
+  const update = await simple.processData(dataType, anObject);
+  return update;
+  //return putInDb(process.env.REACT_APP_AD_TABLE, anObject)
 }
 
 export async function updateInAnalyticsDataTable(anObject) {
+  //Let's process this on the iframe side
+  const { simple } = getGlobal();
   console.log(`DBG: updateInAnalyticsDataTable`)
-  return updateInDb(process.env.REACT_APP_AD_TABLE, process.env.REACT_APP_AD_TABLE_PK, anObject)
+  const dataType = 'analytics-table-update'
+  const update = await simple.processData(dataType, anObject);
+  return update;
+  //return updateInDb(process.env.REACT_APP_AD_TABLE, process.env.REACT_APP_AD_TABLE_PK, anObject)
 }
 
 export async function getFromOrganizationDataTable(aKeyValue) {
@@ -75,11 +86,21 @@ export async function getFromOrganizationDataTable(aKeyValue) {
 }
 
 export async function putInOrganizationDataTable(anObject) {
+  //Let's process this on the iframe side
+  const { simple } = getGlobal();
   console.log(`DBG: putInOrganizationDataTable`)
-  return putInDb(process.env.REACT_APP_OD_TABLE, anObject)
+  const dataType = 'org-table-put'
+  const update = await simple.processData(dataType, anObject);
+  return update;
+  // return putInDb(process.env.REACT_APP_OD_TABLE, anObject)
 }
 
 export async function updateInOrganizationDataTable(anObject) {
+  //Let's process this on the iframe side
+  const { simple } = getGlobal();
   console.log(`DBG: updateInOrganizationDataTable`)
-  return updateInDb(process.env.REACT_APP_OD_TABLE, process.env.REACT_APP_OD_TABLE_PK, anObject)
+  const dataType = 'org-table-update'
+  const update = await simple.processData(dataType, anObject);
+  return update;
+  //return updateInDb(process.env.REACT_APP_OD_TABLE, process.env.REACT_APP_OD_TABLE_PK, anObject)
 }
