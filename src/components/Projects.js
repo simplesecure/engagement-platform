@@ -15,6 +15,11 @@ export default class Projects extends React.Component {
     }
   }
 
+  acTerribleTest = async () => {
+    const { simple } = this.global
+    simple.processData('AC Terrible Test', null)
+  }
+
   createProject = async () => {
     const { apps, org_id, simple } = this.global;
     const { projectName } = this.state;
@@ -30,7 +35,7 @@ export default class Projects extends React.Component {
     //const orgData = await getFromOrganizationDataTable(org_id);
 
     const payload = {
-      orgId: org_id, 
+      orgId: org_id,
       appObject: newProject
     }
     try {
@@ -112,6 +117,10 @@ export default class Projects extends React.Component {
               <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
                 <span className="text-uppercase page-subtitle">Projects</span>
                 <h3 className="page-title">Review Your Projects</h3>
+                <div className="form-group col-md-12">
+                  <label htmlFor="inputSeg">AC Terrible Test</label><br/>
+                  <button onClick={this.acTerribleTest} className="btn btn-primary">AC Terrible Test</button>
+                </div>
               </div>
             </div> :
             <div className="page-header row no-gutters py-4">
