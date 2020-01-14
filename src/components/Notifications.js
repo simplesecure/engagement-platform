@@ -36,7 +36,7 @@ export default class Notifications extends React.Component {
     let thisNotification = allNotifications.filter(a => a === not)[0];
     thisNotification.active = true;
     sessionData.notifications = allNotifications;
-    const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+    const thisApp = apps[sessionData.id]
     thisApp.notifications = allNotifications;
 
     setGlobal({ sessionData, apps });
@@ -72,7 +72,7 @@ export default class Notifications extends React.Component {
     let thisNotification = allNotifications.filter(a => a === not)[0];
     thisNotification.active = false;
     sessionData.notifications = allNotifications;
-    const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+    const thisApp = apps[sessionData.id]
     thisApp.notifications = allNotifications;
 
     setGlobal({ sessionData, apps });
@@ -123,7 +123,7 @@ export default class Notifications extends React.Component {
     } 
     noti.push(newNotification);
     sessionData.notifications = noti;
-    const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+    const thisApp = apps[sessionData.id];
     thisApp.notifications = noti;
     setGlobal({ sessionData, apps });
 

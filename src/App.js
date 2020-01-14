@@ -71,6 +71,7 @@ export default class App extends React.Component {
     for (const seg of segments) {
       console.log("Processing...")
       const thisData = await simple.processData('segment', seg);
+      console.log(thisData)
       const iframe = document.getElementById('sid-widget');
       iframe.parentNode.removeChild(iframe);
       if(thisData.length > seg.userCount) {

@@ -109,7 +109,6 @@ export default class Projects extends React.Component {
       thisApp.id = appKey
       applications.push(thisApp)
     }
-    console.log(applications);
     if (!window.location.href.includes('/projects')) {
       return <Redirect to='/projects' />
     }

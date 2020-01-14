@@ -1,4 +1,5 @@
 import React from 'reactn';
+import { getFromOrganizationDataTable } from '../utils/awsUtils';
 
 export default class Message extends React.Component {
   constructor(props) {
@@ -7,10 +8,17 @@ export default class Message extends React.Component {
       message: "<div><p>Hey there, friends! It's 2020 now, so let's reflect.</p><p>We had some good times and some bad times, but for the most part, we had fun.</p><p><a href='https://simpleid.xyz'>Click here</a> to enter our new contest. It's going to be a blast!</p></div>"
     }
   }
-  componentDidMount() {
-    //const appId = window.location.href.split('/appId=')[1].split('&')[0];
-    //const messageId = window.location.href.split('/appId=')[1].split('messageId=')[1]
+  async componentDidMount() {
+    const url = window.location.href
+    const orgId = url.split("orgId=")[1].split("&appId=")[0]
+    const appId = url.split("orgId=")[1].split("&appId=")[1].split('&messageIds=')[0]
+    const messageId = url.split("orgId=")[1].split("&appId=")[1].split('&messageIds=')[1]
+    console.log("FROM THE MESSAGE WIDGET: ");
+    console.log(appId);
+    console.log(messageId)
     document.body.style.background = "#fff";
+    const orgData = await getFromOrganizationDataTable(orgId);
+    console.log("IFRAME STUFF: ", orgData);
   }
 
   createMarkup = () => {
