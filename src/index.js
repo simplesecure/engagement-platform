@@ -25,7 +25,7 @@ setGlobal({
   app_id: simple.config.appId, 
   apps: [], 
   selectedProject: {},
-  showDemo: false 
+  showDemo: true 
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

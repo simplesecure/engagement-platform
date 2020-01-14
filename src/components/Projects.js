@@ -2,10 +2,7 @@ import React, { setGlobal } from 'reactn';
 import { Redirect } from 'react-router-dom';
 import StickyNav from './StickyNav';
 import Modal from 'react-bootstrap/Modal'
-import uuid from 'uuid/v4';
-import { putInOrganizationDataTable,
-         putInAnalyticsDataTable, 
-         getFromOrganizationDataTable} from '../utils/awsUtils';
+import { putInOrganizationDataTable } from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
 
 export default class Projects extends React.Component {
@@ -19,65 +16,41 @@ export default class Projects extends React.Component {
   }
 
   createProject = async () => {
-    const { apps, org_id, SESSION_FROM_LOCAL } = this.global;
+    const { apps, org_id, simple } = this.global;
     const { projectName } = this.state;
     const newProject = {
-      id: uuid(),
-      dateCreated: new Date(),
-      projectName
+      date_created: Date.now(),
+      project_name: projectName
     }
-    apps.push(newProject);
-    setGlobal({ sessionData: apps[0], apps });
-    this.setState({ projectName: "" });
-    //Now update the DB
 
-    //First fetch from the org table
+    //First we need to fetch data from the org table to make sure we're up to date
     //This is a hack to avoid overwriting important data
     //This should also be moved to the iframe
 
-    const orgData = await getFromOrganizationDataTable(org_id);
+    //const orgData = await getFromOrganizationDataTable(org_id);
+
+    const payload = {
+      orgId: org_id, 
+      appObject: newProject
+    }
     try {
-      const anObject = orgData.Item
-      if(anObject.apps.length > 0) {
-        anObject.apps.push(newProject)
+      const projectId = await simple.processData('create-project', payload);
+      if(projectId) {
+        apps[projectId] = newProject
+        const appKeys = Object.keys(apps);
+        const allApps = apps;
+        const currentAppId = allApps[appKeys[0]]
+        const data = allApps[appKeys[0]];
+        setGlobal({ currentAppId, apps: allApps, sessionData: data });
+        this.setState({ projectName: "" });
       } else {
-        anObject.apps = [];
-        anObject.apps.push(newProject)
+        console.log(`ERROR: no app id returned`)
       }
-      anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id;
-      await putInOrganizationDataTable(anObject);
-      const appData = apps[0];
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(appData));
+      //setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(appData));
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
       // TODO: Justin ... (We should run these calls concurrent and retry on fail n times--then report the problem to the user)
     }
-    // Now update the Wallet Analytics Data Table (DB)
-    //
-    // TODO:
-    //   - we may need to move this into the iFrame for crypto reasons.
-    //   - the public / private key pair would get created in the iFrame and
-    //     the private key is encrypted with the KMS (HSM), it would happen
-    //     during sign up to this app.  We should actually be able to get it
-    //     from the user profile in the 'sid' data.
-    //   - However, the keypair needs to be accessible to all authorized users
-    //     of the tool.  Cognito will def be needed.
-
-    //now fetch from the wallet analytics table
-
-    try {
-      const walletAnalyticsDataRow = {
-        app_id: newProject.id,
-        org_id: org_id,
-        public_key: 'TODO',
-        analytics: {},
-      }
-
-      await putInAnalyticsDataTable(walletAnalyticsDataRow)
-    } catch (suppressedError) {
-      console.log(`ERROR: writing to the Wallet Analytics Data Table.\n${suppressedError}`)
-    }
-
   }
 
   deleteProject = async (proj, confirm) => {
@@ -116,9 +89,15 @@ export default class Projects extends React.Component {
 
   render() {
     const { apps } = this.global;
-
     const { projectName, proj, show } = this.state;
-    const applications = apps ? apps : [];
+    const appKeys = Object.keys(apps);
+    let applications = [];
+    for(const appKey of appKeys) {
+      const thisApp = apps[appKey]
+      thisApp.id = appKey
+      applications.push(thisApp)
+    }
+
     if (!window.location.href.includes('/projects')) {
       return <Redirect to='/projects' />
     }

@@ -22,16 +22,26 @@ export default class App extends React.Component {
     if(signedIn) {
       //Need to check if the user is part of an organization from the org table
       const user_id = simple.getUserData().wallet.ethAddr;
-      const org_id = simple.getUserData().orgId.org_id;
+      const org_id = simple.getUserData().orgId ? simple.getUserData().orgId.org_id : undefined;
       //regardless of whether there is data in local storage, we need to fetch from db
-      const appData = await getFromOrganizationDataTable(org_id);
+      let appData;
+      if(org_id) {
+        appData = await getFromOrganizationDataTable(org_id);
+        console.log(appData)
+      } else {
+        console.log("ERROR: No Org ID")
+      }
+      
 
       setGlobal({ user_id, org_id });
 
-      if(appData && appData.Item && appData.Item.apps.length > 0) {
-        const currentAppId = appData.Item.apps[0].id;
-        const data = appData.Item.apps.filter(a => a.id === currentAppId)[0];
-        setGlobal({ loading: false, currentAppId, apps: appData.Item.apps, sessionData: data });
+      if(appData && appData.Item && Object.keys(appData.Item.apps).length > 0) {
+        const appKeys = Object.keys(appData.Item.apps);
+        const allApps = appData.Item.apps;
+        const currentAppId = allApps[appKeys[0]]
+        const data = allApps[appKeys[0]];
+        console.log("THIS APP DATA: ", data)
+        setGlobal({ loading: false, currentAppId, apps: allApps, sessionData: data });
 
         //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to 
         //Get the correct results
