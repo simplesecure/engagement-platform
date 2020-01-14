@@ -2,7 +2,7 @@ import React, { setGlobal } from 'reactn';
 import { Redirect } from 'react-router-dom';
 import StickyNav from './StickyNav';
 import Modal from 'react-bootstrap/Modal'
-import { putInOrganizationDataTable } from '../utils/awsUtils';
+import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
 
 export default class Projects extends React.Component {
@@ -11,13 +11,21 @@ export default class Projects extends React.Component {
     this.state = {
       projectName: "",
       show: false,
-      proj: {}
+      proj: {}, 
+      showACTest: true
     }
   }
 
   acTerribleTest = async () => {
-    const { simple } = this.global
-    simple.processData('AC Terrible Test', null)
+    const { simple, sessionData } = this.global
+    const { currentSegments } = sessionData;
+
+    const seg = currentSegments[0]
+    const payload = {
+      app_id: sessionData.id, 
+      addresses: seg.users
+    }
+    simple.processData('AC Terrible Test', payload)
   }
 
   createProject = async () => {
@@ -60,30 +68,29 @@ export default class Projects extends React.Component {
 
   deleteProject = async (proj, confirm) => {
     const { apps, org_id, SESSION_FROM_LOCAL } = this.global;
-
     if(confirm === false) {
       this.setState({ proj, show: true });
     } else {
-      const index = apps.map(a => a.id).indexOf(proj.id);
-      if(index > -1) {
-        apps.splice(index, 1);
-        const data = apps[0];
-        setGlobal({ sessionData: data ? data : [], apps });
-        this.setState({ show: false });
-        //Now we update in the DB
-        try {
-          const anObject = {
-            apps
-          }
-          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
-          await putInOrganizationDataTable(anObject)
-          const data = apps.length > 0 ? apps[0] : {}
-          setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
-        } catch (suppressedError) {
-          console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-        }
-      } else {
-        console.log("Error with index");
+      const key = proj.id
+      delete apps[key]
+      console.log(apps);
+      //TODO: Need to move this functionality to the iframe to avoid conflicts in how writes are handled
+
+
+      this.setState({ show: false });
+      //Now we update in the DB
+      const orgData = await getFromOrganizationDataTable(org_id);
+
+      try {
+        const anObject = orgData.Item
+        anObject.apps = apps;
+        anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+        await putInOrganizationDataTable(anObject)
+        const appskeys = Object.keys(apps);
+        const data = appskeys.length > 0 ? apps[appskeys[0]] : {}
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
+      } catch (suppressedError) {
+        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
       }
     }
   }
@@ -94,7 +101,7 @@ export default class Projects extends React.Component {
 
   render() {
     const { apps } = this.global;
-    const { projectName, proj, show } = this.state;
+    const { projectName, proj, show, showACTest } = this.state;
     const appKeys = Object.keys(apps);
     let applications = [];
     for(const appKey of appKeys) {
@@ -102,7 +109,7 @@ export default class Projects extends React.Component {
       thisApp.id = appKey
       applications.push(thisApp)
     }
-
+    console.log(applications);
     if (!window.location.href.includes('/projects')) {
       return <Redirect to='/projects' />
     }
@@ -117,10 +124,14 @@ export default class Projects extends React.Component {
               <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
                 <span className="text-uppercase page-subtitle">Projects</span>
                 <h3 className="page-title">Review Your Projects</h3>
+                {
+                showACTest ? 
                 <div className="form-group col-md-12">
                   <label htmlFor="inputSeg">AC Terrible Test</label><br/>
                   <button onClick={this.acTerribleTest} className="btn btn-primary">AC Terrible Test</button>
-                </div>
+                </div> : 
+                <div />
+                } 
               </div>
             </div> :
             <div className="page-header row no-gutters py-4">
@@ -141,7 +152,7 @@ export default class Projects extends React.Component {
                       applications.map(app => {
                         return (
                           <li className="card text-center" key={app.id}>
-                            <span className="card-body standard-tile project-title">{app.projectName}</span><br/>
+                            <span className="card-body standard-tile project-title">{app.project_name}</span><br/>
                             <span className="card-body standard-tile">App ID: <br/>{app.id}</span>
                             <span onClick={() => this.deleteProject(app, false)} className="right clickable text-danger">Delete</span>
                           </li>

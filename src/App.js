@@ -38,9 +38,10 @@ export default class App extends React.Component {
       if(appData && appData.Item && Object.keys(appData.Item.apps).length > 0) {
         const appKeys = Object.keys(appData.Item.apps);
         const allApps = appData.Item.apps;
-        const currentAppId = allApps[appKeys[0]]
+        const currentAppId = appKeys[0]
         const data = allApps[appKeys[0]];
-        console.log("THIS APP DATA: ", data)
+        data['id'] = currentAppId
+
         setGlobal({ loading: false, currentAppId, apps: allApps, sessionData: data });
 
         //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to 

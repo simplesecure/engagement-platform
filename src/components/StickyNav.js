@@ -4,7 +4,13 @@ import { Link } from 'react-router-dom';
 export default class StickyNav extends React.Component {
   render() {
     const { simple, apps, sessionData } = this.global;
-    const projects = apps ? apps : [];
+    const appKeys = Object.keys(apps);
+    let projects = [];
+    for(const appKey of appKeys) {
+      const thisApp = apps[appKey]
+      thisApp.id = appKey
+      projects.push(thisApp)
+    }
     return(
       <div className="main-navbar sticky-top bg-white">
         <nav className="navbar align-items-stretch navbar-light flex-md-nowrap p-0">
@@ -57,11 +63,11 @@ export default class StickyNav extends React.Component {
               projects.length > 0 ? 
               <li className="nav-item dropdown border-right">
                 <button className="a-el-fix project-drop nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  <span className="d-md-inline-block">Current Project: {sessionData.projectName}</span>
+                  <span className="d-md-inline-block">Current Project: {sessionData.project_name}</span>
                 </button>
                 <div className="dropdown-menu dropdown-menu-small">
                   {
-                    apps.length > 1 ? 
+                    Object.keys(apps).length > 1 ? 
                     <div>
                       { 
                         apps.map(app => {

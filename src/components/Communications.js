@@ -32,7 +32,7 @@ export default class Communications extends React.Component {
         thisTemplate.html = html;
 
         sessionData.currentTemplates = templates;
-        const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+        const thisApp = apps[sessionData.id]
         thisApp.currentTemplates = templates;
   
         setGlobal({ sessionData, apps });
@@ -67,7 +67,7 @@ export default class Communications extends React.Component {
         }
         templates.push(newTemplate);
         sessionData.currentTemplates = templates;
-        const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+        const thisApp = apps[sessionData.id]
         thisApp.currentTemplates = templates;
   
         setGlobal({ sessionData, apps });
@@ -132,28 +132,40 @@ export default class Communications extends React.Component {
     this.editor.loadDesign(templateToUpdate.design);
   }
 
-  sendCampaign = () => {
+  sendCampaign = async () => {
     const { sessionData, simple, apps } = this.global;
     const { selectedSegment, selectedTemplate, campaignName } = this.state;
-    const { campaigns } = sessionData;
+    const { campaigns, currentSegments, currentTemplates } = sessionData;
+    const seg = currentSegments.filter(a => a.id === selectedSegment)[0]
+    console.log(seg)
     const camps = campaigns ? campaigns : [];
     //First we need to take the campaign data and send it to the iframe to process
     const newCampaign = {
       id: uuid(), 
       name: campaignName, 
       template: selectedTemplate, 
-      segment: selectedSegment, 
+      users: seg.users, 
       dateSent: new Date()
     }
-    simple.processData('email messaging', newCampaign);
-    camps.push(newCampaign);
-    sessionData.campaigns = camps;
-    const thisApp = apps.filter(a => a.id === sessionData.id)[0];
-    thisApp.campaigns = camps;
 
-    //TODO: Actually send the campaign
-    // On a successful send, we can then update the db to reflect the sent campaigns and set this.state.
-    setGlobal({ sessionData, campaignName: "", selectedTemplate: "Choose...", selectedSegment: "Choose..." })
+    //Process the actual email send
+    const emailPayload = {
+      app_id: sessionData.id, 
+      addresses: newCampaign.users, 
+      template: currentTemplates.filter(a => a.id === selectedTemplate)[0], 
+      subject: campaignName
+    }
+
+    const letsSee = await simple.processData('email messaging', emailPayload)
+    console.log("UUID RESULTS: ", letsSee)
+    // camps.push(newCampaign);
+    // sessionData.campaigns = camps;
+    // const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+    // thisApp.campaigns = camps;
+
+    // //TODO: Actually send the campaign
+    // // On a successful send, we can then update the db to reflect the sent campaigns and set this.state.
+    // setGlobal({ sessionData, campaignName: "", selectedTemplate: "Choose...", selectedSegment: "Choose..." })
   }
 
   render() {

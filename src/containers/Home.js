@@ -29,7 +29,6 @@ export default class Home extends React.Component {
   }
   render() {
     const { signedIn, sessionData, loading } = this.global;
-    const { id } = sessionData;
     return (
       <div>
         {
@@ -39,7 +38,7 @@ export default class Home extends React.Component {
               <div className="row">LOADING</div>
             </div>
           </div> : 
-          signedIn && id && !loading ?
+          signedIn && sessionData && !loading ?
           <BrowserRouter>
             <div className="container-fluid">
               <div className="row">
@@ -64,7 +63,7 @@ export default class Home extends React.Component {
             </div>
           </BrowserRouter>
            : 
-           signedIn && !id ? 
+           signedIn && !sessionData ? 
            <BrowserRouter>
             <div className="container-fluid">
               <div className="row">

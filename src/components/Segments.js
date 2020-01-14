@@ -116,9 +116,10 @@ export default class Segments extends React.Component {
 
     segments.push(segmentCriteria);
     sessionData.currentSegments = segments;
-
-    const thisApp = apps.filter(a => a.id === sessionData.id)[0];
-    thisApp.currentSegments = segments;
+    console.log("APPS: ", apps)
+    console.log("SESSION: ", sessionData)
+    const thisApp = apps[sessionData.id]
+    thisApp.currentSegments = segments
     setGlobal({ sessionData, apps });
     // Put the new segment in the analytics data for the user signed in to this
     // id:
