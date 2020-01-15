@@ -49,7 +49,7 @@ export default class App extends React.Component {
         //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the fetchSegmentData function
         //Will update state as necessary
         if(data.currentSegments) {
-          this.fetchSegmentData(data.currentSegments);
+          //this.fetchSegmentData(data.currentSegments);
         }
 
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));

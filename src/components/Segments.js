@@ -26,6 +26,8 @@ export default class Segments extends React.Component {
       amount: 0, 
       contractAddress: "", 
       existingSegmentToFilter: "Choose...", 
+      tokenType: "Choose...", 
+      tokenAddress: ""
     }
   }
 
@@ -39,7 +41,7 @@ export default class Segments extends React.Component {
         currentSegments.splice(index, 1);
         sessionData.currentSegments = currentSegments;
         //Update in DB
-        const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+        const thisApp = apps[sessionData.id];
         thisApp.currentSegments = currentSegments;
         setGlobal({ sessionData, apps });
         const orgData = await getFromOrganizationDataTable(org_id);
@@ -70,7 +72,7 @@ export default class Segments extends React.Component {
   createSegment = async () => {
     const { sessionData, SESSION_FROM_LOCAL, org_id, apps, simple } = this.global;
     const { currentSegments } = sessionData;
-    const { newSegName, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter } = this.state;
+    const { newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter } = this.state;
     const segments = currentSegments ? currentSegments : [];
     const filterToUse = filters.filter(a => a.filter === filterType)[0];
     const segId = uuid();
@@ -88,6 +90,8 @@ export default class Segments extends React.Component {
       } : null, 
       numberRange: filterToUse.type === "Number Range" ? {
         operatorType, 
+        tokenType, 
+        tokenAddress: tokenType === "ERC-20" ? tokenAddress : undefined, 
         amount
       } : null, 
       contractAddress: filterToUse.type === "Contract" ? contractAddress : null, 
@@ -154,7 +158,7 @@ export default class Segments extends React.Component {
   render() {
     const { sessionData } = this.global;
     const { currentSegments } = sessionData;
-    const { show, seg, existingSeg, allUsers, filterType, newSegName, rangeType, operatorType, amount, contractAddress, existingSegmentToFilter } = this.state;
+    const { show, tokenAddress, tokenType, seg, existingSeg, allUsers, filterType, newSegName, rangeType, operatorType, amount, contractAddress, existingSegmentToFilter } = this.state;
     const segments = currentSegments ? currentSegments : [];
     const filterToUse = filters.filter(a => a.filter === filterType)[0];
 
@@ -300,6 +304,22 @@ export default class Segments extends React.Component {
                       <label htmlFor="tileName">Enter Amount</label>
                       <input value={amount} onChange={(e) => this.setState({ amount: e.target.value })} type="number" class="form-control" id="tileName" placeholder="Wallet Balance Amount" />
                     </div>
+                    <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                      <label htmlFor="tileName">Choose Token</label>
+                      <select value={tokenType} onChange={(e) => this.setState({ tokenType: e.target.value })} id="chartSty" class="form-control">
+                        <option value="Choose...">Choose...</option>
+                        <option value="Ether">Ether</option>
+                        <option value="ERC-20">Other ERC-20 Token</option>
+                      </select>
+                    </div>
+                    {
+                      tokenType === "ERC-20" ?
+                      <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                        <label htmlFor="tileName">Enter ERC-20 Token Address</label>
+                        <input value={tokenAddress} onChange={(e) => this.setState({ tokenAddress: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Enter Token Address" />
+                      </div> : 
+                      <div />
+                    }
                   </div> :
                   <div />
                 }

@@ -133,12 +133,12 @@ export default class Communications extends React.Component {
   }
 
   sendCampaign = async () => {
-    const { sessionData, simple, apps } = this.global;
+    const { sessionData, simple } = this.global;
     const { selectedSegment, selectedTemplate, campaignName } = this.state;
-    const { campaigns, currentSegments, currentTemplates } = sessionData;
+    const { currentSegments, currentTemplates } = sessionData;
     const seg = currentSegments.filter(a => a.id === selectedSegment)[0]
     console.log(seg)
-    const camps = campaigns ? campaigns : [];
+    //const camps = campaigns ? campaigns : [];
     //First we need to take the campaign data and send it to the iframe to process
     const newCampaign = {
       id: uuid(), 
