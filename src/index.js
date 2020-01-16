@@ -25,7 +25,7 @@ setGlobal({
   app_id: simple.config.appId, 
   apps: [], 
   selectedProject: {},
-  showDemo: true,
+  showDemo: false,
   processing: false
 })
 

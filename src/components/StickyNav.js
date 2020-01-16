@@ -18,10 +18,10 @@ export default class StickyNav extends React.Component {
             <div className="input-group input-group-seamless ml-3">
               <div className="input-group-prepend">
                 <div className="input-group-text">
-                  <i className="fas fa-search"></i>
+                  
                 </div>
               </div>
-              <input className="navbar-search form-control" type="text" placeholder="Search for something..." aria-label="Search" /> </div>
+            </div>
           </form>
           <ul className="navbar-nav border-left flex-row ">
             <li className="nav-item border-right dropdown notifications">

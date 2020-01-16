@@ -42,14 +42,15 @@ export default class App extends React.Component {
         const data = allApps[appKeys[0]];
         data['id'] = currentAppId
 
-        setGlobal({ loading: false, currentAppId, apps: allApps, sessionData: data });
+        setGlobal({ signedIn: true, loading: false, currentAppId, apps: allApps, sessionData: data });
 
         //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to 
         //Get the correct results
         //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the fetchSegmentData function
         //Will update state as necessary
         if(data.currentSegments) {
-          //this.fetchSegmentData(data.currentSegments);
+          //TODO: We really need to find a good way to update this
+          this.fetchSegmentData(data.currentSegments);
         }
 
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
@@ -66,10 +67,11 @@ export default class App extends React.Component {
 
   fetchSegmentData = async (segments) => {
     const { simple, sessionData, SESSION_FROM_LOCAL } = this.global;
+    console.log(simple);
     const { currentSegments } = sessionData
     let segs = currentSegments;
+    setGlobal({ processing: true })
     for (const seg of segments) {
-      console.log("Processing...")
       const thisData = await simple.processData('segment', seg);
       console.log(thisData)
       const iframe = document.getElementById('sid-widget');
@@ -81,8 +83,16 @@ export default class App extends React.Component {
         sessionData.currentSegments = segs
         await setGlobal({ sessionData });
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+        //TODO: Now we can check for notifications
+        //const notifications = await simple.checkNotifications()
+        //console.log("NOTIFICATIONS", notifications)
+        setGlobal({ processing: false })
       } else {
         console.log("It's all the same")
+        //Now we can check for notifications
+        //const notifications = await simple.checkNotifications()
+        //console.log("NOTIFICATIONS", notifications)
+        setGlobal({ processing: false })
       }
     }
   }

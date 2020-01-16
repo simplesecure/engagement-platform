@@ -9,6 +9,8 @@ import filters from '../utils/filterOptions.json';
 import DatePicker from 'react-date-picker';
 import uuid from 'uuid/v4';
 import { setLocalStorage } from '../utils/misc';
+import LoadingModal from './LoadingModal';
+const ERROR_MSG = "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
 
 export default class Segments extends React.Component {
   constructor(props) {
@@ -76,6 +78,7 @@ export default class Segments extends React.Component {
     const segments = currentSegments ? currentSegments : [];
     const filterToUse = filters.filter(a => a.filter === filterType)[0];
     const segId = uuid();
+    setGlobal({ processing: true });
     //First we set the segment criteria to be stored
     const segmentCriteria = {
       appId: sessionData.id,
@@ -144,10 +147,10 @@ export default class Segments extends React.Component {
       await putInOrganizationDataTable(anObject)
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     } catch (suppressedError) {
+      setGlobal({ processing: false, error: ERROR_MSG });
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }
-    
-    
+    setGlobal({ processing: false });
     this.setState({ newSegName: "", filterType: "Choose...", contractAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 });
   }
 
@@ -156,12 +159,11 @@ export default class Segments extends React.Component {
   }
 
   render() {
-    const { sessionData } = this.global;
+    const { sessionData, processing } = this.global;
     const { currentSegments } = sessionData;
     const { show, tokenAddress, tokenType, seg, existingSeg, allUsers, filterType, newSegName, rangeType, operatorType, amount, contractAddress, existingSegmentToFilter } = this.state;
     const segments = currentSegments ? currentSegments : [];
     const filterToUse = filters.filter(a => a.filter === filterType)[0];
-
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
@@ -333,6 +335,13 @@ export default class Segments extends React.Component {
                 </div>
               </div>
           </div>
+          
+          <Modal show={processing} >
+            <Modal.Body>
+                <LoadingModal messageToDisplay={"Creating segment..."} />
+            </Modal.Body>
+          </Modal>
+
         </div>
       </main>
     )

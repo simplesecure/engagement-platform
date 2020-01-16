@@ -1,6 +1,5 @@
 import React from 'reactn';
 import Table from 'react-bootstrap/Table';
-import Nav from 'react-bootstrap/Nav';
 
 export default class DemoTable extends React.Component {
   render() {
@@ -25,15 +24,16 @@ export default class DemoTable extends React.Component {
                 return (
                   <tr>
                     <td title={user}>{user.substring(0,8)}...</td>
-                    <td>True</td>
-                    <td>SimpleID</td>
-                    <td>12/20/2019</td>
+                    <td>Coming Soon...</td>
+                    <td>Coming Soon...</td>
+                    <td>Coming Soon...</td>
                   </tr>
                 )
               })
             }
           </tbody>
         </Table>
+       {/* //Need to implement pagination at some point
         <Nav className="justify-content-center" activeKey="link-0">
           <Nav.Item>
             <Nav.Link eventKey="link-0">1</Nav.Link>
@@ -48,6 +48,7 @@ export default class DemoTable extends React.Component {
             <Nav.Link eventKey="link-3">4</Nav.Link>
           </Nav.Item>
         </Nav>
+        */}
       </div>
     )
   }

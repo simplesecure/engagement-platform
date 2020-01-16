@@ -19,6 +19,7 @@ export default class Dashboard extends React.Component {
   render() {
     const { sessionData, appConnected, showDemo } = this.global;
     const { currentTiles } = sessionData;
+    
     const tiles = currentTiles ? currentTiles : [];
     if(showDemo) {
       return (

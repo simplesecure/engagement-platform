@@ -16,16 +16,19 @@ export default class AddTile extends React.Component {
   addTile = async () => {
     const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { tileName, selectedSegment } = this.state;
-    const { currentTiles } = sessionData;
+    const { currentTiles, currentSegments } = sessionData;
     const tiles = currentTiles ? currentTiles : [];
+    const thisSegment = currentSegments.filter(a => a.id === selectedSegment)[0]
+    const userCount = thisSegment.userCount
     const newTile = {
       id: uuid(), 
       name: tileName, 
-      segment: selectedSegment
+      segment: selectedSegment, 
+      userCount
     }
     tiles.push(newTile);
     sessionData.currentTiles = tiles;
-    const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+    const thisApp = apps[sessionData.id];
     thisApp.currentTiles = tiles;
 
     setGlobal({ sessionData, apps });
@@ -64,7 +67,7 @@ export default class AddTile extends React.Component {
     const index = currentTiles.map(a => a.name).indexOf(name);
     if(index > -1) {
       currentTiles.splice(index, 1);
-      const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+      const thisApp = apps[sessionData.id]
       thisApp.currentTiles = currentTiles;
       setGlobal({ sessionData, apps });
       //Update in DB

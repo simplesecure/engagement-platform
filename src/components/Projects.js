@@ -1,9 +1,11 @@
 import React, { setGlobal } from 'reactn';
-import { Redirect } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import StickyNav from './StickyNav';
 import Modal from 'react-bootstrap/Modal'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
+import LoadingModal from './LoadingModal';
+const ERROR_MSG = "Failed to create project, please try again. If this continues, please contact support@simpleid.xyz"
 
 export default class Projects extends React.Component {
   constructor(props) {
@@ -12,7 +14,17 @@ export default class Projects extends React.Component {
       projectName: "",
       show: false,
       proj: {}, 
-      showACTest: true
+      showACTest: false, 
+      redirect: false
+    }
+  }
+
+  componentDidMount() {
+    if (!window.location.href.includes('/projects')) {
+      const redirectLink = document.getElementById('hidden-redirect')
+      if(redirectLink) {
+        redirectLink.click()
+      }
     }
   }
 
@@ -31,16 +43,11 @@ export default class Projects extends React.Component {
   createProject = async () => {
     const { apps, org_id, simple } = this.global;
     const { projectName } = this.state;
+    this.setGlobal({ processing: true });
     const newProject = {
       date_created: Date.now(),
       project_name: projectName
     }
-
-    //First we need to fetch data from the org table to make sure we're up to date
-    //This is a hack to avoid overwriting important data
-    //This should also be moved to the iframe
-
-    //const orgData = await getFromOrganizationDataTable(org_id);
 
     const payload = {
       orgId: org_id,
@@ -54,28 +61,38 @@ export default class Projects extends React.Component {
         const allApps = apps;
         const currentAppId = allApps[appKeys[0]]
         const data = allApps[appKeys[0]];
-        setGlobal({ currentAppId, apps: allApps, sessionData: data });
+        setGlobal({ currentAppId, apps: allApps, sessionData: data, processing: false });
         this.setState({ projectName: "" });
       } else {
+        setGlobal({ processing: false, error: "No app id returned"})
         console.log(`ERROR: no app id returned`)
       }
       //setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(appData));
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      setGlobal({ processing: false, error: ERROR_MSG})
       // TODO: Justin ... (We should run these calls concurrent and retry on fail n times--then report the problem to the user)
     }
   }
 
   deleteProject = async (proj, confirm) => {
     const { apps, org_id, SESSION_FROM_LOCAL } = this.global;
+    let updatedApps;
     if(confirm === false) {
       this.setState({ proj, show: true });
     } else {
       const key = proj.id
       delete apps[key]
       console.log(apps);
+      const appsCheck = Object.keys(apps);
+      if(appsCheck.length === 0) {
+        updatedApps = {}
+        setGlobal({ apps: updatedApps })
+      } else {
+        setGlobal({ apps });
+      }
+      
       //TODO: Need to move this functionality to the iframe to avoid conflicts in how writes are handled
-
 
       this.setState({ show: false });
       //Now we update in the DB
@@ -83,11 +100,13 @@ export default class Projects extends React.Component {
 
       try {
         const anObject = orgData.Item
-        anObject.apps = apps;
+        anObject.apps = updatedApps;
         anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
         await putInOrganizationDataTable(anObject)
-        const appskeys = Object.keys(apps);
-        const data = appskeys.length > 0 ? apps[appskeys[0]] : {}
+        const appKeys = Object.keys(updatedApps);
+        const currentAppId = updatedApps[appKeys[0]] ? updatedApps[appKeys[0]] : ""
+        const data = appKeys.length > 0 ? updatedApps[appKeys[0]] : {}
+        setGlobal({ currentAppId, sessionData: data, processing: false });
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
       } catch (suppressedError) {
         console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
@@ -99,8 +118,8 @@ export default class Projects extends React.Component {
     this.setState({ show: false });
   }
 
-  render() {
-    const { apps } = this.global;
+  renderMain() {
+    const { apps, processing } = this.global;
     const { projectName, proj, show, showACTest } = this.state;
     const appKeys = Object.keys(apps);
     let applications = [];
@@ -109,13 +128,11 @@ export default class Projects extends React.Component {
       thisApp.id = appKey
       applications.push(thisApp)
     }
-    if (!window.location.href.includes('/projects')) {
-      return <Redirect to='/projects' />
-    }
     return (
-      <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
+      <div>
 
         <StickyNav />
+        <Link style={{display: "none"}} id='hidden-redirect' to='/projects' />
         <div className="main-content-container container-fluid px-4">
           {
             applications ?
@@ -207,9 +224,22 @@ export default class Projects extends React.Component {
                   </button>
                 </Modal.Footer>
               </Modal>
-
+              
+              <Modal show={processing}>                
+                <Modal.Body>
+                  <LoadingModal messageToDisplay={"Creating project..."} />
+                </Modal.Body>                
+              </Modal>
             </div>
         </div>
+        </div>
+    )
+  }
+
+  render() {
+    return (
+      <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
+        {this.renderMain()}
       </main>
     )
   }

@@ -220,7 +220,7 @@ export default class Communications extends React.Component {
                 {
                   campaigns.map(camp => {
                     return (
-                    <li className="clickable card text-center" key={camp.id}><span className="card-body standard-tile">{camp.name}</span><span className="open-rate">{camp.openRate} opened</span><span className="click-rate">{camp.clickRate} clicked</span></li>
+                    <li className="clickable card text-center" key={camp.id}><span className="card-body standard-tile">{camp.name}</span></li>
                     )
                   })
                 }
