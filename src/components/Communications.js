@@ -3,8 +3,10 @@ import StickyNav from './StickyNav';
 import EmailEditor from 'react-email-editor';
 import Modal from 'react-bootstrap/Modal';
 import uuid from 'uuid/v4';
+import LoadingModal from './LoadingModal'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
+const ERROR_MSG = "Failed to send email. If this continues, please contact support@simpleid.xyz"
 
 export default class Communications extends React.Component {
   constructor(props) {
@@ -14,8 +16,10 @@ export default class Communications extends React.Component {
       selectedSegment: "Choose...", 
       selectedTemplate: "Choose...", 
       campaignName: "",
-      templateName: "", 
-      templateToUpdate: {}
+      templateName: "",
+      fromAddress: "", 
+      templateToUpdate: {}, 
+      error: ""
     }
   }
 
@@ -133,12 +137,12 @@ export default class Communications extends React.Component {
   }
 
   sendCampaign = async () => {
-    const { sessionData, simple } = this.global;
-    const { selectedSegment, selectedTemplate, campaignName } = this.state;
-    const { currentSegments, currentTemplates } = sessionData;
+    const { sessionData, simple, apps, SESSION_FROM_LOCAL, org_id } = this.global;
+    const { selectedSegment, selectedTemplate, campaignName, fromAddress } = this.state;
+    const { currentSegments, currentTemplates, campaigns } = sessionData;
     const seg = currentSegments.filter(a => a.id === selectedSegment)[0]
-    console.log(seg)
-    //const camps = campaigns ? campaigns : [];
+    const camps = campaigns ? campaigns : [];
+
     //First we need to take the campaign data and send it to the iframe to process
     const newCampaign = {
       id: uuid(), 
@@ -151,26 +155,47 @@ export default class Communications extends React.Component {
     //Process the actual email send
     const emailPayload = {
       app_id: sessionData.id, 
-      addresses: newCampaign.users, 
+      addresses: newCampaign.users,
+      from: fromAddress, 
       template: currentTemplates.filter(a => a.id === selectedTemplate)[0], 
       subject: campaignName
     }
 
-    const letsSee = await simple.processData('email messaging', emailPayload)
-    console.log("UUID RESULTS: ", letsSee)
-    // camps.push(newCampaign);
-    // sessionData.campaigns = camps;
-    // const thisApp = apps.filter(a => a.id === sessionData.id)[0];
-    // thisApp.campaigns = camps;
+    setGlobal({ processing: true })
 
-    // //TODO: Actually send the campaign
-    // // On a successful send, we can then update the db to reflect the sent campaigns and set this.state.
-    // setGlobal({ sessionData, campaignName: "", selectedTemplate: "Choose...", selectedSegment: "Choose..." })
+    const sendEmail = await simple.processData('email messaging', emailPayload)
+    if(sendEmail.success) {
+      newCampaign['emaislSent'] = sendEmail.userCount
+      console.log("CAMPAIGN: ", newCampaign)
+      camps.push(newCampaign);
+      sessionData.campaigns = camps;
+      const thisApp = apps[sessionData.id];
+      thisApp.campaigns = camps;
+      // On a successful send, we can then update the db to reflect the sent campaigns and set this.state.
+      
+      const orgData = await getFromOrganizationDataTable(org_id);
+
+      try {
+        const anObject = orgData.Item
+        anObject.apps = apps
+        anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+        await putInOrganizationDataTable(anObject)
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+        this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
+      } catch (suppressedError) {
+        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      }
+      setGlobal({ sessionData, campaignName: "", selectedTemplate: "Choose...", selectedSegment: "Choose...", processing: false })
+      this.setState({ selectedSegment: "Choose...", selectedTemplate: "Choose...", campaignName: "", fromAddress: "" })
+    } else {
+      setGlobal({ processing: false })
+      this.setState({ error: ERROR_MSG })
+    }
   }
 
   render() {
-    const { show, templateToUpdate, showExisting } = this.state;
-    const { sessionData } = this.global;
+    const { show, templateToUpdate, showExisting, fromAddress } = this.state;
+    const { sessionData, processing } = this.global;
     const { selectedSegment, selectedTemplate, templateName, campaignName } = this.state;
     const { campaigns, currentSegments, currentTemplates } = sessionData;
     const templates = currentTemplates ? currentTemplates : [];
@@ -256,7 +281,13 @@ export default class Communications extends React.Component {
                 <button onClick={() => this.setState({ show: true })} className="btn btn-secondary">Create New Template</button>
               </div>
               <div class="form-group col-md-12">
-                <label htmlFor="inputSeg">Now, Give Your Campaign A Name</label> 
+                <label htmlFor="inputSeg">Enter The From Address</label> <br/>
+                <span className="text-muted">This will be the address recipients see and can respond to</span>
+                <input value={fromAddress} onChange={(e) => this.setState({ fromAddress: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Give it a name" />                           
+              </div>
+              <div class="form-group col-md-12">
+                <label htmlFor="inputSeg">Now, Give Your Campaign A Name</label> <br/>
+                <span className="text-muted">This will act as the subject line for your email</span>
                 <input value={campaignName} onChange={(e) => this.setState({ campaignName: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Give it a name" />                           
               </div>
               <div class="form-group col-md-12">
@@ -312,6 +343,12 @@ export default class Communications extends React.Component {
               Save
             </button>
           </Modal.Footer>
+        </Modal>
+
+        <Modal className="email-modal" show={processing}>
+          <Modal.Body>
+            <LoadingModal messageToDisplay={"Send emails..."} />
+          </Modal.Body>
         </Modal>
       </main>
     )
