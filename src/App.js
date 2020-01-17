@@ -73,13 +73,14 @@ export default class App extends React.Component {
     setGlobal({ processing: true })
     for (const seg of segments) {
       const thisData = await simple.processData('segment', seg);
-      console.log(thisData)
+      console.log("SEGMENT DATA FETCH: ", thisData)
       const iframe = document.getElementById('sid-widget');
       iframe.parentNode.removeChild(iframe);
       if(thisData.length > seg.userCount) {
         console.log("New Users in the Segment")
         const thisSegment = segs.filter(a => a.id === seg.id)[0];
         thisSegment.userCount = thisData.length;
+        thisSegment.users = thisData
         sessionData.currentSegments = segs
         await setGlobal({ sessionData });
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
