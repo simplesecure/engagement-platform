@@ -57,7 +57,7 @@ export default class AddTile extends React.Component {
     }
 
     sessionData.currentTiles = tiles;
-    setGlobal({ tileName: "", selectedSegment: "Choose..." });
+    this.setState({ tileName: "", selectedSegment: "Choose..." });
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
   }
 

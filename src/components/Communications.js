@@ -19,7 +19,8 @@ export default class Communications extends React.Component {
       templateName: "",
       fromAddress: "", 
       templateToUpdate: {}, 
-      error: ""
+      error: "", 
+      confirmModal: false
     }
   }
 
@@ -63,6 +64,7 @@ export default class Communications extends React.Component {
     } else {
       this.editor.exportHtml(async data => {
         const { design, html } = data
+        console.log(html)
         const newTemplate = {
           id: uuid(), 
           name: templateName,
@@ -136,65 +138,71 @@ export default class Communications extends React.Component {
     this.editor.loadDesign(templateToUpdate.design);
   }
 
-  sendCampaign = async () => {
+  sendCampaign = async (confirmed) => {
     const { sessionData, simple, apps, SESSION_FROM_LOCAL, org_id } = this.global;
     const { selectedSegment, selectedTemplate, campaignName, fromAddress } = this.state;
     const { currentSegments, currentTemplates, campaigns } = sessionData;
     const seg = currentSegments.filter(a => a.id === selectedSegment)[0]
     const camps = campaigns ? campaigns : [];
-
-    //First we need to take the campaign data and send it to the iframe to process
-    const newCampaign = {
-      id: uuid(), 
-      name: campaignName, 
-      template: selectedTemplate, 
-      users: seg.users, 
-      dateSent: new Date()
-    }
-
-    //Process the actual email send
-    const emailPayload = {
-      app_id: sessionData.id, 
-      addresses: newCampaign.users,
-      from: fromAddress, 
-      template: currentTemplates.filter(a => a.id === selectedTemplate)[0], 
-      subject: campaignName
-    }
-
-    setGlobal({ processing: true })
-
-    const sendEmail = await simple.processData('email messaging', emailPayload)
-    if(sendEmail.success) {
-      newCampaign['emaislSent'] = sendEmail.userCount
-      console.log("CAMPAIGN: ", newCampaign)
-      camps.push(newCampaign);
-      sessionData.campaigns = camps;
-      const thisApp = apps[sessionData.id];
-      thisApp.campaigns = camps;
-      // On a successful send, we can then update the db to reflect the sent campaigns and set this.state.
-      
-      const orgData = await getFromOrganizationDataTable(org_id);
-
-      try {
-        const anObject = orgData.Item
-        anObject.apps = apps
-        anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
-        await putInOrganizationDataTable(anObject)
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-        this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
-      } catch (suppressedError) {
-        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    if(confirmed) {
+      this.setState({ confirmModal: false })
+      //First we need to take the campaign data and send it to the iframe to process
+      const newCampaign = {
+        id: uuid(), 
+        name: campaignName, 
+        template: selectedTemplate, 
+        users: seg.users, 
+        dateSent: new Date()
       }
-      setGlobal({ sessionData, campaignName: "", selectedTemplate: "Choose...", selectedSegment: "Choose...", processing: false })
-      this.setState({ selectedSegment: "Choose...", selectedTemplate: "Choose...", campaignName: "", fromAddress: "" })
+
+      //Process the actual email send
+      const emailPayload = {
+        app_id: sessionData.id, 
+        addresses: newCampaign.users,
+        from: fromAddress, 
+        template: currentTemplates.filter(a => a.id === selectedTemplate)[0], 
+        subject: campaignName
+      }
+
+      setGlobal({ processing: true })
+
+      const sendEmail = await simple.processData('email messaging', emailPayload)
+      console.log("SEND EMAIL: ",sendEmail)
+      if(sendEmail.success) {
+        newCampaign['emailsSent'] = sendEmail.emailCount
+        console.log("CAMPAIGN: ", newCampaign)
+        camps.push(newCampaign);
+        sessionData.campaigns = camps;
+        const thisApp = apps[sessionData.id];
+        thisApp.campaigns = camps
+
+        setGlobal({ sessionData, apps });
+        // On a successful send, we can then update the db to reflect the sent campaigns and set this.state.
+        const orgData = await getFromOrganizationDataTable(org_id);
+
+        try {
+          const anObject = orgData.Item
+          anObject.apps = apps
+          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+          await putInOrganizationDataTable(anObject)
+          setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+          this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
+        } catch (suppressedError) {
+          console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+        }
+        setGlobal({ sessionData, campaignName: "", selectedTemplate: "Choose...", selectedSegment: "Choose...", processing: false })
+        this.setState({ selectedSegment: "Choose...", selectedTemplate: "Choose...", campaignName: "", fromAddress: "" })
+      } else {
+        setGlobal({ processing: false })
+        this.setState({ error: ERROR_MSG })
+      }
     } else {
-      setGlobal({ processing: false })
-      this.setState({ error: ERROR_MSG })
+      this.setState({ confirmModal: true })
     }
   }
 
   render() {
-    const { show, templateToUpdate, showExisting, fromAddress } = this.state;
+    const { show, templateToUpdate, showExisting, fromAddress, confirmModal } = this.state;
     const { sessionData, processing } = this.global;
     const { selectedSegment, selectedTemplate, templateName, campaignName } = this.state;
     const { campaigns, currentSegments, currentTemplates } = sessionData;
@@ -219,8 +227,9 @@ export default class Communications extends React.Component {
                 <ul className="tile-list">
                 {
                   campaigns.map(camp => {
+                    console.log(camp)
                     return (
-                    <li className="clickable card text-center" key={camp.id}><span className="card-body standard-tile">{camp.name}</span></li>
+                    <li className="clickable card text-center" key={camp.id}><span className="card-body standard-tile heading-tile">{camp.name}</span><br/><span className="card-body standard-tile">Sent to {camp.emailsSent} {camp.emailsSent === 1 || camp.emailsSent === "1" ? "person" : "people"}</span></li>
                     )
                   })
                 }
@@ -292,7 +301,7 @@ export default class Communications extends React.Component {
               </div>
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">Finally, Send The Campaign</label><br/>
-                <button onClick={this.sendCampaign} className="btn btn-primary">Send Campaign</button>         
+                <button onClick={() => this.sendCampaign()} className="btn btn-primary">Send Campaign</button>         
               </div>
             </div>
           </div>
@@ -344,6 +353,27 @@ export default class Communications extends React.Component {
             </button>
           </Modal.Footer>
         </Modal>
+
+        {/* CONFIRM MODAL */}
+
+        <Modal show={confirmModal} onHide={() => this.setState({ confirmModal: false})}>
+          <Modal.Header closeButton>
+            <Modal.Title>You're About To Send An Email</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>Are you sure you want to send this email to up to XXX people?* It can't be undone. <br/><br/>
+          <span className="text-muted">* It's possible that not all of your users made their email address available.</span>
+          </Modal.Body>
+          <Modal.Footer>
+            <button className="btn btn-secondary" onClick={() => this.setState({ confirmModal: false})}>
+              Cancel
+            </button>
+            <button className="btn btn-primary" onClick={() => this.sendCampaign(true)}>
+              Send Email
+            </button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* END CONFIRM MODAL */}
 
         <Modal className="email-modal" show={processing}>
           <Modal.Body>

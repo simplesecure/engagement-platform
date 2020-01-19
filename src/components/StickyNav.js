@@ -24,7 +24,7 @@ export default class StickyNav extends React.Component {
             </div>
           </form>
           <ul className="navbar-nav border-left flex-row ">
-            <li className="nav-item border-right dropdown notifications">
+            {/*<li className="nav-item border-right dropdown notifications">
               <button className="a-el-fix nav-link nav-link-icon text-center" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <div className="nav-link-icon__wrapper">
                   <i className="material-icons">&#xE7F4;</i>
@@ -58,7 +58,7 @@ export default class StickyNav extends React.Component {
                 </button>
                 <button className="a-el-fix dropdown-item notification__all text-center"> View all Notifications </button>
               </div>
-            </li>
+            </li>*/}
             {
               projects.length > 0 ? 
               <li className="nav-item dropdown border-right">
@@ -104,6 +104,8 @@ export default class StickyNav extends React.Component {
               <div className="dropdown-menu dropdown-menu-small">
                 <Link to="/account"><button className="a-el-fix dropdown-item">
                   <i className="material-icons">&#xE7FD;</i> Account</button></Link>
+                
+                  <a href="mailto:support@simpleid.xyz"><button className="a-el-fix dropdown-item"><i className="material-icons">help</i>Help</button></a>
                 <div className="dropdown-divider"></div>
                 <button onClick={() => simple.signOut()} className="a-el-fix dropdown-item text-danger">
                   <i className="material-icons text-danger">&#xE879;</i> Logout </button>

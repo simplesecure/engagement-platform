@@ -4,7 +4,7 @@ import './assets/css/theme.css';
 import './assets/css/shards.min.css';
 import './assets/css/style.css';
 import Home from './containers/Home';
-import { getFromOrganizationDataTable } from './utils/awsUtils';
+import { getFromOrganizationDataTable, putInOrganizationDataTable, getFromAnalyticsDataTable } from './utils/awsUtils';
 import { setLocalStorage } from './utils/misc';
 
 export default class App extends React.Component {
@@ -34,7 +34,6 @@ export default class App extends React.Component {
       
 
       setGlobal({ user_id, org_id });
-
       if(appData && appData.Item && Object.keys(appData.Item.apps).length > 0) {
         const appKeys = Object.keys(appData.Item.apps);
         const allApps = appData.Item.apps;
@@ -43,6 +42,12 @@ export default class App extends React.Component {
         data['id'] = currentAppId
 
         setGlobal({ signedIn: true, loading: false, currentAppId, apps: allApps, sessionData: data });
+
+        //Check if app has been verified
+        const verificationData = await getFromAnalyticsDataTable(currentAppId);
+        if(verificationData.Item && verificationData.Item.verified) {
+          //setGlobal({ verified: true })
+        }
 
         //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to 
         //Get the correct results
@@ -66,11 +71,11 @@ export default class App extends React.Component {
   }
 
   fetchSegmentData = async (segments) => {
-    const { simple, sessionData, SESSION_FROM_LOCAL } = this.global;
+    const { simple, sessionData, SESSION_FROM_LOCAL, org_id, currentAppId } = this.global;
     console.log(simple);
     const { currentSegments } = sessionData
     let segs = currentSegments;
-    setGlobal({ processing: true })
+    setGlobal({ initialLoading: true })
     for (const seg of segments) {
       const thisData = await simple.processData('segment', seg);
       console.log("SEGMENT DATA FETCH: ", thisData)
@@ -84,16 +89,34 @@ export default class App extends React.Component {
         sessionData.currentSegments = segs
         await setGlobal({ sessionData });
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+
+        //Put this data back into the DB otherwise, in-app notifications won't ever be updated
+        const orgData = await getFromOrganizationDataTable(org_id);
+        console.log(orgData)
+        try {
+          const anObject = orgData.Item
+          const apps = anObject.apps
+          apps[currentAppId] = sessionData
+          anObject.apps = apps
+          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+          console.log("UPDATING THIS: ", anObject)
+          await putInOrganizationDataTable(anObject)
+          setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+          this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
+        } catch (suppressedError) {
+          console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+        }
+
         //TODO: Now we can check for notifications
         //const notifications = await simple.checkNotifications()
         //console.log("NOTIFICATIONS", notifications)
-        setGlobal({ processing: false })
+        setGlobal({ initialLoading: false })
       } else {
         console.log("It's all the same")
         //Now we can check for notifications
         //const notifications = await simple.checkNotifications()
         //console.log("NOTIFICATIONS", notifications)
-        setGlobal({ processing: false })
+        setGlobal({ initialLoading: false })
       }
     }
   }

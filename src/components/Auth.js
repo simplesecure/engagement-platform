@@ -25,7 +25,8 @@ export default class Auth extends React.Component {
             <div className="row justify-content-center">
               <div className="col-xl-4 col-lg-5 col-md-6">
                 <div className="card card-body shadow">
-                  <h1 className="h5 text-center">Sign In to Access Your SimpleID Dashboard</h1>
+                  <img className="logo" src={require('../assets/img/logo.png')} alt="simple id" />
+                  <h1 className="h5 text-center">Access Your SimpleID Account</h1>
                   <form onSubmit={this.handleSignIn}>
                     <button className="btn btn-primary btn-block" type="submit">Let's Go</button>
                   </form>

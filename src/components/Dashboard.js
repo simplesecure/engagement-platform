@@ -1,5 +1,6 @@
 import React, { setGlobal } from 'reactn';
 import StickyNav from './StickyNav';
+import { loadCharts } from '../actions/dashboard';
 
 export default class Dashboard extends React.Component {
   componentDidMount() {
@@ -12,12 +13,12 @@ export default class Dashboard extends React.Component {
         tile.userCount = segment.userCount;
       }
     }
-
+    loadCharts()
     setGlobal({ sessionData });
   }
 
   render() {
-    const { sessionData, appConnected, showDemo } = this.global;
+    const { sessionData, verified, showDemo } = this.global;
     const { currentTiles } = sessionData;
     
     const tiles = currentTiles ? currentTiles : [];
@@ -142,7 +143,7 @@ export default class Dashboard extends React.Component {
                         <button type="button" className="btn btn-sm btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Full Report &rarr;</button>
                       </div>
                     </div>
-                    <canvas height="130" style={{maxWidth: "100%"}} className="blog-overview-users"></canvas>
+                    <canvas height="130" style={{maxWidth: "100%"}} className="background-chart"></canvas>
                   </div>
                 </div>
               </div>
@@ -220,7 +221,7 @@ export default class Dashboard extends React.Component {
                 tiles.length > 0 ? 
                 <div></div> : 
                 <div>
-                  <p>Looks like we don't have enough data to display yet. {appConnected ? <span>But the good news is your application is properly configured with the SimpleID SDK.</span> : <span>Let's get you connected to the SimpleID SDK so that we can start receiving data. <button className="a-el-fix">Connect</button></span>}</p>
+                  <p>Looks like we don't have enough data to display yet. {verified ? <span>But the good news is your application is properly configured with the SimpleID SDK.</span> : <span>Let's get you connected to the SimpleID SDK so that we can start receiving data. <a href="https://docs.simpleid.xyz" target="_blank" rel="noopener noreferrer"><button className="a-el-fix">Connect</button></a></span>}</p>
                 </div>
               }
             </div>

@@ -8,7 +8,6 @@ const simple = new SimpleID({
   appOrigin: window.location.origin,
   appName: "Demo Dashboard",
   appId: "00000000000000000000000000000000",
-  development: true, 
   network: 'mainnet', 
   localRPCServer: 'http://localhost:7545'
 });
@@ -18,7 +17,7 @@ setGlobal({
   loading: true,
   SESSION_FROM_LOCAL,
   simple, 
-  appConnected: false, 
+  verified: false, 
   signedIn: simple.getUserData() ? true : false, 
   sessionData: {},
   user_id: "", 
@@ -26,7 +25,8 @@ setGlobal({
   apps: [], 
   selectedProject: {},
   showDemo: false,
-  processing: false
+  processing: false, 
+  initialLoading: false
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

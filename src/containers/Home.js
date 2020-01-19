@@ -41,7 +41,7 @@ export default class Home extends React.Component {
   }
 
   renderSignedIn() {
-    const { processing } = this.global;
+    const { initialLoading } = this.global;
     return (
       <BrowserRouter>
       <div className="container-fluid">
@@ -69,7 +69,7 @@ export default class Home extends React.Component {
             //   This ensures the user can't take any action that requires the iframe until 
             //   the fetchSegment process is done
           */}
-          <Modal show={processing} >
+          <Modal show={initialLoading} >
             <Modal.Body>
                 <LoadingModal messageToDisplay={"Updating your user segment data..."} />
             </Modal.Body>
