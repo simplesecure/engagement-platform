@@ -83,7 +83,7 @@ export default class Projects extends React.Component {
     } else {
       const key = proj.id
       delete apps[key]
-      console.log(apps);
+
       const appsCheck = Object.keys(apps);
       if(appsCheck.length === 0) {
         updatedApps = {}

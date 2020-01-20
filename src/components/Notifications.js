@@ -160,7 +160,7 @@ export default class Notifications extends React.Component {
     const inactiveNotifications = noti.filter(a => a.active === false);
     const activeNotifications = noti.filter(a => a.active === true);
     const segments = currentSegments ? currentSegments : [];
-    console.log(notifications);
+    
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />

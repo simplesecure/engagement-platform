@@ -112,11 +112,7 @@ export default class StickyNav extends React.Component {
               </div>
             </li>
           </ul>
-          <nav className="nav">
-            <button className="a-el-fix nav-link nav-link-icon toggle-sidebar d-md-inline d-lg-none text-center border-left" data-toggle="collapse" data-target=".header-navbar" aria-expanded="false" aria-controls="header-navbar">
-              <i className="material-icons">&#xE5D2;</i>
-            </button>
-          </nav>
+          
         </nav>
       </div>
     )

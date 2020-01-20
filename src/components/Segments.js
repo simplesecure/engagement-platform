@@ -89,7 +89,7 @@ export default class Segments extends React.Component {
       filter: filterToUse,
       dateRange: filterToUse.type === "Date Range" ? {
         rangeType, 
-        date
+        date: Date.parse(date)
       } : null, 
       numberRange: filterToUse.type === "Number Range" ? {
         operatorType, 
@@ -123,10 +123,11 @@ export default class Segments extends React.Component {
 
     segments.push(segmentCriteria);
     sessionData.currentSegments = segments;
-    console.log("APPS: ", apps)
-    console.log("SESSION: ", sessionData)
+
     const thisApp = apps[sessionData.id]
     thisApp.currentSegments = segments
+    apps[sessionData.id] = thisApp;
+
     setGlobal({ sessionData, apps });
     // Put the new segment in the analytics data for the user signed in to this
     // id:
@@ -151,7 +152,7 @@ export default class Segments extends React.Component {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }
     setGlobal({ processing: false });
-    this.setState({ newSegName: "", filterType: "Choose...", contractAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 });
+    this.setState({ tokenType: "Choose...", newSegName: "", filterType: "Choose...", contractAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 });
   }
 
   handleDateChange = (date) => {
@@ -161,8 +162,9 @@ export default class Segments extends React.Component {
   render() {
     const { sessionData, processing } = this.global;
     const { currentSegments } = sessionData;
-    const { show, tokenAddress, tokenType, seg, existingSeg, allUsers, filterType, newSegName, rangeType, operatorType, amount, contractAddress, existingSegmentToFilter } = this.state;
+    const { show, tokenAddress, tokenType, seg, existingSeg, filterType, newSegName, rangeType, operatorType, amount, contractAddress, existingSegmentToFilter } = this.state;
     const segments = currentSegments ? currentSegments : [];
+  
     const filterToUse = filters.filter(a => a.filter === filterType)[0];
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
@@ -223,7 +225,7 @@ export default class Segments extends React.Component {
             </div>
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <h5>Create a Segment</h5>
-                <div class="form-group col-md-12">
+                {/*<div class="form-group col-md-12">
                   <label htmlFor="inputSeg">First, Start With Existing Segment or Start With All Users</label>
                   <fieldset>
                     <div class="custom-control custom-radio mb-1">
@@ -235,7 +237,7 @@ export default class Segments extends React.Component {
                       <label class="custom-control-label" for="formsRadioChecked">Start With All Users</label>
                     </div>
                   </fieldset>
-                </div>
+                </div>*/}
                 {
                   existingSeg ?
                   <div class="form-group col-md-12">
@@ -254,7 +256,7 @@ export default class Segments extends React.Component {
                   <div />
                 }
                 <div class="form-group col-md-12">
-                  <label htmlFor="chartSty">Next, Choose a Filter</label>
+                  <label htmlFor="chartSty">First, Choose a Filter</label>
                   <select value={filterType} onChange={(e) => this.setState({ filterType: e.target.value })} id="chartSty" className="form-control">
                     <option value="Choose...">Choose...</option>
                     {

@@ -20,7 +20,8 @@ export default class Communications extends React.Component {
       fromAddress: "", 
       templateToUpdate: {}, 
       error: "", 
-      confirmModal: false
+      confirmModal: false, 
+      userCount: 0
     }
   }
 
@@ -64,7 +65,6 @@ export default class Communications extends React.Component {
     } else {
       this.editor.exportHtml(async data => {
         const { design, html } = data
-        console.log(html)
         const newTemplate = {
           id: uuid(), 
           name: templateName,
@@ -143,6 +143,7 @@ export default class Communications extends React.Component {
     const { selectedSegment, selectedTemplate, campaignName, fromAddress } = this.state;
     const { currentSegments, currentTemplates, campaigns } = sessionData;
     const seg = currentSegments.filter(a => a.id === selectedSegment)[0]
+    this.setState({ userCount: seg.users.length ? seg.users.length : 0 })
     const camps = campaigns ? campaigns : [];
     if(confirmed) {
       this.setState({ confirmModal: false })
@@ -170,7 +171,7 @@ export default class Communications extends React.Component {
       console.log("SEND EMAIL: ",sendEmail)
       if(sendEmail.success) {
         newCampaign['emailsSent'] = sendEmail.emailCount
-        console.log("CAMPAIGN: ", newCampaign)
+        
         camps.push(newCampaign);
         sessionData.campaigns = camps;
         const thisApp = apps[sessionData.id];
@@ -204,7 +205,7 @@ export default class Communications extends React.Component {
   render() {
     const { show, templateToUpdate, showExisting, fromAddress, confirmModal } = this.state;
     const { sessionData, processing } = this.global;
-    const { selectedSegment, selectedTemplate, templateName, campaignName } = this.state;
+    const { selectedSegment, selectedTemplate, templateName, campaignName, userCount } = this.state;
     const { campaigns, currentSegments, currentTemplates } = sessionData;
     const templates = currentTemplates ? currentTemplates : [];
     const segments = currentSegments ? currentSegments : [];
@@ -227,7 +228,6 @@ export default class Communications extends React.Component {
                 <ul className="tile-list">
                 {
                   campaigns.map(camp => {
-                    console.log(camp)
                     return (
                     <li className="clickable card text-center" key={camp.id}><span className="card-body standard-tile heading-tile">{camp.name}</span><br/><span className="card-body standard-tile">Sent to {camp.emailsSent} {camp.emailsSent === 1 || camp.emailsSent === "1" ? "person" : "people"}</span></li>
                     )
@@ -360,7 +360,7 @@ export default class Communications extends React.Component {
           <Modal.Header closeButton>
             <Modal.Title>You're About To Send An Email</Modal.Title>
           </Modal.Header>
-          <Modal.Body>Are you sure you want to send this email to up to XXX people?* It can't be undone. <br/><br/>
+          <Modal.Body>Are you sure you want to send this email to up to {userCount} people?* It can't be undone. <br/><br/>
           <span className="text-muted">* It's possible that not all of your users made their email address available.</span>
           </Modal.Body>
           <Modal.Footer>

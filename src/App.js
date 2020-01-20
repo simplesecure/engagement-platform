@@ -4,7 +4,7 @@ import './assets/css/theme.css';
 import './assets/css/shards.min.css';
 import './assets/css/style.css';
 import Home from './containers/Home';
-import { getFromOrganizationDataTable, putInOrganizationDataTable, getFromAnalyticsDataTable } from './utils/awsUtils';
+import { getFromOrganizationDataTable, getFromAnalyticsDataTable } from './utils/awsUtils';
 import { setLocalStorage } from './utils/misc';
 
 export default class App extends React.Component {
@@ -27,7 +27,6 @@ export default class App extends React.Component {
       let appData;
       if(org_id) {
         appData = await getFromOrganizationDataTable(org_id);
-        console.log(appData)
       } else {
         console.log("ERROR: No Org ID")
       }
@@ -55,7 +54,7 @@ export default class App extends React.Component {
         //Will update state as necessary
         if(data.currentSegments) {
           //TODO: We really need to find a good way to update this
-          this.fetchSegmentData(data.currentSegments);
+          this.fetchSegmentData(appData);
         }
 
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
@@ -70,54 +69,30 @@ export default class App extends React.Component {
 
   }
 
-  fetchSegmentData = async (segments) => {
+  fetchSegmentData = async (appData) => {
+    console.warn("FETCHING SEGMENT DATA")
     const { simple, sessionData, SESSION_FROM_LOCAL, org_id, currentAppId } = this.global;
-    console.log(simple);
+    const payload = {
+      app_id: currentAppId, 
+      appData, 
+      org_id
+    }
     const { currentSegments } = sessionData
     let segs = currentSegments;
     setGlobal({ initialLoading: true })
-    for (const seg of segments) {
-      const thisData = await simple.processData('segment', seg);
-      console.log("SEGMENT DATA FETCH: ", thisData)
-      const iframe = document.getElementById('sid-widget');
+    const updatedData = await simple.processData('update-segments', payload)
+    segs = updatedData
+    sessionData.currentSegments = segs;
+    setGlobal({ sessionData })
+    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    //TODO: Now we can check for notifications
+    //const notifications = await simple.checkNotifications()
+    //console.log("NOTIFICATIONS", notifications)
+    setGlobal({ initialLoading: false })
+
+    const iframe = document.getElementById('sid-widget');
+    if(iframe) {
       iframe.parentNode.removeChild(iframe);
-      if(thisData.length > seg.userCount) {
-        console.log("New Users in the Segment")
-        const thisSegment = segs.filter(a => a.id === seg.id)[0];
-        thisSegment.userCount = thisData.length;
-        thisSegment.users = thisData
-        sessionData.currentSegments = segs
-        await setGlobal({ sessionData });
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-
-        //Put this data back into the DB otherwise, in-app notifications won't ever be updated
-        const orgData = await getFromOrganizationDataTable(org_id);
-        console.log(orgData)
-        try {
-          const anObject = orgData.Item
-          const apps = anObject.apps
-          apps[currentAppId] = sessionData
-          anObject.apps = apps
-          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
-          console.log("UPDATING THIS: ", anObject)
-          await putInOrganizationDataTable(anObject)
-          setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-          this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
-        } catch (suppressedError) {
-          console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-        }
-
-        //TODO: Now we can check for notifications
-        //const notifications = await simple.checkNotifications()
-        //console.log("NOTIFICATIONS", notifications)
-        setGlobal({ initialLoading: false })
-      } else {
-        console.log("It's all the same")
-        //Now we can check for notifications
-        //const notifications = await simple.checkNotifications()
-        //console.log("NOTIFICATIONS", notifications)
-        setGlobal({ initialLoading: false })
-      }
     }
   }
 
