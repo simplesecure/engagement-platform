@@ -106,7 +106,7 @@ export default class Communications extends React.Component {
     const index = currentTemplates.map(a => a.id).indexOf(temp.id);
     if(index > -1) {
       currentTemplates.splice(index, 1);
-      const thisApp = apps.filter(a => a.id === sessionData.id)[0];
+      const thisApp = apps[sessionData.id];
       thisApp.currentTemplates = currentTemplates;
 
       setGlobal({ sessionData, apps });

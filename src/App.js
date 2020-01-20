@@ -6,6 +6,7 @@ import './assets/css/style.css';
 import Home from './containers/Home';
 import { getFromOrganizationDataTable, getFromAnalyticsDataTable } from './utils/awsUtils';
 import { setLocalStorage } from './utils/misc';
+import CookieConsent from "react-cookie-consent";
 
 export default class App extends React.Component {
 
@@ -54,7 +55,7 @@ export default class App extends React.Component {
         //Will update state as necessary
         if(data.currentSegments) {
           //TODO: We really need to find a good way to update this
-          this.fetchSegmentData(appData);
+          //this.fetchSegmentData(appData);
         }
 
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
@@ -98,7 +99,20 @@ export default class App extends React.Component {
 
   render() {
     return (
-      <Home />
+      <div>
+        <CookieConsent
+          location="bottom"
+          buttonText="I accept"
+          cookieName="simpleIDCookieConsent"
+          style={{ background: "#2B373B", zIndex: "1200" }}
+          buttonStyle={{ color: "#fff", background: "#007bff", borderRadius: ".25rem", fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif", fontSize: "13px" }}
+          expires={150}
+        >
+          SimpleID may use third-party cookies to help improve your experience. Continued use of the application represents consent.{" "}
+        </CookieConsent>
+        <Home />
+      </div>
+      
     )
   }
 }

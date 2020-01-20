@@ -15,6 +15,7 @@ export default class SideNav extends React.Component {
   }
   render() {
     const { pathname } = this.state;
+    const { currentAppId } = this.global;
     return(
       <aside className="main-sidebar col-12 col-md-3 col-lg-2 px-0">
         <div className="main-navbar">
@@ -41,33 +42,39 @@ export default class SideNav extends React.Component {
         <div className="nav-wrapper">
           <ul className="nav flex-column">
             <li className="nav-item">
-              <Link onClick={() => this.setState({ pathname: '/' })} className={`nav-link ${pathname ==='/' ? "active" : ""}`} to="/">                
+              <Link onClick={() => this.setState({ pathname: '/' })} className={`nav-link ${pathname ==='/' && currentAppId !== undefined ? "active" : ""}`} to="/">                
                 <i className="material-icons">equalizer</i>
                 <span>Dashboard</span>
               </Link>
             </li>
             <li className="nav-item">
-              <Link onClick={() => this.setState({ pathname: '/new-tile' })} className={`nav-link ${pathname.includes('/new-tile') ? "active" : ""}`} to="/new-tile">
+              <Link onClick={() => this.setState({ pathname: '/new-tile' })} className={`nav-link ${pathname.includes('/new-tile') && currentAppId !== undefined ? "active" : ""}`} to="/new-tile">
                 <i className="material-icons">note_add</i>
                 <span>Customize</span>
               </Link>
             </li>
             <li className="nav-item">
-              <Link onClick={() => this.setState({ pathname: '/segments' })} className={`nav-link ${pathname.includes('/segments') ? "active" : ""}`} to="/segments">
+              <Link onClick={() => this.setState({ pathname: '/projects' })} className={`nav-link ${pathname.includes('/projects') && currentAppId !== undefined ? "active" : ""}`} to="/projects">
+                <i className="material-icons">web</i>
+                <span>Projects</span>
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link onClick={() => this.setState({ pathname: '/segments' })} className={`nav-link ${pathname.includes('/segments') && currentAppId !== undefined ? "active" : ""}`} to="/segments">
                 <i className="material-icons">view_module</i>
                 <span>Segments</span>
               </Link>
             </li>
             <li className="nav-item">
-              <Link onClick={() => this.setState({ pathname: '/notifications' })} className={`nav-link ${pathname.includes('/notifications') ? "active" : ""}`} to="/notifications">
+              <Link onClick={() => this.setState({ pathname: '/notifications' })} className={`nav-link ${pathname.includes('/notifications') && currentAppId !== undefined ? "active" : ""}`} to="/notifications">
                 <i className="material-icons">notifications</i>
                 <span>Notifications</span>
               </Link>
             </li>
             <li className="nav-item">
-              <Link onClick={() => this.setState({ pathname: '/communications' })} className={`nav-link ${pathname.includes('/communications') ? "active" : ""}`} to="/communications">
+              <Link onClick={() => this.setState({ pathname: '/communications' })} className={`nav-link ${pathname.includes('/communications') && currentAppId !== undefined ? "active" : ""}`} to="/communications">
                 <i className="material-icons">email</i>
-                <span>Communications</span>
+                <span>Email</span>
               </Link>
             </li>
             {/*<li className="nav-item">
@@ -77,7 +84,7 @@ export default class SideNav extends React.Component {
               </Link>
             </li>*/}
             <li className="nav-item">
-              <Link onClick={() => this.setState({ pathname: '/account' })} className={`nav-link ${pathname.includes('/account') ? "active" : ""}`} to="/account">
+              <Link onClick={() => this.setState({ pathname: '/account' })} className={`nav-link ${pathname.includes('/account') && currentAppId !== undefined ? "active" : ""}`} to="/account">
                 <i className="material-icons">person</i>
                 <span>Account</span>
               </Link>

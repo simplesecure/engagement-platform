@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import SimpleID from 'simpleid-js-sdk';
+
 const simple = new SimpleID({
   appOrigin: window.location.origin,
   appName: "Demo Dashboard",
