@@ -225,24 +225,24 @@ export default class Segments extends React.Component {
             </div>
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <h5>Create a Segment</h5>
-                {/*<div class="form-group col-md-12">
+                {/*<div className="form-group col-md-12">
                   <label htmlFor="inputSeg">First, Start With Existing Segment or Start With All Users</label>
                   <fieldset>
-                    <div class="custom-control custom-radio mb-1">
-                      <input onChange={() => this.setState({ allUsers: !allUsers, existingSeg: !existingSeg })} type="radio" id="formsRadioDefault" name="formsRadioDefault" class="custom-control-input" checked={existingSeg} />
-                      <label class="custom-control-label" for="formsRadioDefault">Use Existing Segment</label>
+                    <div className="custom-control custom-radio mb-1">
+                      <input onChange={() => this.setState({ allUsers: !allUsers, existingSeg: !existingSeg })} type="radio" id="formsRadioDefault" name="formsRadioDefault" className="custom-control-input" checked={existingSeg} />
+                      <label className="custom-control-label" for="formsRadioDefault">Use Existing Segment</label>
                     </div>
-                    <div class="custom-control custom-radio mb-1">
-                      <input onChange={() => this.setState({ allUsers: !allUsers, existingSeg: !existingSeg })} type="radio" id="formsRadioChecked" name="formsRadioChecked" class="custom-control-input" checked={allUsers} />
-                      <label class="custom-control-label" for="formsRadioChecked">Start With All Users</label>
+                    <div className="custom-control custom-radio mb-1">
+                      <input onChange={() => this.setState({ allUsers: !allUsers, existingSeg: !existingSeg })} type="radio" id="formsRadioChecked" name="formsRadioChecked" className="custom-control-input" checked={allUsers} />
+                      <label className="custom-control-label" for="formsRadioChecked">Start With All Users</label>
                     </div>
                   </fieldset>
                 </div>*/}
                 {
                   existingSeg ?
-                  <div class="form-group col-md-12">
+                  <div className="form-group col-md-12">
                     <label htmlFor="inputSeg">Now, Choose a Segment</label>
-                    <select value={existingSegmentToFilter} onChange={(e) => this.setState({ existingSegmentToFilter: e.target.value })} id="inputSeg" class="form-control">
+                    <select value={existingSegmentToFilter} onChange={(e) => this.setState({ existingSegmentToFilter: e.target.value })} id="inputSeg" className="form-control">
                       <option value="Choose...">Choose...</option>
                       {
                         segments.map(seg => {
@@ -255,7 +255,7 @@ export default class Segments extends React.Component {
                   </div> :
                   <div />
                 }
-                <div class="form-group col-md-12">
+                <div className="form-group col-md-12">
                   <label htmlFor="chartSty">First, Choose a Filter</label>
                   <select value={filterType} onChange={(e) => this.setState({ filterType: e.target.value })} id="chartSty" className="form-control">
                     <option value="Choose...">Choose...</option>
@@ -270,15 +270,15 @@ export default class Segments extends React.Component {
                 </div>
                 {
                   filterToUse && filterToUse.type === "Contract" ?
-                  <div class="form-group col-md-12">
+                  <div className="form-group col-md-12">
                     <label htmlFor="tileName">Enter The Contract Address</label>
-                    <input value={contractAddress} onChange={(e) => this.setState({ contractAddress: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Contract Address" />
+                    <input value={contractAddress} onChange={(e) => this.setState({ contractAddress: e.target.value })} type="text" className="form-control" id="tileName" placeholder="Contract Address" />
                   </div> :
                   filterToUse && filterToUse.type === "Date Range" ? 
                   <div className="row form-group col-md-12">
                     <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
                       <label htmlFor="chartSty">Make a Selection</label>
-                      <select value={rangeType} onChange={(e) => this.setState({ rangeType: e.target.value })} id="chartSty" class="form-control">
+                      <select value={rangeType} onChange={(e) => this.setState({ rangeType: e.target.value })} id="chartSty" className="form-control">
                         <option value="Choose...">Choose...</option>
                         <option value="Before">Before</option>
                         <option value="After">After</option>
@@ -297,7 +297,7 @@ export default class Segments extends React.Component {
                   <div className="row form-group col-md-12">
                     <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
                       <label htmlFor="chartSty">Make a Selection</label>
-                      <select value={operatorType} onChange={(e) => this.setState({ operatorType: e.target.value })} id="chartSty" class="form-control">
+                      <select value={operatorType} onChange={(e) => this.setState({ operatorType: e.target.value })} id="chartSty" className="form-control">
                         <option value="Choose...">Choose...</option>
                         <option value="More Than">More Than</option>
                         <option value="Less Than">Less Than</option>
@@ -306,11 +306,11 @@ export default class Segments extends React.Component {
                     </div>
                     <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
                       <label htmlFor="tileName">Enter Amount</label>
-                      <input value={amount} onChange={(e) => this.setState({ amount: e.target.value })} type="number" class="form-control" id="tileName" placeholder="Wallet Balance Amount" />
+                      <input value={amount} onChange={(e) => this.setState({ amount: e.target.value })} type="number" className="form-control" id="tileName" placeholder="Wallet Balance Amount" />
                     </div>
                     <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
                       <label htmlFor="tileName">Choose Token</label>
-                      <select value={tokenType} onChange={(e) => this.setState({ tokenType: e.target.value })} id="chartSty" class="form-control">
+                      <select value={tokenType} onChange={(e) => this.setState({ tokenType: e.target.value })} id="chartSty" className="form-control">
                         <option value="Choose...">Choose...</option>
                         <option value="Ether">Ether</option>
                         <option value="ERC-20">Other ERC-20 Token</option>
@@ -320,18 +320,18 @@ export default class Segments extends React.Component {
                       tokenType === "ERC-20" ?
                       <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
                         <label htmlFor="tileName">Enter ERC-20 Token Address</label>
-                        <input value={tokenAddress} onChange={(e) => this.setState({ tokenAddress: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Enter Token Address" />
+                        <input value={tokenAddress} onChange={(e) => this.setState({ tokenAddress: e.target.value })} type="text" className="form-control" id="tileName" placeholder="Enter Token Address" />
                       </div> : 
                       <div />
                     }
                   </div> :
                   <div />
                 }
-                <div class="form-group col-md-12">
+                <div className="form-group col-md-12">
                   <label htmlFor="tileName">Then, Give It A Name</label>
-                  <input onChange={(e) => this.setState({ newSegName: e.target.value })} value={newSegName} type="text" class="form-control" id="tileName" placeholder="Give it a name" />
+                  <input onChange={(e) => this.setState({ newSegName: e.target.value })} value={newSegName} type="text" className="form-control" id="tileName" placeholder="Give it a name" />
                 </div>
-                <div class="form-group col-md-12">
+                <div className="form-group col-md-12">
                   <label htmlFor="chartSty">Finally, Create The Segment</label><br/>
                   <button onClick={this.createSegment} className="btn btn-primary">Create Segment</button>
                 </div>

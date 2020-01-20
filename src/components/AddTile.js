@@ -128,9 +128,9 @@ export default class AddTile extends React.Component {
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <div>
                 <h5>Add a Custom Data Tile</h5>
-                <div class="form-group col-md-12">
+                <div className="form-group col-md-12">
                   <label htmlFor="inputSeg">First, Choose a Segment</label>
-                  <select value={selectedSegment} onChange={(e) => this.setState({ selectedSegment: e.target.value })} id="inputSeg" class="form-control">
+                  <select value={selectedSegment} onChange={(e) => this.setState({ selectedSegment: e.target.value })} id="inputSeg" className="form-control">
                     <option value="Choose...">Choose...</option>
                     {
                       segments.map(seg => {
@@ -141,9 +141,9 @@ export default class AddTile extends React.Component {
                     }
                   </select>
                 </div>
-                {/* TODO: advance feature: custom charts <div class="form-group col-md-12">
+                {/* TODO: advance feature: custom charts <div className="form-group col-md-12">
                   <label htmlFor="chartSty">Next, Choose Chart Style</label>
-                  <select id="chartSty" class="form-control">
+                  <select id="chartSty" className="form-control">
                     <option selected>Choose...</option>
                     <option>Number</option>
                     <option>Bar</option>
@@ -152,11 +152,11 @@ export default class AddTile extends React.Component {
                     <option>Donut</option>
                   </select>
                 </div>*/}
-                <div class="form-group col-md-12">
+                <div className="form-group col-md-12">
                   <label htmlFor="tileName">Then, Give It A Name</label>
-                  <input value={tileName} onChange={(e) => this.setState({ tileName: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Give it a name" />
+                  <input value={tileName} onChange={(e) => this.setState({ tileName: e.target.value })} type="text" className="form-control" id="tileName" placeholder="Give it a name" />
                 </div>
-                <div class="form-group col-md-12">
+                <div className="form-group col-md-12">
                   <label htmlFor="chartSty">Finally, Add The Tile</label><br/>
                   <button onClick={this.addTile} className="btn btn-primary">Add Tile</button>
                 </div>
