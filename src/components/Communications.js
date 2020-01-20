@@ -292,7 +292,7 @@ export default class Communications extends React.Component {
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">Enter The From Address</label> <br/>
                 <span className="text-muted">This will be the address recipients see and can respond to</span>
-                <input value={fromAddress} onChange={(e) => this.setState({ fromAddress: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Give it a name" />                           
+                <input value={fromAddress} onChange={(e) => this.setState({ fromAddress: e.target.value })} type="text" class="form-control" id="tileName" placeholder="From email address your users will see and reply to" />                           
               </div>
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">Now, Give Your Campaign A Name</label> <br/>
