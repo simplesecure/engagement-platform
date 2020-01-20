@@ -21,6 +21,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "deploy-prod": "aws s3 sync build/ s3://app.simpleid.xyz --acl public-read",
+    "deploy-stage": "aws s3 sync build/ s3://stage-app.simpleid-xyz --acl public-read",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
