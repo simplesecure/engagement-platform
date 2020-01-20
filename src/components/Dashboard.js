@@ -221,7 +221,7 @@ export default class Dashboard extends React.Component {
                 tiles.length > 0 ? 
                 <div></div> : 
                 <div>
-                  <p>Looks like we don't have enough data to display yet. {verified ? <span>But the good news is your application is properly configured with the SimpleID SDK.</span> : <span>Let's get you connected to the SimpleID SDK so that we can start receiving data. <a href="https://docs.simpleid.xyz" target="_blank" rel="noopener noreferrer"><button className="a-el-fix">Connect</button></a></span>}</p>
+                  <p>Looks like we don't have enough data to display yet. {verified ? <span>But the good news is <strong><u>your application is properly configured</u></strong> with the SimpleID SDK.</span> : <span>Let's get you connected to the SimpleID SDK so that we can start receiving data. <a href="https://docs.simpleid.xyz" target="_blank" rel="noopener noreferrer"><button className="a-el-fix">Connect</button></a></span>}</p>
                 </div>
               }
             </div>

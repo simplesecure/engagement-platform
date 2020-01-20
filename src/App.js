@@ -44,9 +44,11 @@ export default class App extends React.Component {
         setGlobal({ signedIn: true, loading: false, currentAppId, apps: allApps, sessionData: data });
 
         //Check if app has been verified
+        console.log(currentAppId)
         const verificationData = await getFromAnalyticsDataTable(currentAppId);
+        console.log(verificationData)
         if(verificationData.Item && verificationData.Item.verified) {
-          //setGlobal({ verified: true })
+          setGlobal({ verified: true })
         }
 
         //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to 
