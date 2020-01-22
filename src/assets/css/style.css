@@ -167,3 +167,11 @@ section {
 .heading-tile {
   font-size: 24px!important;
 }
+
+.beta-text {
+  font-size: 12px;
+  color: red;
+  position: absolute;
+  top: 25px;
+  right: 30px;
+}
