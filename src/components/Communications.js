@@ -169,7 +169,7 @@ export default class Communications extends React.Component {
 
       const sendEmail = await simple.processData('email messaging', emailPayload)
       console.log("SEND EMAIL: ",sendEmail)
-      if(sendEmail.success) {
+      if(sendEmail && sendEmail.success) {
         newCampaign['emailsSent'] = sendEmail.emailCount
         
         camps.push(newCampaign);
@@ -194,8 +194,32 @@ export default class Communications extends React.Component {
         setGlobal({ sessionData, campaignName: "", selectedTemplate: "Choose...", selectedSegment: "Choose...", processing: false })
         this.setState({ selectedSegment: "Choose...", selectedTemplate: "Choose...", campaignName: "", fromAddress: "" })
       } else {
-        setGlobal({ processing: false })
-        this.setState({ error: ERROR_MSG })
+        //TODO Make this fail properly
+        newCampaign['emailsSent'] = 0
+        
+        camps.push(newCampaign);
+        sessionData.campaigns = camps;
+        const thisApp = apps[sessionData.id];
+        thisApp.campaigns = camps
+
+        setGlobal({ sessionData, apps });
+        // On a successful send, we can then update the db to reflect the sent campaigns and set this.state.
+        const orgData = await getFromOrganizationDataTable(org_id);
+
+        try {
+          const anObject = orgData.Item
+          anObject.apps = apps
+          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+          await putInOrganizationDataTable(anObject)
+          setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+          this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
+        } catch (suppressedError) {
+          console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+        }
+        setGlobal({ sessionData, campaignName: "", selectedTemplate: "Choose...", selectedSegment: "Choose...", processing: false })
+        this.setState({ selectedSegment: "Choose...", selectedTemplate: "Choose...", campaignName: "", fromAddress: "" })
+        // setGlobal({ processing: false })
+        // this.setState({ error: ERROR_MSG })
       }
     } else {
       this.setState({ confirmModal: true })
