@@ -7,9 +7,12 @@ export default class Dashboard extends React.Component {
     //Need to push user counts into the tiles if they aren't there yet
     const { sessionData } = this.global;
     const { currentSegments, currentTiles } = sessionData;
+    console.log("ALL SEGMENTS: ", currentSegments)
     if(currentTiles && currentSegments) {
       for(const tile of currentTiles) {
+        console.log(tile)
         const segment = currentSegments.filter(a => a.id === tile.segment)[0];
+        console.log("segment", segment)
         tile.userCount = segment.userCount;
       }
     }
@@ -22,6 +25,7 @@ export default class Dashboard extends React.Component {
     const { currentTiles } = sessionData;
     
     const tiles = currentTiles ? currentTiles : [];
+    console.log(tiles)
     if(showDemo) {
       return (
         <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
@@ -203,7 +207,7 @@ export default class Dashboard extends React.Component {
                             <div className="d-flex flex-column m-auto">
                               <div className="stats-small__data text-center">
                                 <span className="stats-small__label text-uppercase">{tile.name}</span>
-                                <h6 className="stats-small__value count my-3">{tile.userCount}</h6>
+                                <h6 className="stats-small__value count my-3">{tile.userCount ? tile.userCount : ""}</h6>
                               </div>
                               <div className="stats-small__data">
                                 {/*<span className="stats-small__percentage stats-small__percentage--increase">4.7%</span>*/}

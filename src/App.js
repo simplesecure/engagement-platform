@@ -57,7 +57,7 @@ export default class App extends React.Component {
         //Will update state as necessary
         if(data.currentSegments) {
           //TODO: We really need to find a good way to update this
-          //this.fetchSegmentData(appData);
+          this.fetchSegmentData(appData);
         }
 
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
