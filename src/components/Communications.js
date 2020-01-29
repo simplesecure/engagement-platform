@@ -6,21 +6,21 @@ import uuid from 'uuid/v4';
 import LoadingModal from './LoadingModal'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
-const ERROR_MSG = "Failed to send email. If this continues, please contact support@simpleid.xyz"
+// const ERROR_MSG = "Failed to send email. If this continues, please contact support@simpleid.xyz"
 
 export default class Communications extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      show: false, 
-      selectedSegment: "Choose...", 
-      selectedTemplate: "Choose...", 
+      show: false,
+      selectedSegment: "Choose...",
+      selectedTemplate: "Choose...",
       campaignName: "",
       templateName: "",
-      fromAddress: "", 
-      templateToUpdate: {}, 
-      error: "", 
-      confirmModal: false, 
+      fromAddress: "",
+      templateToUpdate: {},
+      error: "",
+      confirmModal: false,
       userCount: 0
     }
   }
@@ -40,11 +40,11 @@ export default class Communications extends React.Component {
         sessionData.currentTemplates = templates;
         const thisApp = apps[sessionData.id]
         thisApp.currentTemplates = templates;
-  
+
         setGlobal({ sessionData, apps });
         this.setState({ showExisting: false });
         //Now we save to the DB
-      
+
         //
         // TODO: probably want to wait on this to finish and throw a status/activity
         //       bar in the app:
@@ -54,7 +54,7 @@ export default class Communications extends React.Component {
           const anObject = orgData.Item
           anObject.apps = apps;
           anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
-  
+
           await putInOrganizationDataTable(anObject)
           setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
           setGlobal({ templateName: ""})
@@ -66,20 +66,20 @@ export default class Communications extends React.Component {
       this.editor.exportHtml(async data => {
         const { design, html } = data
         const newTemplate = {
-          id: uuid(), 
+          id: uuid(),
           name: templateName,
-          design, 
+          design,
           html
         }
         templates.push(newTemplate);
         sessionData.currentTemplates = templates;
         const thisApp = apps[sessionData.id]
         thisApp.currentTemplates = templates;
-  
+
         setGlobal({ sessionData, apps });
         this.setState({ show: false });
         //Now we save to the DB
-      
+
         //
         // TODO: probably want to wait on this to finish and throw a status/activity
         //       bar in the app:
@@ -89,7 +89,7 @@ export default class Communications extends React.Component {
           const anObject = orgData.Item
           anObject.apps = apps;
           anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
-  
+
           await putInOrganizationDataTable(anObject)
           setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
           setGlobal({ templateName: ""})
@@ -149,19 +149,19 @@ export default class Communications extends React.Component {
       this.setState({ confirmModal: false })
       //First we need to take the campaign data and send it to the iframe to process
       const newCampaign = {
-        id: uuid(), 
-        name: campaignName, 
-        template: selectedTemplate, 
-        users: seg.users, 
+        id: uuid(),
+        name: campaignName,
+        template: selectedTemplate,
+        users: seg.users,
         dateSent: new Date()
       }
 
       //Process the actual email send
       const emailPayload = {
-        app_id: sessionData.id, 
+        app_id: sessionData.id,
         addresses: newCampaign.users,
-        from: fromAddress, 
-        template: currentTemplates.filter(a => a.id === selectedTemplate)[0], 
+        from: fromAddress,
+        template: currentTemplates.filter(a => a.id === selectedTemplate)[0],
         subject: campaignName
       }
 
@@ -171,7 +171,7 @@ export default class Communications extends React.Component {
       console.log("SEND EMAIL: ",sendEmail)
       if(sendEmail && sendEmail.success) {
         newCampaign['emailsSent'] = sendEmail.emailCount
-        
+
         camps.push(newCampaign);
         sessionData.campaigns = camps;
         const thisApp = apps[sessionData.id];
@@ -196,7 +196,7 @@ export default class Communications extends React.Component {
       } else {
         //TODO Make this fail properly
         newCampaign['emailsSent'] = 0
-        
+
         camps.push(newCampaign);
         sessionData.campaigns = camps;
         const thisApp = apps[sessionData.id];
@@ -257,7 +257,7 @@ export default class Communications extends React.Component {
                     )
                   })
                 }
-                </ul> : 
+                </ul> :
                 <ul className="tile-list">
                   <li className="card"><span className="card-body">You haven't sent any campaigns yet, let's do that now!</span></li>
                 </ul>
@@ -274,7 +274,7 @@ export default class Communications extends React.Component {
                     )
                   })
                 }
-                </ul> : 
+                </ul> :
                 <ul className="tile-list">
                   <li className="card"><span className="card-body">You haven't created any email templates yet.</span></li>
                 </ul>
@@ -307,7 +307,7 @@ export default class Communications extends React.Component {
                       )
                     })
                   }
-                </select>             
+                </select>
               </div>
               <div class="form-group col-md-12">
                 <label>Or Create A New Template</label><br/>
@@ -316,16 +316,16 @@ export default class Communications extends React.Component {
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">Enter The From Address</label> <br/>
                 <span className="text-muted">This will be the address recipients see and can respond to</span>
-                <input value={fromAddress} onChange={(e) => this.setState({ fromAddress: e.target.value })} type="text" class="form-control" id="tileName" placeholder="From email address your users will see and reply to" />                           
+                <input value={fromAddress} onChange={(e) => this.setState({ fromAddress: e.target.value })} type="text" class="form-control" id="tileName" placeholder="From email address your users will see and reply to" />
               </div>
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">Now, Give Your Campaign A Name</label> <br/>
                 <span className="text-muted">This will act as the subject line for your email</span>
-                <input value={campaignName} onChange={(e) => this.setState({ campaignName: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Give it a name" />                           
+                <input value={campaignName} onChange={(e) => this.setState({ campaignName: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Give it a name" />
               </div>
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">Finally, Send The Campaign</label><br/>
-                <button onClick={() => this.sendCampaign()} className="btn btn-primary">Send Campaign</button>         
+                <button onClick={() => this.sendCampaign()} className="btn btn-primary">Send Campaign</button>
               </div>
             </div>
           </div>
@@ -337,7 +337,7 @@ export default class Communications extends React.Component {
           </Modal.Header>
           <Modal.Body>
             <p>Give your template a name</p>
-            <input value={templateName} onChange={(e) => this.setState({ templateName: e.target.value })} type="text" className="form-control template-name" id="tileName" placeholder="Give it a name" />                           
+            <input value={templateName} onChange={(e) => this.setState({ templateName: e.target.value })} type="text" className="form-control template-name" id="tileName" placeholder="Give it a name" />
             <EmailEditor
               ref={editor => this.editor = editor}
               // onLoad={this.onLoad}
@@ -353,7 +353,7 @@ export default class Communications extends React.Component {
             </button>
           </Modal.Footer>
         </Modal>
-        
+
         {/*UPDATE OR VIEW EXISTING TEMPLATE*/}
         <Modal className="email-modal" show={showExisting} onHide={() => this.setState({ showExisting: false })}>
           <Modal.Header closeButton>
@@ -361,7 +361,7 @@ export default class Communications extends React.Component {
           </Modal.Header>
           <Modal.Body>
             <p>Give your template a name</p>
-            <input value={templateName} onChange={(e) => this.setState({ templateName: e.target.value })} type="text" className="form-control template-name" id="tileName" placeholder="Give it a name" />                           
+            <input value={templateName} onChange={(e) => this.setState({ templateName: e.target.value })} type="text" className="form-control template-name" id="tileName" placeholder="Give it a name" />
             <EmailEditor
               ref={editor => this.editor = editor}
               onLoad={this.onLoad}

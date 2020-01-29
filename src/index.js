@@ -5,29 +5,33 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 import SimpleID from 'simpleid-js-sdk';
 
+const DEV_WIDGET = (process.env.REACT_APP_DEV_WIDGET === true) ||
+                    ((typeof process.env.REACT_APP_DEV_WIDGET === 'string') &&
+                     process.env.REACT_APP_DEV_WIDGET.toLowerCase() === 'true' )
+
 const simple = new SimpleID({
   appOrigin: window.location.origin,
   appName: "Demo Dashboard",
   appId: "00000000000000000000000000000000",
-  network: 'mainnet', 
-  devWidget: false,
+  network: 'mainnet',
+  devWidget: process.env.REACT_APP_DEV_WIDGET,
   localRPCServer: 'http://localhost:7545'
 });
 const SESSION_FROM_LOCAL = 'sessionData';
 
-setGlobal({ 
+setGlobal({
   loading: true,
   SESSION_FROM_LOCAL,
-  simple, 
-  verified: false, 
-  signedIn: simple.getUserData() ? true : false, 
+  simple,
+  verified: false,
+  signedIn: simple.getUserData() ? true : false,
   sessionData: {},
-  user_id: "", 
-  app_id: simple.config.appId, 
-  apps: {}, 
+  user_id: "",
+  app_id: simple.config.appId,
+  apps: {},
   selectedProject: {},
   showDemo: false,
-  processing: false, 
+  processing: false,
   initialLoading: false
 })
 

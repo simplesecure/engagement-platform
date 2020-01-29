@@ -13,8 +13,8 @@ export default class Projects extends React.Component {
     this.state = {
       projectName: "",
       show: false,
-      proj: {}, 
-      showACTest: false, 
+      proj: {},
+      showACTest: false,
       redirect: false
     }
   }
@@ -34,7 +34,7 @@ export default class Projects extends React.Component {
 
     const seg = currentSegments[0]
     const payload = {
-      app_id: sessionData.id, 
+      app_id: sessionData.id,
       addresses: seg.users
     }
     simple.processData('AC Terrible Test', payload)
@@ -91,7 +91,7 @@ export default class Projects extends React.Component {
       } else {
         setGlobal({ apps });
       }
-      
+
       //TODO: Need to move this functionality to the iframe to avoid conflicts in how writes are handled
 
       this.setState({ show: false });
@@ -141,13 +141,13 @@ export default class Projects extends React.Component {
                 <span className="text-uppercase page-subtitle">Projects</span>
                 <h3 className="page-title">Review Your Projects</h3>
                 {
-                showACTest ? 
+                showACTest ?
                 <div className="form-group col-md-12">
                   <label htmlFor="inputSeg">AC Terrible Test</label><br/>
                   <button onClick={this.acTerribleTest} className="btn btn-primary">AC Terrible Test</button>
-                </div> : 
+                </div> :
                 <div />
-                } 
+                }
               </div>
             </div> :
             <div className="page-header row no-gutters py-4">
@@ -199,7 +199,7 @@ export default class Projects extends React.Component {
                     <h5>Add a Project</h5>
                     <div className="form-group col-md-12">
                       <label htmlFor="inputSeg">First, Give Your Project a Name</label>
-                      <input type="text" value={projectName} onChange={(e) => this.setState({ projectName: e.target.value })} class="form-control" id="tileName" placeholder="Give it a name" />
+                      <input type="text" value={projectName} onChange={(e) => this.setState({ projectName: e.target.value })} className="form-control" id="tileName" placeholder="Give it a name" />
                     </div>
                     <div className="form-group col-md-12">
                       <label htmlFor="inputSeg">Then, Create It</label><br/>
@@ -224,11 +224,11 @@ export default class Projects extends React.Component {
                   </button>
                 </Modal.Footer>
               </Modal>
-              
-              <Modal show={processing}>                
+
+              <Modal show={processing}>
                 <Modal.Body>
                   <LoadingModal messageToDisplay={"Creating project..."} />
-                </Modal.Body>                
+                </Modal.Body>
               </Modal>
             </div>
         </div>
