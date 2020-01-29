@@ -14,7 +14,7 @@ const simple = new SimpleID({
   appName: "Demo Dashboard",
   appId: "00000000000000000000000000000000",
   network: 'mainnet',
-  devWidget: process.env.REACT_APP_DEV_WIDGET,
+  devWidget: DEV_WIDGET,
   localRPCServer: 'http://localhost:7545'
 });
 const SESSION_FROM_LOCAL = 'sessionData';
