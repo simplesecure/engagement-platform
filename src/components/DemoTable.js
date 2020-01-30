@@ -2,6 +2,15 @@ import React from 'reactn';
 import Table from 'react-bootstrap/Table';
 
 export default class DemoTable extends React.Component {
+  constructor() {
+    super()
+    this.keyIdx=0
+  }
+
+  getUniqueKey() {
+    return `DemoTable${this.keyIdx++}`
+  }
+
   render() {
     const { seg } = this.props;
     let users = seg.users ? seg.users : []
@@ -22,7 +31,7 @@ export default class DemoTable extends React.Component {
               //TODO: the users returned here are just addresses right now. Need more info to be included
               users.map(user => {
                 return (
-                  <tr>
+                  <tr key={this.getUniqueKey()}>
                     <td title={user}>{user.substring(0,8)}...</td>
                     <td>Coming Soon...</td>
                     <td>Coming Soon...</td>

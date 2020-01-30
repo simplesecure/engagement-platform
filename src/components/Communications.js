@@ -76,8 +76,8 @@ export default class Communications extends React.Component {
         const thisApp = apps[sessionData.id]
         thisApp.currentTemplates = templates;
 
-        setGlobal({ sessionData, apps });
-        this.setState({ show: false });
+        await setGlobal({ sessionData, apps, templateName: "" });
+        this.setState({ show: false, selectedTemplate: newTemplate.id});
         //Now we save to the DB
 
         //
@@ -92,7 +92,6 @@ export default class Communications extends React.Component {
 
           await putInOrganizationDataTable(anObject)
           setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-          setGlobal({ templateName: ""})
         } catch (suppressedError) {
           console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
         }
@@ -316,12 +315,12 @@ export default class Communications extends React.Component {
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">Enter The From Address</label> <br/>
                 <span className="text-muted">This will be the address recipients see and can respond to</span>
-                <input value={fromAddress} onChange={(e) => this.setState({ fromAddress: e.target.value })} type="text" class="form-control" id="tileName" placeholder="From email address your users will see and reply to" />
+                <input value={fromAddress} onChange={(e) => this.setState({ fromAddress: e.target.value })} type="text" class="form-control" id="tileNameFromAddress" placeholder="From email address your users will see and reply to" />
               </div>
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">Now, Give Your Campaign A Name</label> <br/>
                 <span className="text-muted">This will act as the subject line for your email</span>
-                <input value={campaignName} onChange={(e) => this.setState({ campaignName: e.target.value })} type="text" class="form-control" id="tileName" placeholder="Give it a name" />
+                <input value={campaignName} onChange={(e) => this.setState({ campaignName: e.target.value })} type="text" class="form-control" id="tileNameCampaignName" placeholder="Give it a name" />
               </div>
               <div class="form-group col-md-12">
                 <label htmlFor="inputSeg">Finally, Send The Campaign</label><br/>
