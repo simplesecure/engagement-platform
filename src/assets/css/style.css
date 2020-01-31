@@ -29,6 +29,11 @@ section {
   cursor: pointer;
 }
 
+.copy-button {
+  font-size: 16px!important;
+  margin-left: 8px;
+}
+
 .custom-tile {
   color: green;
 }

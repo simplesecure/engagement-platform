@@ -5,6 +5,9 @@ import Modal from 'react-bootstrap/Modal'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
 import LoadingModal from './LoadingModal';
+import copy from 'copy-to-clipboard';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const ERROR_MSG = "Failed to create project, please try again. If this continues, please contact support@simpleid.xyz"
 
 export default class Projects extends React.Component {
@@ -118,6 +121,18 @@ export default class Projects extends React.Component {
     this.setState({ show: false });
   }
 
+  copy = () => {
+    const elem = document.getElementById('app-id')
+    const text = elem.innerText
+    const copied = copy(text)
+    if(copied) {
+      toast.success("Copied!", {
+        position: toast.POSITION.TOP_RIGHT, 
+        autoClose: 1000
+      });
+    }
+  }
+
   renderMain() {
     const { apps, processing } = this.global;
     const { projectName, proj, show, showACTest } = this.state;
@@ -169,7 +184,7 @@ export default class Projects extends React.Component {
                         return (
                           <li className="card text-center" key={app.id}>
                             <span className="card-body standard-tile project-title">{app.project_name}</span><br/>
-                            <span className="card-body standard-tile">App ID: <br/>{app.id}</span>
+                            <span className="card-body standard-tile">App ID: <br/><span id="app-id">{app.id}</span><i onClick={this.copy} data-clipboard-target="#app-id" className="copy-button clickable material-icons">content_copy</i></span>
                             <span onClick={() => this.deleteProject(app, false)} className="right clickable text-danger">Delete</span>
                           </li>
                           )
@@ -182,6 +197,7 @@ export default class Projects extends React.Component {
                     <p>Add a new project to get started. Once you do and once your app is integrated, you'll be able use SimpleID.</p>
                   </div>
                 }
+                <ToastContainer />
               </div>
 
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
