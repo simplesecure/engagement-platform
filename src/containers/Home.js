@@ -1,6 +1,6 @@
 import React from 'reactn';
 import { BrowserRouter, Route } from 'react-router-dom';
-import Auth from '../components/Auth';
+import SignIn from '../components/SignIn';
 import Dashboard from '../components/Dashboard';
 import SideNav from '../components/SideNav';
 import Search from '../components/Search';
@@ -21,11 +21,11 @@ export default class Home extends React.Component {
         return <Dashboard />
       case '/new-search':
         return <Search />
-      case '/new-tile': 
+      case '/new-tile':
         return <AddTile />
       case '/notifications':
         return <Notifications />
-      default: 
+      default:
         return <Home />
     }
   }
@@ -48,7 +48,7 @@ export default class Home extends React.Component {
         <div className="row">
           {
             !window.location.href.includes('notifications/appId') ?
-            <SideNav /> : 
+            <SideNav /> :
             <div/>
           }
           <Route exact path='/' component={Dashboard} />
@@ -60,13 +60,13 @@ export default class Home extends React.Component {
           <Route path='/communications' component={Communications} />
           <Route path='/projects' component={Projects} />
           {/*
-            //This is the component that will render the in-app notifications                  
+            //This is the component that will render the in-app notifications
           */}
           <Route path='/notifications/appId=:id&messageIds=:id' component={Message} />
-          {/* 
+          {/*
             //   This is not a scalable solution, but we can go live with it
             //   This will throw up a loading modal on any refresh (component mount)
-            //   This ensures the user can't take any action that requires the iframe until 
+            //   This ensures the user can't take any action that requires the iframe until
             //   the fetchSegment process is done
           */}
           <Modal show={initialLoading} >
@@ -106,9 +106,9 @@ export default class Home extends React.Component {
     )
   }
 
-  renderAuth() {
+  renderSignIn() {
     return (
-      <Auth />
+      <SignIn />
     )
   }
 
@@ -124,7 +124,7 @@ export default class Home extends React.Component {
     } else if(window.location.href.includes('notifications/appId')) {
       renderEl = this.renderMessages()
     } else {
-      renderEl = this.renderAuth()
+      renderEl = this.renderSignIn()
     }
     return (
       <div>

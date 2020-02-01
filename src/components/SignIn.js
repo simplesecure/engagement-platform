@@ -1,20 +1,10 @@
 import React from 'reactn';
 
-export default class Auth extends React.Component {
+export default class SignIn extends React.Component {
   handleSignIn = async (e) => {
     const { simple } = this.global;
     e.preventDefault();
     simple.signUserIn();
-  
-    //this.checkForAuth();
-  }
-
-  checkForAuth = () => {
-    const { simple, signedIn } = this.global;
-    //This is checking is a user is already signed in
-    if(!simple.getUserData() && !signedIn) {
-      this.checkForAuth();
-    }
   }
 
   render() {

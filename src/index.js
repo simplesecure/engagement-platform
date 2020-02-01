@@ -3,31 +3,18 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import SimpleID from 'simpleid-js-sdk';
 
-const DEV_WIDGET = (process.env.REACT_APP_DEV_WIDGET === true) ||
-                    ((typeof process.env.REACT_APP_DEV_WIDGET === 'string') &&
-                     process.env.REACT_APP_DEV_WIDGET.toLowerCase() === 'true' )
-
-const simple = new SimpleID({
-  appOrigin: window.location.origin,
-  appName: "Demo Dashboard",
-  appId: "00000000000000000000000000000000",
-  network: 'mainnet',
-  devWidget: DEV_WIDGET,
-  localRPCServer: 'http://localhost:7545'
-});
 const SESSION_FROM_LOCAL = 'sessionData';
+const SID_APP_ID = "00000000000000000000000000000000"
 
 setGlobal({
   loading: true,
   SESSION_FROM_LOCAL,
-  simple,
   verified: false,
-  signedIn: simple.getUserData() ? true : false,
+  signedIn: false,
   sessionData: {},
   user_id: "",
-  app_id: simple.config.appId,
+  app_id: SID_APP_ID,
   apps: {},
   selectedProject: {},
   showDemo: false,
