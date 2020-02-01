@@ -3,7 +3,7 @@ import StickyNav from './StickyNav';
 
 export default class Account extends React.Component {
   render() {
-    const { simple } = this.global;
+    const { simple, org_id } = this.global;
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
@@ -20,7 +20,7 @@ export default class Account extends React.Component {
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <h5>Your Info</h5>
               <ul className="tile-list">
-                <li className=" card text-center"><span className="card-body standard-tile seg-title">User ID/Wallet<br/><strong className="account-card">{simple.getUserData() && simple.getUserData().wallet ? simple.getUserData().wallet.ethAddr : ""}</strong></span></li>
+                <li className=" card text-center"><span className="card-body standard-tile seg-title">Org ID<br/><strong className="account-card">{org_id}</strong></span></li>
                 <li className=" card text-center"><span className="card-body standard-tile seg-title">Your Team<br/><strong className="account-card">Coming Soon...</strong></span></li>
                 <li className=" card text-center"><span className="card-body standard-tile seg-title">Your Plan<br/><strong className="account-card">Beta</strong></span></li>
               </ul>
