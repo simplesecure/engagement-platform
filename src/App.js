@@ -22,7 +22,6 @@ export default class App extends React.Component {
 
     if(signedIn) {
       //Need to check if the user is part of an organization from the org table
-      const user_id = simple.getUserData().wallet.ethAddr;
       const org_id = simple.getUserData().orgId ? simple.getUserData().orgId.org_id : undefined;
       //regardless of whether there is data in local storage, we need to fetch from db
       let appData;
@@ -33,7 +32,7 @@ export default class App extends React.Component {
       }
       
 
-      setGlobal({ user_id, org_id });
+      setGlobal({ org_id });
       if(appData && appData.Item && Object.keys(appData.Item.apps).length > 0) {
         const appKeys = Object.keys(appData.Item.apps);
         const allApps = appData.Item.apps;

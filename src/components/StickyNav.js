@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 
 export default class StickyNav extends React.Component {
   render() {
-    const { simple, apps, sessionData } = this.global;
+    const { simple, apps, sessionData, org_id } = this.global;
+    const orgId = org_id ? `${org_id.substring(0,8)}...` : ""
+
     const appKeys = Object.keys(apps);
     let projects = [];
     for(const appKey of appKeys) {
@@ -99,7 +101,7 @@ export default class StickyNav extends React.Component {
 
             <li className="nav-item dropdown">
               <button className="a-el-fix project-drop nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">                
-                <span className="d-none d-md-inline-block">{simple.getUserData() && simple.getUserData().wallet ? `${simple.getUserData().wallet.ethAddr.substring(0, 8)}...` : ""}</span>
+                <span className="d-none d-md-inline-block">{orgId}</span>
               </button>
               <div className="dropdown-menu dropdown-menu-small">
                 <Link to="/account"><button className="a-el-fix dropdown-item">

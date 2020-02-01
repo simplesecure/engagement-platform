@@ -26,7 +26,6 @@ setGlobal({
   verified: false,
   signedIn: simple.getUserData() ? true : false,
   sessionData: {},
-  user_id: "",
   app_id: simple.config.appId,
   apps: {},
   selectedProject: {},
