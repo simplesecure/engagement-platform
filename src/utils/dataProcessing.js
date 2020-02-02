@@ -11,7 +11,7 @@ const ethers = require('ethers');
 const log = getLog('dataProcessing')
 
 const ALETHIO_KEY = process.env.REACT_APP_ALETHIO_KEY;
-const rootUrl = `https://api.aleth.io/v1`;
+const ALETHIO_URL = process.env.REACT_APP_ALETHIO_URL;
 const ROOT_EMAIL_SERVICE_URL = process.env.REACT_APP_EMAIL_SVC_URL
 const headers = { Authorization: `Bearer ${ALETHIO_KEY}`, 'Content-Type': 'application/json' }
 let addresses = []
@@ -251,7 +251,7 @@ export async function handleData(dataToProcess) {
 }
 
 export async function filterByContract(userList, contractAddress) {
-  const uri = `${rootUrl}/contracts/${contractAddress}/transactions?page[limit]=100`;
+  const uri = `${ALETHIO_URL}/contracts/${contractAddress}/transactions?page[limit]=100`;
   await fetchFromURL(uri, "contract");
   const uniqueAddresses = [...new Set(addresses)];
   log.debug(uniqueAddresses);
