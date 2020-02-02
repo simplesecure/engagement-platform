@@ -643,6 +643,8 @@ export class SidServices
       //
       const userDataDbRow = await this.tableGetWithIdpCredentials()
       const userData = userDataDbRow.Item
+  
+      this.persist.sid = userData ? userData.sid : undefined
       this.persist.secretCipherText1 = userData.secretCipherText1
       this.persist.secretCipherText2 = userData.secretCipherText2
 
@@ -665,9 +667,7 @@ export class SidServices
 
       this.persist.userUuid = userData.uuid
 
-      // 5. If the user has never signed into this App before, we need to update
-      //    the appropriate tables with the user's data unless this is happening on the hosted-wallet side of things:
-      //
+      
     }
 
     if (authenticated) {

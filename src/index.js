@@ -5,7 +5,6 @@ import App from './App';
 import { createSidSvcs } from './utils/sidServices.js'
 import { getCloudUser } from './utils/cloudUser.js'
 import * as serviceWorker from './serviceWorker';
-import { configureDebugScopes } from './utils/debugScopes.js'
 
 const log = require('loglevel')
 
@@ -30,7 +29,8 @@ setGlobal({
   showDemo: false,
   processing: false,
   initialLoading: false,
-  action: ""
+  action: "", 
+  org_id: getCloudUser().getUserData() ? getCloudUser().getUserData().orgId : ""
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));
@@ -121,11 +121,9 @@ if (window) {
       setDebugScope(aScope, aLevel)
     },
     debugAll: function() {
-      "use strict";
       setAllDebugScopes();
     },
     debugOff: function() {
-      "use strict";
       setAllDebugScopes('INFO');
     }
   }

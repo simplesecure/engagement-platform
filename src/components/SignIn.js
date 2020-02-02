@@ -1,5 +1,4 @@
-import React, { setGlobal } from 'reactn';
-import { getCloudUser } from './../utils/cloudUser.js'
+import React from 'reactn';
 import Modal from 'react-bootstrap/Modal'
 import Auth from './Auth.js'
 import Header from './Header.js'

@@ -6,8 +6,6 @@ const SIMPLEID_USER_SESSION = 'SimpleID-User-Session';
 const log = getLog('sidServices')
 
 class CloudUser {
-  constructor() {
-  }
 
   signOut() {
     clearSidKeysFromLocalStore('getCloudUser().js')
@@ -47,8 +45,10 @@ class CloudUser {
     log.debug("AUTHENTICATED USER: ", authenticatedUser);
     //TODO: @AC needs to review because this might be a place where we are revealing too much to the parent
     if (authenticatedUser) {
+      sid = getSidSvcs().getSID();
+      console.log("SID: ", sid)
       const userData = {
-        orgId: sid ? sid : null
+        orgId: sid ? sid.org_id : ""
       }
       localStorage.setItem(SIMPLEID_USER_SESSION, JSON.stringify(userData));
       return true
@@ -181,7 +181,7 @@ export function clearSidKeysFromLocalStore(context='') {
   const keysToClear = [SIMPLEID_USER_SESSION]
   for (const key of keysToClear) {
     try {
-      localStorage.remove(key)
+      localStorage.removeItem(key)
     } catch (suppressedError) {}
   }
 }

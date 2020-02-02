@@ -4,7 +4,7 @@ import { getCloudUser } from './../utils/cloudUser.js'
 
 export default class StickyNav extends React.Component {
   render() {
-    const { simple, apps, sessionData, org_id } = this.global;
+    const { apps, sessionData, org_id } = this.global;
     const orgId = org_id ? `${org_id.substring(0,8)}...` : ""
 
     const appKeys = Object.keys(apps);

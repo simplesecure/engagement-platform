@@ -68,7 +68,9 @@ export default class Auth extends React.Component {
       if(signIn === 'cognito-user-verified') {
         const userData = await getCloudUser().approveSignIn()
         if(userData) {
-          setGlobal({ signedIn: true, action: "" })
+          const orgId = getCloudUser().getUserData().orgId
+
+          setGlobal({ signedIn: true, action: "", org_id: orgId })
         }
       } else {
         setGlobal({ action: 'sign-in-approval' })

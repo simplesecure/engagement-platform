@@ -12,7 +12,7 @@ import { getCloudUser } from './utils/cloudUser.js'
 export default class App extends React.Component {
 
   async componentDidMount() {
-    const { simple, SESSION_FROM_LOCAL, signedIn } = this.global;
+    const { SESSION_FROM_LOCAL, signedIn } = this.global;
     setGlobal({ loading: true });
     //let currentSegments = [];
     //Check local storage for quick loading first
@@ -23,7 +23,7 @@ export default class App extends React.Component {
 
     if(signedIn) {
       //Need to check if the user is part of an organization from the org table
-      const org_id = getCloudUser().getUserData().orgId ? getCloudUser().getUserData().orgId.org_id : undefined;
+      const org_id = getCloudUser().getUserData().orgId ? getCloudUser().getUserData().orgId : undefined;
       //regardless of whether there is data in local storage, we need to fetch from db
       let appData;
       if(org_id) {
@@ -74,7 +74,7 @@ export default class App extends React.Component {
 
   fetchSegmentData = async (appData) => {
     console.warn("FETCHING SEGMENT DATA")
-    const { simple, sessionData, SESSION_FROM_LOCAL, org_id, currentAppId } = this.global;
+    const { sessionData, SESSION_FROM_LOCAL, org_id, currentAppId } = this.global;
     const payload = {
       app_id: currentAppId,
       appData,

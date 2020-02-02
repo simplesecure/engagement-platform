@@ -32,7 +32,7 @@ export default class Projects extends React.Component {
   }
 
   createProject = async () => {
-    const { apps, org_id, simple } = this.global;
+    const { apps, org_id } = this.global;
     const { projectName } = this.state;
     this.setGlobal({ processing: true });
     const newProject = {

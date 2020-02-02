@@ -139,7 +139,7 @@ export default class Communications extends React.Component {
   }
 
   sendCampaign = async (confirmed) => {
-    const { sessionData, simple, apps, SESSION_FROM_LOCAL, org_id } = this.global;
+    const { sessionData, apps, SESSION_FROM_LOCAL, org_id } = this.global;
     const { selectedSegment, selectedTemplate, campaignName, fromAddress } = this.state;
     const { currentSegments, currentTemplates, campaigns } = sessionData;
     const seg = currentSegments.filter(a => a.id === selectedSegment)[0]

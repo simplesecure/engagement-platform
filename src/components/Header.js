@@ -1,8 +1,6 @@
 import React from 'reactn';
-import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Image from 'react-bootstrap/Image';
-import { getSidSvcs } from '../utils/sidServices.js';
 
 export default class Header extends React.Component {
   render() {

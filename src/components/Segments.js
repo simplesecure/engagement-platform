@@ -73,7 +73,7 @@ export default class Segments extends React.Component {
   }
 
   createSegment = async () => {
-    const { sessionData, SESSION_FROM_LOCAL, org_id, apps, simple } = this.global;
+    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { currentSegments } = sessionData;
     const { newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter } = this.state;
     const segments = currentSegments ? currentSegments : [];
