@@ -7,6 +7,7 @@ import Home from './containers/Home';
 import { getFromOrganizationDataTable, getFromAnalyticsDataTable } from './utils/awsUtils';
 import { setLocalStorage } from './utils/misc';
 import CookieConsent from "react-cookie-consent";
+import { getCloudUser } from './utils/cloudUser.js'
 
 export default class App extends React.Component {
 
@@ -22,7 +23,7 @@ export default class App extends React.Component {
 
     if(signedIn) {
       //Need to check if the user is part of an organization from the org table
-      const org_id = simple.getUserData().orgId ? simple.getUserData().orgId.org_id : undefined;
+      const org_id = getCloudUser().getUserData().orgId ? getCloudUser().getUserData().orgId.org_id : undefined;
       //regardless of whether there is data in local storage, we need to fetch from db
       let appData;
       if(org_id) {
@@ -30,7 +31,7 @@ export default class App extends React.Component {
       } else {
         console.log("ERROR: No Org ID")
       }
-      
+
 
       setGlobal({ org_id });
       if(appData && appData.Item && Object.keys(appData.Item.apps).length > 0) {
@@ -50,7 +51,7 @@ export default class App extends React.Component {
           setGlobal({ verified: true })
         }
 
-        //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to 
+        //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to
         //Get the correct results
         //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the fetchSegmentData function
         //Will update state as necessary
@@ -75,20 +76,20 @@ export default class App extends React.Component {
     console.warn("FETCHING SEGMENT DATA")
     const { simple, sessionData, SESSION_FROM_LOCAL, org_id, currentAppId } = this.global;
     const payload = {
-      app_id: currentAppId, 
-      appData, 
+      app_id: currentAppId,
+      appData,
       org_id
     }
     const { currentSegments } = sessionData
     let segs = currentSegments;
     setGlobal({ initialLoading: true })
-    const updatedData = await simple.processData('update-segments', payload)
+    const updatedData = await getCloudUser().processData('update-segments', payload)
     segs = updatedData
     sessionData.currentSegments = segs;
     setGlobal({ sessionData })
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     //TODO: Now we can check for notifications
-    //const notifications = await simple.checkNotifications()
+    //const notifications = await getCloudUser().checkNotifications()
     //console.log("NOTIFICATIONS", notifications)
     setGlobal({ initialLoading: false })
 
@@ -113,7 +114,7 @@ export default class App extends React.Component {
         </CookieConsent>
         <Home />
       </div>
-      
+
     )
   }
 }

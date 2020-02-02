@@ -6,6 +6,7 @@ import uuid from 'uuid/v4';
 import LoadingModal from './LoadingModal'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
+import { getCloudUser } from './../utils/cloudUser.js'
 // const ERROR_MSG = "Failed to send email. If this continues, please contact support@simpleid.xyz"
 
 export default class Communications extends React.Component {
@@ -53,7 +54,7 @@ export default class Communications extends React.Component {
         try {
           const anObject = orgData.Item
           anObject.apps = apps;
-          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+          anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
 
           await putInOrganizationDataTable(anObject)
           setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
@@ -88,7 +89,7 @@ export default class Communications extends React.Component {
         try {
           const anObject = orgData.Item
           anObject.apps = apps;
-          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+          anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
 
           await putInOrganizationDataTable(anObject)
           setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
@@ -115,7 +116,7 @@ export default class Communications extends React.Component {
       try {
         const anObject = orgData.Item
         anObject.apps = apps;
-        anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
         await putInOrganizationDataTable(anObject)
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
       } catch (suppressedError) {
@@ -166,7 +167,7 @@ export default class Communications extends React.Component {
 
       setGlobal({ processing: true })
 
-      const sendEmail = await simple.processData('email messaging', emailPayload)
+      const sendEmail = await getCloudUser().processData('email messaging', emailPayload)
       console.log("SEND EMAIL: ",sendEmail)
       if(sendEmail && sendEmail.success) {
         newCampaign['emailsSent'] = sendEmail.emailCount
@@ -183,7 +184,7 @@ export default class Communications extends React.Component {
         try {
           const anObject = orgData.Item
           anObject.apps = apps
-          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+          anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
           await putInOrganizationDataTable(anObject)
           setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
           this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
@@ -208,7 +209,7 @@ export default class Communications extends React.Component {
         try {
           const anObject = orgData.Item
           anObject.apps = apps
-          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+          anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
           await putInOrganizationDataTable(anObject)
           setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
           this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
@@ -233,7 +234,7 @@ export default class Communications extends React.Component {
     const templates = currentTemplates ? currentTemplates : [];
     const segments = currentSegments ? currentSegments : [];
     const sendFeaturesComplete = selectedSegment !== "Choose..." && selectedTemplate !== "Choose..." && fromAddress && fromAddress.length > 5 && campaignName
-   
+
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
@@ -299,8 +300,8 @@ export default class Communications extends React.Component {
               </div>
               <div className="form-group col-md-12">
                 <label htmlFor="inputSeg">Next, Choose a Template</label>
-                {templates.length > 0 ? 
-                  <select value={selectedTemplate} onChange={(e) => this.setState({ selectedTemplate: e.target.value })} id="inputSeg" className="form-control"> 
+                {templates.length > 0 ?
+                  <select value={selectedTemplate} onChange={(e) => this.setState({ selectedTemplate: e.target.value })} id="inputSeg" className="form-control">
                   <option value="Choose...">Choose...</option>
                   {
                     templates.map(temp => {
@@ -309,8 +310,8 @@ export default class Communications extends React.Component {
                       )
                     })
                   }
-                </select> : 
-                <select disabled value="Create a template" id="inputSeg" className="form-control"> 
+                </select> :
+                <select disabled value="Create a template" id="inputSeg" className="form-control">
                   <option disabled value="Choose...">Create a template</option>
                 </select>
                 }

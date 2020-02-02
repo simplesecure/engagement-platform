@@ -1,5 +1,6 @@
 import React from 'reactn';
 import { Link } from 'react-router-dom';
+import { getCloudUser } from './../utils/cloudUser.js'
 
 export default class StickyNav extends React.Component {
   render() {
@@ -20,7 +21,7 @@ export default class StickyNav extends React.Component {
             <div className="input-group input-group-seamless ml-3">
               <div className="input-group-prepend">
                 <div className="input-group-text">
-                  
+
                 </div>
               </div>
             </div>
@@ -54,7 +55,7 @@ export default class StickyNav extends React.Component {
                   </div>
                   <div className="notification__content">
                     <span className="notification__category">Comms</span>
-                    <p>Last week, you sent 
+                    <p>Last week, you sent
                       <span className="text-danger text-semibold"> 5.52%</span> fewer emails or notifications to your users.</p>
                   </div>
                 </button>
@@ -62,36 +63,36 @@ export default class StickyNav extends React.Component {
               </div>
             </li>*/}
             {
-              projects.length > 0 ? 
+              projects.length > 0 ?
               <li className="nav-item dropdown border-right">
                 <button className="a-el-fix project-drop nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                   <span className="d-md-inline-block">Current Project: {sessionData.project_name}</span>
                 </button>
                 <div className="dropdown-menu dropdown-menu-small">
                   {
-                    Object.keys(apps).length > 1 ? 
+                    Object.keys(apps).length > 1 ?
                     <div>
-                      { 
+                      {
                         apps.map(app => {
                         return (
                           <button className="a-el-fix dropdown-item">
                             <i className="material-icons">web</i> {app.projectName}
                           </button>
                         )
-                        }) 
+                        })
                       }
                       <div className="dropdown-divider"></div>
                       <Link to='/projects'><button className="a-el-fix dropdown-item">
                         <i className="material-icons">web</i> Add or View Projects</button></Link>
-                      </div> : 
+                      </div> :
                     <div>
                     <Link to='/projects'><button className="a-el-fix dropdown-item">
                       <i className="material-icons">web</i> Add or View Projects</button></Link>
                     </div>
                   }
-                  
+
                 </div>
-              </li> : 
+              </li> :
               <li className="nav-item dropdown border-right">
                 <Link to='/projects'><button className="a-el-fix project-drop nav-link text-nowrap px-3" aria-haspopup="true" aria-expanded="false">
                   <span className="d-md-inline-block">Create a Project</span>
@@ -100,21 +101,21 @@ export default class StickyNav extends React.Component {
             }
 
             <li className="nav-item dropdown">
-              <button className="a-el-fix project-drop nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">                
+              <button className="a-el-fix project-drop nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <span className="d-none d-md-inline-block">{orgId}</span>
               </button>
               <div className="dropdown-menu dropdown-menu-small">
                 <Link to="/account"><button className="a-el-fix dropdown-item">
                   <i className="material-icons">&#xE7FD;</i> Account</button></Link>
-                
+
                   <a href="mailto:support@simpleid.xyz"><button className="a-el-fix dropdown-item"><i className="material-icons">help</i>Help</button></a>
                 <div className="dropdown-divider"></div>
-                <button onClick={() => simple.signOut()} className="a-el-fix dropdown-item text-danger">
+                <button onClick={() => getCloudUser().signOut()} className="a-el-fix dropdown-item text-danger">
                   <i className="material-icons text-danger">&#xE879;</i> Logout </button>
               </div>
             </li>
           </ul>
-          
+
         </nav>
       </div>
     )

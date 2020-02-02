@@ -56,7 +56,7 @@ export default class Notifications extends React.Component {
     try {
       const anObject = orgData.Item
       anObject.apps = apps;
-      anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
       await putInOrganizationDataTable(anObject)
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
       this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
@@ -93,7 +93,7 @@ export default class Notifications extends React.Component {
     try {
       const anObject = orgData.Item
       anObject.apps = apps;
-      anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
       await putInOrganizationDataTable(anObject)
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
       this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})
@@ -143,7 +143,7 @@ export default class Notifications extends React.Component {
     try {
       const anObject = orgData.Item
       anObject.apps = apps;
-      anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
       await putInOrganizationDataTable(anObject)
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
       this.setState({ selectedSegment: "Choose...", message: "", notificationName: ""})

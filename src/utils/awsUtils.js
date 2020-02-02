@@ -44,62 +44,19 @@ async function putInDb(aTable, anObject) {
   })
 }
 
-async function updateInDb(aTable, aKeyName, anObject) {
-  //Placeholder for updating data rather than full overwrites
-  //TODO: review whether we need this
-}
 
-// TODO: Expand these accessors to be more functional (i.e. get specific items
-//       from the analytics table as needed, put new items in that don't affect
-//       adjacent row elements or do updates)
-//
 export async function getFromAnalyticsDataTable(aKeyValue) {
-  console.log(`DBG: getFromAnalyticsDataTable ${aKeyValue}`)
-  return getFromDb(
-    process.env.REACT_APP_AD_TABLE, process.env.REACT_APP_AD_TABLE_PK, aKeyValue)
+  return getFromDb(process.env.REACT_APP_AD_TABLE, process.env.REACT_APP_AD_TABLE_PK, aKeyValue)
 }
 
 export async function putInAnalyticsDataTable(anObject) {
-  //Let's process this on the iframe side
-  // const { simple } = getGlobal();
-  console.log(`DBG: putInAnalyticsDataTable`)
-  // const dataType = 'analytics-table-put'
-  // const update = await simple.processData(dataType, anObject);
-  // return update;
   return putInDb(process.env.REACT_APP_AD_TABLE, anObject)
 }
 
-export async function updateInAnalyticsDataTable(anObject) {
-  //Let's process this on the iframe side
-  // const { simple } = getGlobal();
-  console.log(`DBG: updateInAnalyticsDataTable`)
-  // const dataType = 'analytics-table-update'
-  // const update = await simple.processData(dataType, anObject);
-  // return update;
-  return updateInDb(process.env.REACT_APP_AD_TABLE, process.env.REACT_APP_AD_TABLE_PK, anObject)
-}
-
 export async function getFromOrganizationDataTable(aKeyValue) {
-  console.log(`DBG: getFromOrganizationDataTable ${aKeyValue}`)
-  return getFromDb(process.env.REACT_APP_OD_TABLE, process.env.REACT_APP_OD_TABLE_PK, aKeyValue)
+  return getFromDb(process.env.REACT_APP_ORG_TABLE, process.env.REACT_APP_ORG_TABLE_PK, aKeyValue)
 }
 
 export async function putInOrganizationDataTable(anObject) {
-  //Let's process this on the iframe side
-  // const { simple } = getGlobal();
-  console.log(`DBG: putInOrganizationDataTable`)
-  // const dataType = 'org-table-put'
-  // const update = await simple.processData(dataType, anObject);
-  // return update;
-  return putInDb(process.env.REACT_APP_OD_TABLE, anObject)
-}
-
-export async function updateInOrganizationDataTable(anObject) {
-  //Let's process this on the iframe side
-  // const { simple } = getGlobal();
-  console.log(`DBG: updateInOrganizationDataTable`)
-  // const dataType = 'org-table-update'
-  // const update = await simple.processData(dataType, anObject);
-  // return update;
-  return updateInDb(process.env.REACT_APP_OD_TABLE, process.env.REACT_APP_OD_TABLE_PK, anObject)
+  return putInDb(process.env.REACT_APP_ORG_TABLE, anObject)
 }

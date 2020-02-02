@@ -93,19 +93,6 @@ export default class Home extends React.Component {
     )
   }
 
-  renderMessages() {
-    return(
-      <BrowserRouter>
-        <div>
-          {/*
-            //This is the component that will render the in-app notifications
-          */}
-          <Route path='/notifications/appId=:id&messageIds=:id' component={Message} />
-        </div>
-      </BrowserRouter>
-    )
-  }
-
   renderSignIn() {
     return (
       <SignIn />
@@ -121,8 +108,6 @@ export default class Home extends React.Component {
       renderEl = this.renderSignedIn()
     } else if(signedIn && Object.keys(sessionData).length === 0) {
       renderEl = this.renderNoProjectsView()
-    } else if(window.location.href.includes('notifications/appId')) {
-      renderEl = this.renderMessages()
     } else {
       renderEl = this.renderSignIn()
     }

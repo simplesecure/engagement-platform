@@ -8,7 +8,7 @@ export default class AddTile extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      tileName: "", 
+      tileName: "",
       selectedSegment: "Choose..."
     }
   }
@@ -21,9 +21,9 @@ export default class AddTile extends React.Component {
     const thisSegment = currentSegments.filter(a => a.id === selectedSegment)[0]
     const userCount = thisSegment.userCount
     const newTile = {
-      id: uuid(), 
-      name: tileName, 
-      segment: selectedSegment, 
+      id: uuid(),
+      name: tileName,
+      segment: selectedSegment,
       userCount
     }
     tiles.push(newTile);
@@ -40,7 +40,7 @@ export default class AddTile extends React.Component {
     //      A segment will be stored in the DB under the primary key 'app_id' in
     //      the appropriate user_id's segment storage:
     //
-    
+
     //
     // TODO: probably want to wait on this to finish and throw a status/activity
     //       bar in the app:
@@ -49,7 +49,7 @@ export default class AddTile extends React.Component {
     const anObject = orgData.Item
     try {
       anObject.apps = apps;
-      anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
       await putInOrganizationDataTable(anObject)
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     } catch (suppressedError) {
@@ -76,7 +76,7 @@ export default class AddTile extends React.Component {
       try {
         const anObject = orgData.Item
         anObject.apps = apps;
-        anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
         await putInOrganizationDataTable(anObject)
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
       } catch (suppressedError) {
@@ -116,9 +116,9 @@ export default class AddTile extends React.Component {
                     return (
                       <li className="card" key={tile.name}><span className="card-body standard-tile">{tile.name}</span><span onClick={() => this.deleteTile(tile.name)} className="right clickable text-danger">Remove</span></li>
                     )
-                  })                  
+                  })
                 }
-              </ul> : 
+              </ul> :
               <ul className="tile-list">
                 <li className="card"><span className="card-body">No tiles selected yet. Add a new custom tile that you can display on your dashboard.</span></li>
               </ul>
@@ -165,7 +165,7 @@ export default class AddTile extends React.Component {
           </div>
         </div>
       </main>
-   
+
     )
   }
 }

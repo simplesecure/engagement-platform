@@ -10,6 +10,7 @@ import DatePicker from 'react-date-picker';
 import uuid from 'uuid/v4';
 import { setLocalStorage } from '../utils/misc';
 import LoadingModal from './LoadingModal';
+import { getCloudUser } from './../utils/cloudUser.js'
 const ERROR_MSG = "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
 
 export default class Segments extends React.Component {
@@ -22,13 +23,13 @@ export default class Segments extends React.Component {
       allUsers: true,
       filterType: "Choose...",
       rangeType: "Choose...",
-      operatorType: "Choose...", 
-      newSegName: "", 
-      date: new Date(), 
-      amount: 0, 
-      contractAddress: "", 
-      existingSegmentToFilter: "Choose...", 
-      tokenType: "Choose...", 
+      operatorType: "Choose...",
+      newSegName: "",
+      date: new Date(),
+      amount: 0,
+      contractAddress: "",
+      existingSegmentToFilter: "Choose...",
+      tokenType: "Choose...",
       tokenAddress: ""
     }
   }
@@ -51,7 +52,7 @@ export default class Segments extends React.Component {
         try {
           const anObject = orgData.Item
           anObject.apps = apps;
-          anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+          anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
           await putInOrganizationDataTable(anObject)
         } catch (suppressedError) {
           console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
@@ -83,21 +84,21 @@ export default class Segments extends React.Component {
     const segmentCriteria = {
       appId: sessionData.id,
       id: segId,
-      name: newSegName, 
-      startWithExisting: !allUsers, 
-      existingSegmentToFilter: allUsers === false ? existingSegmentToFilter : null, 
+      name: newSegName,
+      startWithExisting: !allUsers,
+      existingSegmentToFilter: allUsers === false ? existingSegmentToFilter : null,
       filter: filterToUse,
       dateRange: filterToUse.type === "Date Range" ? {
-        rangeType, 
+        rangeType,
         date: Date.parse(date)
-      } : null, 
+      } : null,
       numberRange: filterToUse.type === "Number Range" ? {
-        operatorType, 
-        tokenType, 
-        tokenAddress: tokenType === "ERC-20" ? tokenAddress : undefined, 
+        operatorType,
+        tokenType,
+        tokenAddress: tokenType === "ERC-20" ? tokenAddress : undefined,
         amount
-      } : null, 
-      contractAddress: filterToUse.type === "Contract" ? contractAddress : null, 
+      } : null,
+      contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
       userCount: null
     }
 
@@ -105,10 +106,10 @@ export default class Segments extends React.Component {
 
     //This state should trigger a UI element showing the segment being created (could take a while)
     setGlobal({ processingSegment: true });
-    
+
     //Here we need to use the iframe to process the segment criteria and return the necessary data
-    const data = await simple.processData('segment', segmentCriteria);
-    
+    const data = await getCloudUser().processData('segment', segmentCriteria);
+
     if(data) {
       if(filterToUse.filter === "Total Transactions") {
         segmentCriteria.totalTransactions = data;
@@ -135,8 +136,8 @@ export default class Segments extends React.Component {
     //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
     //      A segment will be stored in the DB under the primary key 'app_id' in
     //      the appropriate user_id's segment storage:
-    
-    
+
+
     // TODO: probably want to wait on this to finish and throw a status/activity
     //       bar in the app:
     const orgData = await getFromOrganizationDataTable(org_id);
@@ -144,7 +145,7 @@ export default class Segments extends React.Component {
     try {
       const anObject = orgData.Item
       anObject.apps = apps;
-      anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
       await putInOrganizationDataTable(anObject)
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     } catch (suppressedError) {
@@ -164,7 +165,7 @@ export default class Segments extends React.Component {
     const { currentSegments } = sessionData;
     const { show, tokenAddress, tokenType, seg, existingSeg, filterType, newSegName, rangeType, operatorType, amount, contractAddress, existingSegmentToFilter } = this.state;
     const segments = currentSegments ? currentSegments : [];
-  
+
     const filterToUse = filters.filter(a => a.filter === filterType)[0];
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
@@ -274,7 +275,7 @@ export default class Segments extends React.Component {
                     <label htmlFor="tileName">Enter The Contract Address</label>
                     <input value={contractAddress} onChange={(e) => this.setState({ contractAddress: e.target.value })} type="text" className="form-control" id="tileName" placeholder="Contract Address" />
                   </div> :
-                  filterToUse && filterToUse.type === "Date Range" ? 
+                  filterToUse && filterToUse.type === "Date Range" ?
                   <div className="row form-group col-md-12">
                     <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
                       <label htmlFor="chartSty">Make a Selection</label>
@@ -292,7 +293,7 @@ export default class Segments extends React.Component {
                         value={this.state.date}
                       />
                     </div>
-                  </div> : 
+                  </div> :
                   filterToUse && filterToUse.type === "Number Range" ?
                   <div className="row form-group col-md-12">
                     <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
@@ -321,7 +322,7 @@ export default class Segments extends React.Component {
                       <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
                         <label htmlFor="tileName">Enter ERC-20 Token Address</label>
                         <input value={tokenAddress} onChange={(e) => this.setState({ tokenAddress: e.target.value })} type="text" className="form-control" id="tileName" placeholder="Enter Token Address" />
-                      </div> : 
+                      </div> :
                       <div />
                     }
                   </div> :
@@ -337,7 +338,7 @@ export default class Segments extends React.Component {
                 </div>
               </div>
           </div>
-          
+
           <Modal show={processing} >
             <Modal.Body>
                 <LoadingModal messageToDisplay={"Creating segment..."} />

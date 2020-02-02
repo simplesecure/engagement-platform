@@ -8,6 +8,7 @@ import LoadingModal from './LoadingModal';
 import copy from 'copy-to-clipboard';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { getCloudUser } from './../utils/cloudUser.js'
 const ERROR_MSG = "Failed to create project, please try again. If this continues, please contact support@simpleid.xyz"
 
 export default class Projects extends React.Component {
@@ -17,7 +18,6 @@ export default class Projects extends React.Component {
       projectName: "",
       show: false,
       proj: {},
-      showACTest: false,
       redirect: false
     }
   }
@@ -29,18 +29,6 @@ export default class Projects extends React.Component {
         redirectLink.click()
       }
     }
-  }
-
-  acTerribleTest = async () => {
-    const { simple, sessionData } = this.global
-    const { currentSegments } = sessionData;
-
-    const seg = currentSegments[0]
-    const payload = {
-      app_id: sessionData.id,
-      addresses: seg.users
-    }
-    simple.processData('AC Terrible Test', payload)
   }
 
   createProject = async () => {
@@ -57,7 +45,7 @@ export default class Projects extends React.Component {
       appObject: newProject
     }
     try {
-      const projectId = await simple.processData('create-project', payload);
+      const projectId = await getCloudUser().processData('create-project', payload);
       if(projectId) {
         apps[projectId] = newProject
         const appKeys = Object.keys(apps);
@@ -104,7 +92,7 @@ export default class Projects extends React.Component {
       try {
         const anObject = orgData.Item
         anObject.apps = updatedApps;
-        anObject[process.env.REACT_APP_OD_TABLE_PK] = org_id
+        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
         await putInOrganizationDataTable(anObject)
         const appKeys = Object.keys(updatedApps);
         const currentAppId = updatedApps[appKeys[0]] ? updatedApps[appKeys[0]] : ""
@@ -127,7 +115,7 @@ export default class Projects extends React.Component {
     const copied = copy(text)
     if(copied) {
       toast.success("Copied!", {
-        position: toast.POSITION.TOP_RIGHT, 
+        position: toast.POSITION.TOP_RIGHT,
         autoClose: 1000
       });
     }
@@ -135,7 +123,7 @@ export default class Projects extends React.Component {
 
   renderMain() {
     const { apps, processing } = this.global;
-    const { projectName, proj, show, showACTest } = this.state;
+    const { projectName, proj, show } = this.state;
     const appKeys = Object.keys(apps);
     let applications = [];
     for(const appKey of appKeys) {
@@ -155,14 +143,6 @@ export default class Projects extends React.Component {
               <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
                 <span className="text-uppercase page-subtitle">Projects</span>
                 <h3 className="page-title">Review Your Projects</h3>
-                {
-                showACTest ?
-                <div className="form-group col-md-12">
-                  <label htmlFor="inputSeg">AC Terrible Test</label><br/>
-                  <button onClick={this.acTerribleTest} className="btn btn-primary">AC Terrible Test</button>
-                </div> :
-                <div />
-                }
               </div>
             </div> :
             <div className="page-header row no-gutters py-4">
