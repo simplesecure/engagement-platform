@@ -4,7 +4,6 @@ import './assets/css/theme.css';
 import './assets/css/shards.min.css';
 import './assets/css/style.css';
 import Home from './containers/Home';
-import { getFromOrganizationDataTable, getFromAnalyticsDataTable } from './utils/awsUtils';
 import { setLocalStorage } from './utils/misc';
 import CookieConsent from "react-cookie-consent";
 import { getCloudUser } from './utils/cloudUser.js'
@@ -23,49 +22,7 @@ export default class App extends React.Component {
 
     if(signedIn) {
       //Need to check if the user is part of an organization from the org table
-      const org_id = getCloudUser().getUserData().orgId ? getCloudUser().getUserData().orgId : undefined;
-      //regardless of whether there is data in local storage, we need to fetch from db
-      let appData;
-      if(org_id) {
-        appData = await getFromOrganizationDataTable(org_id);
-      } else {
-        console.log("ERROR: No Org ID")
-      }
-
-
-      setGlobal({ org_id });
-      if(appData && appData.Item && Object.keys(appData.Item.apps).length > 0) {
-        const appKeys = Object.keys(appData.Item.apps);
-        const allApps = appData.Item.apps;
-        const currentAppId = appKeys[0]
-        const data = allApps[appKeys[0]];
-        data['id'] = currentAppId
-
-        setGlobal({ signedIn: true, loading: false, currentAppId, apps: allApps, sessionData: data });
-
-        //Check if app has been verified
-        console.log(currentAppId)
-        const verificationData = await getFromAnalyticsDataTable(currentAppId);
-        console.log(verificationData)
-        if(verificationData.Item && verificationData.Item.verified) {
-          setGlobal({ verified: true })
-        }
-
-        //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to
-        //Get the correct results
-        //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the fetchSegmentData function
-        //Will update state as necessary
-        if(data.currentSegments) {
-          //TODO: We really need to find a good way to update this
-          this.fetchSegmentData(appData);
-        }
-
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
-      } else {
-        setGlobal({ loading: false });
-        //If there's nothing returned from the DB but something is still in local storage, what do we do?
-        //TODO: should we remove from localstorage here?
-      }
+      await getCloudUser().fetchOrgDataAndUpdate()
     } else {
       setGlobal({ loading: false });
     }

@@ -1,6 +1,7 @@
 import React, { setGlobal } from 'reactn';
 import ReactDOM from 'react-dom';
 import './index.css';
+import './assets/css/loader-pulse.css'
 import App from './App';
 import { createSidSvcs } from './utils/sidServices.js'
 import { getCloudUser } from './utils/cloudUser.js'

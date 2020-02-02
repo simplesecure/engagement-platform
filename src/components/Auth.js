@@ -71,6 +71,7 @@ export default class Auth extends React.Component {
           const orgId = getCloudUser().getUserData().orgId
 
           setGlobal({ signedIn: true, action: "", org_id: orgId })
+          await getCloudUser().fetchOrgDataAndUpdate()
         }
       } else {
         setGlobal({ action: 'sign-in-approval' })

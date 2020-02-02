@@ -4,9 +4,9 @@ import { walletAnalyticsDataTableGet,
          organizationDataTablePut } from './dynamoConveniences.js';
 import { getSidSvcs } from './sidServices.js';
 import { getLog } from './debugScopes.js'
+const BN = require('bignumber.js');
 
 const rp = require('request-promise');
-const ethers = require('ethers');
 
 const log = getLog('dataProcessing')
 
@@ -313,62 +313,53 @@ export async function filterByLastSeen(users, data) {
   return filteredList;
 }
 
-export async function filterByWalletBalance(users, balanceCriteria, config) {
-  if (!config) {
-    throw new Error('Hey Justin, Fix ME!  I need config defined')
-  }
+export async function filterByWalletBalance(users, balanceCriteria) {
 
   const { operatorType, amount } = balanceCriteria;
-  const provider = ethers.getDefaultProvider(config.network ? config.network : 'mainnet');
   let filteredUsers = [];
   if(operatorType === "More Than") {
     if(balanceCriteria.tokenType === "ERC-20") {
+      const { tokenAddress } = balanceCriteria
       for(const user of users) {
-        const url = `https://api.tokenbalance.com/token/${balanceCriteria.tokenAddress}/0xf1363d3d55d9e679cc6aa0a0496fd85bdfcf7464`
-        const balance = await tokenFetch(url)
-        const numberBal = parseFloat(balance)
-        const numberAmount = parseFloat(amount)
-        const matchCriteria = numberBal > numberAmount
-        if(matchCriteria) {
-          filteredUsers.push(user);
-        }
+        const url = `${ALETHIO_URL}/accounts/${user}/tokenBalances`
+        const results = await tokenBalanceFetch(url, tokenAddress)
+  
+        if(results > parseFloat(amount)) {
+          console.log("MATCH FOUND!")
+          filteredUsers.push(user)
+        } 
       }
     } else {
       for(const user of users) {
-        const balance = await provider.getBalance(user);
-        const etherString = ethers.utils.formatEther(balance);
-        const numberBal = parseFloat(etherString)
-        const numberAmount = parseFloat(amount)
-        const matchCriteria = numberBal > numberAmount
-        if(matchCriteria) {
-          log.debug("Criteria Match");
-          filteredUsers.push(user);
-        }
+        const url = `${ALETHIO_URL}/accounts/${user}`
+        const results = await etherBalanceFetch(url);
+        if(results > parseFloat(amount)) {
+          console.log("MATCH FOUND!")
+          filteredUsers.push(user)
+        } 
       }
     }
     return filteredUsers;
   } else if(operatorType === "Less Than") {
     if(balanceCriteria.tokenType === "ERC-20") {
+      const { tokenAddress } = balanceCriteria
       for(const user of users) {
-        const url = `https://api.tokenbalance.com/token/${balanceCriteria.tokenAddress}/0xf1363d3d55d9e679cc6aa0a0496fd85bdfcf7464`
-        const balance = await tokenFetch(url)
-        const numberBal = parseFloat(balance)
-        const numberAmount = parseFloat(amount)
-        const matchCriteria = numberBal < numberAmount
-        if(matchCriteria) {
-          filteredUsers.push(user);
-        }
+        const url = `${ALETHIO_URL}/accounts/${user}/tokenBalances`
+        const results = await tokenBalanceFetch(url, tokenAddress)
+  
+        if(results < parseFloat(amount)) {
+          console.log("MATCH FOUND!")
+          filteredUsers.push(user)
+        } 
       }
     } else {
       for(const user of users) {
-        const balance = await provider.getBalance(user);
-        const etherString = ethers.utils.formatEther(balance);
-        const numberBal = parseFloat(etherString)
-        const numberAmount = parseFloat(amount)
-        const matchCriteria = numberBal < numberAmount
-        if(matchCriteria) {
-          filteredUsers.push(user);
-        }
+        const url = `${ALETHIO_URL}/accounts/${user}`
+        const results = await etherBalanceFetch(url);
+        if(results < parseFloat(amount)) {
+          console.log("MATCH FOUND!")
+          filteredUsers.push(user)
+        } 
       }
     }
 
@@ -376,43 +367,101 @@ export async function filterByWalletBalance(users, balanceCriteria, config) {
   }
 }
 
-export async function fetchTotalTransactions(users, config) {
-  if (!config) {
-    throw new Error('Hey Justin, Fix ME!  I need config defined')
+export async function fetchTotalTransactions(users) {
+  let txCount = 0;
+  for(const user of users) {
+    const url = `${ALETHIO_URL}/accounts/${user}/transactions`
+    const results = await transactionCountFetch(url)
+    
+    txCount = txCount + results;
   }
 
-  log.debug(users);
-  const provider = ethers.getDefaultProvider(config.network ? config.network : 'mainnet');
-  let txCount = 0;
-  for (const user of users) {
-    log.debug(txCount);
-    const count = await provider.getTransactionCount(user);
-    txCount = txCount + count;
-  }
   return txCount;
 }
 
-export async function tokenFetch(url) {
-  const options = {
+export async function transactionCountFetch(url) {
+  const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${ALETHIO_KEY}` }
+  var options = {
+    uri: url,
     method: 'GET',
+    headers,
+    json: true 
+  }
+
+  const res = await rp(options)
+  if(res.data[0].attributes.txNonce) {
+    return res.data[0].attributes.txNonce
+  } else {
+    return 0
+  }
+}
+
+
+export async function tokenBalanceFetch(url, tokenAddress) {
+  var options = {
     uri: url,
     headers,
-    json: true
+    json: true 
   }
-  return rp(options)
-  .then(async function (parsedBody) {
-    log.debug("Token Balance Api:", parsedBody)
-    if(parsedBody && parsedBody.balance) {
-      return parsedBody.balance
+  
+  try {
+    const post = await rp(options)
+
+    const thisToken = post.data.filter(t => t.relationships.token.data.id === tokenAddress)[0]
+    //const thisUser = options.uri.split('accounts/')[1].split('/token')[0]
+    //console.log("USER: ", thisUser)
+    if(thisToken) {
+      //Return the balance
+      const balance = thisToken.attributes.balance
+      const balanceWeiBN = new BN(balance)
+
+      const decimals = 18
+      const decimalsBN = new BN(decimals)
+      const divisor = new BN(10).pow(decimalsBN)
+
+      const beforeDecimal = parseFloat(balanceWeiBN.div(divisor))
+      return beforeDecimal
     } else {
-      return 0
+      //Check if there's another page of results
+      const nextPage = post.meta.page.hasNext
+      if(nextPage) {
+        //Grab the link for the next page and run this whole query again
+        const nextPageUrl = post.links.next
+        try {
+          return await tokenBalanceFetch(nextPageUrl)
+        } catch(e) {
+          return e
+        }
+      } else {
+        return 0
+      }
     }
+  } catch(e) {
+    console.log("ERROR POSTING TO API: ", e)
+  }
+}
 
+export async function etherBalanceFetch(url) {
+  var options = {
+    uri: url,
+    headers,
+    json: true 
+  }
+  
+  try {
+    const post = await rp(options)
+    const balance = post.data.attributes.balance
+    const balanceWeiBN = new BN(balance)
 
-  })
-  .catch(function (err) {
-    log.error(err.message);
-  });
+    const decimals = 18
+    const decimalsBN = new BN(decimals)
+    const divisor = new BN(10).pow(decimalsBN)
+
+    const beforeDecimal = parseFloat(balanceWeiBN.div(divisor))
+    return beforeDecimal
+  } catch(e) {
+    return e
+  }
 }
 
 //Probably don't want to keep this here

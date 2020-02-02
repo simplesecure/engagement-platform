@@ -5,6 +5,7 @@
   "dependencies": {
     "aws-amplify": "^2.2.2",
     "aws-sdk": "^2.597.0",
+    "bignumber.js": "^9.0.0",
     "bootstrap": "^4.4.1",
     "buffer": "^5.4.3",
     "copy-to-clipboard": "^3.2.0",
