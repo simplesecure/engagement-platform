@@ -5,6 +5,7 @@ import { getCloudUser } from '../utils/cloudUser';
 import { getSidSvcs } from '../utils/sidServices.js'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import Tooltip from 'react-bootstrap/Tooltip'
+import '../assets/css/loader-pulse.css'
 
 // eslint-disable-next-line
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/g
