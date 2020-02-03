@@ -7,6 +7,7 @@ import './assets/css/style.css';
 import Home from './containers/Home';
 import CookieConsent from "react-cookie-consent";
 import { getCloudUser } from './utils/cloudUser.js'
+const PROFILE_STORAGE = 'engagement-app-profile'
 
 export default class App extends React.Component {
 
@@ -21,6 +22,9 @@ export default class App extends React.Component {
     }
 
     if(signedIn) {
+      //First try to fetch the profile from local storage
+      const profile = localStorage.getItem(PROFILE_STORAGE) ? JSON.parse(localStorage.getItem(PROFILE_STORAGE)) : {}
+      setGlobal({ threeBoxProfile: profile })
       //Need to check if the user is part of an organization from the org table
       await getCloudUser().fetchOrgDataAndUpdate()
     } else {

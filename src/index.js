@@ -30,6 +30,9 @@ setGlobal({
   processing: false,
   initialLoading: false,
   action: "", 
+  threeBoxConnected: false, 
+  provider: {},
+  threeBoxProfile: {},
   org_id: getCloudUser().getUserData() ? getCloudUser().getUserData().orgId : ""
 })
 

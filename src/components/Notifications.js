@@ -231,18 +231,18 @@ export default class Notifications extends React.Component {
                   }
                 </select>
               </div>
-              <div class="form-group col-md-12">
+              <div className="form-group col-md-12">
                 <label htmlFor="inputSeg">Next, Write Your Message</label>
                 <ReactQuill 
                   value={message}
                   onChange={this.handleChange} 
                 />             
               </div>
-              <div class="form-group col-md-12">
+              <div className="form-group col-md-12">
                 <label htmlFor="inputSeg">Now, Give Your Notification A Name</label> 
-                <input type="text" value={notificationName} onChange={this.handleNameChange} class="form-control" id="tileName" placeholder="Give it a name" />                           
+                <input type="text" value={notificationName} onChange={this.handleNameChange} className="form-control" id="tileName" placeholder="Give it a name" />                           
               </div>
-              <div class="form-group col-md-12">
+              <div className="form-group col-md-12">
                 <label htmlFor="inputSeg">Finally, Save the Notification</label><br/>
                 <span className="text-muted">Notification will be inactive until you activate it.</span><br/><br/>
                 {message ? <button onClick={this.saveNotification} className="btn btn-primary">Save Notification</button> : <button className="btn btn-secondary">Save Notification</button>}{message ? <button onClick={this.previewMessage} className="btn preview btn-secondary">Preview Notification</button> : <div/>}           

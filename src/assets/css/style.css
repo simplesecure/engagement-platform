@@ -180,3 +180,9 @@ section {
   top: 25px;
   right: 30px;
 }
+
+.rounded-circle {
+  height: 75px;
+  width: 75px;
+  border-radius: 50% !important;
+}
