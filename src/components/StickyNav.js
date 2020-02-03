@@ -4,8 +4,9 @@ import { getCloudUser } from './../utils/cloudUser.js'
 
 export default class StickyNav extends React.Component {
   render() {
-    const { apps, sessionData, org_id } = this.global;
+    const { apps, sessionData, org_id, threeBoxProfile } = this.global;
     const orgId = org_id ? `${org_id.substring(0,8)}...` : ""
+    const headerName = threeBoxProfile && threeBoxProfile.name ? threeBoxProfile.name : orgId
 
     const appKeys = Object.keys(apps);
     let projects = [];
@@ -102,7 +103,7 @@ export default class StickyNav extends React.Component {
 
             <li className="nav-item dropdown">
               <button className="a-el-fix project-drop nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span className="d-none d-md-inline-block">{orgId}</span>
+                <span className="d-none d-md-inline-block">{headerName}</span>
               </button>
               <div className="dropdown-menu dropdown-menu-small">
                 <Link to="/account"><button className="a-el-fix dropdown-item">

@@ -5,6 +5,7 @@ import { getCloudUser } from '../utils/cloudUser';
 import { getSidSvcs } from '../utils/sidServices.js'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import Tooltip from 'react-bootstrap/Tooltip'
+const PROFILE_STORAGE = 'engagement-app-profile'
 
 // eslint-disable-next-line
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/g
@@ -70,8 +71,9 @@ export default class Auth extends React.Component {
         const userData = await getCloudUser().approveSignIn()
         if(userData) {
           const orgId = getCloudUser().getUserData().orgId
+          const profile = localStorage.getItem(PROFILE_STORAGE) ? JSON.parse(localStorage.getItem(PROFILE_STORAGE)) : {}
 
-          setGlobal({ signedIn: true, action: "", org_id: orgId })
+          setGlobal({ signedIn: true, action: "", org_id: orgId, threeBoxProfile: profile })
           await getCloudUser().fetchOrgDataAndUpdate()
         }
       } else {

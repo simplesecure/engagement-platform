@@ -408,6 +408,7 @@ export async function tokenBalanceFetch(url, tokenAddress) {
     }
   } catch(e) {
     console.log("ERROR POSTING TO API: ", e)
+    return 0
   }
 }
 
@@ -430,7 +431,8 @@ export async function etherBalanceFetch(url) {
     const beforeDecimal = parseFloat(balanceWeiBN.div(divisor))
     return beforeDecimal
   } catch(e) {
-    return e
+    // console.log(e)
+    return 0
   }
 }
 
