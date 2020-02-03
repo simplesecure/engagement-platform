@@ -8,6 +8,8 @@ const prefix = require('loglevel-plugin-prefix');
 
 const ROOT_KEY = 'loglevel'
 const ALLOWED_SCOPES = [ ROOT_KEY,
+                        `${ROOT_KEY}:cloudUser`,
+                        `${ROOT_KEY}:dataProcessing`,
                         `${ROOT_KEY}:sidServices` ]
 const ALLOWED_LEVELS = [ 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR' ]
 const DEFAULT_LOG_LEVEL="INFO"

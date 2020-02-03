@@ -1,42 +1,20 @@
 import { Auth } from 'aws-amplify'
 import Amplify from 'aws-amplify';
-
 import { walletAnalyticsDataTablePut,
-         walletToUuidMapTablePut,
          organizationDataTableGet,
          organizationDataTablePut,
-         unauthenticatedUuidTableQueryByEmail,
-         unauthenticatedUuidTableGetByUuid,
-         unauthenticatedUuidTablePut,
-         unauthenticatedUuidTableAppendAppId,
-         userDataTableGetEmailsFromUuid,       // TODO: get rid of me soon!
-         walletToUuidMapTableGetUuids,
-         walletToUuidMapTableAddCipherTextUuidForAppId,
-         walletAnalyticsDataTableGetAppPublicKey,
-         walletAnalyticsDataTableAddWalletForAnalytics,
-         walletAnalyticsDataTableGet,
-         walletToUuidMapTableGet } from './dynamoConveniences.js'
-
-import { jsonParseToBuffer, getRandomString } from './misc.js'
-
+         walletToUuidMapTableGetUuids } from './dynamoConveniences.js'
+import { jsonParseToBuffer } from './misc.js'
 import { getLog } from './debugScopes.js'
 const log = getLog('sidServices')
-
 const AWS = require('aws-sdk')
-const ethers = require('ethers')
 
 // v4 = random. Might consider using v5 (namespace, in conjunction w/ app id)
 // see: https://github.com/kelektiv/node-uuid
 const uuidv4 = require('uuid/v4')
-
-const SSS = require('shamirs-secret-sharing')
-const Buffer = require('buffer/').Buffer  // note: the trailing slash is important!
-                                          // (See: https://github.com/feross/buffer)
-
 const eccrypto = require('eccrypto')
 
 const USER_POOL_ID = process.env.REACT_APP_PASSWORD_USER_POOL_ID
-
 const USER_POOL_WEB_CLIENT_ID = process.env.REACT_APP_PASSWORD_USER_POOL_WEB_CLIENT_ID
 
 // TODO: clean up for security best practices
@@ -73,11 +51,8 @@ amplifyAuthObj['authenticationFlowType'] = 'USER_PASSWORD_AUTH'
 Amplify.configure({
   Auth: amplifyAuthObj
 });
-
 AWS.config.update({ region: process.env.REACT_APP_REGION })
 
-
-const NON_SID_WALLET_USER_INFO = "non-sid-user-info";
 const SID_ANALYTICS_APP_ID = '00000000000000000000000000000000'
 
 /*******************************************************************************
@@ -85,17 +60,8 @@ const SID_ANALYTICS_APP_ID = '00000000000000000000000000000000'
  ******************************************************************************/
 const TEST_ASYMMETRIC_DECRYPT = true
 
-/*******************************************************************************
- * Test Switches - Remove / Disable in Production
- ******************************************************************************/
-const TEST_SIGN_USER_UP_TO_NEW_APP = false
-
-// Local storage key for sid services data and static symmetric encryption
-// key obfuscate locally stored data:
+// Local storage key for sid services data
 const SID_SVCS_LS_KEY = 'SID_SVCS'
-//const SID_SVCS_LS_ENC_KEY = 'fsjl-239i-sjn3-wen3' TODO: AC code, do we need this? Wasn't being used
-//                                                        Justin: - this is going to get used to obfuscate
-//                                                                  our local store when everything's done.
 
 
 // TODO: Remove this soon.  #Bicycle
@@ -166,13 +132,10 @@ export class SidServices
     this.persist = {
       userUuid: undefined,
       email: undefined,
-      address: undefined,
-      secretCipherText1: undefined,
-      secretCipherText2: undefined,
+      sid: undefined
     }
 
     this.neverPersist = {
-      wallet: undefined,
       priKey: undefined,
       password: undefined
     }
@@ -182,9 +145,9 @@ export class SidServices
       // TODO: de-obfuscate using static symmetric encryption key SID_SVCS_LS_ENC_KEY
       const stringifiedData = localStorage.getItem(SID_SVCS_LS_KEY)
       const persistedData = jsonParseToBuffer(stringifiedData)
-      if (persistedData.hasOwnProperty('email') &&
-          persistedData.hasOwnProperty('address') &&
-          persistedData.email && persistedData.address) {
+      if ( persistedData.hasOwnProperty('email') && persistedData.email &&
+           persistedData.hasOwnProperty('userUuid') && persistedData.userUuid &&
+           persistedData.hasOwnProperty('sid') && persistedData.sid ) {
         this.persist = persistedData
       }
     } catch (suppressedError) {
@@ -192,102 +155,8 @@ export class SidServices
     }
   }
 
-  getEmail() {
-    return this.persist.email
-  }
-
-  getAddress() {
-    return this.persist.address
-  }
-
   getSID() {
     return this.persist.sid;
-  }
-
-  getWalletAddress() {
-    return this.persist.address
-  }
-
- /**
-  * signInOrUp:
-  *
-  * Notes:  Signing in or up is a two part process. A user enters their email
-  *         which is passed to this function and then to Cognito where a
-  *         challenge is generated and sent to the provided email.
-  *         Our UI collects the challenge response and sends it to the method
-  *         'answerCustomChallenge'.
-  *
-  *         In signInOrUp their are really two use cases the Cognito User already
-  *         exists (signIn) or we must create them (signUp).  Either way the
-  *         flow is the same, a challenge is generated and sent to the provided
-  *         email. The only difference is that we do some extra work on sign up,
-  *         specifically:
-  *           - wallet creation
-  *           - key assignment
-  *           - user data creation and storage in our user data db
-  *
-  *         There is one required argument:
-  *         @param anAppId is a string containing a uuid.
-  *                        It is used to create and interact with user data. For
-  *                        most apps this will control email preferences
-  *                        from the developer and where analytics data is created
-  *                        and stored. For the SimpleID analytics app this will
-  *                        also result in the creation of additional data
-  *                        (organization ids etc.)
-  *         @param anEmail is string containing a user's email.
-  *
-  * TODO (short-term, higher priority):
-  *         1. Improve error handling. See:
-  *              - https:*aws-amplify.github.io/docs/js/authentication#lambda-triggers for more error handling etc.
-  *
-  * TODO (long-term, lower priority):
-  *         1. Do we want to expand this to use phone numbers?
-  *         2. Do we want to collect other information (name etc.)?
-  *              - two storage options--Cognito User Pool or DB
-  *
-  */
-  async signInOrUp(anEmail) {
-    const authenticated = await this.isAuthenticated(anEmail)
-    if (authenticated) {
-      // If the user is already authenticated, then skip this function.
-      return 'already-logged-in'
-    }
-
-    // Test to see if the user is already in our Cognito user pool. If they are
-    // not in our user pool, a UserNotFoundException is thrown (we suppress that
-    // error and continue to the signUp flow).
-    try {
-      // signIn flow:
-      ///////////////
-      this.cognitoUser = await Auth.signIn(anEmail)
-      this.persist.email = anEmail
-      return
-    } catch (error) {
-      if (error.code !== 'UserNotFoundException') {
-        throw Error(`ERROR: Sign in attempt has failed.\n${error}`)
-      }
-    }
-
-    // signUp flow:
-    ///////////////
-    try {
-      const params = {
-        username: anEmail,
-        password: getRandomString(30)
-      }
-      await Auth.signUp(params)
-
-      this.cognitoUser = await Auth.signIn(anEmail)
-
-      // Local state store items for sign-up process after successfully answering
-      // a challenge question:
-      this.persist.email = anEmail
-
-      this.signUpUserOnConfirm = true
-    } catch (error) {
-      log.error(error)
-      throw Error(`ERROR: Sign up attempt has failed.\n${error}`)
-    }
   }
 
   async signInOrUpWithPassword(anEmail, aPassword) {
@@ -329,9 +198,9 @@ export class SidServices
             this.neverPersist.password = aPassword
             log.debug('code resent successfully');
             return 'sign-in-approval'
-          } catch (ohFuck) {
-            log.error(ohFuck);
-            throw Error(`ERROR: Sign in attempt has failed.\n${ohFuck}`)
+          } catch (nestedError) {
+            log.error(nestedError);
+            throw Error(`ERROR: Sign in attempt has failed.\n${nestedError}`)
           }
       } else if (err.code === 'PasswordResetRequiredException') {
           // The error happens when the password is reset in the Cognito console
@@ -442,8 +311,6 @@ export class SidServices
    *
    */
   async answerCustomChallenge(anAnswer) {
-    let signUpMnemonicReveal = false
-
     log.debug(`DBG: answerCustomChallenge password flow.`)
     // TODO: refactor this whole method to make sense if we keep the password flow stuff.
     //       (i.e. split out the common code into names that make more sense etc.).
@@ -524,25 +391,7 @@ export class SidServices
         //
         this.persist.userUuid = uuidv4()
 
-        //  1. Generate keychain
-        //
-        this.neverPersist.wallet = ethers.Wallet.createRandom()
-        this.persist.address = this.neverPersist.wallet.address
-
-        //  2. SSS
-        //
-        const secret = Buffer.from(this.neverPersist.wallet.mnemonic)
-        const shares = SSS.split(secret, { shares: 3, threshold: 2 })
-
-        //  3. Encrypt & store private / secret user data
-        //
-        log.debug('DBG: encryptWithKmsUsingIdpCredentials ...')
-        this.persist.secretCipherText1 =
-          await this.encryptWithKmsUsingIdpCredentials(this.keyId1, shares[0])
-        this.persist.secretCipherText2 =
-          await this.encryptWithKmsUsingIdpCredentials(this.keyId2, shares[1])
-
-        //  4. a)  Create and store entry in Organization Data (simple_id_org_data_v001)
+        //  1. a)  Create and store entry in Organization Data (simple_id_org_data_v001)
         //         the this.appIsSimpleId
         //
         //
@@ -568,7 +417,7 @@ export class SidServices
         //
         const sidObj = await this.createSidObject()
 
-        //  4. b) Create and store User Data (simple_id_auth_user_data_v001)
+        //  1. b) Create and store User Data (simple_id_auth_user_data_v001)
         //
         //  IMPORTANT: Never put wallet address in user data (the whole point
         //             is to decouple the two with a cryptographic island).
@@ -576,8 +425,6 @@ export class SidServices
           // sub: <cognito idp sub>  is implicitly added to this in call to tablePutWithIdpCredentials below.
           uuid: this.persist.userUuid,
           email: this.persist.email,
-          secretCipherText1: this.persist.secretCipherText1,
-          secretCipherText2: this.persist.secretCipherText2,
           apps: {
             [ this.appId ] : {}             // Empty Contact Prefs Etc.
           },
@@ -587,42 +434,6 @@ export class SidServices
         // Write this to the user data table:
         log.debug('DBG: tablePutWithIdpCredentials ...')
         await this.tablePutWithIdpCredentials( userDataRow )
-
-        //  4. c)  Create and store entry in Wallet to UUID map for this app
-        //         (simple_id_wallet_uuid_map_v001)
-        //
-        log.debug('DBG: walletAnalyticsDataTableGetAppPublicKey ...')
-        const appPublicKey =
-          await walletAnalyticsDataTableGetAppPublicKey(this.appId)
-        const userUuidCipherText =
-          await eccrypto.encrypt(appPublicKey, Buffer.from(this.persist.userUuid))
-        const walletUuidMapRow = {
-          wallet_address: this.persist.address,
-          app_to_enc_uuid_map: {
-            [ this.appId ] : userUuidCipherText
-          }
-        }
-        //
-        // TODO: Make this use Cognito to get write permission to the DB (for the
-        //       time being we're using an AWS_SECRET):
-        log.debug('DBG: walletToUuidMapTablePut ...')
-        await walletToUuidMapTablePut(walletUuidMapRow)
-
-        //  4. d)  Create and store Wallet Analytics Data
-        //         (simple_id_cust_analytics_data_v001)
-        //
-        // TODO (Justin+AC): Events of some sort (i.e. sign-in, sign-up, date etc.)
-        //
-        log.debug('DBG: walletAnalyticsDataTableAddWalletForAnalytics ...')
-        await walletAnalyticsDataTableAddWalletForAnalytics(
-          this.persist.address, this.appId)
-
-        //  5. Email / Save PDF secret
-        //   Setting this as true so we can return it to the approveSignIn function from postMessage.js
-        //   If we don't do this, we'll have to set state in the sidServices file, which I don't think
-        //   we want to do.
-        //   see line 609 for how this will be returned
-        signUpMnemonicReveal = true;
       } catch (error) {
         throw Error(`ERROR: signing up user after successfully answering customer challenge failed.\n${error}`)
       } finally {
@@ -643,36 +454,13 @@ export class SidServices
       //
       const userDataDbRow = await this.tableGetWithIdpCredentials()
       const userData = userDataDbRow.Item
-  
+
       this.persist.sid = userData ? userData.sid : undefined
-      this.persist.secretCipherText1 = userData.secretCipherText1
-      this.persist.secretCipherText2 = userData.secretCipherText2
-
-      // 2. Decrypt the secrets on the appropriate HSM KMS CMKs
-      //
-      const secretPlainText1 =
-        await this.decryptWithKmsUsingIdpCredentials(this.persist.secretCipherText1)
-      const secretPlainText2 =
-        await this.decryptWithKmsUsingIdpCredentials(this.persist.secretCipherText2)
-
-      // 3. Merge the secrets to recover the keychain
-      //
-      const secretMnemonic = SSS.combine([secretPlainText1, secretPlainText2])
-
-      // 4. Inflate the wallet and persist it to state.
-      //
-      const mnemonicStr = secretMnemonic.toString()
-      this.neverPersist.wallet = new ethers.Wallet.fromMnemonic(mnemonicStr)
-      this.persist.address = this.neverPersist.wallet.address
-
       this.persist.userUuid = userData.uuid
-
-      
     }
 
     if (authenticated) {
       try {
-        // TODO: obfuscate using static symmetric encryption key SID_SVCS_LS_ENC_KEY
         localStorage.setItem(SID_SVCS_LS_KEY, JSON.stringify(this.persist))
       } catch (suppressedError) {
         log.error(`ERROR persisting SID services data to local store.\n${suppressedError}`)
@@ -681,6 +469,7 @@ export class SidServices
 
     // moving the authenticated = true into an object so that we include signUpMnemonicReveal
     // this needs to be sent so that in postMessage.js we know if we need to update state accordingly
+    const signUpMnemonicReveal = false
     return { authenticated, signUpMnemonicReveal }
   }
 
@@ -754,9 +543,6 @@ export class SidServices
     // 1. Fetch the encrypted uuids for the given wallet addresses and appID:
     //
     const encryptedUuids = []
-    //AC Hard-coded version:
-    //const encryptedUuidMaps = await walletToUuidMapTableGetUuids(theWalletAddresses)
-    //Justin dynamic version:
     const encryptedUuidMaps = await walletToUuidMapTableGetUuids(addresses)
     for (const encryptedUuidMap of encryptedUuidMaps) {
       try {
@@ -800,42 +586,6 @@ export class SidServices
 
     return uuids
   }
-
-  /**
-   * getEmailsForUuids
-   *
-   * Notes:
-   *
-   * TODO:
-   *        - Move this to a server / lambda (restrict access to User DB)
-   *        - This is awful. Need to research if we can do a batch get on secondary
-   *          indexes or make a second table mapping uuids to { sub: <sub>, email: <email> }
-   *        - something better for unauthenticated users (probably a combined table)
-   */
-  async getEmailsForUuids(theUuids) {
-    const emails = []
-    for (const uuid of theUuids) {
-      try {
-        const emailResults = await userDataTableGetEmailsFromUuid(uuid)
-        if (emailResults.Items.length > 0) {
-          let email = emailResults.Items[0].email
-          log.debug("THIS EMAIL: ", email)
-          emails.push(email)
-        } else {
-          // Try the unauthenticated users table since we didn't find the uuid in
-          // the auth'd users table
-          const unauthEmailResults = await unauthenticatedUuidTableGetByUuid(uuid)
-          let email = unauthEmailResults.Item.email
-          emails.push(email)
-        }
-      } catch (suppressedError) {
-        log.warn(`WARN: Failed to get email for uuid ${uuid}.\n${suppressedError}`)
-      }
-    }
-
-    return emails
-  }
-
 
   /**
    * createOrganizationId
@@ -994,229 +744,6 @@ export class SidServices
     return appId
   }
 
-  /**
-   * deleteAppId
-   *
-   * Notes:  This method removes an app id from the
-   *         Organization Data Table and Wallet Analytics Tables with the
-   *         newly created organization id.
-   *
-   *         It does not remove the app id from the User Data table, the
-   *         Unauthenticated UUID table, or the Wallet to UUID Map table.
-   */
-  async deleteAppId() {
-    // TODO deleteAppId
-  }
-
-  /**
-   * signUserUpToNewApp
-   *
-   * Notes:  If a user has or has not joined Simple ID Cognito's user pool, there
-   *         is still the matter of creating their data pertaining to the app
-   *         they signed in from.
-   *
-   *         This method inserts the appId related data into the User Data table
-   *         or Unauthenticated UUID table (depending on if they're using us for
-   *         auth), and the Wallet Analytics Data table and Wallet to UUID Map
-   *         table.
-   *
-   * TODO:
-   *       - Failure resistant db write methods.
-   *       - Concurrency and an await Promise.all () with handled
-   *         catch statements on individual promises.
-   */
-  async signUserUpToNewApp(isAuthenticatedUser) {
-
-    if (isAuthenticatedUser) {
-      // 1.a) Update the User Data Table if the user is authenticated.
-      //
-      // We do this in the 2nd part of the sign in flow when the user
-      // answers a challenge but still need to do the other operations
-      // below.
-    } else {
-      // 1.b) Otherwise update the Unauthenticated UUID Table if the user is an
-      //      unauthenticated user.
-      //
-      await unauthenticatedUuidTableAppendAppId(this.persist.userUuid, this.appId)
-    }
-
-    // 2. Update the Wallet Analytics Data table:
-    //
-    await walletAnalyticsDataTableAddWalletForAnalytics(this.persist.address, this.appId)
-
-    // 3. Update the Wallet to UUID Map table:
-    //
-    const appPublicKey = await walletAnalyticsDataTableGetAppPublicKey(this.appId)
-    const userUuidCipherText =
-      await eccrypto.encrypt(appPublicKey, Buffer.from(this.persist.userUuid))
-
-    await walletToUuidMapTableAddCipherTextUuidForAppId(
-      this.persist.address, userUuidCipherText, this.appId)
-  }
-
-/******************************************************************************
- *                                                                            *
- * Non-SimpleID Wallet User Methods                                           *
- *                                                                            *
- ******************************************************************************/
-
- async persistNonSIDUserInfo(userInfo) {
-
-   if (this.appIsSimpleId) {
-     // We don't do this in Simple ID.
-     return
-   }
-   const { email, address } = userInfo
-   this.persist.email = email
-   this.persist.address = address
-
-   // Check to see if this user exists in Unauthenticated UUID table (email key
-   // is also indexed):
-   let userExists = false
-   let uuidResults = undefined
-   //Not all providers will send through the email
-   if(email) {
-    log.debug(`Calling unauthenticatedUuidTableQueryByEmail with ${email}`)
-    uuidResults = await unauthenticatedUuidTableQueryByEmail(email)
-    userExists = (uuidResults.Items.length === 1)
-    if (uuidResults.Items.length !== 0 && uuidResults.Items.length !== 1) {
-     throw new Error('ERROR: collision with user in Simple ID unauth\'d user table.')
-    }
-   } else {
-    //   TODO: Need AC to review this
-    //   Querying the wallet to uuid map because we only have a wallet address here
-    const walletResults = await walletToUuidMapTableGet(address)
-    log.debug("WALLET RESULTS ", walletResults)
-
-    userExists = (walletResults.Items && walletResults.Items.length === 1)
-    if (walletResults.Items && walletResults.Items.length !== 0 && walletResults.Items.length !== 1) {
-     throw new Error('ERROR: collision with user in Simple ID unauth\'d user table.')
-    }
-   }
-
-   if (!userExists) {
-     // The unauthenticated user does not exist in our data model. Initialize and
-     // create DB entries for them:
-     //
-     // 1. Create a uuid for this user and insert them into the
-     //    Unauthenticated UUID table:
-     //
-     // TODO:
-     //       - think about obfusicating the email due to the openness of this table.
-     //       - Refactor to createUnauthenticatedUser
-     //
-     this.persist.userUuid = uuidv4()
-     const unauthenticatedUuidRowObj = {
-       uuid: this.persist.userUuid,
-       email,
-       apps: [ this.appId ]
-     }
-     await unauthenticatedUuidTablePut(unauthenticatedUuidRowObj)
-
-     // 2. Create an entry for them in the Wallet Analytics Data Table
-     //
-     await walletAnalyticsDataTableAddWalletForAnalytics(this.persist.address, this.appId)
-
-     // 3. Create an entry for them in the Wallet to UUID Map
-     //
-     // TODO: Fetch the public key for the row corresponding to this app_id
-     //       from the simple_id_cust_analytics_data_v001 table and use it
-     //       to asymmetricly encrypt the user uuid. For now we just pop in
-     //       the plain text uuid.
-     //
-     const appPublicKey = await walletAnalyticsDataTableGetAppPublicKey(this.appId)
-     const userUuidCipherText = await eccrypto.encrypt(
-       appPublicKey, Buffer.from(this.persist.userUuid))
-
-     const walletUuidMapRowObj = {
-       wallet_address: address,
-       app_to_enc_uuid_map: {
-         [ this.appId ] : userUuidCipherText
-       }
-     }
-     //
-     // TODO: Make this use Cognito to get write permission to the DB (for the
-     //       time being we're using an AWS_SECRET):
-     // TODO: Make this update / append when needed too (here it's new data so it's okay)
-     await walletToUuidMapTablePut(walletUuidMapRowObj)
-   } else {
-     // TODO Refactor to persistUnauthenticatedUser
-     //
-     this.persist.userUuid = uuidResults.Items[0].uuid
-
-     // 1. Fetch the email & apps from the Unauthenticated UUID table and ensure
-     //    this app is listed.
-     //
-     const unauthdUuidRowObj = await unauthenticatedUuidTableGetByUuid(this.persist.userUuid)
-     // BEGIN REMOVE
-     const oldAppId = this.appId
-     if (TEST_SIGN_USER_UP_TO_NEW_APP) {
-       log.warn('************************ REMOVE WHEN WORKING ***************')
-       log.warn('* Faking a new AppId to build signUserUpToNewApp           *')
-       log.warn('************************************************************')
-       this.appId = `new-app-id-random-${Date.now()}`
-     }
-     // See also: BEGIN REMOVE ~10 lines down
-     // END REMOVE
-
-     if ( !unauthdUuidRowObj.Item.apps.includes(this.appId) ) {
-       // The App doesn't exist in the user's profile (this is the first time
-       // the user is using it). Update the Unauthenticated UUID table,
-       // Wallet Analytics Data table, and Wallet to UUID tables.
-       const authenticatedUser = false
-       await this.signUserUpToNewApp(authenticatedUser)
-     }
-
-     // BEGIN REMOVE
-     // restore appId
-     this.appId = oldAppId
-     // END REMOVE
-
-     //Need to update date stamp
-     await this.updateDateStamp()
-   }
-
-   // TODO: this needs to be obfuscated. It should also use a common method with
-   //       our other flow persistence. The data should also be stored in this.persist
-   //
-   // TODO: Justin, why not use SID_SVCS_LS_KEY and add a boolean to the object
-   //       indicating unauthenticatedUser (i.e. non wallet)?
-   //
-   //TODO: AC review. This feels super hacky, but might be the right way to handle it
-   localStorage.setItem(NON_SID_WALLET_USER_INFO, JSON.stringify(userInfo));
-
-   const returnableUserData = {
-     wallet: {
-       ethAddr: address
-     }
-   }
-   return returnableUserData
- }
-
- getNonSIDUserInfo() {
-   const userInfo = localStorage.getItem(NON_SID_WALLET_USER_INFO);
-   return JSON.parse(userInfo);
- }
-
- async updateDateStamp() {
-  try {
-    //Fetch from DB
-    const appData = await walletAnalyticsDataTableGet(this.appId)
-
-    //    TODO: need to examine if we will run into address casing issues
-    //    Some address results have capital letters in them and some have
-    //    lower case. Need consistency to do look ups like this
-
-    const dataRowToUpdate = appData.Item
-    const users = dataRowToUpdate.analytics
-    const thisUser = users[this.persist.address]
-    thisUser['last_seen'] = Date.now()
-    //now we put it back into the DB
-    await walletAnalyticsDataTablePut(dataRowToUpdate)
-  } catch (e) {
-    log.error("Error updating date stamp: ", e)
-  }
- }
 
 /******************************************************************************
  *                                                                            *
@@ -1453,65 +980,6 @@ export class SidServices
 
     return awsDynDbRequest
   }
-
-  // TODO: might not be needed (Read Modify Write might be sufficient)
-  //       hold on to this for the time being:
-  //
-  // // Rename: adapeted from dynamoBasics method tableUpdateAppendNestedObjectProperty
-  // tableUpdateWithIdpCredentials = async (aNestedObjKey, a2ndNestedObjKey, aPropName, aPropValue) => {
-  //   // Adapted from the JS on:
-  //   //    https://aws.amazon.com/blogs/mobile/building-fine-grained-authorization-using-amazon-cognito-user-pools-groups/
-  //   //
-  //   await this.requestIdpCredentials()
-  //
-  //   // Modified to use getPromise from:
-  //   //    https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Credentials.html#get-property
-  //   //
-  //   let sub = undefined
-  //   try {
-  //     sub = AWS.config.credentials.identityId
-  //   } catch (error) {
-  //     throw Error(`ERROR: getting credential identityId.\n${error}`)
-  //   }
-  //
-  //   const docClient = new AWS.DynamoDB.DocumentClient(
-  //     { region: process.env.REACT_APP_REGION })
-  //
-  //
-  //   // Taken from dynamoBasics method tableUpdateAppendNestedObjectProperty
-  //   const dbParams = {
-  //     TableName: process.env.REACT_APP_UD_TABLE,
-  //     Key: {
-  //       sub: sub
-  //     },
-  //     UpdateExpression: 'set #objName.#objName2.#objPropName = :propValue',
-  //     ExpressionAttributeNames: {
-  //       '#objName': aNestedObjKey,
-  //       '#objName2': a2ndNestedObjKey,
-  //       '#objPropName': aPropName
-  //     },
-  //     ExpressionAttributeValues: {
-  //       ':propValue': aPropValue
-  //     },
-  //     ReturnValues: 'NONE'
-  //   }
-  //
-  //   const awsDynDbRequest = await new Promise(
-  //     (resolve, reject) => {
-  //       docClient.update(dbParams, (err, data) => {
-  //         if (err) {
-  //           dbRequestDebugLog('tableUpdateWithIdpCredentials', dbParams, err)
-  //
-  //           reject(err)
-  //         } else {
-  //           resolve(data)
-  //         }
-  //       })
-  //     }
-  //   )
-  //
-  //   return awsDynDbRequest
-  // }
 }
 
 

@@ -35,7 +35,11 @@ const providerOptions = {
 export default class Account extends React.Component {
 
   disconnect3Box = () => {
-
+    const WEB3_CONNECT = 'WEB3_CONNECT_CACHED_PROVIDER'
+    const ENGAGEMENT_PROFILE = 'engagement-app-profile'
+    localStorage.removeItem(WEB3_CONNECT)
+    localStorage.removeItem(ENGAGEMENT_PROFILE)
+    setGlobal({ threeBoxProfile: {} })
   }
 
   connect3Box = async() => {
