@@ -6,11 +6,12 @@ import { getFromOrganizationDataTable, getFromAnalyticsDataTable } from './awsUt
 import { setLocalStorage } from './misc';
 
 const SIMPLEID_USER_SESSION = 'SimpleID-User-Session';
-const log = getLog('sidServices')
+const log = getLog('cloudUser')
 
 class CloudUser {
 
-  signOut() {
+  async signOut() {
+    await getSidSvcs().signOut()
     clearSidKeysFromLocalStore('getCloudUser().js')
     window.location.reload();
   }
@@ -109,7 +110,7 @@ class CloudUser {
       log.error(`ERROR: Failed trying to submit or match the code:\n`)
       log.error(error)
     }
-    
+
     log.debug("AUTHENTICATED USER: ", authenticatedUser);
     //TODO: @AC needs to review because this might be a place where we are revealing too much to the parent
     if (authenticatedUser) {

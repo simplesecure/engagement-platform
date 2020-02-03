@@ -1,6 +1,5 @@
 import { walletAnalyticsDataTableGet,
          organizationDataTableGet,
-         walletAnalyticsDataTablePut,
          organizationDataTablePut } from './dynamoConveniences.js';
 import { getSidSvcs } from './sidServices.js';
 import { getLog } from './debugScopes.js'
@@ -138,23 +137,6 @@ export async function handleData(dataToProcess) {
     //When we finally finish this function, we'll need to return a success indicator rather than a list of anything
     //   TODO: check for status code not a string.
     return sendEmails
-  } else if(type === 'ping') {
-    const appId = data && data.appDetails && data.appDetails.appId ? data.appDetails.appId : undefined
-    //First we fetch the data from the org
-    try {
-      const appData = await walletAnalyticsDataTableGet(appId)
-      //Now we can post the ping data back
-      const dataToModify = appData.Item
-      dataToModify['verified'] = {
-        success: true,
-        date: data.date,
-        origin: data.origin
-      }
-      await walletAnalyticsDataTablePut(dataToModify)
-      return true
-    } catch(e) {
-      log.error(e)
-    }
   } else if(type === 'notifications') {
     const { appId, address } = data
     let results = undefined
@@ -235,18 +217,6 @@ export async function handleData(dataToProcess) {
     const createProject = await getSidSvcs().createAppId(orgId, appObject)
     log.debug(createProject)
     return createProject
-  } else if (type === 'AC Terrible Test') {
-    log.debug('AC\'s Terrible Test:')
-    log.debug('  getting uuids')
-    const uuids = await getSidSvcs().getUuidsForWalletAddresses(data)
-    log.debug('  uuids:')
-    log.debug(JSON.stringify(uuids, 0, 2))
-    log.debug('  getting emails from uuids')
-    const emails = await getSidSvcs().getEmailsForUuids(uuids)
-    log.debug('  emails: ')
-    log.debug(JSON.stringify(emails, 0 , 2))
-    log.debug('done...')
-    return 'Better return something or no tomorrow.'
   }
 }
 
@@ -323,11 +293,11 @@ export async function filterByWalletBalance(users, balanceCriteria) {
       for(const user of users) {
         const url = `${ALETHIO_URL}/accounts/${user}/tokenBalances`
         const results = await tokenBalanceFetch(url, tokenAddress)
-  
+
         if(results > parseFloat(amount)) {
           console.log("MATCH FOUND!")
           filteredUsers.push(user)
-        } 
+        }
       }
     } else {
       for(const user of users) {
@@ -336,7 +306,7 @@ export async function filterByWalletBalance(users, balanceCriteria) {
         if(results > parseFloat(amount)) {
           console.log("MATCH FOUND!")
           filteredUsers.push(user)
-        } 
+        }
       }
     }
     return filteredUsers;
@@ -346,11 +316,11 @@ export async function filterByWalletBalance(users, balanceCriteria) {
       for(const user of users) {
         const url = `${ALETHIO_URL}/accounts/${user}/tokenBalances`
         const results = await tokenBalanceFetch(url, tokenAddress)
-  
+
         if(results < parseFloat(amount)) {
           console.log("MATCH FOUND!")
           filteredUsers.push(user)
-        } 
+        }
       }
     } else {
       for(const user of users) {
@@ -359,7 +329,7 @@ export async function filterByWalletBalance(users, balanceCriteria) {
         if(results < parseFloat(amount)) {
           console.log("MATCH FOUND!")
           filteredUsers.push(user)
-        } 
+        }
       }
     }
 
@@ -372,7 +342,7 @@ export async function fetchTotalTransactions(users) {
   for(const user of users) {
     const url = `${ALETHIO_URL}/accounts/${user}/transactions`
     const results = await transactionCountFetch(url)
-    
+
     txCount = txCount + results;
   }
 
@@ -385,7 +355,7 @@ export async function transactionCountFetch(url) {
     uri: url,
     method: 'GET',
     headers,
-    json: true 
+    json: true
   }
 
   const res = await rp(options)
@@ -401,9 +371,9 @@ export async function tokenBalanceFetch(url, tokenAddress) {
   var options = {
     uri: url,
     headers,
-    json: true 
+    json: true
   }
-  
+
   try {
     const post = await rp(options)
 
@@ -445,9 +415,9 @@ export async function etherBalanceFetch(url) {
   var options = {
     uri: url,
     headers,
-    json: true 
+    json: true
   }
-  
+
   try {
     const post = await rp(options)
     const balance = post.data.attributes.balance

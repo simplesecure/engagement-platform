@@ -49,7 +49,8 @@ export default class Auth extends React.Component {
     try {
       setGlobal({ action: 'loading' })
       const auth = await getCloudUser().approveSignIn(token)
-      if(auth && auth.authenticated) {
+      console.log(`AUTH IS: ${JSON.stringify(auth, 0, 2)}`)
+      if(auth) {
         setGlobal({ showSignIn: false, signedIn: true })
       }
     } catch(e) {

@@ -1,3 +1,6 @@
+const Buffer = require('buffer/').Buffer  // note: the trailing slash is important!
+                                          // (See: https://github.com/feross/buffer)
+
 /**
  * jsonParseToBuffer:
  *
@@ -23,20 +26,6 @@ export function jsonParseToBuffer(aStringifiedObj) {
       return v
     }
   )
-}
-
-function _intToHex(aNumber) {
-  return aNumber.toString(16).padStart(2, '0');
-}
-
-export function getRandomString(numBytes) {
-  const randomValues = new Uint8Array(numBytes)
-
-  if (!window) {
-    throw Error(`ERROR: SID Services is unable to access window.`)
-  }
-  window.crypto.getRandomValues(randomValues)
-  return Array.from(randomValues).map(_intToHex).join('');
 }
 
 export function setLocalStorage(key, data) {

@@ -29,7 +29,7 @@ setGlobal({
   showDemo: false,
   processing: false,
   initialLoading: false,
-  action: "", 
+  action: "",
   org_id: getCloudUser().getUserData() ? getCloudUser().getUserData().orgId : ""
 })
 
@@ -49,6 +49,8 @@ serviceWorker.unregister();
 //
 const ROOT_KEY = 'loglevel'
 const ALLOWED_SCOPES = [ ROOT_KEY,
+                        `${ROOT_KEY}:cloudUser`,
+                        `${ROOT_KEY}:dataProcessing`,
                         `${ROOT_KEY}:sidServices` ]
 const ALLOWED_LEVELS = [ 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR' ]
 const DEFAULT_LOG_LEVEL="INFO"
@@ -62,9 +64,9 @@ const DEFAULT_LOG_LEVEL="INFO"
  *  @returns a map of the scope keys to their string values.
  */
 function getIFrameDebugScopes() {
-  const debugScopes = {
-    [ ROOT_KEY ] : DEFAULT_LOG_LEVEL,
-    [ `${ROOT_KEY}:sidServices` ] : DEFAULT_LOG_LEVEL
+  const debugScopes = {}
+  for (const key of ALLOWED_SCOPES) {
+    debugScopes[key] = DEFAULT_LOG_LEVEL
   }
 
   for (const scopeKey in debugScopes) {
