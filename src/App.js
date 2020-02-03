@@ -1,10 +1,10 @@
 import React, { setGlobal } from 'reactn';
+import './assets/css/loader-pulse.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './assets/css/theme.css';
 import './assets/css/shards.min.css';
 import './assets/css/style.css';
 import Home from './containers/Home';
-import { setLocalStorage } from './utils/misc';
 import CookieConsent from "react-cookie-consent";
 import { getCloudUser } from './utils/cloudUser.js'
 
@@ -25,34 +25,6 @@ export default class App extends React.Component {
       await getCloudUser().fetchOrgDataAndUpdate()
     } else {
       setGlobal({ loading: false });
-    }
-
-  }
-
-  fetchSegmentData = async (appData) => {
-    console.warn("FETCHING SEGMENT DATA")
-    const { sessionData, SESSION_FROM_LOCAL, org_id, currentAppId } = this.global;
-    const payload = {
-      app_id: currentAppId,
-      appData,
-      org_id
-    }
-    const { currentSegments } = sessionData
-    let segs = currentSegments;
-    setGlobal({ initialLoading: true })
-    const updatedData = await getCloudUser().processData('update-segments', payload)
-    segs = updatedData
-    sessionData.currentSegments = segs;
-    setGlobal({ sessionData })
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-    //TODO: Now we can check for notifications
-    //const notifications = await getCloudUser().checkNotifications()
-    //console.log("NOTIFICATIONS", notifications)
-    setGlobal({ initialLoading: false })
-
-    const iframe = document.getElementById('sid-widget');
-    if(iframe) {
-      iframe.parentNode.removeChild(iframe);
     }
   }
 
