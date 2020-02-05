@@ -95,14 +95,15 @@ class CloudUser {
 
   async approveSignIn(token) {
     let authenticatedUser = false
-    let sid = {};
     try {
       const thisUserSignUp = await getSidSvcs().answerCustomChallenge(token)
       console.log("FROM CLOUD USER: ", thisUserSignUp)
       const { authenticated } = thisUserSignUp;
       authenticatedUser = authenticated;
 
-      sid = getSidSvcs().getSID();
+      //sid = getSidSvcs().getSID();
+      const org_id = getCloudUser().getUserData() && getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.org_id : undefined
+      setGlobal({ org_id })
       // setGlobal({ sid });
     } catch (error) {
       // TODO: Cognito gives 3 shots at this
