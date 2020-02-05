@@ -114,12 +114,12 @@ class CloudUser {
     log.debug("AUTHENTICATED USER: ", authenticatedUser);
     //TODO: @AC needs to review because this might be a place where we are revealing too much to the parent
     if (authenticatedUser) {
-      sid = getSidSvcs().getSID();
-      console.log("SID: ", sid)
-      const userData = {
-        orgId: sid ? sid.org_id : ""
-      }
-      localStorage.setItem(SIMPLEID_USER_SESSION, JSON.stringify(userData));
+      // sid = getSidSvcs().getSID();
+      // console.log("SID: ", sid)
+      // const userData = {
+      //   orgId: sid ? sid.org_id : ""
+      // }
+      // localStorage.setItem(SIMPLEID_USER_SESSION, JSON.stringify(userData));
       return true
     } else {
       return false
