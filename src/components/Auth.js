@@ -80,9 +80,9 @@ export default class Auth extends React.Component {
         setGlobal({ action: 'sign-in-approval' })
       }
     } catch(err) {
-      console.log(err)
+      console.log("SIGN IN ERROR: ", JSON.stringify(err, 0, 2))
       setGlobal({ action: ""})
-      this.setState({ errorMsg: err })
+      this.setState({ errorMsg: "Trouble signing in, please check your password" })
     }
   }
 
@@ -125,7 +125,7 @@ export default class Auth extends React.Component {
   }
 
   renderPasswordFlow = () => {
-    const { found, email, errorMsg } = this.state
+    const { found, email } = this.state
 
     return (
       <div>
@@ -157,14 +157,14 @@ export default class Auth extends React.Component {
             </Button>
           )}
         </Form>
-        <p>{errorMsg}</p>
       </div>
     )
 
   }
 
   render = () => {
-    const { action } = this.global;
+    const { action } = this.global
+    const { errorMsg } = this.state
 
     let containerElements = undefined
     switch (action) {
@@ -184,6 +184,7 @@ export default class Auth extends React.Component {
     return (
       <div className="container text-center">
         {containerElements}
+        <p style={{color: 'red'}}>{errorMsg}</p>
       </div>
     )
   }
