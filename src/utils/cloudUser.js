@@ -5,7 +5,7 @@ import { getLog } from './debugScopes.js'
 import { getFromOrganizationDataTable, getFromAnalyticsDataTable } from './awsUtils';
 import { setLocalStorage } from './misc';
 
-const SIMPLEID_USER_SESSION = 'SimpleID-User-Session';
+const SIMPLEID_USER_SESSION = 'SID_SVCS';
 const log = getLog('cloudUser')
 
 class CloudUser {
@@ -18,7 +18,7 @@ class CloudUser {
 
   async fetchOrgDataAndUpdate() {
     const { SESSION_FROM_LOCAL } = await getGlobal()
-    const org_id = getCloudUser().getUserData().orgId ? getCloudUser().getUserData().orgId : undefined;
+    const org_id = getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.org_id : undefined
     //regardless of whether there is data in local storage, we need to fetch from db
     let appData;
     if(org_id) {
@@ -123,120 +123,8 @@ class CloudUser {
       return true
     } else {
       return false
-      // TODO: something more appropriate here (i.e. try to sign-in-approval again
-      //       which I think this should be doing, but it's not).
-      // setGlobal({ auth: true, action: 'sign-in-approval' })
     }
   }
-
-    // TODO: Justin, AC:
-  //       - remove notificationCheck altogether (it's in there to prevent an infintie loop)
-  // async checkNotifications() {
-  //   if(notificationCheck) {
-  //     const address = this.getUserData() ? this.getUserData().wallet.ethAddr : "";
-  //     const appId = this.appId
-  //     if(address) {
-  //       const data = {
-  //         address, appId
-  //       }
-  //       action = 'process-data';
-  //       notificationCheck = false;
-  //       let notificationsToReturn = []
-  //       const notificationData = await this.processData('notifications', data);
-  //       if(notificationData !== 'Error fetching app data' &&
-  //         notificationData && notificationData.length > 0) {
-  //         log.debug(`notificationData value = ${notificationData}`)
-  //         log.debug(`notificationData type = ${typeof notificationData}`)
-  //         let activeNotifications = notificationData.filter(a => a.active === true)
-  //         //No matter what, we need to return this to the developer
-  //         activeNoti = activeNotifications;
-  //         //Now we check to see if there are more than one notification:
-  //         if(activeNotifications.length > 1) {
-  //           //Filter out the messages that have been seen
-  //           const messagesSeen = localStorage.getItem(MESSAGES_SEEN) !== "undefined" ?
-  //             JSON.parse(localStorage.getItem(MESSAGES_SEEN)) : undefined
-  //           if(messagesSeen && messagesSeen.length > 0) {
-  //             for (const noti of activeNotifications) {
-  //               const foundMessage = messagesSeen.filter(a => a === noti.id)
-  //               if (!foundMessage || !(foundMessage.length > 0)) {
-  //                 notificationsToReturn.push(noti);
-  //               }
-  //             }
-  //           } else {
-  //             notificationsToReturn = activeNotifications
-  //           }
-  //
-  //           if(notificationsToReturn && notificationsToReturn.length > 0) {
-  //             if(this.renderNotifications) {
-  //               const messageToStore = notificationsToReturn[0]
-  //               localStorage.setItem(ACTIVE_SID_MESSAGE, JSON.stringify(messageToStore))
-  //               this.loadButton()
-  //             } else {
-  //               if(notificationsToReturn.length > 0) {
-  //                 const updated = this._addPlainText(notificationsToReturn)
-  //                 if(updated.length > 0) {
-  //                   notificationsToReturn = updated
-  //                 }
-  //               }
-  //               this.notifications = notificationsToReturn
-  //               return notificationData
-  //             }
-  //           } else {
-  //             return []
-  //           }
-  //
-  //         } else if(activeNotifications.length === 1) {
-  //
-  //           //Filter out the messages that have been seen
-  //           const messagesSeen = localStorage.getItem(MESSAGES_SEEN) !== "undefined" ?
-  //               JSON.parse(localStorage.getItem(MESSAGES_SEEN)) : undefined
-  //           if(messagesSeen && messagesSeen.length > 0) {
-  //             for (const noti of activeNotifications) {
-  //               const foundMessage = messagesSeen.filter(a => a === noti.id)
-  //               if (foundMessage && foundMessage.length > 0) {
-  //                 //Don't do anything here
-  //               } else {
-  //                 notificationsToReturn.push(noti);
-  //               }
-  //             }
-  //           } else {
-  //             notificationsToReturn = activeNotifications
-  //           }
-  //           //need to check if the developer expects us to handle the widget
-  //           if(this.renderNotifications && notificationsToReturn.length > 0) {
-  //             //Throw up the button for the SID widget
-  //             const notification = notificationsToReturn[0];
-  //             const dataToPass = {
-  //               notification,
-  //               appId: this.appId
-  //             }
-  //             localStorage.setItem(ACTIVE_SID_MESSAGE, JSON.stringify(dataToPass))
-  //             this.loadButton()
-  //           } else {
-  //             if(notificationsToReturn.length > 0) {
-  //               const updated = this._addPlainText(notificationsToReturn)
-  //               if(updated.lenght > 0) {
-  //                 notificationsToReturn = updated
-  //               }
-  //             }
-  //             this.notifications = notificationsToReturn
-  //             localStorage.setItem(SIMPLEID_NOTIFICATION_FETCH, JSON.stringify(notificationsToReturn))
-  //             return notificationsToReturn
-  //           }
-  //         }
-  //       } else {
-  //         if(notificationsToReturn.length > 0) {
-  //           const updated = this._addPlainText(notificationsToReturn)
-  //           if(updated.lenght > 0) {
-  //             notificationsToReturn = updated
-  //           }
-  //         }
-  //         this.notifications = notificationsToReturn
-  //         return notificationData
-  //       }
-  //     }
-  //   }
-  // }
 }
 
 

@@ -70,7 +70,7 @@ export default class Auth extends React.Component {
       if(signIn === 'cognito-user-verified') {
         const userData = await getCloudUser().approveSignIn()
         if(userData) {
-          const orgId = getCloudUser().getUserData().orgId
+          const orgId = getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.org_id : undefined
           const profile = localStorage.getItem(PROFILE_STORAGE) ? JSON.parse(localStorage.getItem(PROFILE_STORAGE)) : {}
 
           setGlobal({ signedIn: true, action: "", org_id: orgId, threeBoxProfile: profile })

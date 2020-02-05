@@ -36,7 +36,7 @@ setGlobal({
   threeBoxConnected: false, 
   provider: {},
   threeBoxProfile: {},
-  org_id: getCloudUser().getUserData() ? getCloudUser().getUserData().orgId : ""
+  org_id: getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.org_id : undefined
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));
