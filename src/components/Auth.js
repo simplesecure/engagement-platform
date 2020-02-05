@@ -62,6 +62,7 @@ export default class Auth extends React.Component {
 
   handleSignIn = async (e) => {
     const { email, password } = this.state
+    this.setState({ errorMsg: "" })
     console.log(`DBG: handleSignIn`)
     e.preventDefault()
     try {
@@ -125,7 +126,7 @@ export default class Auth extends React.Component {
   }
 
   renderPasswordFlow = () => {
-    const { found, email } = this.state
+    const { found, email, errorMsg } = this.state
 
     return (
       <div>
@@ -157,6 +158,7 @@ export default class Auth extends React.Component {
             </Button>
           )}
         </Form>
+        <p style={{color: 'red'}}>{errorMsg}</p>
       </div>
     )
 
@@ -164,7 +166,6 @@ export default class Auth extends React.Component {
 
   render = () => {
     const { action } = this.global
-    const { errorMsg } = this.state
 
     let containerElements = undefined
     switch (action) {
@@ -184,7 +185,6 @@ export default class Auth extends React.Component {
     return (
       <div className="container text-center">
         {containerElements}
-        <p style={{color: 'red'}}>{errorMsg}</p>
       </div>
     )
   }
