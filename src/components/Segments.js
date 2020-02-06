@@ -148,12 +148,12 @@ export default class Segments extends React.Component {
       anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
       await putInOrganizationDataTable(anObject)
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+      this.setState({ tokenType: "Choose...", newSegName: "", filterType: "Choose...", contractAddress: "", tokenAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 });
+      setGlobal({ processing: false });
     } catch (suppressedError) {
       setGlobal({ processing: false, error: ERROR_MSG });
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }
-    setGlobal({ processing: false });
-    this.setState({ tokenType: "Choose...", newSegName: "", filterType: "Choose...", contractAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 });
   }
 
   handleDateChange = (date) => {

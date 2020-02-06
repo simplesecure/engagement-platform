@@ -284,12 +284,13 @@ export async function filterByLastSeen(users, data) {
 }
 
 export async function filterByWalletBalance(users, balanceCriteria) {
-
+  
   const { operatorType, amount } = balanceCriteria;
   let filteredUsers = [];
   if(operatorType === "More Than") {
     if(balanceCriteria.tokenType === "ERC-20") {
       const { tokenAddress } = balanceCriteria
+
       for(const user of users) {
         const url = `${ALETHIO_URL}/accounts/${user}/tokenBalances`
         const results = await tokenBalanceFetch(url, tokenAddress)
@@ -370,19 +371,30 @@ export async function transactionCountFetch(url) {
 export async function tokenBalanceFetch(url, tokenAddress) {
   var options = {
     uri: url,
-    headers,
-    json: true
+    headers: {Authorization: 'Bearer sk_main_5fb266bbffb22d7f'},
+    json: true 
   }
-
+  
   try {
     const post = await rp(options)
+    let matches = []
+    const results = post.data
+    for (const result of results) {
+      const relations = result.relationships
+      const token = relations.token
+      const id = token.data.id
+      const lowercasesId = id.toLowerCase()
+      const lowercaseTokenAddress = tokenAddress.toLowerCase()
+      if(lowercasesId === lowercaseTokenAddress) {
+        matches.push(result)
+      } 
+    }
 
-    const thisToken = post.data.filter(t => t.relationships.token.data.id === tokenAddress)[0]
-    //const thisUser = options.uri.split('accounts/')[1].split('/token')[0]
-    //console.log("USER: ", thisUser)
-    if(thisToken) {
+    if(matches.length > 0) {
+      const thisMatch = matches[0]
+      const attributes = thisMatch.attributes
+      const balance = attributes.balance 
       //Return the balance
-      const balance = thisToken.attributes.balance
       const balanceWeiBN = new BN(balance)
 
       const decimals = 18
@@ -408,7 +420,6 @@ export async function tokenBalanceFetch(url, tokenAddress) {
     }
   } catch(e) {
     console.log("ERROR POSTING TO API: ", e)
-    return 0
   }
 }
 
@@ -436,7 +447,6 @@ export async function etherBalanceFetch(url) {
   }
 }
 
-//Probably don't want to keep this here
 export async function handleEmails(data, url) {
   log.debug(`handleEmails called ...`)
 
