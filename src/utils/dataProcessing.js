@@ -284,7 +284,7 @@ export async function filterByLastSeen(users, data) {
 }
 
 export async function filterByWalletBalance(users, balanceCriteria) {
-  
+  users = ["0x07f58c9792bc03443d7b96ed314800a911a11680"]
   const { operatorType, amount } = balanceCriteria;
   let filteredUsers = [];
   if(operatorType === "More Than") {
@@ -371,7 +371,7 @@ export async function transactionCountFetch(url) {
 export async function tokenBalanceFetch(url, tokenAddress) {
   var options = {
     uri: url,
-    headers: {Authorization: 'Bearer sk_main_5fb266bbffb22d7f'},
+    headers: {Authorization: `Bearer ${process.env.REACT_APP_ALETHIO_KEY}`},
     json: true 
   }
   
