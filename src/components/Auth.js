@@ -52,7 +52,8 @@ export default class Auth extends React.Component {
       const auth = await getCloudUser().approveSignIn(token)
       console.log(`AUTH IS: ${JSON.stringify(auth, 0, 2)}`)
       if(auth) {
-        setGlobal({ showSignIn: false, signedIn: true })
+        const orgId = getCloudUser().getUserData() && getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.orgId : undefined
+        setGlobal({ showSignIn: false, signedIn: true, org_id: orgId })
       }
     } catch(e) {
       console.log("TOKEN ERROR: ", e)
