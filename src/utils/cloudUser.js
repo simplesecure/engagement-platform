@@ -12,7 +12,7 @@ class CloudUser {
 
   async signOut() {
     await getSidSvcs().signOut()
-    clearSidKeysFromLocalStore('getCloudUser().js')
+    clearSidKeysFromLocalStore('CloudUser.js')
     window.location.reload();
   }
 
