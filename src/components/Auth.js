@@ -56,7 +56,7 @@ export default class Auth extends React.Component {
         const sid = userData.sid
         const org_id = sid.org_id
       
-        setGlobal({ showSignIn: false, signedIn: true, org_id })
+        setGlobal({ showSignIn: false, signedIn: true, org_id, loading: false })
       }
     } catch(e) {
       console.log("TOKEN ERROR: ", e)
@@ -70,9 +70,10 @@ export default class Auth extends React.Component {
     console.log(`DBG: handleSignIn`)
     e.preventDefault()
     try {
-      setGlobal({ loading: true, action: 'loading' })
+      setGlobal({ action: 'loading' })
       const signIn = await getSidSvcs().signInOrUpWithPassword(email, password)
       if(signIn === 'cognito-user-verified') {
+        setGlobal({ loading: true })
         const userSignedIn = await getCloudUser().approveSignIn()
         if(userSignedIn) {
           const userData = await getCloudUser().getUserData()

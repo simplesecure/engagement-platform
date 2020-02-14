@@ -188,7 +188,14 @@ class CloudUser {
  *
  */
 export function clearSidKeysFromLocalStore(context='') {
-  const keysToClear = [SIMPLEID_USER_SESSION, SESSION_FROM_LOCAL]
+  let keysToClear = [SIMPLEID_USER_SESSION, SESSION_FROM_LOCAL]
+  // let allKeys = Object.entries(localStorage)
+  // for(const localKey of allKeys) {
+  //   if(localKey.includes('aws.cognito.identity')) {
+  //     keysToClear.push(localKey)
+  //   }
+  // }
+
   for (const key of keysToClear) {
     try {
       localStorage.removeItem(key)
