@@ -104,9 +104,9 @@ export default class Home extends React.Component {
     let renderEl;
     if(loading) {
       renderEl = this.renderWhenLoading()
-    } else if(signedIn && Object.keys(sessionData).length > 0 && !loading) {
+    } else if(signedIn && Object.keys(sessionData).length > 0 && loading === false) {
       renderEl = this.renderSignedIn()
-    } else if(signedIn && Object.keys(sessionData).length === 0) {
+    } else if(signedIn && Object.keys(sessionData).length === 0 && loading === false) {
       renderEl = this.renderNoProjectsView()
     } else {
       renderEl = this.renderSignIn()

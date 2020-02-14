@@ -70,7 +70,7 @@ export default class Auth extends React.Component {
     console.log(`DBG: handleSignIn`)
     e.preventDefault()
     try {
-      setGlobal({ action: 'loading' })
+      setGlobal({ loading: true, action: 'loading' })
       const signIn = await getSidSvcs().signInOrUpWithPassword(email, password)
       if(signIn === 'cognito-user-verified') {
         const userSignedIn = await getCloudUser().approveSignIn()

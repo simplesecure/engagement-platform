@@ -2,8 +2,17 @@ import React, { setGlobal } from 'reactn';
 import StickyNav from './StickyNav';
 import { loadCharts } from '../actions/dashboard';
 import DemoDash from './DemoDash';
+import Modal from 'react-bootstrap/Modal'
+import LoadingModal from './LoadingModal'
+import { getCloudUser } from '../utils/cloudUser'
 
 export default class Dashboard extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      loadingMessage: ""
+    }
+  }
   componentDidMount() {
     //Need to push user counts into the tiles if they aren't there yet
     const { sessionData } = this.global;
@@ -12,9 +21,16 @@ export default class Dashboard extends React.Component {
     setGlobal({ sessionData });
   }
 
+  handleRefreshData = async () => {
+    this.setState({ loadingMessage: "Updating chart data"})
+    setGlobal({ processing: true })
+    await getCloudUser().handleUpdateSegments()
+  }
+
   render() {
-    const { sessionData, verified, showDemo } = this.global;
-    const { currentSegments } = sessionData;
+    const { sessionData, verified, showDemo, processing } = this.global;
+    const { loadingMessage } = this.state
+    const { currentSegments } = sessionData
     const allTiles = currentSegments ? currentSegments : []
     const tiles = allTiles.filter(a => a.showOnDashboard)
 
@@ -32,7 +48,7 @@ export default class Dashboard extends React.Component {
               <div className="page-header row no-gutters py-4">
                 <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
                   <span className="text-uppercase page-subtitle">Dashboard</span>
-                  <h3 className="page-title">App Overview</h3>
+                  <h3 className="page-title">App Overview <span onClick={this.handleRefreshData} className="clickable refresh"><i className="fas fa-sync-alt"></i></span></h3>
                 </div>
               </div>
              
@@ -68,7 +84,11 @@ export default class Dashboard extends React.Component {
                 </div>
               }
             </div>
-  
+            <Modal show={processing} >
+              <Modal.Body>
+                <LoadingModal messageToDisplay={`${loadingMessage}...`} />
+              </Modal.Body>
+            </Modal>
           </main>
       )
     }

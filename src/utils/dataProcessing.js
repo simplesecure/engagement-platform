@@ -17,6 +17,7 @@ let addresses = []
 export async function handleData(dataToProcess) {
   log.debug("DATA IN HANDLE DATA FUNCTION: ", dataToProcess)
   const { data, type } = dataToProcess;
+  
   if(type === 'fetch-user-count') {
     log.debug(data.app_id);
     try {
@@ -39,6 +40,7 @@ export async function handleData(dataToProcess) {
     let saveToDb = false
 
     for(const seg of currentSegments) {
+      seg['appId'] = data.app_id
       const dataForProcessing = {
         type: 'segment',
         data: seg
@@ -89,7 +91,8 @@ export async function handleData(dataToProcess) {
       const appData = await walletAnalyticsDataTableGet(data.appId);
       const users = Object.keys(appData.Item.analytics);
       log.debug(appData);
-      switch(data.filter.filter) {
+      const filterType = data.filter ? data.filter.filter : data.name
+      switch(filterType) {
         case "Smart Contract Transactions":
           results = await filterByContract(users, data.contractAddress);
           break;
@@ -296,7 +299,10 @@ export async function filterByLastSeen(users, data) {
 }
 
 export async function filterByWalletBalance(users, balanceCriteria) {
-  users = require('./testAddresses.json').addresses
+  // The below can be used when testing locally to use real addresses that have a 
+  // combination of ERC20 and Ether balances
+  
+  // users = require('./testAddresses.json').addresses
   let filteredUsers = [];
 
   if(balanceCriteria.tokenType === "ERC-20") {

@@ -45,9 +45,8 @@ class CloudUser {
       const currentAppId = appKeys[0]
       const data = allApps[appKeys[0]];
       data['id'] = currentAppId
-
-      setGlobal({ signedIn: true, loading: false, currentAppId, apps: allApps, sessionData: data });
-
+      await setGlobal({ signedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data });
+      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
       //Check if app has been verified
       const verificationData = await getFromAnalyticsDataTable(currentAppId);
       try {
@@ -70,7 +69,7 @@ class CloudUser {
 
       //setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
     } else {
-      setGlobal({ loading: false });
+      setGlobal({ loading: false, projectFound: false });
       //If there's nothing returned from the DB but something is still in local storage, what do we do?
       //TODO: should we remove from localstorage here?
     }
@@ -99,8 +98,26 @@ class CloudUser {
       const segments = []
       segments.push(allUsersSegment)
       sessionData['currentSegments'] = segments
-      setGlobal({ sessionData })
+      await setGlobal({ sessionData })
+      setGlobal({ loading: false })
+    } else {
+      setGlobal({ loading: false })
     }
+  }
+
+  async handleUpdateSegments() {
+    let userData
+    let sid
+    let org_id
+    try {
+      userData = this.getUserData()
+      sid = userData.sid
+      org_id = sid.org_id
+    } catch(e) {
+      log.debug("org id error: ", e)
+    }
+    const appData = await getFromOrganizationDataTable(org_id)
+    this.fetchSegmentData(appData)
   }
 
   async fetchSegmentData(appData) {
@@ -112,11 +129,11 @@ class CloudUser {
     }
     const { currentSegments } = sessionData
     let segs = currentSegments;
-    setGlobal({ initialLoading: true })
+    //setGlobal({ initialLoading: true })
     const updatedData = await this.processData('update-segments', payload)
     segs = updatedData
     sessionData.currentSegments = segs;
-    setGlobal({ sessionData, initialLoading: false })
+    setGlobal({ sessionData, initialLoading: false, processing: false })
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
   }
 
@@ -136,10 +153,9 @@ class CloudUser {
     let authenticatedUser = false
     try {
       const thisUserSignUp = await getSidSvcs().answerCustomChallenge(token)
-      console.log("FROM CLOUD USER: ", thisUserSignUp)
-      const { authenticated } = thisUserSignUp;
-      authenticatedUser = authenticated;
-      const userData = getCloudUser().getUserData()
+      const { authenticated } = thisUserSignUp
+      authenticatedUser = authenticated
+      const userData = this.getUserData()
       const sid = userData.sid
       const org_id = sid.org_id
       if(org_id) {
@@ -156,14 +172,7 @@ class CloudUser {
     }
 
     log.debug("AUTHENTICATED USER: ", authenticatedUser);
-    //TODO: @AC needs to review because this might be a place where we are revealing too much to the parent
     if (authenticatedUser) {
-      // sid = getSidSvcs().getSID();
-      // console.log("SID: ", sid)
-      // const userData = {
-      //   orgId: sid ? sid.org_id : ""
-      // }
-      // localStorage.setItem(SIMPLEID_USER_SESSION, JSON.stringify(userData));
       return true
     } else {
       return false

@@ -216,3 +216,8 @@ section {
   padding-left: 170px!important;
   padding-top: 65px!important;
 }
+
+.refresh {
+  margin-left: 8px;
+  font-size: 14px;
+}

@@ -33,7 +33,8 @@ export default class Segments extends React.Component {
       tokenAddress: "", 
       showSegmentModal: false, 
       segmentToShow: {}, 
-      dashboardShow: "Yes"
+      dashboardShow: "Yes", 
+      loadingMessage: "Creating segment"
     }
   }
 
@@ -287,6 +288,12 @@ export default class Segments extends React.Component {
     })
   }
 
+  handleRefreshData = async () => {
+    this.setState({ loadingMessage: "Updating segment"})
+    setGlobal({ processing: true })
+    await getCloudUser().handleUpdateSegments()
+  }
+
   renderCreateSegment() {
     const { tokenAddress, tokenType, editSegment, dashboardShow, filterType, newSegName, rangeType, operatorType, amount, contractAddress } = this.state;
     const filterToUse = filters.filter(a => a.filter === filterType)[0];
@@ -412,10 +419,10 @@ export default class Segments extends React.Component {
   }
 
   render() {
-    const { sessionData, processing, currentAppId } = this.global;
-    const { currentSegments } = sessionData;
-    const { editSegment, showSegmentModal, segmentToShow, show, seg, existingSeg, newSegName, existingSegmentToFilter } = this.state;
-    const segments = currentSegments ? currentSegments : [];
+    const { sessionData, processing, currentAppId } = this.global
+    const { currentSegments } = sessionData
+    const { loadingMessage, editSegment, showSegmentModal, segmentToShow, show, seg, existingSeg, newSegName, existingSegmentToFilter } = this.state
+    const segments = currentSegments ? currentSegments : []
 
     return(
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
@@ -425,7 +432,7 @@ export default class Segments extends React.Component {
           <div className="page-header row no-gutters py-4">
             <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
               <span className="text-uppercase page-subtitle">Segments</span>
-              <h3 className="page-title">Group People Using Your App</h3>
+              <h3 className="page-title">Group People Using Your App <span onClick={this.handleRefreshData} className="clickable refresh"><i className="fas fa-sync-alt"></i></span></h3>
             </div>
           </div>
           <div className="row">
@@ -555,7 +562,7 @@ export default class Segments extends React.Component {
 
           <Modal show={processing} >
             <Modal.Body>
-              <LoadingModal messageToDisplay={"Creating segment..."} />
+              <LoadingModal messageToDisplay={`${loadingMessage}...`} />
             </Modal.Body>
           </Modal>
 

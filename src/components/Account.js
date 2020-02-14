@@ -46,7 +46,7 @@ export default class Account extends React.Component {
         profile.imageUrl = fetchImageUrl
       }
     }
-    console.log(profile)
+
     setGlobal({ threeBoxProfile: profile })
     setLocalStorage(PROFILE_STORAGE, JSON.stringify(profile));
   }
