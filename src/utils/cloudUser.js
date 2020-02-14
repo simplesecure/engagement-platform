@@ -98,7 +98,9 @@ class CloudUser {
       const segments = []
       segments.push(allUsersSegment)
       sessionData['currentSegments'] = segments
+
       await setGlobal({ sessionData })
+
       setGlobal({ loading: false })
     } else {
       setGlobal({ loading: false })
@@ -106,6 +108,7 @@ class CloudUser {
   }
 
   async handleUpdateSegments() {
+    const { currentAppId } = getGlobal()
     let userData
     let sid
     let org_id
@@ -117,7 +120,12 @@ class CloudUser {
       log.debug("org id error: ", e)
     }
     const appData = await getFromOrganizationDataTable(org_id)
-    this.fetchSegmentData(appData)
+    const thisApp = appData.Item.apps[currentAppId]
+    if(thisApp.currentSegments) {
+      this.fetchSegmentData(appData)
+    } else {
+      setGlobal({ processing: false })
+    }
   }
 
   async fetchSegmentData(appData) {
@@ -127,6 +135,7 @@ class CloudUser {
       appData,
       org_id
     }
+    console.log(payload)
     const { currentSegments } = sessionData
     let segs = currentSegments;
     //setGlobal({ initialLoading: true })

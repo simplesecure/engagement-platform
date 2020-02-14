@@ -1,11 +1,12 @@
 import { walletAnalyticsDataTableGet,
          organizationDataTableGet,
          organizationDataTablePut } from './dynamoConveniences.js';
-import { getSidSvcs } from './sidServices.js';
+import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
-const BN = require('bignumber.js');
+const useTestAddresses = localStorage.getItem('sid-use-test-addresses')
+const BN = require('bignumber.js')
 
-const rp = require('request-promise');
+const rp = require('request-promise')
 
 const log = getLog('dataProcessing')
 
@@ -46,8 +47,9 @@ export async function handleData(dataToProcess) {
         data: seg
       }
       const results = await handleData(dataForProcessing)
+      
       log.debug("RESULTS: ", results)
-      if(results.length > seg.userCount) {
+      if(results && results.length > seg.userCount) {
         seg.users = results;
         seg.userCount = results.length
         saveToDb = true
@@ -89,7 +91,13 @@ export async function handleData(dataToProcess) {
     try {
       log.debug(data.appId);
       const appData = await walletAnalyticsDataTableGet(data.appId);
-      const users = Object.keys(appData.Item.analytics);
+      let users = undefined
+      console.log(useTestAddresses)
+      if(useTestAddresses) {
+        users = require('./testAddresses.json').addresses
+      } else {
+        users = Object.keys(appData.Item.analytics);
+      }
       log.debug(appData);
       const filterType = data.filter ? data.filter.filter : data.name
       switch(filterType) {
@@ -301,8 +309,6 @@ export async function filterByLastSeen(users, data) {
 export async function filterByWalletBalance(users, balanceCriteria) {
   // The below can be used when testing locally to use real addresses that have a 
   // combination of ERC20 and Ether balances
-  
-  // users = require('./testAddresses.json').addresses
   let filteredUsers = [];
 
   if(balanceCriteria.tokenType === "ERC-20") {
