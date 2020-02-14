@@ -9,7 +9,7 @@ const PROFILE_STORAGE = 'engagement-app-profile'
 
 const Web3 = require('web3')
 const Box = require('3box')
-let web3 = undefined 
+let web3 = new Web3(Web3.givenProvider) 
 
 const providerOptions = {
   walletconnect: {
@@ -34,6 +34,23 @@ const providerOptions = {
 
 export default class Account extends React.Component {
 
+  async componentDidMount() {
+    const accounts = await web3.eth.getAccounts()
+    const profile = await Box.getProfile(accounts[0])
+    profile.address = accounts[0]
+    if(profile && profile.image) {
+      const profileImage = profile.image[0].contentUrl
+      if(profileImage) {
+        const profileImageHash = Object.values(profileImage)[0]
+        const fetchImageUrl = `https://gateway.ipfs.io/ipfs/${profileImageHash}`
+        profile.imageUrl = fetchImageUrl
+      }
+    }
+    console.log(profile)
+    setGlobal({ threeBoxProfile: profile })
+    setLocalStorage(PROFILE_STORAGE, JSON.stringify(profile));
+  }
+
   disconnect3Box = () => {
     const WEB3_CONNECT = 'WEB3_CONNECT_CACHED_PROVIDER'
     const ENGAGEMENT_PROFILE = 'engagement-app-profile'
@@ -51,9 +68,7 @@ export default class Account extends React.Component {
     let accounts = undefined
     web3Connect.toggleModal();
     web3Connect.on('connect', async (provider) => {
-      console.log(provider)
       web3 = await new Web3(provider)
-      console.log(web3.currentProvider)
       accounts = await web3.eth.getAccounts()
       setGlobal({ provider })
       if(accounts && accounts.length > 0) {
@@ -128,6 +143,7 @@ export default class Account extends React.Component {
                       <button onClick={this.connect3Box} type="button" className="mb-2 btn btn-sm btn-pill btn-outline-primary mr-2"><i className="material-icons mr-1">person_add</i>Connect 3Box</button> : 
                       <button onClick={this.disconnect3Box} type="button" className="mb-2 btn btn-sm btn-pill btn-outline-primary mr-2"><i className="material-icons mr-1">person_remove</i>Disconnect 3Box</button>
                     }
+                    <div><p>Want to update your 3Box profile? <a href="https://3box.io/hub" target="_blank" rel="noreferrer noopener">Do it here.</a></p></div>
                 </div>
                 
               </div>

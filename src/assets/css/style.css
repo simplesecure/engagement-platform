@@ -63,8 +63,9 @@ section {
   font-size: 14px;
 }
 
-.email-modal .modal-dialog {
-  max-width: 75%!important;
+.email-modal .modal-dialog .modal-content {
+  width: 75%!important;
+  margin: auto!important;
 }
 
 .email-modal {
@@ -155,6 +156,10 @@ section {
   color: #007bff;
 }
 
+.link-color {
+  color: #007bff;
+}
+
 .project-drop {
   margin-top: 10px!important;
 }
@@ -185,4 +190,29 @@ section {
   height: 75px;
   width: 75px;
   border-radius: 50% !important;
+}
+
+.custom-modal .modal-dialog .modal-content {
+  width: 140%!important;
+  margin: auto!important;
+  overflow: scroll!important;
+  height: auto!important;
+}
+
+.custom-modal-email .modal-dialog .modal-content {
+  width: 160%!important;
+  margin: auto!important;
+  overflow: scroll!important;
+  height: auto!important;
+  margin-left: -50px!important;
+}
+
+.sc-jbKcbu {
+  width: 95%!important;
+  margin: auto!important;
+}
+
+.web3connect-modal-container {
+  padding-left: 170px!important;
+  padding-top: 65px!important;
 }

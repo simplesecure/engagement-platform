@@ -1,7 +1,7 @@
 import React from 'reactn';
 import Table from 'react-bootstrap/Table';
 
-export default class DemoTable extends React.Component {
+export default class SegmentTable extends React.Component {
   constructor() {
     super()
     this.keyIdx=0
@@ -20,7 +20,6 @@ export default class DemoTable extends React.Component {
           <thead>
             <tr>
               <th>Wallet Address</th>
-              <th>Email Available</th>
               <th>Provider</th>
               <th>Last Sign In</th>
             </tr>
@@ -32,8 +31,7 @@ export default class DemoTable extends React.Component {
               users.map(user => {
                 return (
                   <tr key={this.getUniqueKey()}>
-                    <td title={user}>{user.substring(0,8)}...</td>
-                    <td>Coming Soon...</td>
+                    <td title={user}>{user}</td>
                     <td>Coming Soon...</td>
                     <td>Coming Soon...</td>
                   </tr>

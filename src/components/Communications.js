@@ -4,6 +4,8 @@ import EmailEditor from 'react-email-editor';
 import Modal from 'react-bootstrap/Modal';
 import uuid from 'uuid/v4';
 import LoadingModal from './LoadingModal'
+import Table from 'react-bootstrap/Table'
+import Card from 'react-bootstrap/Card'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils';
 import { setLocalStorage } from '../utils/misc';
 import { getCloudUser } from './../utils/cloudUser.js'
@@ -22,7 +24,9 @@ export default class Communications extends React.Component {
       templateToUpdate: {},
       error: "",
       confirmModal: false,
-      userCount: 0
+      userCount: 0, 
+      templateToDelete: {}, 
+      deleteTempModal: false
     }
   }
 
@@ -100,15 +104,21 @@ export default class Communications extends React.Component {
     }
   }
 
-  deleteTemplate = async (temp) => {
+  deleteTemplate = (temp) => {
+    this.setState({ deleteTempModal: true, templateToDelete: temp })
+  }
+
+  confirmDelete = async () => {
     const { sessionData, org_id, apps, SESSION_FROM_LOCAL } = this.global;
     const { currentTemplates } = sessionData;
+    const { templateToDelete } = this.state
+    const temp = templateToDelete
     const index = currentTemplates.map(a => a.id).indexOf(temp.id);
     if(index > -1) {
       currentTemplates.splice(index, 1);
       const thisApp = apps[sessionData.id];
       thisApp.currentTemplates = currentTemplates;
-
+      this.setState({ deleteTempModal: false, templateToDelete: {} })
       setGlobal({ sessionData, apps });
       //Update in DB
       const orgData = await getFromOrganizationDataTable(org_id);
@@ -227,7 +237,7 @@ export default class Communications extends React.Component {
   }
 
   render() {
-    const { show, templateToUpdate, showExisting, fromAddress, confirmModal } = this.state;
+    const { show, templateToUpdate, showExisting, fromAddress, confirmModal, templateToDelete, deleteTempModal } = this.state;
     const { sessionData, processing } = this.global;
     const { selectedSegment, selectedTemplate, templateName, campaignName, userCount } = this.state;
     const { campaigns, currentSegments, currentTemplates } = sessionData;
@@ -251,15 +261,30 @@ export default class Communications extends React.Component {
               <h5>Campaigns</h5>
               {
                 campaigns && campaigns.length > 0 ?
-                <ul className="tile-list">
-                {
-                  campaigns.map(camp => {
-                    return (
-                    <li className="clickable card text-center" key={camp.id}><span className="card-body standard-tile heading-tile">{camp.name}</span><br/><span className="card-body standard-tile">Sent to {camp.emailsSent} {camp.emailsSent === 1 || camp.emailsSent === "1" ? "person" : "people"}</span></li>
-                    )
-                  })
-                }
-                </ul> :
+                <Card>
+                  <Card.Body>
+                    <Table responsive>
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Recipients</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      {
+                        campaigns.map(camp => {
+                          return (
+                            <tr key={camp.id}>
+                              <td>{camp.name}</td>
+                              <td>{camp.emailsSent}</td>                              
+                            </tr>
+                          )
+                        })
+                      }
+                      </tbody>
+                    </Table>
+                  </Card.Body>
+                </Card> :
                 <ul className="tile-list">
                   <li className="card"><span className="card-body">You haven't sent any campaigns yet, let's do that now!</span></li>
                 </ul>
@@ -268,15 +293,30 @@ export default class Communications extends React.Component {
                 <h5>Templates</h5>
                 {
                 currentTemplates && currentTemplates.length > 0 ?
-                <ul className="tile-list">
-                {
-                  currentTemplates.map(temp => {
-                    return (
-                    <li className="clickable card" key={temp.id}><span onClick={() => this.loadTemplate(temp)} className="card-body standard-tile">{temp.name}</span><span onClick={() => this.deleteTemplate(temp)} className="right clickable text-danger">Remove</span></li>
-                    )
-                  })
-                }
-                </ul> :
+                <Card>
+                  <Card.Body>
+                    <Table responsive>
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      {
+                        currentTemplates.map(temp => {
+                          return (
+                            <tr key={temp.id}>
+                              <td>{temp.name}</td>
+                              <td className="clickable text-danger" onClick={() => this.deleteTemplate(temp)}>Delete</td>                              
+                            </tr>
+                          )
+                        })
+                      }
+                      </tbody>
+                    </Table>
+                  </Card.Body>
+                </Card> : 
                 <ul className="tile-list">
                   <li className="card"><span className="card-body">You haven't created any email templates yet.</span></li>
                 </ul>
@@ -338,7 +378,7 @@ export default class Communications extends React.Component {
           </div>
         </div>
         {/*CREATE NEW TEMPLATE*/}
-        <Modal className="email-modal" show={show} onHide={() => this.setState({ show: false })}>
+        <Modal className="custom-modal-email" show={show} onHide={() => this.setState({ show: false })}>
           <Modal.Header closeButton>
             <Modal.Title>Create a New Email Template</Modal.Title>
           </Modal.Header>
@@ -347,6 +387,13 @@ export default class Communications extends React.Component {
             <input value={templateName} onChange={(e) => this.setState({ templateName: e.target.value })} type="text" className="form-control template-name" id="tileName" placeholder="Give it a name" />
             <EmailEditor
               ref={editor => this.editor = editor}
+              appearance={{
+                panels: {
+                  tools: {
+                    dock: 'left'
+                  }
+                }
+              }}
               // onLoad={this.onLoad}
               // onDesignLoad={this.onDesignLoad}
             />
@@ -372,6 +419,13 @@ export default class Communications extends React.Component {
             <EmailEditor
               ref={editor => this.editor = editor}
               onLoad={this.onLoad}
+              appearance={{
+                panels: {
+                  tools: {
+                    dock: 'left'
+                  }
+                }
+              }}
               // onDesignLoad={this.onDesignLoad}
             />
           </Modal.Body>
@@ -410,6 +464,22 @@ export default class Communications extends React.Component {
           <Modal.Body>
             <LoadingModal messageToDisplay={"Send emails..."} />
           </Modal.Body>
+        </Modal>
+
+
+        <Modal className="custom-modal" show={deleteTempModal} onHide={() => this.setState({ deleteTempModal: false})}>
+          <Modal.Header closeButton>
+            <Modal.Title>Are you sure?</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>You're about to delete the segment <strong><u>{templateToDelete.name}</u></strong>. Are you sure you want to do this? It can't be undone.</Modal.Body>
+          <Modal.Footer>
+            <button className="btn btn-secondary" onClick={() => this.setState({ deleteTempModal: false})}>
+              Cancel
+            </button>
+            <button className="btn btn-danger" onClick={this.confirmDelete}>
+              Delete
+            </button>
+          </Modal.Footer>
         </Modal>
       </main>
     )
