@@ -221,3 +221,14 @@ section {
   margin-left: 8px;
   font-size: 14px;
 }
+
+.button-filter {
+  max-width: 65%!important;
+  margin: auto!important;
+  text-align: center;
+}
+
+.filter-btn {
+  max-width: 50%!important;
+  margin: auto!important
+}

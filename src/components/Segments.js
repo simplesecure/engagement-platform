@@ -11,6 +11,7 @@ import uuid from 'uuid/v4';
 import { setLocalStorage } from '../utils/misc';
 import LoadingModal from './LoadingModal';
 import { getCloudUser } from './../utils/cloudUser.js'
+const listToArray = require('list-to-array');
 const ERROR_MSG = "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
 
 export default class Segments extends React.Component {
@@ -34,7 +35,8 @@ export default class Segments extends React.Component {
       showSegmentModal: false, 
       segmentToShow: {}, 
       dashboardShow: "Yes", 
-      loadingMessage: "Creating segment"
+      loadingMessage: "Creating segment", 
+      listOfAddresses: ""
     }
   }
 
@@ -79,12 +81,17 @@ export default class Segments extends React.Component {
   createSegment = async () => {
     const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { currentSegments } = sessionData;
-    const { newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state;
+    const { listOfAddresses, newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state;
     const showOnDashboard = dashboardShow === "Yes" ? true : false
     const segments = currentSegments ? currentSegments : [];
     const filterToUse = filters.filter(a => a.filter === filterType)[0];
     const segId = uuid();
     setGlobal({ processing: true });
+    let addrArray = []
+    if(listOfAddresses) {
+      addrArray = listToArray(listOfAddresses)
+    }
+
     //First we set the segment criteria to be stored
     const segmentCriteria = {
       appId: sessionData.id,
@@ -105,7 +112,7 @@ export default class Segments extends React.Component {
         amount
       } : null,
       contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
-      userCount: null
+      userCount: addrArray.length > 0 ? addrArray.length : null
     }
 
     //Now we fetch the actual results
@@ -113,17 +120,22 @@ export default class Segments extends React.Component {
     //This state should trigger a UI element showing the segment being created (could take a while)
     setGlobal({ processingSegment: true });
 
-    //Here we need to use the iframe to process the segment criteria and return the necessary data
-    const data = await getCloudUser().processData('segment', segmentCriteria);
+    //If the segment needs to be process via api, use the processData call
+    if(addrArray.length === 0) {
+      const data = await getCloudUser().processData('segment', segmentCriteria);
 
-    if(data) {
-      if(filterToUse.filter === "Total Transactions") {
-        segmentCriteria.totalTransactions = data;
-      } else {
-        segmentCriteria.userCount = data.length;
-        segmentCriteria.users = data;
+      if(data) {
+        if(filterToUse.filter === "Total Transactions") {
+          segmentCriteria.totalTransactions = data
+        } else {
+          segmentCriteria.userCount = data.length
+          segmentCriteria.users = data
+        }
       }
+    } else {
+      segmentCriteria.users = addrArray
     }
+    
 
     //Then we store the segment with an empty slot for the user count
     //TODO: we need to also look at showing the wallets and other meta data (see demo app)
@@ -133,9 +145,9 @@ export default class Segments extends React.Component {
 
     const thisApp = apps[sessionData.id]
     thisApp.currentSegments = segments
-    apps[sessionData.id] = thisApp;
+    apps[sessionData.id] = thisApp
 
-    setGlobal({ sessionData, apps });
+    setGlobal({ sessionData, apps })
     // Put the new segment in the analytics data for the user signed in to this
     // id:
     //      Each App (SimpleID Customer) will have an app_id
@@ -165,11 +177,17 @@ export default class Segments extends React.Component {
   updateSegment = async () => {
     const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { currentSegments } = sessionData;
-    const { segmentToShow, newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state;
+    const { listOfAddresses, segmentToShow, newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state;
     const showOnDashboard = dashboardShow === "Yes" ? true : false
     const filterToUse = filters.filter(a => a.filter === filterType)[0];
     setGlobal({ processing: true })
     this.setState({ editSegment: false, showSegmentModal: false })
+
+    let addrArray = []
+    if(listOfAddresses) {
+      addrArray = listToArray(listOfAddresses)
+    }
+
     //First we set the segment criteria to be stored
     const segmentCriteria = {
       appId: sessionData.id,
@@ -190,18 +208,21 @@ export default class Segments extends React.Component {
         amount
       } : null,
       contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
-      userCount: segmentToShow.userCount
+      userCount: addrArray.length > 0 ? addrArray.length : segmentToShow.userCount
     }
 
-    const data = await getCloudUser().processData('segment', segmentCriteria);
+    if(addrArray.length === 0) {
+      const data = await getCloudUser().processData('segment', segmentCriteria);
 
-    if(data) {
-      if(filterToUse.filter === "Total Transactions") {
-        segmentCriteria.totalTransactions = data;
-      } else {
-        segmentCriteria.userCount = data.length;
-        segmentCriteria.users = data;
+      if(data) {
+        if(filterToUse.filter === "Total Transactions") {
+          segmentCriteria.totalTransactions = data
+        } else {
+          segmentCriteria.userCount = data.length
+        }
       }
+    } else {
+      segmentCriteria.users = addrArray
     }
 
     //Filter by this segment
@@ -260,6 +281,8 @@ export default class Segments extends React.Component {
     const { segmentToShow, tokenAddress, contractAddress, filterType, operatorType, amount, rangeType, tokenType } = this.state
     
     const filterToUse = filters.filter(a => a.filter === segmentToShow.filter.filter)[0];
+    console.log(segmentToShow)
+    console.log(segmentToShow.filter.type === "Paste")
     this.setState({ 
       showSegmentModal: false, 
       editSegment: true, 
@@ -270,7 +293,8 @@ export default class Segments extends React.Component {
       operatorType: segmentToShow.numberRange ? segmentToShow.numberRange.operatorType : operatorType, 
       amount: segmentToShow.numberRange ? segmentToShow.numberRange.amount : amount, 
       tokenType: segmentToShow.numberRange ? segmentToShow.numberRange.tokenType : tokenType, 
-      tokenAddress: segmentToShow.numberRange ? segmentToShow.numberRange.tokenAddress : tokenAddress
+      tokenAddress: segmentToShow.numberRange ? segmentToShow.numberRange.tokenAddress : tokenAddress,
+      listOfAddresses: segmentToShow.filter.type === "Paste" ? segmentToShow.users.join(',') : ""
     })
   }
 
@@ -295,10 +319,9 @@ export default class Segments extends React.Component {
   }
 
   renderCreateSegment() {
-    const { tokenAddress, tokenType, editSegment, dashboardShow, filterType, newSegName, rangeType, operatorType, amount, contractAddress } = this.state;
+    const { listOfAddresses, tokenAddress, tokenType, editSegment, dashboardShow, filterType, newSegName, rangeType, operatorType, amount, contractAddress } = this.state;
     const filterToUse = filters.filter(a => a.filter === filterType)[0];
     const createCriteria = filterType !== "Choose" && newSegName ? true : false
-
     return (
       <div>
       <div className="form-group col-md-12">
@@ -371,6 +394,11 @@ export default class Segments extends React.Component {
             <div />
           }
         </div> :
+        filterToUse && filterToUse.type === "Paste" ? 
+        <div className="col-lg-12 col-md-12 col-sm-12 mb-4">
+          <label htmlFor="pastedAddress">Paste comma delimited list of wallet addresses</label>
+          <textarea value={listOfAddresses} className="form-control" onChange={(e) => this.setState({ listOfAddresses: e.target.value })}></textarea>
+        </div> : 
         <div />
       }
       <div className="form-group col-md-12">
@@ -504,7 +532,7 @@ export default class Segments extends React.Component {
                   <SegmentTable seg={segmentToShow} />
                 </Modal.Body>
                 <Modal.Footer>
-                  <button className="btn btn-secondary" onClick={() => this.setState({ showSegmentModal, segmentToShow: {}})}>
+                  <button className="btn btn-secondary" onClick={() => this.setState({ showSegmentModal: false, segmentToShow: {}})}>
                     Close
                   </button>                  
                 </Modal.Footer>
@@ -560,7 +588,7 @@ export default class Segments extends React.Component {
               </div>
           </div>
 
-          <Modal show={processing} >
+          <Modal className="custom-modal" show={processing} >
             <Modal.Body>
               <LoadingModal messageToDisplay={`${loadingMessage}...`} />
             </Modal.Body>

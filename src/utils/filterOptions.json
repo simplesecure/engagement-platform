@@ -10,5 +10,9 @@
   {
     "filter": "Smart Contract Transactions", 
     "type": "Contract"
+  }, 
+  {
+    "filter": "Paste Addresses", 
+    "type": "Paste"
   }
 ]

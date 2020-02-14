@@ -1,23 +1,23 @@
-import React, { setGlobal } from 'reactn';
-import ReactDOM from 'react-dom';
-import App from './App';
+import React from 'reactn'
+import ReactDOM from 'react-dom'
+import App from './App'
 import { getCloudUser } from './utils/cloudUser'
 import { getSidSvcs, createSidSvcs } from './utils/sidServices'
 const SID_APP_ID = "00000000000000000000000000000000"
 
 it('renders without crashing', () => {
-  const div = document.createElement('div');
-  ReactDOM.render(<App />, div);
-  ReactDOM.unmountComponentAtNode(div);
+  const div = document.createElement('div')
+  ReactDOM.render(<App />, div)
+  ReactDOM.unmountComponentAtNode(div)
 })
 
 it('shows sign in screen', () => {
-  const div = document.createElement('div');
-  ReactDOM.render(<App />, div);
+  const div = document.createElement('div')
+  ReactDOM.render(<App />, div)
 
   document.getElementById('sign-in-modal')
   
-  ReactDOM.unmountComponentAtNode(div);
+  ReactDOM.unmountComponentAtNode(div)
 })
 
 //TODO: this is a long time
