@@ -373,7 +373,7 @@ export async function transactionCountFetch(url) {
 export async function tokenBalanceFetch(url, tokenAddress) {
   var options = {
     uri: url,
-    headers: {Authorization: 'Bearer sk_main_f59f04cb24ccc1c4'},
+    headers: {Authorization: `Bearer ${ALETHIO_KEY}`},
     json: true 
   }
   
