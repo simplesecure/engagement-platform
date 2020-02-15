@@ -208,7 +208,8 @@ export default class Segments extends React.Component {
         amount
       } : null,
       contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
-      userCount: addrArray.length > 0 ? addrArray.length : segmentToShow.userCount
+      userCount: addrArray.length > 0 ? addrArray.length : segmentToShow.userCount,
+      users: segmentToShow.users
     }
 
     if(addrArray.length === 0) {
@@ -219,6 +220,7 @@ export default class Segments extends React.Component {
           segmentCriteria.totalTransactions = data
         } else {
           segmentCriteria.userCount = data.length
+          segmentCriteria.users = data
         }
       }
     } else {

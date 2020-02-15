@@ -4,13 +4,16 @@ import { loadCharts } from '../actions/dashboard';
 import DemoDash from './DemoDash';
 import Modal from 'react-bootstrap/Modal'
 import LoadingModal from './LoadingModal'
+import SegmentTable from './SegmentTable'
 import { getCloudUser } from '../utils/cloudUser'
 
 export default class Dashboard extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      loadingMessage: ""
+      loadingMessage: "", 
+      showSegmentModal: false, 
+      segmentToShow: {}
     }
   }
   componentDidMount() {
@@ -27,9 +30,13 @@ export default class Dashboard extends React.Component {
     await getCloudUser().handleUpdateSegments()
   }
 
+  handleShowSeg = (seg) => {
+    this.setState({ segmentToShow: seg, showSegmentModal: true })
+  }
+
   render() {
     const { sessionData, verified, showDemo, processing } = this.global;
-    const { loadingMessage } = this.state
+    const { loadingMessage, showSegmentModal, segmentToShow } = this.state
     const { currentSegments } = sessionData
     const allTiles = currentSegments ? currentSegments : []
     const tiles = allTiles.filter(a => a.showOnDashboard)
@@ -56,7 +63,7 @@ export default class Dashboard extends React.Component {
                 {
                   tiles.map(tile => {
                     return (
-                      <div key={tile.id} className="col-lg col-md-6 col-sm-6 mb-4">
+                      <div onClick={() => this.handleShowSeg(tile)} key={tile.id} className="clickable col-lg col-md-6 col-sm-6 mb-4">
                         <div className="stats-small stats-small--1 card card-small">
                           <div className="card-body p-0 d-flex">
                             <div className="d-flex flex-column m-auto">
@@ -84,6 +91,22 @@ export default class Dashboard extends React.Component {
                 </div>
               }
             </div>
+
+            
+            <Modal className="custom-modal" show={showSegmentModal} onHide={() => this.setState({ showSegmentModal: false, segmentToShow: {}})}>
+              <Modal.Header closeButton>
+                <Modal.Title>{segmentToShow.name}</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <SegmentTable seg={segmentToShow} />
+              </Modal.Body>
+              <Modal.Footer>
+                <button className="btn btn-secondary" onClick={() => this.setState({ showSegmentModal: false, segmentToShow: {}})}>
+                  Close
+                </button>                  
+              </Modal.Footer>
+            </Modal>
+
             <Modal show={processing} >
               <Modal.Body>
                 <LoadingModal messageToDisplay={`${loadingMessage}...`} />
