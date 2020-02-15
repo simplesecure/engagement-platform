@@ -130,7 +130,7 @@ export function configureDebugScopes(debugScopes={}) {
         scopeValue = overriddenScopeValue
       }
     } catch (suppressedError) {
-      log.debug(`Suppressed error getting override iFrame log level for ${moduleName}.\n${suppressedError}`)
+      log.debug(`Suppressed error getting override log level for ${moduleName}.\n${suppressedError}`)
     }
 
     try {
@@ -140,7 +140,7 @@ export function configureDebugScopes(debugScopes={}) {
         log.getLogger(moduleName).setLevel(scopeValue)
       }
     } catch (suppressedError) {
-      log.debug(`Suppressed error setting the iframe log level for ${moduleName} to ${scopeValue}.\n${suppressedError}`)
+      log.debug(`Suppressed error setting the log level for ${moduleName} to ${scopeValue}.\n${suppressedError}`)
     }
   }
 }
@@ -148,8 +148,7 @@ export function configureDebugScopes(debugScopes={}) {
 /**
  *  getDebugScopes:
  *
- *  Fetches known debug scopes from local storage to forward to the widget
- *  iFrame for dynamic debug capability from an App Console.
+ *  Fetches known debug scopes from local storage
  *
  *  @returns a map of the scope keys to their string values.
  */
