@@ -1,6 +1,5 @@
 import React, { setGlobal } from 'reactn';
 import StickyNav from './StickyNav';
-import { loadCharts } from '../actions/dashboard';
 import DemoDash from './DemoDash';
 import Modal from 'react-bootstrap/Modal'
 import LoadingModal from './LoadingModal'
@@ -20,7 +19,6 @@ export default class Dashboard extends React.Component {
     //Need to push user counts into the tiles if they aren't there yet
     const { sessionData } = this.global;
     
-    loadCharts()
     setGlobal({ sessionData });
   }
 
@@ -39,7 +37,7 @@ export default class Dashboard extends React.Component {
     const { loadingMessage, showSegmentModal, segmentToShow } = this.state
     const { currentSegments } = sessionData
     const allTiles = currentSegments ? currentSegments : []
-    const tiles = allTiles.filter(a => a.showOnDashboard)
+    const tiles = allTiles.filter(a => a.showOnDashboard === true || a.showOnDashboard === undefined)
 
     if(showDemo) {
       return (

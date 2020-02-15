@@ -32,7 +32,9 @@ class CloudUser {
     //regardless of whether there is data in local storage, we need to fetch from db
     let appData;
     if(org_id) {
+      console.log(org_id)
       appData = await getFromOrganizationDataTable(org_id);
+      console.log(appData)
     } else {
       console.log("ERROR: No Org ID")
     }
@@ -95,7 +97,11 @@ class CloudUser {
         userCount: updatedData.length, 
         users: updatedData
       }
-      const segments = []
+      
+      let segments = []
+      if(currentSegments && currentSegments.length > 0) {
+        segments = currentSegments
+      }
       segments.push(allUsersSegment)
       sessionData['currentSegments'] = segments
 
@@ -119,6 +125,7 @@ class CloudUser {
     } catch(e) {
       log.debug("org id error: ", e)
     }
+
     const appData = await getFromOrganizationDataTable(org_id)
     const thisApp = appData.Item.apps[currentAppId]
     if(thisApp.currentSegments) {
