@@ -64,8 +64,14 @@ const TEST_ASYMMETRIC_DECRYPT = true
 const SID_SVCS_LS_KEY = 'SID_SVCS'
 
 
+if (!process.env.REACT_APP_AWS_ACCESS_KEY_ID) {
+  throw new Error('Cloud services provider not defined!')
+}
+
 // TODO: Remove this soon.  #Bicycle
 function getKeyAssignments() {
+  const AWS_TEST_ACCOUNT = (process.env.REACT_APP_AWS_ACCESS_KEY_ID === 'AKIARVK4F3CUFEBZSRLS')
+
   const keyIds = {
     1 : '2fe4d745-6685-4581-93ca-6fd7aff92426',
     8 : '5b70dc4d-a34a-4ff2-8c7e-56f772dbbea3',
@@ -77,6 +83,21 @@ function getKeyAssignments() {
     2 : 'ba920788-7c6a-4553-b804-958870279f53',
     6 : 'f2445d7c-2c60-4846-acf9-cc899cf3d4f1',
     9 : 'fa3e1b67-b62b-4455-a2f7-0190fb40c2c8'
+  }
+  if (AWS_TEST_ACCOUNT) {
+    // Test farm keys
+    keyIds = {
+      0: 'dbe0351b-887e-46fb-b0f5-d4da8691a71a',
+      1: 'f770b6af-6268-443f-b34f-b5a2bb238ae3',
+      2: 'f770b6af-6268-443f-b34f-b5a2bb238ae3',
+      3: 'dbe0351b-887e-46fb-b0f5-d4da8691a71a',
+      4: 'f770b6af-6268-443f-b34f-b5a2bb238ae3',
+      5: 'dbe0351b-887e-46fb-b0f5-d4da8691a71a',
+      6: 'f770b6af-6268-443f-b34f-b5a2bb238ae3',
+      7: 'dbe0351b-887e-46fb-b0f5-d4da8691a71a',
+      8: 'f770b6af-6268-443f-b34f-b5a2bb238ae3',
+      9: 'dbe0351b-887e-46fb-b0f5-d4da8691a71a'
+    }
   }
 
   const MAX_KEYS = Object.keys(keyIds).length

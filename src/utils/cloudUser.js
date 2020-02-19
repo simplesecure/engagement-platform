@@ -145,7 +145,7 @@ export function clearSidKeysFromLocalStore(context='') {
 }
 
 
-// El Singltone:
+// Singleton:
 //
 let cuInstance = undefined
 
