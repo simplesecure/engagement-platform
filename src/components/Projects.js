@@ -32,7 +32,8 @@ export default class Projects extends React.Component {
   }
 
   createProject = async () => {
-    const { apps, org_id } = this.global;
+    const { apps, org_id, SESSION_FROM_LOCAL } = this.global;
+
     const { projectName } = this.state;
     this.setGlobal({ processing: true });
     const newProject = {
@@ -46,19 +47,22 @@ export default class Projects extends React.Component {
     }
     try {
       const projectId = await getCloudUser().processData('create-project', payload);
+      let data
       if(projectId) {
         apps[projectId] = newProject
-        const appKeys = Object.keys(apps);
+        const appKeys = Object.keys(apps);        
         const allApps = apps;
         const currentAppId = allApps[appKeys[0]]
-        const data = allApps[appKeys[0]];
+        data = allApps[appKeys[0]];
         setGlobal({ currentAppId, apps: allApps, sessionData: data, processing: false });
         this.setState({ projectName: "" });
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
+        getCloudUser().fetchOrgDataAndUpdate()
       } else {
         setGlobal({ processing: false, error: "No app id returned"})
         console.log(`ERROR: no app id returned`)
       }
-      //setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(appData));
+      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
       setGlobal({ processing: false, error: ERROR_MSG})
@@ -206,7 +210,7 @@ export default class Projects extends React.Component {
 
               </div>
 
-              <Modal show={show} onHide={this.closeModal}>
+              <Modal className="custom-modal" show={show} onHide={this.closeModal}>
                 <Modal.Header closeButton>
                   <Modal.Title>Are you sure?</Modal.Title>
                 </Modal.Header>
@@ -221,7 +225,7 @@ export default class Projects extends React.Component {
                 </Modal.Footer>
               </Modal>
 
-              <Modal show={processing}>
+              <Modal className="custom-modal" show={processing}>
                 <Modal.Body>
                   <LoadingModal messageToDisplay={"Creating project..."} />
                 </Modal.Body>

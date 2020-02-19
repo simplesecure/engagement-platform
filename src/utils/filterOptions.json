@@ -1,9 +1,5 @@
 [
   {
-    "filter": "All Users", 
-    "type": "Count"
-  }, 
-  {
     "filter": "Last Seen", 
     "type": "Date Range"
   }, 
@@ -12,11 +8,11 @@
     "type": "Number Range"
   }, 
   {
-    "filter": "Total Transactions", 
-    "type": "Count"
-  }, 
-  {
     "filter": "Smart Contract Transactions", 
     "type": "Contract"
+  }, 
+  {
+    "filter": "Paste Addresses", 
+    "type": "Paste"
   }
 ]

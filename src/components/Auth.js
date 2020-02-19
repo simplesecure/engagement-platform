@@ -52,8 +52,11 @@ export default class Auth extends React.Component {
       const auth = await getCloudUser().approveSignIn(token)
       console.log(`AUTH IS: ${JSON.stringify(auth, 0, 2)}`)
       if(auth) {
-        const orgId = getCloudUser().getUserData() && getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.orgId : undefined
-        setGlobal({ showSignIn: false, signedIn: true, org_id: orgId })
+        const userData = await getCloudUser().getUserData()
+        const sid = userData.sid
+        const org_id = sid.org_id
+      
+        setGlobal({ showSignIn: false, signedIn: true, org_id, loading: false })
       }
     } catch(e) {
       console.log("TOKEN ERROR: ", e)
@@ -70,12 +73,15 @@ export default class Auth extends React.Component {
       setGlobal({ action: 'loading' })
       const signIn = await getSidSvcs().signInOrUpWithPassword(email, password)
       if(signIn === 'cognito-user-verified') {
-        const userData = await getCloudUser().approveSignIn()
-        if(userData) {
-          const orgId = getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.org_id : undefined
+        setGlobal({ loading: true })
+        const userSignedIn = await getCloudUser().approveSignIn()
+        if(userSignedIn) {
+          const userData = await getCloudUser().getUserData()
+          const sid = userData.sid
+          const org_id = sid.org_id
           const profile = localStorage.getItem(PROFILE_STORAGE) ? JSON.parse(localStorage.getItem(PROFILE_STORAGE)) : {}
 
-          setGlobal({ signedIn: true, action: "", org_id: orgId, threeBoxProfile: profile })
+          setGlobal({ signedIn: true, action: "", threeBoxProfile: profile, org_id })
           await getCloudUser().fetchOrgDataAndUpdate()
         }
       } else {
@@ -150,7 +156,7 @@ export default class Auth extends React.Component {
             </Form.Text>
           </Form.Group>
           {(found && email) ? (
-            <Button variant="primary" type="submit">
+            <Button id="submit-sign-in" variant="primary" type="submit">
               Continue
             </Button>
           ) :(

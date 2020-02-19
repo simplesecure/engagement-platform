@@ -1,187 +1,47 @@
 import React, { setGlobal } from 'reactn';
 import StickyNav from './StickyNav';
-import { loadCharts } from '../actions/dashboard';
+import DemoDash from './DemoDash';
+import Modal from 'react-bootstrap/Modal'
+import LoadingModal from './LoadingModal'
+import SegmentTable from './SegmentTable'
+import { getCloudUser } from '../utils/cloudUser'
 
 export default class Dashboard extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      loadingMessage: "", 
+      showSegmentModal: false, 
+      segmentToShow: {}
+    }
+  }
   componentDidMount() {
     //Need to push user counts into the tiles if they aren't there yet
     const { sessionData } = this.global;
-    const { currentSegments, currentTiles } = sessionData;
-    console.log("ALL SEGMENTS: ", currentSegments)
-    if(currentTiles && currentSegments) {
-      for(const tile of currentTiles) {
-        console.log(tile)
-        const segment = currentSegments.filter(a => a.id === tile.segment)[0];
-        console.log("segment", segment)
-        tile.userCount = segment.userCount;
-      }
-    }
-    loadCharts()
+    
     setGlobal({ sessionData });
   }
 
+  handleRefreshData = async () => {
+    this.setState({ loadingMessage: "Updating chart data"})
+    setGlobal({ processing: true })
+    await getCloudUser().handleUpdateSegments()
+  }
+
+  handleShowSeg = (seg) => {
+    this.setState({ segmentToShow: seg, showSegmentModal: true })
+  }
+
   render() {
-    const { sessionData, verified, showDemo } = this.global;
-    const { currentTiles } = sessionData;
-    
-    const tiles = currentTiles ? currentTiles : [];
-    console.log(tiles)
+    const { sessionData, verified, showDemo, processing } = this.global;
+    const { loadingMessage, showSegmentModal, segmentToShow } = this.state
+    const { currentSegments } = sessionData
+    const allTiles = currentSegments ? currentSegments : []
+    const tiles = allTiles.filter(a => a.showOnDashboard === true || a.showOnDashboard === undefined)
+
     if(showDemo) {
       return (
-        <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
-                        
-          <StickyNav />
-          <div className="main-content-container container-fluid px-4">
-          
-            <div className="page-header row no-gutters py-4">
-              <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
-                <span className="text-uppercase page-subtitle">Dashboard</span>
-                <h3 className="page-title">App Overview</h3>
-              </div>
-            </div>
-          
-            <div className="row">
-              <div className="col-lg col-md-6 col-sm-6 mb-4">
-                <div className="stats-small stats-small--1 card card-small">
-                  <div className="card-body p-0 d-flex">
-                    <div className="d-flex flex-column m-auto">
-                      <div className="stats-small__data text-center">
-                        <span className="stats-small__label text-uppercase">Total Users</span>
-                        <h6 className="stats-small__value count my-3">2,390</h6>
-                      </div>
-                      <div className="stats-small__data">
-                        <span className="stats-small__percentage stats-small__percentage--increase">4.7%</span>
-                      </div>
-                    </div>
-                    <canvas height="120" className="blog-overview-stats-small-1"></canvas>
-                  </div>
-                </div>
-              </div>
-              <div className="col-lg col-md-6 col-sm-6 mb-4">
-                <div className="stats-small stats-small--1 card card-small">
-                  <div className="card-body p-0 d-flex">
-                    <div className="d-flex flex-column m-auto">
-                      <div className="stats-small__data text-center">
-                        <span className="stats-small__label text-uppercase">Daily Active Users</span>
-                        <h6 className="stats-small__value count my-3">182</h6>
-                      </div>
-                      <div className="stats-small__data">
-                        <span className="stats-small__percentage stats-small__percentage--increase">12.4%</span>
-                      </div>
-                    </div>
-                    <canvas height="120" className="blog-overview-stats-small-2"></canvas>
-                  </div>
-                </div>
-              </div>
-              <div className="col-lg col-md-4 col-sm-6 mb-4">
-                <div className="stats-small stats-small--1 card card-small">
-                  <div className="card-body p-0 d-flex">
-                    <div className="d-flex flex-column m-auto">
-                      <div className="stats-small__data text-center">
-                        <span className="stats-small__label text-uppercase">Total Transactions</span>
-                        <h6 className="stats-small__value count my-3">8,147</h6>
-                      </div>
-                      <div className="stats-small__data">
-                        <span className="stats-small__percentage stats-small__percentage--decrease">3.8%</span>
-                      </div>
-                    </div>
-                    <canvas height="120" className="blog-overview-stats-small-3"></canvas>
-                  </div>
-                </div>
-              </div>
-              <div className="col-lg col-md-4 col-sm-6 mb-4">
-                <div className="stats-small stats-small--1 card card-small">
-                  <div className="card-body p-0 d-flex">
-                    <div className="d-flex flex-column m-auto">
-                      <div className="stats-small__data text-center">
-                        <span className="stats-small__label text-uppercase">Contract Transactions</span>
-                        <h6 className="stats-small__value count my-3">2,413</h6>
-                      </div>
-                      <div className="stats-small__data">
-                        <span className="stats-small__percentage stats-small__percentage--increase">12.4%</span>
-                      </div>
-                    </div>
-                    <canvas height="120" className="blog-overview-stats-small-4"></canvas>
-                  </div>
-                </div>
-              </div>
-              <div className="col-lg col-md-4 col-sm-12 mb-4">
-                <div className="stats-small stats-small--1 card card-small">
-                  <div className="card-body p-0 d-flex">
-                    <div className="d-flex flex-column m-auto">
-                      <div className="stats-small__data text-center">
-                        <span className="stats-small__label text-uppercase">Current AUM</span>
-                        <h6 className="stats-small__value count my-3">$17,281</h6>
-                      </div>
-                      <div className="stats-small__data">
-                        <span className="stats-small__percentage stats-small__percentage--decrease">2.4%</span>
-                      </div>
-                    </div>
-                    <canvas height="120" className="blog-overview-stats-small-5"></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-          
-            <div className="row">
-          
-              <div className="col-lg-8 col-md-12 col-sm-12 mb-4">
-                <div className="card card-small">
-                  <div className="card-header border-bottom">
-                    <h6 className="m-0">Users</h6>
-                  </div>
-                  <div className="card-body pt-0">
-                    <div className="row border-bottom py-2 bg-light">
-                      <div className="col-12 col-sm-6">
-                        <div id="blog-overview-date-range" className="input-daterange input-group input-group-sm my-auto ml-auto mr-auto ml-sm-auto mr-sm-0" style={{maxWidth: "350px"}}>
-                          <input type="text" className="input-sm form-control" name="start" placeholder="Start Date" id="blog-overview-date-range-1" />
-                          <input type="text" className="input-sm form-control" name="end" placeholder="End Date" id="blog-overview-date-range-2" />
-                          <span className="input-group-append">
-                            <span className="input-group-text">
-                              <i className="material-icons"></i>
-                            </span>
-                          </span>
-                        </div>
-                      </div>
-                      <div className="col-12 col-sm-6 d-flex mb-2 mb-sm-0">
-                        <button type="button" className="btn btn-sm btn-white ml-auto mr-auto ml-sm-auto mr-sm-0 mt-3 mt-sm-0">View Full Report &rarr;</button>
-                      </div>
-                    </div>
-                    <canvas height="130" style={{maxWidth: "100%"}} className="background-chart"></canvas>
-                  </div>
-                </div>
-              </div>
-        
-              <div className="col-lg-4 col-md-6 col-sm-12 mb-4">
-                <div className="card card-small h-100">
-                  <div className="card-header border-bottom">
-                    <h6 className="m-0">Transactions by Contract</h6>
-                  </div>
-                  <div className="card-body d-flex py-0">
-                    <canvas height="220" className="blog-users-by-device m-auto"></canvas>
-                  </div>
-                  <div className="card-footer border-top">
-                    <div className="row">
-                      <div className="col">
-                        <select className="custom-select custom-select-sm" style={{maxWidth: "130px"}}>
-                          <option defaultValue="Last Week">Last Week</option>
-                          <option value="1">Today</option>
-                          <option value="2">Last Month</option>
-                          <option value="3">Last Year</option>
-                        </select>
-                      </div>
-                      <div className="col text-right view-report">
-                        <button className="a-el-fix">Full report &rarr;</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-      
-            </div>
-          </div>
-
-        </main>
+        <DemoDash />
       )
     } else {
       return(
@@ -193,7 +53,7 @@ export default class Dashboard extends React.Component {
               <div className="page-header row no-gutters py-4">
                 <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
                   <span className="text-uppercase page-subtitle">Dashboard</span>
-                  <h3 className="page-title">App Overview</h3>
+                  <h3 className="page-title">App Overview <span onClick={this.handleRefreshData} className="clickable refresh"><i className="fas fa-sync-alt"></i></span></h3>
                 </div>
               </div>
              
@@ -201,13 +61,13 @@ export default class Dashboard extends React.Component {
                 {
                   tiles.map(tile => {
                     return (
-                      <div key={tile.id} className="col-lg col-md-6 col-sm-6 mb-4">
+                      <div onClick={() => this.handleShowSeg(tile)} key={tile.id} className="clickable col-lg col-md-6 col-sm-6 mb-4">
                         <div className="stats-small stats-small--1 card card-small">
                           <div className="card-body p-0 d-flex">
                             <div className="d-flex flex-column m-auto">
                               <div className="stats-small__data text-center">
                                 <span className="stats-small__label text-uppercase">{tile.name}</span>
-                                <h6 className="stats-small__value count my-3">{tile.userCount ? tile.userCount : ""}</h6>
+                                <h6 className="stats-small__value count my-3">{tile.userCount ? tile.userCount : 0}</h6>
                               </div>
                               <div className="stats-small__data">
                                 {/*<span className="stats-small__percentage stats-small__percentage--increase">4.7%</span>*/}
@@ -229,7 +89,27 @@ export default class Dashboard extends React.Component {
                 </div>
               }
             </div>
-  
+
+            
+            <Modal className="custom-modal" show={showSegmentModal} onHide={() => this.setState({ showSegmentModal: false, segmentToShow: {}})}>
+              <Modal.Header closeButton>
+                <Modal.Title>{segmentToShow.name}</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <SegmentTable seg={segmentToShow} />
+              </Modal.Body>
+              <Modal.Footer>
+                <button className="btn btn-secondary" onClick={() => this.setState({ showSegmentModal: false, segmentToShow: {}})}>
+                  Close
+                </button>                  
+              </Modal.Footer>
+            </Modal>
+
+            <Modal show={processing} >
+              <Modal.Body>
+                <LoadingModal messageToDisplay={`${loadingMessage}...`} />
+              </Modal.Body>
+            </Modal>
           </main>
       )
     }

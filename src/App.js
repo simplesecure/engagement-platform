@@ -18,9 +18,9 @@ export default class App extends React.Component {
     //Check local storage for quick loading first
     const sessionFromLocal = localStorage.getItem(SESSION_FROM_LOCAL);
     if(sessionFromLocal) {
-      setGlobal({ sessionData: JSON.parse(sessionFromLocal), loading: false });
+      setGlobal({ sessionData: JSON.parse(sessionFromLocal) });
     }
-
+    
     if(signedIn) {
       //First try to fetch the profile from local storage
       const profile = localStorage.getItem(PROFILE_STORAGE) ? JSON.parse(localStorage.getItem(PROFILE_STORAGE)) : {}

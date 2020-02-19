@@ -48,18 +48,12 @@ export default class SideNav extends React.Component {
                 <span>Dashboard</span>
               </Link>
             </li>
-            <li className="nav-item">
+            {/*<li className="nav-item">
               <Link onClick={() => this.setState({ pathname: '/new-tile' })} className={`nav-link ${pathname.includes('/new-tile') && currentAppId !== undefined ? "active" : ""}`} to="/new-tile">
                 <i className="material-icons">note_add</i>
                 <span>Customize</span>
               </Link>
-            </li>
-            <li className="nav-item">
-              <Link onClick={() => this.setState({ pathname: '/projects' })} className={`nav-link ${pathname.includes('/projects') && currentAppId !== undefined ? "active" : ""}`} to="/projects">
-                <i className="material-icons">web</i>
-                <span>Projects</span>
-              </Link>
-            </li>
+            </li>*/}
             <li className="nav-item">
               <Link onClick={() => this.setState({ pathname: '/segments' })} className={`nav-link ${pathname.includes('/segments') && currentAppId !== undefined ? "active" : ""}`} to="/segments">
                 <i className="material-icons">view_module</i>
@@ -76,6 +70,12 @@ export default class SideNav extends React.Component {
               <Link onClick={() => this.setState({ pathname: '/communications' })} className={`nav-link ${pathname.includes('/communications') && currentAppId !== undefined ? "active" : ""}`} to="/communications">
                 <i className="material-icons">email</i>
                 <span>Email</span>
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link onClick={() => this.setState({ pathname: '/projects' })} className={`nav-link ${pathname.includes('/projects') && currentAppId !== undefined ? "active" : ""}`} to="/projects">
+                <i className="material-icons">web</i>
+                <span>Projects</span>
               </Link>
             </li>
             {/*<li className="nav-item">

@@ -1,11 +1,12 @@
 import { walletAnalyticsDataTableGet,
          organizationDataTableGet,
          organizationDataTablePut } from './dynamoConveniences.js';
-import { getSidSvcs } from './sidServices.js';
+import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
-const BN = require('bignumber.js');
+const useTestAddresses = localStorage.getItem('sid-use-test-addresses')
+const BN = require('bignumber.js')
 
-const rp = require('request-promise');
+const rp = require('request-promise')
 
 const log = getLog('dataProcessing')
 
@@ -17,7 +18,19 @@ let addresses = []
 export async function handleData(dataToProcess) {
   log.debug("DATA IN HANDLE DATA FUNCTION: ", dataToProcess)
   const { data, type } = dataToProcess;
-  if(type === 'update-segments') {
+  
+  if(type === 'fetch-user-count') {
+    log.debug(data.app_id);
+    try {
+      const appData = await walletAnalyticsDataTableGet(data.app_id);
+      const users = Object.keys(appData.Item.analytics);
+      log.debug(appData);
+      return users 
+    } catch(e) {
+      log.debug("USER FETCH ERROR: ", e)
+      return []
+    }
+  } else if(type === 'update-segments') {
     //Take the whole org data payload and execute on it
     log.debug("ORG DATA PAYLOAD")
     log.debug(data);
@@ -26,14 +39,17 @@ export async function handleData(dataToProcess) {
     const currentSegments = thisApp.currentSegments;
     const updatedSegments = []
     let saveToDb = false
+
     for(const seg of currentSegments) {
+      seg['appId'] = data.app_id
       const dataForProcessing = {
         type: 'segment',
         data: seg
       }
       const results = await handleData(dataForProcessing)
+      
       log.debug("RESULTS: ", results)
-      if(results.length > seg.userCount) {
+      if(results && results.length > seg.userCount) {
         seg.users = results;
         seg.userCount = results.length
         saveToDb = true
@@ -75,9 +91,16 @@ export async function handleData(dataToProcess) {
     try {
       log.debug(data.appId);
       const appData = await walletAnalyticsDataTableGet(data.appId);
-      const users = Object.keys(appData.Item.analytics);
+      let users = undefined
+      console.log(useTestAddresses)
+      if(useTestAddresses) {
+        users = require('./testAddresses.json').addresses
+      } else {
+        users = Object.keys(appData.Item.analytics);
+      }
       log.debug(appData);
-      switch(data.filter.filter) {
+      const filterType = data.filter ? data.filter.filter : data.name
+      switch(filterType) {
         case "Smart Contract Transactions":
           results = await filterByContract(users, data.contractAddress);
           break;
@@ -284,58 +307,37 @@ export async function filterByLastSeen(users, data) {
 }
 
 export async function filterByWalletBalance(users, balanceCriteria) {
-  users = ["0x07f58c9792bc03443d7b96ed314800a911a11680"]
-  const { operatorType, amount } = balanceCriteria;
+  // The below can be used when testing locally to use real addresses that have a 
+  // combination of ERC20 and Ether balances
   let filteredUsers = [];
-  if(operatorType === "More Than") {
-    if(balanceCriteria.tokenType === "ERC-20") {
-      const { tokenAddress } = balanceCriteria
 
-      for(const user of users) {
-        const url = `${ALETHIO_URL}/accounts/${user}/tokenBalances`
-        const results = await tokenBalanceFetch(url, tokenAddress)
+  if(balanceCriteria.tokenType === "ERC-20") {
+    const { tokenAddress } = balanceCriteria
 
-        if(results > parseFloat(amount)) {
-          console.log("MATCH FOUND!")
-          filteredUsers.push(user)
-        }
-      }
-    } else {
-      for(const user of users) {
-        const url = `${ALETHIO_URL}/accounts/${user}`
-        const results = await etherBalanceFetch(url);
-        if(results > parseFloat(amount)) {
-          console.log("MATCH FOUND!")
-          filteredUsers.push(user)
+    for(const user of users) {
+      const url = `https://api.aleth.io/v1/accounts/${user}/tokenBalances?filter[token]=${tokenAddress}`
+      const results = await tokenBalanceFetch(url)
+      if(results === 'error') {
+        return "error"
+      } else {
+        const updatedFilteredUsers = await conditionCheck(results, user, balanceCriteria, filteredUsers)
+        if(updatedFilteredUsers) {
+          filteredUsers = updatedFilteredUsers
         }
       }
     }
-    return filteredUsers;
-  } else if(operatorType === "Less Than") {
-    if(balanceCriteria.tokenType === "ERC-20") {
-      const { tokenAddress } = balanceCriteria
-      for(const user of users) {
-        const url = `${ALETHIO_URL}/accounts/${user}/tokenBalances`
-        const results = await tokenBalanceFetch(url, tokenAddress)
-
-        if(results < parseFloat(amount)) {
-          console.log("MATCH FOUND!")
-          filteredUsers.push(user)
-        }
-      }
-    } else {
-      for(const user of users) {
-        const url = `${ALETHIO_URL}/accounts/${user}`
-        const results = await etherBalanceFetch(url);
-        if(results < parseFloat(amount)) {
-          console.log("MATCH FOUND!")
-          filteredUsers.push(user)
-        }
+  } else {
+    for(const user of users) {
+      const url = `${ALETHIO_URL}/accounts/${user}`
+      const results = await etherBalanceFetch(url)
+      const updatedFilteredUsers = await conditionCheck(results, user, balanceCriteria, filteredUsers)
+      if(updatedFilteredUsers) {
+        filteredUsers = updatedFilteredUsers
       }
     }
-
-    return filteredUsers;
   }
+
+  return filteredUsers;
 }
 
 export async function fetchTotalTransactions(users) {
@@ -371,55 +373,35 @@ export async function transactionCountFetch(url) {
 export async function tokenBalanceFetch(url, tokenAddress) {
   var options = {
     uri: url,
-    headers: {Authorization: `Bearer ${process.env.REACT_APP_ALETHIO_KEY}`},
+    headers: {Authorization: `Bearer ${ALETHIO_KEY}`},
     json: true 
   }
   
   try {
     const post = await rp(options)
-    let matches = []
-    const results = post.data
-    for (const result of results) {
-      const relations = result.relationships
-      const token = relations.token
-      const id = token.data.id
-      const lowercasesId = id.toLowerCase()
-      const lowercaseTokenAddress = tokenAddress.toLowerCase()
-      if(lowercasesId === lowercaseTokenAddress) {
-        matches.push(result)
-      } 
-    }
-
-    if(matches.length > 0) {
-      const thisMatch = matches[0]
-      const attributes = thisMatch.attributes
-      const balance = attributes.balance 
-      //Return the balance
-      const balanceWeiBN = new BN(balance)
-
-      const decimals = 18
-      const decimalsBN = new BN(decimals)
-      const divisor = new BN(10).pow(decimalsBN)
-
-      const beforeDecimal = parseFloat(balanceWeiBN.div(divisor))
-      return beforeDecimal
-    } else {
-      //Check if there's another page of results
-      const nextPage = post.meta.page.hasNext
-      if(nextPage) {
-        //Grab the link for the next page and run this whole query again
-        const nextPageUrl = post.links.next
-        try {
-          return await tokenBalanceFetch(nextPageUrl)
-        } catch(e) {
-          return e
-        }
+    const data = post.data[0]
+    let result = undefined
+    if(data) {
+      const attributes = data.attributes
+      const balance = attributes.balance
+      if(attributes && balance) {
+        const balanceWeiBN = new BN(balance)
+    
+        const decimals = 18
+        const decimalsBN = new BN(decimals)
+        const divisor = new BN(10).pow(decimalsBN)
+        const beforeDecimal = parseFloat(balanceWeiBN.div(divisor))
+        result = beforeDecimal
       } else {
-        return 0
+        result = 0
       }
+    } else {
+      result = 0
     }
+    
+    return result
   } catch(e) {
-    console.log("ERROR POSTING TO API: ", e)
+    return 0
   }
 }
 
@@ -442,9 +424,26 @@ export async function etherBalanceFetch(url) {
     const beforeDecimal = parseFloat(balanceWeiBN.div(divisor))
     return beforeDecimal
   } catch(e) {
-    // console.log(e)
     return 0
   }
+}
+
+export async function conditionCheck(fetchedAmount, user, conditional, matchingUsers) {
+  const { operatorType, amount } = conditional
+  new Promise((resolve) => {
+    if(operatorType === 'More Than') {
+      if(fetchedAmount > parseFloat(amount)) {
+        matchingUsers.push(user)
+      } 
+      resolve(matchingUsers)
+    } else {
+      if(fetchedAmount < parseFloat(amount)) {
+        matchingUsers.push(user)
+      }
+
+      resolve(matchingUsers)
+    }
+  })
 }
 
 export async function handleEmails(data, url) {
