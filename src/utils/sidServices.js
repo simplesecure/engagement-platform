@@ -72,7 +72,7 @@ if (!process.env.REACT_APP_AWS_ACCESS_KEY_ID) {
 function getKeyAssignments() {
   const AWS_TEST_ACCOUNT = (process.env.REACT_APP_AWS_ACCESS_KEY_ID === 'AKIARVK4F3CUFEBZSRLS')
 
-  const keyIds = {
+  let keyIds = {
     1 : '2fe4d745-6685-4581-93ca-6fd7aff92426',
     8 : '5b70dc4d-a34a-4ff2-8c7e-56f772dbbea3',
     0 : '66d158b8-ecbd-4962-aedb-15d5dd4024ee',
@@ -566,15 +566,35 @@ export class SidServices
     const encryptedUuids = []
     const encryptedUuidMaps = await walletToUuidMapTableGetUuids(addresses)
     for (const encryptedUuidMap of encryptedUuidMaps) {
+      // SPEC Change:
+      //    This data structure now features app_to_enc_uuid_map_v2, which
+      //    has lists of ciphertexts to UUIDs etc.
+      //    To mitigate our situation, lets try this first, then fall back to
+      //    the legacy data.
+      //
+      //    TODO:
+      //          - Ultimately we want to upgrade the data format and ditch the
+      //            legacy.
+      //          - Grab all uuids (or consider that as fallback / emerg
+      //            message broadcast).
+      //
       try {
-        //AC Hard-coded version:
-        //const cipherObj = encryptedUuidMap.app_to_enc_uuid_map[anAppId]
-        //Justin dynamic version:
+        const cipherObj = encryptedUuidMap.app_to_enc_uuid_map_v2[app_id][0]
+        encryptedUuids.push(cipherObj)
+        log.debug(`Spec. Change Success.  Read first cipherObj from app_to_enc_uuid_map_v2.`)
+        continue
+      } catch (suppressedSpecChangeError) {
+        log.debug(`Spec. Change Fail.  Unable to read cipherObj from app_to_enc_uuid_map_v2. Trying to read app_to_enc_uuid_map. Reported error:\n${suppressedSpecChangeError}`)
+      }
+
+      try {
         const cipherObj = encryptedUuidMap.app_to_enc_uuid_map[app_id]
         encryptedUuids.push(cipherObj)
       } catch (suppressedError) {
+        log.warn(`Unable to get uuid cipherObj from object:`, encryptedUuidMap)
         continue
       }
+
     }
 
     // 2. Fetch the private key required to decrypt the uuids:

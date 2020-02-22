@@ -18,14 +18,14 @@ let addresses = []
 export async function handleData(dataToProcess) {
   log.debug("DATA IN HANDLE DATA FUNCTION: ", dataToProcess)
   const { data, type } = dataToProcess;
-  
+
   if(type === 'fetch-user-count') {
     log.debug(data.app_id);
     try {
       const appData = await walletAnalyticsDataTableGet(data.app_id);
       const users = Object.keys(appData.Item.analytics);
       log.debug(appData);
-      return users 
+      return users
     } catch(e) {
       log.debug("USER FETCH ERROR: ", e)
       return []
@@ -47,7 +47,7 @@ export async function handleData(dataToProcess) {
         data: seg
       }
       const results = await handleData(dataForProcessing)
-      
+
       log.debug("RESULTS: ", results)
       if(results && results.length > seg.userCount) {
         seg.users = results;
@@ -155,6 +155,13 @@ export async function handleData(dataToProcess) {
     }
 
     //Once we have the emails, send them to the email service lambda with the template
+    if (ROOT_EMAIL_SERVICE_URL === 'TODO-ENV-FILE-AND-AWS') {
+      log.warn(`Add server to test emailing segments. Until then, here's the data being sent to the email service:`)
+      log.warn(`\n${JSON.stringify(dataForEmailService, 0, 2)}`)
+      log.warn('')
+      return 'Not so much - TODO: dataProcessing.js'
+    }
+
     const sendEmails = await handleEmails(dataForEmailService, ROOT_EMAIL_SERVICE_URL)
 
     //When we finally finish this function, we'll need to return a success indicator rather than a list of anything
@@ -307,7 +314,7 @@ export async function filterByLastSeen(users, data) {
 }
 
 export async function filterByWalletBalance(users, balanceCriteria) {
-  // The below can be used when testing locally to use real addresses that have a 
+  // The below can be used when testing locally to use real addresses that have a
   // combination of ERC20 and Ether balances
   let filteredUsers = [];
 
@@ -374,9 +381,9 @@ export async function tokenBalanceFetch(url, tokenAddress) {
   var options = {
     uri: url,
     headers: {Authorization: `Bearer ${ALETHIO_KEY}`},
-    json: true 
+    json: true
   }
-  
+
   try {
     const post = await rp(options)
     const data = post.data[0]
@@ -386,7 +393,7 @@ export async function tokenBalanceFetch(url, tokenAddress) {
       const balance = attributes.balance
       if(attributes && balance) {
         const balanceWeiBN = new BN(balance)
-    
+
         const decimals = 18
         const decimalsBN = new BN(decimals)
         const divisor = new BN(10).pow(decimalsBN)
@@ -398,7 +405,7 @@ export async function tokenBalanceFetch(url, tokenAddress) {
     } else {
       result = 0
     }
-    
+
     return result
   } catch(e) {
     return 0
@@ -434,7 +441,7 @@ export async function conditionCheck(fetchedAmount, user, conditional, matchingU
     if(operatorType === 'More Than') {
       if(fetchedAmount > parseFloat(amount)) {
         matchingUsers.push(user)
-      } 
+      }
       resolve(matchingUsers)
     } else {
       if(fetchedAmount < parseFloat(amount)) {
