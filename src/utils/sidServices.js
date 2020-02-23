@@ -560,7 +560,6 @@ export class SidServices
   async getUuidsForWalletAddresses(data) {
     const { app_id, addresses } = data;
     let uuids = []
-
     // 1. Fetch the encrypted uuids for the given wallet addresses and appID:
     //
     const encryptedUuids = []
@@ -618,9 +617,13 @@ export class SidServices
     //
     for (const encryptedUuidCipherText of encryptedUuids) {
       try {
-        const uuid = await eccrypto.decrypt(orgEcPriKey, encryptedUuidCipherText)
-        uuids.push(uuid.toString())
+        console.log(orgEcPriKey, encryptedUuidCipherText)
+        if(encryptedUuidCipherText) {
+          const uuid = await eccrypto.decrypt(orgEcPriKey, encryptedUuidCipherText)
+          uuids.push(uuid.toString())
+        }
       } catch (suppressedError) {
+        console.log(suppressedError)
         // TODO: some message or analytic to fix / track this
       }
     }

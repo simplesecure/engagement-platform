@@ -65,9 +65,10 @@ class CloudUser {
       if(data.currentSegments) {
 
         //TODO: We really need to find a good way to update this
-        //this.fetchSegmentData(appData);
-      } 
-      this.fetchUsersCount(appData)
+        this.fetchSegmentData(appData);
+      } else {
+        this.fetchUsersCount(appData)
+      }
 
       //setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
     } else {
@@ -149,7 +150,7 @@ class CloudUser {
     const updatedData = await this.processData('update-segments', payload)
     segs = updatedData
     sessionData.currentSegments = segs;
-    setGlobal({ sessionData, initialLoading: false, processing: false })
+    setGlobal({ sessionData, initialLoading: false, processing: false, loading: false })
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
   }
 

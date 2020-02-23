@@ -25,7 +25,8 @@ export default class Dashboard extends React.Component {
   handleRefreshData = async () => {
     this.setState({ loadingMessage: "Updating chart data"})
     setGlobal({ processing: true })
-    await getCloudUser().handleUpdateSegments()
+    await getCloudUser().fetchOrgDataAndUpdate()
+    setGlobal({ processing: false })
   }
 
   handleShowSeg = (seg) => {
@@ -105,7 +106,7 @@ export default class Dashboard extends React.Component {
               </Modal.Footer>
             </Modal>
 
-            <Modal show={processing} >
+            <Modal className="custom-modal" show={processing} >
               <Modal.Body>
                 <LoadingModal messageToDisplay={`${loadingMessage}...`} />
               </Modal.Body>

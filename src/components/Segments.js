@@ -317,7 +317,8 @@ export default class Segments extends React.Component {
   handleRefreshData = async () => {
     this.setState({ loadingMessage: "Updating segment"})
     setGlobal({ processing: true })
-    await getCloudUser().handleUpdateSegments()
+    await getCloudUser().fetchOrgDataAndUpdate()
+    setGlobal({ processing: false })
   }
 
   renderCreateSegment() {
