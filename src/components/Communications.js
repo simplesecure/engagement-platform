@@ -441,7 +441,7 @@ export default class Communications extends React.Component {
 
         {/* CONFIRM MODAL */}
 
-        <Modal show={confirmModal} onHide={() => this.setState({ confirmModal: false})}>
+        <Modal className="custom-modal" show={confirmModal} onHide={() => this.setState({ confirmModal: false})}>
           <Modal.Header closeButton>
             <Modal.Title>You're About To Send An Email</Modal.Title>
           </Modal.Header>
@@ -460,7 +460,7 @@ export default class Communications extends React.Component {
 
         {/* END CONFIRM MODAL */}
 
-        <Modal className="email-modal" show={processing}>
+        <Modal className="custom-modal" show={processing}>
           <Modal.Body>
             <LoadingModal messageToDisplay={"Send emails..."} />
           </Modal.Body>
