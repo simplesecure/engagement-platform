@@ -4299,8 +4299,8 @@ a.close.disabled {
   left: 0;
   z-index: 1050;
   display: none;
-  width: 100%;
-  height: 100%;
+  width: 100vw!important;
+  height: 100vh!important;
   overflow: hidden;
   outline: 0; }
 
@@ -4357,8 +4357,11 @@ a.close.disabled {
   background-clip: padding-box;
   border: 1px solid #EAEDF2;
   border-radius: 0.3125rem;
+  height: 75vh!important;
   box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.09);
-  outline: 0; }
+  outline: 0;
+  overflow: scroll!important;
+  margin-top: 12.5vh!important }
 
 .modal-backdrop {
   position: fixed;

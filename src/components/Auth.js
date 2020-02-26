@@ -137,7 +137,7 @@ export default class Auth extends React.Component {
 
     return (
       <div>
-        <h5>Sign Into Your SimpleID Wallet</h5>
+        <h5>Sign Into Your SimpleID Account</h5>
         <p>All you need is an email and password.</p>
         <Form onSubmit={this.handleSignIn}>
           <Form.Group controlId="formBasicEmail">
