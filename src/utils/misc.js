@@ -1,4 +1,4 @@
-const Buffer = require('buffer/').Buffer  // note: the trailing slash is important!
+//const Buffer = require('buffer/').Buffer  // note: the trailing slash is important!
                                           // (See: https://github.com/feross/buffer)
 
 /**

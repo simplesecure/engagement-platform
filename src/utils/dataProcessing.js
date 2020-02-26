@@ -4,6 +4,7 @@ import { walletAnalyticsDataTableGet,
 import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
 const useTestAddresses = localStorage.getItem('sid-use-test-addresses')
+const SID_ANALYTICS_APP_ID = '00000000000000000000000000000000'
 const BN = require('bignumber.js')
 
 const rp = require('request-promise')
@@ -148,10 +149,14 @@ export async function handleData(dataToProcess) {
 
     //Now we need to take this list and fetch the emails for the users
     const dataForEmailService = {
-      uuidList,
-      template,
-      subject,
-      from
+      data: {
+        uuidList,
+        template,
+        subject,
+        from, 
+        appId: SID_ANALYTICS_APP_ID
+      },
+      command: 'sendEmails'
     }
 
     //Once we have the emails, send them to the email service lambda with the template
@@ -159,14 +164,30 @@ export async function handleData(dataToProcess) {
       log.warn(`Add server to test emailing segments. Until then, here's the data being sent to the email service:`)
       log.warn(`\n${JSON.stringify(dataForEmailService, 0, 2)}`)
       log.warn('')
-      return 'Not so much - TODO: dataProcessing.js'
+      return fetch('http://localhost:3005', {
+        method: 'post',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dataForEmailService)
+      }).then(function(response) {
+        return response.json();
+      }).then(function(data) {
+        console.log(data)
+        return data.data
+      }).catch((e) => {
+        console.log(e)
+        return e
+      })
+      // return 'Not so much - TODO: dataProcessing.js' 
     }
 
-    const sendEmails = await handleEmails(dataForEmailService, ROOT_EMAIL_SERVICE_URL)
+    //const sendEmails = await handleEmails(dataForEmailService, ROOT_EMAIL_SERVICE_URL)
 
     //When we finally finish this function, we'll need to return a success indicator rather than a list of anything
     //   TODO: check for status code not a string.
-    return sendEmails
+    //return sendEmails
   } else if(type === 'notifications') {
     const { appId, address } = data
     let results = undefined

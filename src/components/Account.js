@@ -69,6 +69,7 @@ export default class Account extends React.Component {
     web3Connect.toggleModal();
     web3Connect.on('connect', async (provider) => {
       web3 = await new Web3(provider)
+      setGlobal({ web3 })
       accounts = await web3.eth.getAccounts()
       setGlobal({ provider })
       if(accounts && accounts.length > 0) {

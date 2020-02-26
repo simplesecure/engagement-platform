@@ -11,6 +11,7 @@ import Account from '../components/Account';
 import Segments from '../components/Segments';
 import Message from '../components/Message';
 import Projects from '../components/Projects';
+import Support from '../components/Support';
 import LoadingModal from '../components/LoadingModal';
 import Modal from 'react-bootstrap/Modal'
 
@@ -58,6 +59,7 @@ export default class Home extends React.Component {
           <Route exact path='/notifications' component={Notifications} />
           <Route path='/account' component={Account} />
           <Route path='/communications' component={Communications} />
+          <Route path='/support' component={Support} />
           <Route path='/projects' component={Projects} />
           {/*
             //This is the component that will render the in-app notifications

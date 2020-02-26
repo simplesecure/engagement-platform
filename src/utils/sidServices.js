@@ -579,6 +579,7 @@ export class SidServices
       //
       try {
         const cipherObj = encryptedUuidMap.app_to_enc_uuid_map_v2[app_id][0]
+        console.log(cipherObj)
         encryptedUuids.push(cipherObj)
         log.debug(`Spec. Change Success.  Read first cipherObj from app_to_enc_uuid_map_v2.`)
         continue
@@ -617,9 +618,13 @@ export class SidServices
     //
     for (const encryptedUuidCipherText of encryptedUuids) {
       try {
-        console.log(orgEcPriKey, encryptedUuidCipherText)
+        console.log(orgEcPriKey.toString('base64'))
+        //console.log(orgEcPriKey, encryptedUuidCipherText)
         if(encryptedUuidCipherText) {
+          console.log(JSON.stringify(encryptedUuidCipherText))
           const uuid = await eccrypto.decrypt(orgEcPriKey, encryptedUuidCipherText)
+          console.log("UUID: ")
+          console.log(uuid)
           uuids.push(uuid.toString())
         }
       } catch (suppressedError) {

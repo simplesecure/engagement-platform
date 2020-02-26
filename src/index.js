@@ -36,6 +36,8 @@ setGlobal({
   threeBoxConnected: false, 
   provider: {},
   threeBoxProfile: {},
+  box: {}, 
+  space: {},
   org_id: getCloudUser().getUserData() && getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.org_id : undefined
 })
 
