@@ -357,7 +357,8 @@ export class SidServices
       }
       // Now sign the user in and proceed with the rest of our flow:
       try {
-        log.debug(`DBG: calling signIn ... e:${this.persist.email}, p:${this.neverPersist.password}`)
+        // log.debug(`DBG: calling signIn ... e:${this.persist.email}, p:${this.neverPersist.password}`)
+        log.debug(`Calling signIn:  e:${this.persist.email}, p:********`)
         this.cognitoUser = await Auth.signIn(this.persist.email, this.neverPersist.password)
         log.debug('  success!')
       } catch (err) {

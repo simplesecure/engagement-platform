@@ -14,6 +14,7 @@ const log = getLog('dataProcessing')
 const ALETHIO_KEY = process.env.REACT_APP_ALETHIO_KEY;
 const ALETHIO_URL = process.env.REACT_APP_ALETHIO_URL;
 const ROOT_EMAIL_SERVICE_URL = process.env.REACT_APP_EMAIL_SVC_URL
+
 const headers = { Authorization: `Bearer ${ALETHIO_KEY}`, 'Content-Type': 'application/json' }
 let addresses = []
 export async function handleData(dataToProcess) {
@@ -153,41 +154,13 @@ export async function handleData(dataToProcess) {
         uuidList,
         template,
         subject,
-        from, 
+        from,
         appId: SID_ANALYTICS_APP_ID
       },
       command: 'sendEmails'
     }
 
-    //Once we have the emails, send them to the email service lambda with the template
-    if (ROOT_EMAIL_SERVICE_URL === 'TODO-ENV-FILE-AND-AWS') {
-      log.warn(`Add server to test emailing segments. Until then, here's the data being sent to the email service:`)
-      log.warn(`\n${JSON.stringify(dataForEmailService, 0, 2)}`)
-      log.warn('')
-      return fetch('http://localhost:3005', {
-        method: 'post',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(dataForEmailService)
-      }).then(function(response) {
-        return response.json();
-      }).then(function(data) {
-        console.log(data)
-        return data.data
-      }).catch((e) => {
-        console.log(e)
-        return e
-      })
-      // return 'Not so much - TODO: dataProcessing.js' 
-    }
-
-    //const sendEmails = await handleEmails(dataForEmailService, ROOT_EMAIL_SERVICE_URL)
-
-    //When we finally finish this function, we'll need to return a success indicator rather than a list of anything
-    //   TODO: check for status code not a string.
-    //return sendEmails
+    return await handleEmails(dataForEmailService, ROOT_EMAIL_SERVICE_URL)
   } else if(type === 'notifications') {
     const { appId, address } = data
     let results = undefined
@@ -477,20 +450,29 @@ export async function conditionCheck(fetchedAmount, user, conditional, matchingU
 export async function handleEmails(data, url) {
   log.debug(`handleEmails called ...`)
 
-  const route = '/v1/email'
-  const options = {
-    method: 'POST',
-    uri: url + route,
-    headers,
-    body: data,
-    json: true
+  //Once we have the emails, send them to the email service lambda with the template
+  if (url === 'TODO-ENV-FILE-AND-AWS') {
+    log.warn(`\nDumping data for email service for testing:`)
+    log.warn(`\n${JSON.stringify(data, 0, 2)}`)
+    log.warn('')
+    return
   }
 
-  return rp(options)
-  .then(async function (parsedBody) {
-    return parsedBody
-  })
-  .catch(function (err) {
-    return err
-  });
+  try {
+    const requestData = {
+      method: 'post',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    }
+
+    const result = await fetch(url, requestData)
+    const jsonData = await result.json();
+    return jsonData.data
+  } catch (error) {
+    log.error('handleData email messaging failed:\n', error)
+    return error
+  }
 }
