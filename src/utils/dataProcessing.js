@@ -1,5 +1,4 @@
 import { walletAnalyticsDataTableGet,
-         organizationDataTableGet,
          organizationDataTablePut } from './dynamoConveniences.js';
 import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
@@ -92,40 +91,80 @@ export async function handleData(dataToProcess) {
     //TODO: AC return the entire user list here so we can use it to plug into analytics service and filter
     try {
       log.debug(data.appId);
+      
       const appData = await walletAnalyticsDataTableGet(data.appId);
       let users = undefined
-      console.log(useTestAddresses)
       if(useTestAddresses) {
         users = require('./testAddresses.json').addresses
       } else {
         users = Object.keys(appData.Item.analytics);
       }
       log.debug(appData);
-      const filterType = data.filter ? data.filter.filter : data.name
-      switch(filterType) {
-        case "Smart Contract Transactions":
-          results = await filterByContract(users, data.contractAddress);
-          break;
-        case "All Users":
-          //placeholder for all users
-          results = users;
-          break;
-        case "Last Seen":
-          //placeholder for Last Seen
-          results = await filterByLastSeen(appData.Item.analytics, data);
-          break;
-        case "Wallet Balance":
-          //placeholder for Wallet Balance
-          results = await filterByWalletBalance(users, data.numberRange)
-          break;
-        case "Total Transactions":
-          //placeholder for Total Transactions
-          results = await fetchTotalTransactions(users);
-          break;
-        default:
-          break;
+      if(data.conditions && data.conditions.filterConditions) {
+        //  This is a segment with multiple filters combined
+        //  Start by pulling out the operator
+        const { conditions } = data
+        const { operator, filterConditions } = conditions
+        let usersToReturn = []
+        if(operator === "Or") {
+          //  Any matching criteria should be used to create segment
+          for(const condition of filterConditions) {
+            const filterType = condition.filter ? condition.filter.filter : condition.name
+            const data = condition
+            let usersToSend;
+            if(filterType === "Last Seen") {
+              usersToSend = appData.Item.analytics
+            } else { 
+              usersToSend = users
+            }
+            const results = await runFilters(filterType, data, usersToSend)
+            usersToReturn.push(...results)
+          }
+          return usersToReturn
+        } else {
+          //  Only users that match all conditions should be included
+          usersToReturn = users
+          for(const condition of filterConditions) {
+            const filterType = condition.filter ? condition.filter.filter : condition.name
+            const data = condition
+            let usersToSend;
+            if(filterType === "Last Seen") {
+              usersToSend = appData.Item.analytics
+            } else { 
+              usersToSend = usersToReturn
+            }
+            const results = await runFilters(filterType, data, usersToSend)
+            usersToReturn = results
+          }
+          return usersToReturn
+        }
+      } else {
+        const filterType = data.filter ? data.filter.filter : data.name
+        switch(filterType) {
+          case "Smart Contract Transactions":
+            results = await filterByContract(users, data.contractAddress);
+            break;
+          case "All Users":
+            //placeholder for all users
+            results = users;
+            break;
+          case "Last Seen":
+            //placeholder for Last Seen
+            results = await filterByLastSeen(users, data);
+            break;
+          case "Wallet Balance":
+            //placeholder for Wallet Balance
+            results = await filterByWalletBalance(users, data.numberRange)
+            break;
+          case "Total Transactions":
+            //placeholder for Total Transactions
+            results = await fetchTotalTransactions(users);
+            break;
+          default:
+            break;
+        }
+        return results;
       }
-      return results;
     } catch(e) {
       log.error("Error: ", e)
       return e
@@ -167,6 +206,40 @@ export async function handleData(dataToProcess) {
     log.debug(createProject)
     return createProject
   }
+}
+
+export async function runFilters(filterType, data, users) {
+  return new Promise(async (resolve, reject) => {
+    let results;
+    try {
+      switch(filterType) {
+        case "Smart Contract Transactions":
+          results = await filterByContract(users, data.contractAddress);
+          break;
+        case "All Users":
+          //placeholder for all users
+          results = users;
+          break;
+        case "Last Seen":
+          //placeholder for Last Seen
+          results = await filterByLastSeen(users, data);
+          break;
+        case "Wallet Balance":
+          //placeholder for Wallet Balance
+          results = await filterByWalletBalance(users, data.numberRange)
+          break;
+        case "Total Transactions":
+          //placeholder for Total Transactions
+          results = await fetchTotalTransactions(users);
+          break;
+        default:
+          break;
+      }
+       resolve(results)
+    } catch(e) {
+      reject(e)
+    }
+  })
 }
 
 export async function filterByContract(userList, contractAddress) {
@@ -220,12 +293,11 @@ export async function filterByLastSeen(users, data) {
   //const datum = Date.parse(dateRange.date);
 
   let filteredList = []
-
-  const userKeys = Object.keys(users)
-  for (const userKey of userKeys) {
-    if (dateRange.rangeType === "Before" && parseInt(users[userKey].last_seen, 10) < dateRange.date) {
+  const usersToCycleThrough = Object.keys(users)
+  for (const userKey of usersToCycleThrough) {
+    if (users[userKey].last_seen && dateRange.rangeType === "Before" && parseInt(users[userKey].last_seen, 10) < dateRange.date) {
       filteredList.push(userKey);
-    } else if(dateRange.rangeType === "After" && parseInt(users[userKey].last_seen, 10) > dateRange.date) {
+    } else if(users[userKey].last_seen && dateRange.rangeType === "After" && parseInt(users[userKey].last_seen, 10) > dateRange.date) {
       filteredList.push(userKey);
     }
   }

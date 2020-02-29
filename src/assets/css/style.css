@@ -232,3 +232,13 @@ section {
   max-width: 50%!important;
   margin: auto!important
 }
+
+.custom-select {
+  width: 80px!important;
+  margin-right: 10px;
+}
+
+.segment-icon {
+  top: 0!important;
+  font-size: 16px!important;
+}
