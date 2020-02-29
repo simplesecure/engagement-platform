@@ -1,6 +1,4 @@
-import { walletAnalyticsDataTableGet,
-         organizationDataTableGet,
-         organizationDataTablePut } from './dynamoConveniences.js';
+import { walletAnalyticsDataTableGet, organizationDataTablePut } from './dynamoConveniences.js';
 import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
 
