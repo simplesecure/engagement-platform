@@ -9,7 +9,7 @@ export default class SignIn extends React.Component {
 
   render() {
     return (
-      <Modal id="sign-in-modal" className="sign-in-modal" show={true}>
+      <Modal id="sign-in-modal" className="sign-in-modal" show={true} onHide={()=>{}}>
         <Header />
         <Modal.Body>
           <Auth />

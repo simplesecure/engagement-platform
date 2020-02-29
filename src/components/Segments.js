@@ -134,10 +134,11 @@ export default class Segments extends React.Component {
     //If the segment needs to be process via api, use the processData call
     if(addrArray.length === 0) {
       try {
-        data = await getCloudUser().processData('segment', segmentCriteria);
+        data = await getCloudUser().processData('segment', segmentCriteria)
+        const dataFromApi = data && data.data ? data.data : []
         console.log(data)
-        segmentCriteria.userCount = data.length
-        segmentCriteria.users = data
+        segmentCriteria.userCount = dataFromApi.length
+        segmentCriteria.users = dataFromApi
       } catch(e) {
         console.log(e)
       }
@@ -242,8 +243,10 @@ export default class Segments extends React.Component {
         if(filterToUse.filter === "Total Transactions") {
           segmentCriteria.totalTransactions = data
         } else {
-          segmentCriteria.userCount = data.length
-          segmentCriteria.users = data
+          const dataFromApi = data && data.data ? data.data : []
+          
+          segmentCriteria.userCount = dataFromApi.length
+          segmentCriteria.users = dataFromApi
         }
       }
     } else {
