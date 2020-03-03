@@ -17,12 +17,6 @@ export default class Dashboard extends React.Component {
       segmentToShow: {}
     }
   }
-  componentDidMount() {
-    //Need to push user counts into the tiles if they aren't there yet
-    // const { sessionData } = this.global;
-    
-    // setGlobal({ sessionData });
-  }
 
   handleRefreshData = async () => {
     toast.success("Refreshing Dashboard Data...", {
