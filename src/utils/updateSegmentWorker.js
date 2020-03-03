@@ -16,10 +16,15 @@ const workercode = () => {
         data: seg
       }
       const results = await self.__issueWebApiCmd(cmdObj)
- 
-      if(results && results.length > seg.userCount) {
-        seg.users = results;
-        seg.userCount = results.length
+
+      if (seg && !seg.userCount) {
+        seg.userCount = 0
+      }
+      if ( results &&
+           results.data &&
+           results.data.length > seg.userCount) {
+        seg.users = results.data
+        seg.userCount = results.data.length
         saveToDb = true
         updatedSegments.push(seg)
       } else {
@@ -27,10 +32,10 @@ const workercode = () => {
       }
     }
     const returnedPayload = {
-      saveToDb, 
+      saveToDb,
       updatedSegments
     }
-    
+
     self.postMessage(JSON.stringify(returnedPayload))
   }
 
@@ -43,7 +48,7 @@ const workercode = () => {
       },
       body: JSON.stringify(cmdObj)
     }
-  
+
     // TODO: consider timeout / abortable fetch:
     //  - https://developers.google.com/web/updates/2017/09/abortable-fetch
     //  - https://developer.mozilla.org/en-US/docs/Web/API/AbortController
@@ -54,7 +59,7 @@ const workercode = () => {
       // result = await retry(async bail => {
       //   // If anything throws in this block, we retry ...
       //   const response = await fetch(process.env.REACT_APP_WEB_API_HOST, options)
-  
+
       //   // Some conditions don't make sense to retry, so exit ...
       //   if (response.status >= 400 && response.status <= 499) {
       //     bail(`__issueWebApiCmd failed with client error ${response.status} (${response.statusText})`)
@@ -72,7 +77,7 @@ const workercode = () => {
       //result.error = error
       console.log(error)
     }
-  
+
     //return result
   }
 }
