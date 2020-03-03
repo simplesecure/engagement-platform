@@ -7,8 +7,6 @@ import { putInOrganizationDataTable, getFromOrganizationDataTable } from './awsU
 
 const SESSION_FROM_LOCAL = 'sessionData'
 
-const retry = require('async-retry')
-
 const SID_ANALYTICS_APP_ID = '00000000000000000000000000000000'
 
 const log = getLog('dataProcessing')
@@ -32,48 +30,6 @@ const fetchSegmentWorker = new Worker(require('./fetchSegmentWorker.js'))
  *             a message is returned in the error property and data remains
  *             undefined.
  */
-async function __issueWebApiCmd(cmdObj) {
-  const options = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(cmdObj)
-  }
-
-  let result = {
-    error: undefined,
-    data: undefined
-  }
-
-  // TODO: consider timeout / abortable fetch:
-  //  - https://developers.google.com/web/updates/2017/09/abortable-fetch
-  //  - https://developer.mozilla.org/en-US/docs/Web/API/AbortController
-  //
-  try {
-    result = await retry(async bail => {
-      // If anything throws in this block, we retry ...
-      const response = await fetch(process.env.REACT_APP_WEB_API_HOST, options)
-
-      // Some conditions don't make sense to retry, so exit ...
-      if (response.status >= 400 && response.status <= 499) {
-        bail(`__issueWebApiCmd failed with client error ${response.status} (${response.statusText})`)
-        return
-      }
-      return await response.json()
-    }, {
-      retries: 0,     // For now, let's not retry (long jobs & related complications)
-      minTimeout: 500,
-      maxTimeout: 5000,
-      onRetry: (error) => {log.warn(`Fetch attempt failed with error below. Retrying.\n${error}`)}
-    })
-  } catch (error) {
-    log.debug(`in __issueWebApiCmd try/catch, error =\n${error}`)
-    result.error = error
-  }
-
-  return result
-}
 
 
 export async function handleData(dataToProcess) {
@@ -101,7 +57,7 @@ export async function handleData(dataToProcess) {
     const currentSegments = thisApp.currentSegments
 
     const workerData = {
-      app_id: data.app_id, 
+      app_id: data.app_id,
       currentSegments
     }
 
@@ -159,17 +115,17 @@ export async function handleData(dataToProcess) {
 
     fetchSegmentWorker.onmessage = async (m) => {
       const results = JSON.parse(m.data)
-    
+
       const dataFromApi = results && results.data ? results.data : []
-      
+
       data.userCount = dataFromApi.length
       data.users = dataFromApi
-      if(data.update) {
+      if (data.update) {
         //Filter by this segment
         let thisSegment = segments.filter(a => a.id === data.id)[0]
         if(thisSegment) {
           thisSegment = data
-        } 
+        }
         const index = await segments.map((x) => {return x.id }).indexOf(data.id)
         if(index > -1) {
           segments[index] = thisSegment
@@ -179,13 +135,13 @@ export async function handleData(dataToProcess) {
       } else {
         segments.push(data)
       }
-      
+
       sessionData.currentSegments = segments
-  
+
       const thisApp = apps[sessionData.id]
       thisApp.currentSegments = segments
       apps[sessionData.id] = thisApp
-  
+
       setGlobal({ sessionData, apps })
       // Put the new segment in the analytics data for the user signed in to this
       // id:
@@ -193,18 +149,18 @@ export async function handleData(dataToProcess) {
       //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
       //      A segment will be stored in the DB under the primary key 'app_id' in
       //      the appropriate user_id's segment storage:
-  
-  
+
+
       // TODO: probably want to wait on this to finish and throw a status/activity
       //       bar in the app:
       const orgData = await getFromOrganizationDataTable(org_id)
-  
+
       try {
         const anObject = orgData.Item
         anObject.apps = apps
         anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
         await putInOrganizationDataTable(anObject)
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))        
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
       } catch (suppressedError) {
         setGlobal({ error: ERROR_MSG })
@@ -213,8 +169,8 @@ export async function handleData(dataToProcess) {
     }
 
 
-    const results = await __issueWebApiCmd(cmdObj)
-    return results
+    // const results = await __issueWebApiCmd(cmdObj)
+    // return results
   } else if(type === 'email messaging') {
     //Here we will do something similar to segment data except we will send the appropriate message
     //Data should include the following:
