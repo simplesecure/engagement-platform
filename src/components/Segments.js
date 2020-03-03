@@ -82,9 +82,14 @@ export default class Segments extends React.Component {
     this.setState({ show: false })
   }
 
+  clearState = () => {
+    this.setState({ listOfAddresses: "", conditions: {}, tokenType: "Choose...", newSegName: "", filterType: "Choose...", contractAddress: "", tokenAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 })
+  }
+
   createSegment = async () => {
-    const { sessionData } = this.global
-    
+    const { sessionData, apps, org_id, SESSION_FROM_LOCAL } = this.global
+    const { currentSegments } = sessionData
+    const ERROR_MSG = "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
     const { listOfAddresses, newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state
     let { conditions } = this.state
     let { filterConditions } = conditions
@@ -137,12 +142,45 @@ export default class Segments extends React.Component {
     if(addrArray.length === 0) {
       try {
         getCloudUser().processData('segment', segmentCriteria)
-        this.setState({ conditions: {}, tokenType: "Choose...", newSegName: "", filterType: "Choose...", contractAddress: "", tokenAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 })
+        this.clearState()
       } catch(e) {
         console.log(e)
       }
     } else {
       segmentCriteria.users = addrArray
+      segmentCriteria.userCount = addrArray.length
+      const segments = currentSegments ? currentSegments : []
+      segments.push(segmentCriteria)
+      sessionData.currentSegments = segments
+  
+      const thisApp = apps[sessionData.id]
+      thisApp.currentSegments = segments
+      apps[sessionData.id] = thisApp
+      this.clearState()
+      setGlobal({ sessionData, apps })
+      // Put the new segment in the analytics data for the user signed in to this
+      // id:
+      //      Each App (SimpleID Customer) will have an app_id
+      //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
+      //      A segment will be stored in the DB under the primary key 'app_id' in
+      //      the appropriate user_id's segment storage:
+  
+  
+      // TODO: probably want to wait on this to finish and throw a status/activity
+      //       bar in the app:
+      const orgData = await getFromOrganizationDataTable(org_id)
+  
+      try {
+        const anObject = orgData.Item
+        anObject.apps = apps
+        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+        await putInOrganizationDataTable(anObject)
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))        
+        setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
+      } catch (suppressedError) {
+        setGlobal({ error: ERROR_MSG })
+        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      }
     }
   }
 
@@ -503,7 +541,7 @@ export default class Segments extends React.Component {
       }
 
       {
-        filterToUse ? 
+        filterToUse && filterToUse.type !== "Paste" ? 
         <div className="form-group col-md-12">
           <button onClick={this.addFilter} className="btn btn-secondary">Add Another Filter</button>
         </div> : 
