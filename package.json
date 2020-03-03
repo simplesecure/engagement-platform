@@ -19,6 +19,7 @@
     "loglevel": "^1.6.6",
     "loglevel-plugin-prefix": "^0.8.4",
     "multicodec": "^0.5.6",
+    "puppeteer": "^2.1.1",
     "react": "^16.12.0",
     "react-bootstrap": "^1.0.0-beta.16",
     "react-cookie-consent": "^3.0.0",
@@ -39,7 +40,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts --max_old_space_size=4096 build",
-    "test": "react-scripts test",
+    "test": "jest",
     "deploy-prod": "aws s3 sync build/ s3://app.simpleid.xyz --acl public-read",
     "deploy-stage": "aws s3 sync build/ s3://stage-app.simpleid-xyz --acl public-read",
     "eject": "react-scripts eject"
@@ -58,5 +59,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "jest": "^25.1.0"
   }
 }
