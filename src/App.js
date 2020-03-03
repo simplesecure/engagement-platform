@@ -8,17 +8,18 @@ import Home from './containers/Home';
 import CookieConsent from "react-cookie-consent";
 import { getCloudUser } from './utils/cloudUser.js'
 const PROFILE_STORAGE = 'engagement-app-profile'
+const SESSION_FROM_LOCAL = 'sessionData';
 
 export default class App extends React.Component {
 
   async componentDidMount() {
-    const { SESSION_FROM_LOCAL, signedIn } = this.global;
+    const { signedIn } = this.global;
     setGlobal({ loading: true });
     //let currentSegments = [];
     //Check local storage for quick loading first
-    const sessionFromLocal = localStorage.getItem(SESSION_FROM_LOCAL);
+    const sessionFromLocal = localStorage.getItem(SESSION_FROM_LOCAL)
     if(sessionFromLocal) {
-      setGlobal({ sessionData: JSON.parse(sessionFromLocal) });
+      setGlobal({ sessionData: JSON.parse(sessionFromLocal), loading: false });
     }
     
     if(signedIn) {

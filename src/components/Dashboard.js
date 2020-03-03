@@ -1,10 +1,12 @@
-import React, { setGlobal } from 'reactn';
+import React from 'reactn';
 import StickyNav from './StickyNav';
 import DemoDash from './DemoDash';
 import Modal from 'react-bootstrap/Modal'
 import LoadingModal from './LoadingModal'
 import SegmentTable from './SegmentTable'
 import { getCloudUser } from '../utils/cloudUser'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 export default class Dashboard extends React.Component {
   constructor(props) {
@@ -17,16 +19,17 @@ export default class Dashboard extends React.Component {
   }
   componentDidMount() {
     //Need to push user counts into the tiles if they aren't there yet
-    const { sessionData } = this.global;
+    // const { sessionData } = this.global;
     
-    setGlobal({ sessionData });
+    // setGlobal({ sessionData });
   }
 
   handleRefreshData = async () => {
-    this.setState({ loadingMessage: "Updating chart data"})
-    setGlobal({ processing: true })
-    await getCloudUser().fetchOrgDataAndUpdate()
-    setGlobal({ processing: false })
+    toast.success("Refreshing Dashboard Data...", {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 2000
+    })
+    getCloudUser().fetchOrgDataAndUpdate()
   }
 
   handleShowSeg = (seg) => {
@@ -36,8 +39,11 @@ export default class Dashboard extends React.Component {
   render() {
     const { sessionData, verified, showDemo, processing } = this.global;
     const { loadingMessage, showSegmentModal, segmentToShow } = this.state
+    
     const { currentSegments } = sessionData
+    console.log(currentSegments)
     const allTiles = currentSegments ? currentSegments : []
+    console.log(allTiles)
     const tiles = allTiles.filter(a => a.showOnDashboard === true || a.showOnDashboard === undefined)
 
     if(showDemo) {
@@ -62,7 +68,7 @@ export default class Dashboard extends React.Component {
                 {
                   tiles.map(tile => {
                     return (
-                      <div onClick={() => this.handleShowSeg(tile)} key={tile.id} className="clickable col-lg col-md-6 col-sm-6 mb-4">
+                      <div onClick={() => this.handleShowSeg(tile)} key={tile.id} className="clickable col-lg-4 col-md-6 col-sm-6 mb-4">
                         <div className="stats-small stats-small--1 card card-small">
                           <div className="card-body p-0 d-flex">
                             <div className="d-flex flex-column m-auto">
@@ -91,7 +97,8 @@ export default class Dashboard extends React.Component {
               }
             </div>
 
-            
+            <ToastContainer />
+
             <Modal className="custom-modal" show={showSegmentModal} onHide={() => this.setState({ showSegmentModal: false, segmentToShow: {}})}>
               <Modal.Header closeButton>
                 <Modal.Title>{segmentToShow.name}</Modal.Title>

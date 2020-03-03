@@ -1,22 +1,23 @@
-import React, { setGlobal } from 'reactn';
-import StickyNav from './StickyNav';
-import Modal from 'react-bootstrap/Modal';
+import React, { setGlobal } from 'reactn'
+import StickyNav from './StickyNav'
+import Modal from 'react-bootstrap/Modal'
 import Table from 'react-bootstrap/Table'
 import Card from 'react-bootstrap/Card'
-import SegmentTable from './SegmentTable';
-import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils.js';
-import filters from '../utils/filterOptions.json';
-import DatePicker from 'react-date-picker';
-import uuid from 'uuid/v4';
-import { setLocalStorage } from '../utils/misc';
-import LoadingModal from './LoadingModal';
+import SegmentTable from './SegmentTable'
+import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils.js'
+import filters from '../utils/filterOptions.json'
+import DatePicker from 'react-date-picker'
+import uuid from 'uuid/v4'
+import { setLocalStorage } from '../utils/misc'
+import LoadingModal from './LoadingModal'
 import { getCloudUser } from './../utils/cloudUser.js'
-const listToArray = require('list-to-array');
-const ERROR_MSG = "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+const listToArray = require('list-to-array')
 
 export default class Segments extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       show: false,
       seg: "",
@@ -44,54 +45,53 @@ export default class Segments extends React.Component {
   }
 
   deleteSegment = async(seg, confirm) => {
-    const { sessionData, SESSION_FROM_LOCAL, apps, org_id } = this.global;
-    const { currentSegments } = sessionData;
-    this.setState({ seg });
+    const { sessionData, SESSION_FROM_LOCAL, apps, org_id } = this.global
+    const { currentSegments } = sessionData
+    this.setState({ seg })
     if(confirm) {
-      const index = currentSegments.map(a => a.id).indexOf(seg.id);
+      const index = currentSegments.map(a => a.id).indexOf(seg.id)
       if(index > -1) {
-        currentSegments.splice(index, 1);
-        sessionData.currentSegments = currentSegments;
+        currentSegments.splice(index, 1)
+        sessionData.currentSegments = currentSegments
         //Update in DB
-        const thisApp = apps[sessionData.id];
-        thisApp.currentSegments = currentSegments;
-        setGlobal({ sessionData, apps });
-        const orgData = await getFromOrganizationDataTable(org_id);
+        const thisApp = apps[sessionData.id]
+        thisApp.currentSegments = currentSegments
+        setGlobal({ sessionData, apps })
+        const orgData = await getFromOrganizationDataTable(org_id)
 
         try {
           const anObject = orgData.Item
-          anObject.apps = apps;
+          anObject.apps = apps
           anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
           await putInOrganizationDataTable(anObject)
         } catch (suppressedError) {
           console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
         }
 
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-        this.setState({ show: false });
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        this.setState({ show: false })
       } else {
-        console.log("Error with index");
+        console.log("Error with index")
       }
     } else {
-      this.setState({ show: true });
+      this.setState({ show: true })
     }
   }
 
   closeModal = () => {
-    this.setState({ show: false });
+    this.setState({ show: false })
   }
 
   createSegment = async () => {
-    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
-    const { currentSegments } = sessionData;
-    const { listOfAddresses, newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state;
+    const { sessionData } = this.global
+    
+    const { listOfAddresses, newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state
     let { conditions } = this.state
     let { filterConditions } = conditions
     const showOnDashboard = dashboardShow === "Yes" ? true : false
-    const segments = currentSegments ? currentSegments : [];
-    const filterToUse = filters.filter(a => a.filter === filterType)[0];
-    const segId = uuid();
-    setGlobal({ processing: true });
+
+    const filterToUse = filters.filter(a => a.filter === filterType)[0]
+    const segId = uuid()
     let addrArray = []
     if(listOfAddresses) {
       addrArray = listToArray(listOfAddresses)
@@ -119,6 +119,11 @@ export default class Segments extends React.Component {
       userCount: addrArray.length > 0 ? addrArray.length : null
     }
 
+    setGlobal({ showSegmentNotification: true, segmentProcessingDone: false, segmentName: segmentCriteria.name })
+    toast.success("Creating Segments. You'll get a notification when it's complete.", {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 3000
+    })
     if(filterConditions && filterConditions.length > 0) {
       this.addFilter()
       conditions = this.state.conditions
@@ -128,70 +133,26 @@ export default class Segments extends React.Component {
     
     //Now we fetch the actual results
 
-    //This state should trigger a UI element showing the segment being created (could take a while)
-    setGlobal({ processingSegment: true });
-    let data;
     //If the segment needs to be process via api, use the processData call
     if(addrArray.length === 0) {
       try {
-        data = await getCloudUser().processData('segment', segmentCriteria)
-        const dataFromApi = data && data.data ? data.data : []
-        console.log(data)
-        segmentCriteria.userCount = dataFromApi.length
-        segmentCriteria.users = dataFromApi
+        getCloudUser().processData('segment', segmentCriteria)
+        this.setState({ conditions: {}, tokenType: "Choose...", newSegName: "", filterType: "Choose...", contractAddress: "", tokenAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 })
       } catch(e) {
         console.log(e)
       }
     } else {
       segmentCriteria.users = addrArray
     }
-    
-
-    //Then we store the segment with an empty slot for the user count
-    //TODO: we need to also look at showing the wallets and other meta data (see demo app)
-
-    segments.push(segmentCriteria);
-    sessionData.currentSegments = segments;
-
-    const thisApp = apps[sessionData.id]
-    thisApp.currentSegments = segments
-    apps[sessionData.id] = thisApp
-
-    setGlobal({ sessionData, apps })
-    // Put the new segment in the analytics data for the user signed in to this
-    // id:
-    //      Each App (SimpleID Customer) will have an app_id
-    //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-    //      A segment will be stored in the DB under the primary key 'app_id' in
-    //      the appropriate user_id's segment storage:
-
-
-    // TODO: probably want to wait on this to finish and throw a status/activity
-    //       bar in the app:
-    const orgData = await getFromOrganizationDataTable(org_id);
-
-    try {
-      const anObject = orgData.Item
-      anObject.apps = apps;
-      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      await putInOrganizationDataTable(anObject)
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      this.setState({ conditions: {}, tokenType: "Choose...", newSegName: "", filterType: "Choose...", contractAddress: "", tokenAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 });
-      setGlobal({ processing: false });
-    } catch (suppressedError) {
-      setGlobal({ processing: false, error: ERROR_MSG });
-      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-    }
   }
 
   updateSegment = async () => {
-    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
-    const { currentSegments } = sessionData;
-    const { conditions, listOfAddresses, segmentToShow, newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state;
+    const { sessionData } = this.global
+
+    const { conditions, listOfAddresses, segmentToShow, newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state
     const showOnDashboard = dashboardShow === "Yes" ? true : false
-    const filterToUse = filters.filter(a => a.filter === filterType)[0];
-    
-    setGlobal({ processing: true })
+    const filterToUse = filters.filter(a => a.filter === filterType)[0]
+  
     this.setState({ editSegment: false, showSegmentModal: false })
 
     let addrArray = []
@@ -235,64 +196,19 @@ export default class Segments extends React.Component {
       updatedConditions = {}
       this.setState({ conditions: updatedConditions })
     }
+    segmentCriteria['update'] = true
+    //Now we fetch the actual results
 
+    //If the segment needs to be process via api, use the processData call
     if(addrArray.length === 0) {
-      const data = await getCloudUser().processData('segment', segmentCriteria);
-
-      if(data) {
-        if(filterToUse.filter === "Total Transactions") {
-          segmentCriteria.totalTransactions = data
-        } else {
-          const dataFromApi = data && data.data ? data.data : []
-          
-          segmentCriteria.userCount = dataFromApi.length
-          segmentCriteria.users = dataFromApi
-        }
+      try {
+        getCloudUser().processData('segment', segmentCriteria)
+        this.setState({ conditions: {}, tokenType: "Choose...", newSegName: "", filterType: "Choose...", contractAddress: "", tokenAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 })
+      } catch(e) {
+        console.log(e)
       }
     } else {
       segmentCriteria.users = addrArray
-    }
-
-    //Filter by this segment
-    let thisSegment = currentSegments.filter(a => a.id === segmentToShow.id)[0]
-    if(thisSegment) {
-      thisSegment = segmentCriteria
-    } 
-    const index = await currentSegments.map((x) => {return x.id }).indexOf(segmentToShow.id)
-    if(index > -1) {
-      currentSegments[index] = thisSegment
-    } else {
-      console.log("Error with index, not updating")
-    }
-
-    const thisApp = sessionData
-    thisApp.currentSegments = currentSegments
-    apps[sessionData.id] = thisApp
-
-    setGlobal({ sessionData: thisApp, apps })
-    // Put the new segment in the analytics data for the user signed in to this
-    // id:
-    //      Each App (SimpleID Customer) will have an app_id
-    //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-    //      A segment will be stored in the DB under the primary key 'app_id' in
-    //      the appropriate user_id's segment storage:
-
-
-    // TODO: probably want to wait on this to finish and throw a status/activity
-    //       bar in the app:
-    const orgData = await getFromOrganizationDataTable(org_id)
-
-    try {
-      const anObject = orgData.Item
-      anObject.apps = apps;
-      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      await putInOrganizationDataTable(anObject)
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      this.setState({ conditions: {}, editSegment: false, segmentToShow: {}, tokenType: "Choose...", newSegName: "", filterType: "Choose...", contractAddress: "", tokenAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 });
-      setGlobal({ processing: false });
-    } catch (suppressedError) {
-      setGlobal({ processing: false, error: ERROR_MSG });
-      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
     }
   }
 
@@ -364,16 +280,17 @@ export default class Segments extends React.Component {
   }
 
   handleRefreshData = async () => {
-    this.setState({ loadingMessage: "Updating segment"})
-    setGlobal({ processing: true })
-    await getCloudUser().fetchOrgDataAndUpdate()
-    setGlobal({ processing: false })
+    toast.success("Refreshing Dashboard Data...", {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 2000
+    })
+    getCloudUser().fetchOrgDataAndUpdate()
   }
 
   addFilter = (condition) => {
-    const { conditions, operator, listOfAddresses, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state;
+    const { conditions, operator, listOfAddresses, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state
     const showOnDashboard = dashboardShow === "Yes" ? true : false
-    const filterToUse = filters.filter(a => a.filter === filterType)[0];
+    const filterToUse = filters.filter(a => a.filter === filterType)[0]
     let addrArray = []
     
     if(listOfAddresses) {
@@ -500,8 +417,8 @@ export default class Segments extends React.Component {
   }
 
   renderCreateSegment(condition) {
-    const { listOfAddresses, tokenAddress, tokenType, editSegment, dashboardShow, filterType, newSegName, rangeType, operatorType, amount, contractAddress } = this.state;
-    const filterToUse = filters.filter(a => a.filter === filterType)[0];
+    const { listOfAddresses, tokenAddress, tokenType, editSegment, dashboardShow, filterType, newSegName, rangeType, operatorType, amount, contractAddress } = this.state
+    const filterToUse = filters.filter(a => a.filter === filterType)[0]
     const createCriteria = (filterType !== "Choose" && newSegName ? true : false) || (condition && condition.id)
 
     return (
@@ -714,6 +631,9 @@ export default class Segments extends React.Component {
                  <li className="card"><span className="card-body">You haven't created any segments yet, let's do that now!.</span></li>
                </ul>
               }
+
+              <ToastContainer />
+
               <Modal className="custom-modal" show={show} onHide={this.closeModal}>
                 <Modal.Header closeButton>
                   <Modal.Title>Are you sure?</Modal.Title>

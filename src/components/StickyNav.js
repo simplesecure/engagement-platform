@@ -1,10 +1,10 @@
-import React from 'reactn';
+import React, {setGlobal} from 'reactn';
 import { Link } from 'react-router-dom';
 import { getCloudUser } from './../utils/cloudUser.js'
 
 export default class StickyNav extends React.Component {
   render() {
-    const { apps, sessionData, org_id, threeBoxProfile } = this.global;
+    const { apps, sessionData, org_id, threeBoxProfile, showSegmentNotification, segmentProcessingDone, segmentName } = this.global;
     const orgId = org_id ? `${org_id.substring(0,8)}...` : ""
     const headerName = threeBoxProfile && threeBoxProfile.name ? threeBoxProfile.name : orgId
 
@@ -28,41 +28,31 @@ export default class StickyNav extends React.Component {
             </div>
           </form>
           <ul className="navbar-nav border-left flex-row ">
-            {/*<li className="nav-item border-right dropdown notifications">
-              <button className="a-el-fix nav-link nav-link-icon text-center" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <div className="nav-link-icon__wrapper">
-                  <i className="material-icons">&#xE7F4;</i>
-                  <span className="badge badge-pill badge-danger">2</span>
+            {
+              showSegmentNotification && segmentProcessingDone ? 
+              <li className="nav-item border-right dropdown notifications">
+                <button className="a-el-fix nav-link nav-link-icon text-center" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <div className="nav-link-icon__wrapper">
+                    <i className="material-icons">&#xE7F4;</i>
+                    <span className="badge badge-pill badge-danger">1</span>
+                  </div>
+                </button>
+                <div className="dropdown-menu dropdown-menu-small" aria-labelledby="dropdownMenuLink">
+                  <button className="a-el-fix dropdown-item">
+                    <div className="notification__icon-wrapper">
+                      <div className="notification__icon">
+                        <i className="material-icons">&#xE6E1;</i>
+                      </div>
+                    </div>
+                    <div className="notification__content">
+                      <span className="notification__category">Segmentation Updates</span>
+                      <p>Your segment titled <span className="text-underline">{segmentName}</span> is done processing. See it <Link onClick={() => setGlobal({ showSegmentNotification: false, segmentProcessingDone: false })} to={'/segments'}>here.</Link></p>                        
+                    </div>
+                  </button>                  
                 </div>
-              </button>
-              <div className="dropdown-menu dropdown-menu-small" aria-labelledby="dropdownMenuLink">
-                <button className="a-el-fix dropdown-item">
-                  <div className="notification__icon-wrapper">
-                    <div className="notification__icon">
-                      <i className="material-icons">&#xE6E1;</i>
-                    </div>
-                  </div>
-                  <div className="notification__content">
-                    <span className="notification__category">Analytics</span>
-                    <p>Your website’s active users count increased by
-                      <span className="text-success text-semibold"> 12.4%</span> in the last week.</p>
-                  </div>
-                </button>
-                <button className="a-el-fix dropdown-item">
-                  <div className="notification__icon-wrapper">
-                    <div className="notification__icon">
-                      <i className="material-icons">email</i>
-                    </div>
-                  </div>
-                  <div className="notification__content">
-                    <span className="notification__category">Comms</span>
-                    <p>Last week, you sent
-                      <span className="text-danger text-semibold"> 5.52%</span> fewer emails or notifications to your users.</p>
-                  </div>
-                </button>
-                <button className="a-el-fix dropdown-item notification__all text-center"> View all Notifications </button>
-              </div>
-            </li>*/}
+              </li> : 
+              <li style={{dispay: "none"}} />
+            }
             {
               projects.length > 0 ?
               <li className="nav-item dropdown border-right">

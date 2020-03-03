@@ -48,9 +48,9 @@ class CloudUser {
       const data = allApps[appKeys[0]];
       data['id'] = currentAppId
       await setGlobal({ signedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data });
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
+      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
       //Check if app has been verified
-      const verificationData = await getFromAnalyticsDataTable(currentAppId);
+      const verificationData = await getFromAnalyticsDataTable(currentAppId)
       try {
         const verified = Object.keys(verificationData.Item.analytics).length > 0
         setGlobal({ verified })
@@ -72,7 +72,7 @@ class CloudUser {
 
       //setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
     } else {
-      setGlobal({ loading: false, projectFound: false });
+      setGlobal({ loading: false, projectFound: false })
       //If there's nothing returned from the DB but something is still in local storage, what do we do?
       //TODO: should we remove from localstorage here?
     }
@@ -105,7 +105,6 @@ class CloudUser {
       }
       segments.push(allUsersSegment)
       sessionData['currentSegments'] = segments
-
       await setGlobal({ sessionData })
 
       setGlobal({ loading: false })
@@ -137,21 +136,14 @@ class CloudUser {
   }
 
   async fetchSegmentData(appData) {
-    const { sessionData, SESSION_FROM_LOCAL, org_id, currentAppId } = await getGlobal();
+    const { org_id, currentAppId } = await getGlobal();
     const payload = {
       app_id: currentAppId,
       appData,
       org_id
     }
     console.log(payload)
-    const { currentSegments } = sessionData
-    let segs = currentSegments;
-    //setGlobal({ initialLoading: true })
-    const updatedData = await this.processData('update-segments', payload)
-    segs = updatedData
-    sessionData.currentSegments = segs;
-    setGlobal({ sessionData, initialLoading: false, processing: false, loading: false })
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    this.processData('update-segments', payload)
   }
 
   // This returns user info for the SimpleID user

@@ -38,7 +38,10 @@ setGlobal({
   threeBoxProfile: {},
   box: {}, 
   space: {},
-  org_id: getCloudUser().getUserData() && getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.org_id : undefined
+  org_id: getCloudUser().getUserData() && getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.org_id : undefined, 
+  showSegmentNotification: false, 
+  segmentProcessingDone: false, 
+  segmentName: ""
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

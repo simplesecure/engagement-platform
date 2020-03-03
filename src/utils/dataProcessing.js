@@ -1,12 +1,20 @@
-import { walletAnalyticsDataTableGet, organizationDataTablePut } from './dynamoConveniences.js';
+import { getGlobal, setGlobal } from 'reactn'
+import { walletAnalyticsDataTableGet, organizationDataTablePut } from './dynamoConveniences.js'
 import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
+import { setLocalStorage } from './misc'
+import { putInOrganizationDataTable, getFromOrganizationDataTable } from './awsUtils.js'
+
+const SESSION_FROM_LOCAL = 'sessionData'
 
 const retry = require('async-retry')
 
 const SID_ANALYTICS_APP_ID = '00000000000000000000000000000000'
 
 const log = getLog('dataProcessing')
+
+const updateSegmentWorker = new Worker(require('./updateSegmentWorker.js'))
+const fetchSegmentWorker = new Worker(require('./fetchSegmentWorker.js'))
 
 /**
  *  __issueWebApiCmd:
@@ -69,6 +77,7 @@ async function __issueWebApiCmd(cmdObj) {
 
 
 export async function handleData(dataToProcess) {
+  const { sessionData } = getGlobal()
   log.debug("DATA IN HANDLE DATA FUNCTION: ", dataToProcess)
   const { data, type } = dataToProcess;
 
@@ -89,59 +98,121 @@ export async function handleData(dataToProcess) {
     log.debug(data);
     const thisApp = data.appData && data.appData.Item ? data.appData.Item.apps[data.app_id] : undefined
     log.debug("This APP : ", thisApp)
-    const currentSegments = thisApp.currentSegments;
-    const updatedSegments = []
-    let saveToDb = false
+    const currentSegments = thisApp.currentSegments
 
-    for(const seg of currentSegments) {
-      seg['appId'] = data.app_id
-      const dataForProcessing = {
-        type: 'segment',
-        data: seg
-      }
-      const results = await handleData(dataForProcessing)
-
-      log.debug("RESULTS: ", results)
-      if(results && results.length > seg.userCount) {
-        seg.users = results;
-        seg.userCount = results.length
-        saveToDb = true
-        updatedSegments.push(seg)
-      } else {
-        updatedSegments.push(seg)
-      }
+    const workerData = {
+      app_id: data.app_id, 
+      currentSegments
     }
 
-    log.debug("UPDATED SEGMENTS: ", updatedSegments)
+    //  Send the reques to the web worker
+    updateSegmentWorker.postMessage(JSON.stringify(workerData))
 
-    if(saveToDb === true) {
-      const orgData = data.appData
-      try {
-        const anObject = orgData.Item
-        let apps = anObject.apps
-        let thisApp = apps[data.app_id]
-        let segments = updatedSegments
-        thisApp.currentSegments = segments
-        apps[data.app_id] = thisApp
+    //  When the worker responds, execute
+    updateSegmentWorker.onmessage = async (m) => {
+      const results = JSON.parse(m.data)
 
-        anObject.apps = apps;
+      const { saveToDb, updatedSegments } = results
 
-        anObject[process.env.REACT_APP_ORG_TABLE_PK] = data.org_id
+      log.debug("UPDATED SEGMENTS: ", updatedSegments)
 
-        await organizationDataTablePut(anObject)
+      const segs = updatedSegments
+      sessionData.currentSegments = segs
+      setGlobal({ sessionData, initialLoading: false, processing: false, loading: false })
+      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+      if(saveToDb === true) {
+        const orgData = data.appData
+        try {
+          const anObject = orgData.Item
+          let apps = anObject.apps
+          let thisApp = apps[data.app_id]
+          let segments = updatedSegments
+          thisApp.currentSegments = segments
+          apps[data.app_id] = thisApp
+
+          anObject.apps = apps;
+
+          anObject[process.env.REACT_APP_ORG_TABLE_PK] = data.org_id
+
+          await organizationDataTablePut(anObject)
+          return updatedSegments
+        } catch (suppressedError) {
+          log.error(`ERROR: problem writing to DB.\n${suppressedError}`)
+          return undefined
+        }
+      } else {
         return updatedSegments
-      } catch (suppressedError) {
-        log.error(`ERROR: problem writing to DB.\n${suppressedError}`)
-        return undefined
       }
-    } else {
-      return updatedSegments
     }
   } else if(type === 'segment') {
+    const { sessionData, apps, org_id } = getGlobal()
+    const { currentSegments } = sessionData
+    const segments = currentSegments ? currentSegments : []
+    const ERROR_MSG = "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
+
     const cmdObj = {
       command: 'segment',
       data: data
     }
+    //  Send the reques to the web worker
+    fetchSegmentWorker.postMessage(JSON.stringify(cmdObj))
+
+    fetchSegmentWorker.onmessage = async (m) => {
+      const results = JSON.parse(m.data)
+    
+      const dataFromApi = results && results.data ? results.data : []
+      
+      data.userCount = dataFromApi.length
+      data.users = dataFromApi
+      if(data.update) {
+        //Filter by this segment
+        let thisSegment = segments.filter(a => a.id === data.id)[0]
+        if(thisSegment) {
+          thisSegment = data
+        } 
+        const index = await segments.map((x) => {return x.id }).indexOf(data.id)
+        if(index > -1) {
+          segments[index] = thisSegment
+        } else {
+          console.log("Error with index, not updating")
+        }
+      } else {
+        segments.push(data)
+      }
+      
+      sessionData.currentSegments = segments
+  
+      const thisApp = apps[sessionData.id]
+      thisApp.currentSegments = segments
+      apps[sessionData.id] = thisApp
+  
+      setGlobal({ sessionData, apps })
+      // Put the new segment in the analytics data for the user signed in to this
+      // id:
+      //      Each App (SimpleID Customer) will have an app_id
+      //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
+      //      A segment will be stored in the DB under the primary key 'app_id' in
+      //      the appropriate user_id's segment storage:
+  
+  
+      // TODO: probably want to wait on this to finish and throw a status/activity
+      //       bar in the app:
+      const orgData = await getFromOrganizationDataTable(org_id)
+  
+      try {
+        const anObject = orgData.Item
+        anObject.apps = apps
+        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+        await putInOrganizationDataTable(anObject)
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))        
+        setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
+      } catch (suppressedError) {
+        setGlobal({ error: ERROR_MSG })
+        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      }
+    }
+
+
     const results = await __issueWebApiCmd(cmdObj)
     return results
   } else if(type === 'email messaging') {
