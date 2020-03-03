@@ -32,14 +32,14 @@ export default class Segments extends React.Component {
       contractAddress: "",
       existingSegmentToFilter: "Choose...",
       tokenType: "Choose...",
-      tokenAddress: "", 
-      showSegmentModal: false, 
-      segmentToShow: {}, 
-      dashboardShow: "Yes", 
-      loadingMessage: "Creating segment", 
-      listOfAddresses: "", 
+      tokenAddress: "",
+      showSegmentModal: false,
+      segmentToShow: {},
+      dashboardShow: "Yes",
+      loadingMessage: "Creating segment",
+      listOfAddresses: "",
       operator: "",
-      conditions: {}, 
+      conditions: {},
       condition: {}
     }
   }
@@ -82,9 +82,26 @@ export default class Segments extends React.Component {
     this.setState({ show: false })
   }
 
+  clearState = () => {
+    this.setState({
+      conditions: {},
+      tokenType: "Choose...",
+      newSegName: "",
+      filterType: "Choose...",
+      contractAddress: "",
+      tokenAddress: "",
+      rangeType: "",
+      operatorType: "",
+      date: new Date(),
+      amount: 0,
+      listOfAddresses: ""
+    })
+  }
+
   createSegment = async () => {
-    const { sessionData } = this.global
-    
+    const { sessionData, apps, org_id, SESSION_FROM_LOCAL } = this.global
+    const { currentSegments } = sessionData
+
     const { listOfAddresses, newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state
     let { conditions } = this.state
     let { filterConditions } = conditions
@@ -98,7 +115,7 @@ export default class Segments extends React.Component {
     }
     const segmentCriteria = {
       appId: sessionData.id,
-      showOnDashboard: showOnDashboard, 
+      showOnDashboard: showOnDashboard,
       id: segId,
       name: newSegName,
       startWithExisting: !allUsers,
@@ -130,19 +147,54 @@ export default class Segments extends React.Component {
       this.setState({ conditions })
       segmentCriteria.conditions = conditions
     }
-    
+
     //Now we fetch the actual results
 
     //If the segment needs to be process via api, use the processData call
     if(addrArray.length === 0) {
       try {
         getCloudUser().processData('segment', segmentCriteria)
-        this.setState({ conditions: {}, tokenType: "Choose...", newSegName: "", filterType: "Choose...", contractAddress: "", tokenAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 })
+        this.clearState()
       } catch(e) {
         console.log(e)
       }
     } else {
+      this.clearState()
+      segmentCriteria.userCount = addrArray.length
       segmentCriteria.users = addrArray
+      sessionData.currentSegments.push(segmentCriteria)
+
+      // TODO:  Justin & AC fix C+P from dataProcessing (unify & clean up)
+      //
+      const thisApp = apps[sessionData.id]
+      thisApp.currentSegments = sessionData.currentSegments
+      apps[sessionData.id] = thisApp
+
+      setGlobal({ sessionData, apps })
+      // Put the new segment in the analytics data for the user signed in to this
+      // id:
+      //      Each App (SimpleID Customer) will have an app_id
+      //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
+      //      A segment will be stored in the DB under the primary key 'app_id' in
+      //      the appropriate user_id's segment storage:
+
+
+      // TODO: probably want to wait on this to finish and throw a status/activity
+      //       bar in the app:
+      const orgData = await getFromOrganizationDataTable(org_id)
+
+      try {
+        const anObject = orgData.Item
+        anObject.apps = apps
+        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+        await putInOrganizationDataTable(anObject)
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
+      } catch (suppressedError) {
+        const ERROR_MSG = "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
+        setGlobal({ error: ERROR_MSG })
+        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      }
     }
   }
 
@@ -152,7 +204,7 @@ export default class Segments extends React.Component {
     const { conditions, listOfAddresses, segmentToShow, newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state
     const showOnDashboard = dashboardShow === "Yes" ? true : false
     const filterToUse = filters.filter(a => a.filter === filterType)[0]
-  
+
     this.setState({ editSegment: false, showSegmentModal: false })
 
     let addrArray = []
@@ -223,11 +275,11 @@ export default class Segments extends React.Component {
 
   handleEditSegment = async (seg, singleCondition) => {
     //  This function is re-used across both the edit segment functionality and the edit signle criteria functionality
-    //  So we need to know a few things: 
+    //  So we need to know a few things:
     //  We need to know if this is a singleCondition being edited (see singleCondition param)
     //  We need to know the segment or condition (represented by seg param)
     //  If this is a single condition in a filter, we need to set state appropriately (see the condition state variable below)
-    
+
     await this.setState({ segmentToShow: seg, condition: singleCondition ? seg : undefined })
     const { segmentToShow, tokenAddress, contractAddress, filterType, operatorType, amount, rangeType, tokenType } = this.state
     let thisSeg = segmentToShow
@@ -242,39 +294,39 @@ export default class Segments extends React.Component {
         let conditions = seg.conditions
         conditions['filterConditions'] = filterConditions
         await this.setState({ conditions: conditions })
-      } else { 
+      } else {
         console.log("Error with index")
       }
-    } 
+    }
 
     const filterToUse = filters.filter(a => a.filter === thisSeg.filter.filter)[0]
 
-    this.setState({ 
+    this.setState({
       showSegmentModal: false,
-      editSegment: true, 
-      newSegName: segmentToShow.name, 
-      contractAddress: thisSeg.contractAddress || contractAddress, 
-      filterType: filterToUse.filter || filterType, 
-      rangeType: thisSeg.dateRange ? thisSeg.dateRange.rangeType : rangeType, 
-      operatorType: thisSeg.numberRange ? thisSeg.numberRange.operatorType : operatorType, 
-      amount: thisSeg.numberRange ? thisSeg.numberRange.amount : amount, 
-      tokenType: thisSeg.numberRange ? thisSeg.numberRange.tokenType : tokenType, 
+      editSegment: true,
+      newSegName: segmentToShow.name,
+      contractAddress: thisSeg.contractAddress || contractAddress,
+      filterType: filterToUse.filter || filterType,
+      rangeType: thisSeg.dateRange ? thisSeg.dateRange.rangeType : rangeType,
+      operatorType: thisSeg.numberRange ? thisSeg.numberRange.operatorType : operatorType,
+      amount: thisSeg.numberRange ? thisSeg.numberRange.amount : amount,
+      tokenType: thisSeg.numberRange ? thisSeg.numberRange.tokenType : tokenType,
       tokenAddress: thisSeg.numberRange ? thisSeg.numberRange.tokenAddress : tokenAddress,
       listOfAddresses: thisSeg.filter.type === "Paste" ? thisSeg.users.join(',') : ""
     })
   }
 
   handleCloseSegmentModal = () => {
-    this.setState({ 
-      showSegmentModal: false, 
-      editSegment: false, 
-      newSegName: "", 
-      contractAddress: "", 
-      filterType: "", 
-      operatorType: "", 
-      amount: 0, 
-      tokenType: "", 
-      tokenAddress: "", 
+    this.setState({
+      showSegmentModal: false,
+      editSegment: false,
+      newSegName: "",
+      contractAddress: "",
+      filterType: "",
+      operatorType: "",
+      amount: 0,
+      tokenType: "",
+      tokenAddress: "",
       conditions: {}
     })
   }
@@ -292,14 +344,14 @@ export default class Segments extends React.Component {
     const showOnDashboard = dashboardShow === "Yes" ? true : false
     const filterToUse = filters.filter(a => a.filter === filterType)[0]
     let addrArray = []
-    
+
     if(listOfAddresses) {
       addrArray = listToArray(listOfAddresses)
     }
 
     //First we set the segment criteria to be stored
     const segmentCriteria = {
-      id: uuid(), 
+      id: uuid(),
       startWithExisting: !allUsers,
       existingSegmentToFilter: allUsers === false ? existingSegmentToFilter : null,
       filter: filterToUse,
@@ -368,7 +420,7 @@ export default class Segments extends React.Component {
   renderMultipleConditions() {
     const { conditions, operator, editSegment } = this.state
     const { filterConditions } = conditions
-  
+
     if(filterConditions && filterConditions.length > 0) {
       return (
         <div>
@@ -376,29 +428,29 @@ export default class Segments extends React.Component {
             filterConditions.map(condition => {
               return (
                 <div key={condition.id} className="form-group col-md-12">
-                  <p>                    
+                  <p>
                   {
                     filterConditions.map(a => a.id).indexOf(condition.id) === 0 && filterConditions.length === 1 ?
                     <select onChange={this.handleOperatorChange} className="custom-select" value={operator}>
                       <option value="And">And</option>
                       <option value="Or">Or</option>
                     </select> :
-                    filterConditions.map(a => a.id).indexOf(condition.id) === 0 ? 
+                    filterConditions.map(a => a.id).indexOf(condition.id) === 0 ?
                     <select onChange={this.handleOperatorChange} className="custom-select" value={operator}>
                       <option value="And">And</option>
                       <option value="Or">Or</option>
-                    </select> : 
+                    </select> :
                     <select className="custom-select" disabled value={operator}>
                       <option value="And">And</option>
                       <option value="Or">Or</option>
                     </select>
-                    // <button onClick={() => this.setState({ operator: operator === "And" ? "Or" : "And"})} className="btn btn-flat">{operator}</button> : 
+                    // <button onClick={() => this.setState({ operator: operator === "And" ? "Or" : "And"})} className="btn btn-flat">{operator}</button> :
                     // <button className="btn btn-flat" disabled>{operator}</button>
                   }
-                  <span>Filter type: 
+                  <span>Filter type:
                     {
-                      editSegment ? 
-                      <button disabled className="btn btn-flat">{condition.filter.filter}</button> : 
+                      editSegment ?
+                      <button disabled className="btn btn-flat">{condition.filter.filter}</button> :
                       <button className="clickable a-el-fix" onClick={() => this.handleEditSegment(condition, true)}>{condition.filter.filter}</button>
                     }
                     <button onClick={() => this.deleteCondition(condition)} className="btn btn-flat"><i className="material-icons segment-icon">clear</i></button></span>
@@ -494,22 +546,22 @@ export default class Segments extends React.Component {
             <div />
           }
         </div> :
-        filterToUse && filterToUse.type === "Paste" ? 
+        filterToUse && filterToUse.type === "Paste" ?
         <div className="col-lg-12 col-md-12 col-sm-12 mb-4">
           <label htmlFor="pastedAddress">Paste comma delimited list of wallet addresses</label>
           <textarea value={listOfAddresses} className="form-control" onChange={(e) => this.setState({ listOfAddresses: e.target.value })}></textarea>
-        </div> : 
+        </div> :
         <div />
       }
 
       {
-        filterToUse ? 
+        filterToUse ?
         <div className="form-group col-md-12">
           <button onClick={this.addFilter} className="btn btn-secondary">Add Another Filter</button>
-        </div> : 
+        </div> :
         <div />
       }
-      
+
 
       <div className="form-group col-md-12">
         <label htmlFor="dashboardShow">Show on Dashboard</label>
@@ -520,7 +572,7 @@ export default class Segments extends React.Component {
         </select>
       </div>
       {
-        editSegment && !condition ? 
+        editSegment && !condition ?
         <div>
           <div className="form-group col-md-12">
             <label htmlFor="tileName">Update Segment Name</label>
@@ -529,25 +581,25 @@ export default class Segments extends React.Component {
           <div className="form-group col-md-12">
             <label htmlFor="chartSty">Update The Segment</label><br/>
             {
-              createCriteria ? 
-              <button onClick={this.updateSegment} className="btn btn-primary">Update Segment</button> : 
+              createCriteria ?
+              <button onClick={this.updateSegment} className="btn btn-primary">Update Segment</button> :
               <button disabled className="btn">Update Segment</button>
             }
-            
+
           </div>
-        </div> : 
-        editSegment && condition && condition.id ? 
+        </div> :
+        editSegment && condition && condition.id ?
         <div>
           <div className="form-group col-md-12">
             <label htmlFor="chartSty">Update The Filter Condition</label><br/>
             {
-              createCriteria ? 
-              <button onClick={() => this.addFilter(condition)} className="btn btn-primary">Update Filter</button> : 
+              createCriteria ?
+              <button onClick={() => this.addFilter(condition)} className="btn btn-primary">Update Filter</button> :
               <button disabled className="btn">Update Filter</button>
             }
-            
+
           </div>
-        </div> : 
+        </div> :
         <div>
           <div className="form-group col-md-12">
             <label htmlFor="tileName">Then, Give It A Name</label>
@@ -556,11 +608,11 @@ export default class Segments extends React.Component {
           <div className="form-group col-md-12">
             <label htmlFor="chartSty">Finally, Create The Segment</label><br/>
             {
-              createCriteria ? 
-              <button onClick={this.createSegment} className="btn btn-primary">Create Segment</button> : 
+              createCriteria ?
+              <button onClick={this.createSegment} className="btn btn-primary">Create Segment</button> :
               <button className="btn" disabled>Create Segment</button>
             }
-            
+
           </div>
         </div>
       }
@@ -610,14 +662,14 @@ export default class Segments extends React.Component {
                           <td>{seg.userCount}</td>
                           {
                             seg.id === `1-${currentAppId}` ?
-                            <td disabled>Default</td> : 
+                            <td disabled>Default</td> :
                             <td className="clickable" onClick={() => this.handleEditSegment(seg)}>Edit</td>
                           }
                           {
                             seg.id === `1-${currentAppId}` ?
-                            <td disabled></td> : 
+                            <td disabled></td> :
                             <td className="clickable text-danger" onClick={() => this.deleteSegment(seg, false)}>Delete</td>
-                          }                          
+                          }
                         </tr>
                       )
                     })
@@ -659,7 +711,7 @@ export default class Segments extends React.Component {
                 <Modal.Footer>
                   <button className="btn btn-secondary" onClick={() => this.setState({ showSegmentModal: false, segmentToShow: {}})}>
                     Close
-                  </button>                  
+                  </button>
                 </Modal.Footer>
               </Modal>
 
@@ -673,7 +725,7 @@ export default class Segments extends React.Component {
                 <Modal.Footer>
                   <button className="btn btn-secondary" onClick={this.handleCloseSegmentModal}>
                     Close
-                  </button>                  
+                  </button>
                 </Modal.Footer>
               </Modal>
 

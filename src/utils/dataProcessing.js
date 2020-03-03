@@ -101,7 +101,7 @@ export async function handleData(dataToProcess) {
     const currentSegments = thisApp.currentSegments
 
     const workerData = {
-      app_id: data.app_id, 
+      app_id: data.app_id,
       currentSegments
     }
 
@@ -159,17 +159,17 @@ export async function handleData(dataToProcess) {
 
     fetchSegmentWorker.onmessage = async (m) => {
       const results = JSON.parse(m.data)
-    
+
       const dataFromApi = results && results.data ? results.data : []
-      
+
       data.userCount = dataFromApi.length
       data.users = dataFromApi
-      if(data.update) {
+      if (data.update) {
         //Filter by this segment
         let thisSegment = segments.filter(a => a.id === data.id)[0]
         if(thisSegment) {
           thisSegment = data
-        } 
+        }
         const index = await segments.map((x) => {return x.id }).indexOf(data.id)
         if(index > -1) {
           segments[index] = thisSegment
@@ -179,13 +179,13 @@ export async function handleData(dataToProcess) {
       } else {
         segments.push(data)
       }
-      
+
       sessionData.currentSegments = segments
-  
+
       const thisApp = apps[sessionData.id]
       thisApp.currentSegments = segments
       apps[sessionData.id] = thisApp
-  
+
       setGlobal({ sessionData, apps })
       // Put the new segment in the analytics data for the user signed in to this
       // id:
@@ -193,18 +193,18 @@ export async function handleData(dataToProcess) {
       //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
       //      A segment will be stored in the DB under the primary key 'app_id' in
       //      the appropriate user_id's segment storage:
-  
-  
+
+
       // TODO: probably want to wait on this to finish and throw a status/activity
       //       bar in the app:
       const orgData = await getFromOrganizationDataTable(org_id)
-  
+
       try {
         const anObject = orgData.Item
         anObject.apps = apps
         anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
         await putInOrganizationDataTable(anObject)
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))        
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
       } catch (suppressedError) {
         setGlobal({ error: ERROR_MSG })
@@ -213,8 +213,8 @@ export async function handleData(dataToProcess) {
     }
 
 
-    const results = await __issueWebApiCmd(cmdObj)
-    return results
+    // const results = await __issueWebApiCmd(cmdObj)
+    // return results
   } else if(type === 'email messaging') {
     //Here we will do something similar to segment data except we will send the appropriate message
     //Data should include the following:
