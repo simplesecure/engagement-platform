@@ -24,14 +24,14 @@ export default class Segments extends React.Component {
       existingSeg: false,
       allUsers: true,
       filterType: "Choose...",
-      rangeType: "Choose...",
-      operatorType: "Choose...",
+      rangeType: "Before",
+      operatorType: "More Than",
       newSegName: "",
       date: new Date(),
       amount: 0,
       contractAddress: "",
       existingSegmentToFilter: "Choose...",
-      tokenType: "Choose...",
+      tokenType: "Ether",
       tokenAddress: "",
       showSegmentModal: false,
       segmentToShow: {},
@@ -85,13 +85,13 @@ export default class Segments extends React.Component {
   clearState = () => {
     this.setState({
       conditions: {},
-      tokenType: "Choose...",
+      tokenType: "Ether",
       newSegName: "",
       filterType: "Choose...",
       contractAddress: "",
       tokenAddress: "",
-      rangeType: "",
-      operatorType: "",
+      rangeType: "Before",
+      operatorType: "More Than",
       date: new Date(),
       amount: 0,
       listOfAddresses: ""
@@ -199,8 +199,8 @@ export default class Segments extends React.Component {
   }
 
   updateSegment = async () => {
-    const { sessionData } = this.global
-
+    const { sessionData, apps, org_id, SESSION_FROM_LOCAL } = this.global
+    const { currentSegments } = sessionData
     const { conditions, listOfAddresses, segmentToShow, newSegName, tokenType, tokenAddress, filterType, rangeType, operatorType, amount, date, contractAddress, allUsers, existingSegmentToFilter, dashboardShow } = this.state
     const showOnDashboard = dashboardShow === "Yes" ? true : false
     const filterToUse = filters.filter(a => a.filter === filterType)[0]
@@ -255,12 +255,57 @@ export default class Segments extends React.Component {
     if(addrArray.length === 0) {
       try {
         getCloudUser().processData('segment', segmentCriteria)
-        this.setState({ conditions: {}, tokenType: "Choose...", newSegName: "", filterType: "Choose...", contractAddress: "", tokenAddress: "", rangeType: "", operatorType: "", date: new Date(), amount: 0 })
+        this.clearState()
       } catch(e) {
         console.log(e)
       }
     } else {
+      this.clearState()
+      segmentCriteria.userCount = addrArray.length
       segmentCriteria.users = addrArray
+      segmentCriteria.userCount = addrArray.length
+      const segments = currentSegments ? currentSegments : []
+      let thisSegment = segments.filter(a => a.id === segmentCriteria.id)[0]
+      if(thisSegment) {
+        thisSegment = segmentCriteria
+      }
+      const index = await segments.map((x) => {return x.id }).indexOf(segmentCriteria.id)
+      if(index > -1) {
+        segments[index] = thisSegment
+      } else {
+        console.log("Error with index, not updating")
+      }
+      sessionData.currentSegments = segments
+  
+      const thisApp = apps[sessionData.id]
+      thisApp.currentSegments = segments
+      apps[sessionData.id] = thisApp
+      this.clearState()
+      setGlobal({ sessionData, apps })
+      // Put the new segment in the analytics data for the user signed in to this
+      // id:
+      //      Each App (SimpleID Customer) will have an app_id
+      //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
+      //      A segment will be stored in the DB under the primary key 'app_id' in
+      //      the appropriate user_id's segment storage:
+
+
+      // TODO: probably want to wait on this to finish and throw a status/activity
+      //       bar in the app:
+      const orgData = await getFromOrganizationDataTable(org_id)
+
+      try {
+        const anObject = orgData.Item
+        anObject.apps = apps
+        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+        await putInOrganizationDataTable(anObject)
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
+      } catch (suppressedError) {
+        const ERROR_MSG = "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
+        setGlobal({ error: ERROR_MSG })
+        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      }
     }
   }
 
@@ -319,16 +364,9 @@ export default class Segments extends React.Component {
   handleCloseSegmentModal = () => {
     this.setState({
       showSegmentModal: false,
-      editSegment: false,
-      newSegName: "",
-      contractAddress: "",
-      filterType: "",
-      operatorType: "",
-      amount: 0,
-      tokenType: "",
-      tokenAddress: "",
-      conditions: {}
+      editSegment: false
     })
+    this.clearState()
   }
 
   handleRefreshData = async () => {
@@ -392,9 +430,7 @@ export default class Segments extends React.Component {
     }
 
     conditions['filterConditions'] = filterConditions
-    this.setState({ conditions, editSegment: false, showSegmentModal: false, condition: {}, tokenType: "Choose...", newSegName: "", filterType: "Choose...", contractAddress: "", tokenAddress: "", rangeType: "", operatorType: "", amount: 0 })
-
-    console.log(conditions)
+    //this.clearState()
   }
 
   handleOperatorChange = (e) => {

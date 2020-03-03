@@ -95,7 +95,7 @@ export default class StickyNav extends React.Component {
               <button className="a-el-fix project-drop nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <span className="d-none d-md-inline-block">{headerName}</span>
               </button>
-              <div className="dropdown-menu dropdown-menu-small">
+              <div className="dropdown-menu dropdown-menu-right dropdown-menu-small">
                 <Link to="/account"><button className="a-el-fix dropdown-item">
                   <i className="material-icons">&#xE7FD;</i> Account</button></Link>
 
