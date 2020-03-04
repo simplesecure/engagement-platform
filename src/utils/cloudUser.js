@@ -39,7 +39,7 @@ class CloudUser {
       console.log("ERROR: No Org ID")
     }
 
-
+    debugger
     await setGlobal({ org_id });
     if(appData && appData.Item && Object.keys(appData.Item.apps).length > 0) {
       const appKeys = Object.keys(appData.Item.apps);

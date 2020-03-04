@@ -5,14 +5,17 @@ import { getLog } from './debugScopes.js'
 import { setLocalStorage } from './misc'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from './awsUtils.js'
 
+import updateWorker from './updateSegmentWorker'
+import fetchWorker from './fetchSegmentWorker'
+import WebWorker from './workerSetup';
 const SESSION_FROM_LOCAL = 'sessionData'
 
 const SID_ANALYTICS_APP_ID = '00000000000000000000000000000000'
 
 const log = getLog('dataProcessing')
 
-const updateSegmentWorker = new Worker(require('./updateSegmentWorker.js'))
-const fetchSegmentWorker = new Worker(require('./fetchSegmentWorker.js'))
+const updateSegmentWorker = new WebWorker(updateWorker)
+const fetchSegmentWorker = new WebWorker(fetchWorker)
 
 /**
  *  __issueWebApiCmd:

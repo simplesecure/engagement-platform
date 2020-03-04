@@ -1,7 +1,6 @@
 // worker.js
-const workercode = () => {
-  var self = this
-  self.onmessage = async function(e) {
+export default () => { 
+  self.onmessage = async function(e) { // eslint-disable-line no-restricted-globals
     const payload = JSON.parse(e.data)
     const { app_id, currentSegments } = payload
 
@@ -15,7 +14,7 @@ const workercode = () => {
         command: 'segment',
         data: seg
       }
-      const results = await self.__issueWebApiCmd(cmdObj)
+      const results = await self.__issueWebApiCmd(cmdObj) // eslint-disable-line no-restricted-globals
 
       if (seg && !seg.userCount) {
         seg.userCount = 0
@@ -36,10 +35,10 @@ const workercode = () => {
       updatedSegments
     }
 
-    self.postMessage(JSON.stringify(returnedPayload))
+    self.postMessage(JSON.stringify(returnedPayload)) // eslint-disable-line no-restricted-globals
   }
 
-  self.__issueWebApiCmd = async (cmdObj) => {
+  self.__issueWebApiCmd = async (cmdObj) => { // eslint-disable-line no-restricted-globals
 
     const options = {
       method: 'POST',
@@ -82,10 +81,10 @@ const workercode = () => {
   }
 }
 
-let code = workercode.toString()
-code = code.substring(code.indexOf("{")+1, code.lastIndexOf("}"))
+// let code = workercode.toString()
+// code = code.substring(code.indexOf("{")+1, code.lastIndexOf("}"))
 
-const blob = new Blob([code], {type: "application/javascript"})
-const worker_script = URL.createObjectURL(blob)
+// const blob = new Blob([code], {type: "application/javascript"})
+// const worker_script = URL.createObjectURL(blob)
 
-module.exports = worker_script;
+// module.exports = worker_script;

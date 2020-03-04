@@ -5,9 +5,9 @@ let browser;
 let page;
 
 async function launchBrowser() {
-  browser = await puppeteer.launch();
+  //browser = await puppeteer.launch();
   //  Use headless: false to see the test run in a browser controlled by the test suite
-  //  browser = await puppeteer.launch({headless: false});
+  browser = await puppeteer.launch({headless: false});
   page = await browser.newPage();
   await page.goto('http://localhost:3000');
 }

@@ -1,14 +1,12 @@
-// worker.js
-const workercode = () => {
-  var self = this
-  self.onmessage = async function(e) {
+export default () => {
+  self.onmessage = async function(e) { // eslint-disable-line no-restricted-globals
     const cmdObj = JSON.parse(e.data)
-    const results = await self.__issueWebApiCmd(cmdObj)
+    const results = await self.__issueWebApiCmd(cmdObj) // eslint-disable-line no-restricted-globals
     console.log("RESULTS: ", results)
-    self.postMessage(JSON.stringify(results))
+    self.postMessage(JSON.stringify(results)) // eslint-disable-line no-restricted-globals
   }
 
-  self.__issueWebApiCmd = async (cmdObj) => {
+  self.__issueWebApiCmd = async (cmdObj) => { // eslint-disable-line no-restricted-globals
 
     const options = {
       method: 'POST',
@@ -51,10 +49,10 @@ const workercode = () => {
   }
 }
 
-let code = workercode.toString()
-code = code.substring(code.indexOf("{")+1, code.lastIndexOf("}"))
+// let code = workercode.toString()
+// code = code.substring(code.indexOf("{")+1, code.lastIndexOf("}"))
 
-const blob = new Blob([code], {type: "application/javascript"})
-const worker_script = URL.createObjectURL(blob)
+// const blob = new Blob([code], {type: "application/javascript"})
+// const worker_script = URL.createObjectURL(blob)
 
-module.exports = worker_script;
+// module.exports = worker_script;

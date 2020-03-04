@@ -35,9 +35,7 @@ export default class Dashboard extends React.Component {
     const { loadingMessage, showSegmentModal, segmentToShow } = this.state
     
     const { currentSegments } = sessionData
-    console.log(currentSegments)
     const allTiles = currentSegments ? currentSegments : []
-    console.log(allTiles)
     const tiles = allTiles.filter(a => a.showOnDashboard === true || a.showOnDashboard === undefined)
 
     if(showDemo) {
