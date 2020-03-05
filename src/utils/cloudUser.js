@@ -46,7 +46,7 @@ class CloudUser {
       const currentAppId = appKeys[0]
       const data = allApps[appKeys[0]];
       data['id'] = currentAppId
-      await setGlobal({ signedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data });
+      await setGlobal({ signedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data, loading: false });
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
       //Check if app has been verified
       const verificationData = await getFromAnalyticsDataTable(currentAppId)
