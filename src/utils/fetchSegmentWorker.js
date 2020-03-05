@@ -1,5 +1,5 @@
-export default () => {
-  self.onmessage = async function(e) { // eslint-disable-line no-restricted-globals
+export default function worker(self) {
+  self.onmessage = async (e) => { // eslint-disable-line no-restricted-globals
     const cmdObj = JSON.parse(e.data)
     const results = await self.__issueWebApiCmd(cmdObj) // eslint-disable-line no-restricted-globals
     console.log("RESULTS: ", results)

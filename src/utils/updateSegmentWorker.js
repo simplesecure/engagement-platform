@@ -1,6 +1,5 @@
-// worker.js
-export default () => { 
-  self.onmessage = async function(e) { // eslint-disable-line no-restricted-globals
+export default function worker(self) {
+  self.onmessage = async (e) => { // eslint-disable-line no-restricted-globals
     const payload = JSON.parse(e.data)
     const { app_id, currentSegments } = payload
 

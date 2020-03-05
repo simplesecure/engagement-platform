@@ -4,18 +4,21 @@ import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
 import { setLocalStorage } from './misc'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from './awsUtils.js'
+import work from 'webworkify-webpack';
+// import updateWorker from './updateSegmentWorker'
+// import fetchWorker from './fetchSegmentWorker'
+// import WebWorker from './workerSetup'
 
-import updateWorker from './updateSegmentWorker'
-import fetchWorker from './fetchSegmentWorker'
-import WebWorker from './workerSetup';
 const SESSION_FROM_LOCAL = 'sessionData'
 
 const SID_ANALYTICS_APP_ID = '00000000000000000000000000000000'
 
 const log = getLog('dataProcessing')
 
-const updateSegmentWorker = new WebWorker(updateWorker)
-const fetchSegmentWorker = new WebWorker(fetchWorker)
+// const updateSegmentWorker = new WebWorker(updateWorker)
+// const fetchSegmentWorker = new WebWorker(fetchWorker)
+const fetchSegmentWorker = work(require.resolve('./fetchSegmentWorker.js'))
+const updateSegmentWorker = work(require.resolve('./updateSegmentWorker.js'))
 
 /**
  *  __issueWebApiCmd:
