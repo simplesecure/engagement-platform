@@ -3,6 +3,8 @@ import StickyNav from './StickyNav'
 import Modal from 'react-bootstrap/Modal'
 import Table from 'react-bootstrap/Table'
 import Card from 'react-bootstrap/Card'
+import InputGroup from 'react-bootstrap/InputGroup'
+import FormControl from 'react-bootstrap/FormControl'
 import SegmentTable from './SegmentTable'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils.js'
 import filters from '../utils/filterOptions.json'
@@ -40,7 +42,9 @@ export default class Segments extends React.Component {
       listOfAddresses: "",
       operator: "",
       conditions: {},
-      condition: {}
+      condition: {}, 
+      importModalOpen: false, 
+      importAddress: ""
     }
   }
 
@@ -453,6 +457,17 @@ export default class Segments extends React.Component {
     }
   }
 
+  importUsers = () => {
+    const { importAddress } = this.state
+    console.log(importAddress)
+    //  TODO: AC handle import through server here
+    //  We are using the webworker for server calls, so the functionality should look like this: 
+    //  getCloudUser().processData('import', importAddress)
+    //  And in the processData function, you will need to add an import type
+    //  Because it's happening on a webworker, no need for an await here. Just clear the input and close the modal
+    this.setState({ importModalOpen: false, importAddress: "" })
+  }
+
   renderMultipleConditions() {
     const { conditions, operator, editSegment } = this.state
     const { filterConditions } = conditions
@@ -659,7 +674,7 @@ export default class Segments extends React.Component {
   render() {
     const { sessionData, processing, currentAppId } = this.global
     const { currentSegments } = sessionData
-    const { loadingMessage, condition, editSegment, showSegmentModal, segmentToShow, show, seg, existingSeg, newSegName, existingSegmentToFilter } = this.state
+    const { importAddress, importModalOpen, loadingMessage, condition, editSegment, showSegmentModal, segmentToShow, show, seg, existingSeg, newSegName, existingSegmentToFilter } = this.state
     const segments = currentSegments ? currentSegments : []
 
     return(
@@ -698,7 +713,7 @@ export default class Segments extends React.Component {
                           <td>{seg.userCount}</td>
                           {
                             seg.id === `1-${currentAppId}` ?
-                            <td disabled>Default</td> :
+                            <td className="clickable" onClick={() => this.setState({ importModalOpen: true })}>Import Users</td> :
                             <td className="clickable" onClick={() => this.handleEditSegment(seg)}>Edit</td>
                           }
                           {
@@ -761,6 +776,34 @@ export default class Segments extends React.Component {
                 <Modal.Footer>
                   <button className="btn btn-secondary" onClick={this.handleCloseSegmentModal}>
                     Close
+                  </button>
+                </Modal.Footer>
+              </Modal>
+
+              <Modal className="custom-modal" show={importModalOpen} onHide={() => this.setState({ importModalOpen: false})}>
+                <Modal.Header closeButton>
+                  <Modal.Title>Import Users</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>You can import your users based on your smart contracts. Simply enter a smart contract address and we will import all of the addresses that have interacted with that address.</Modal.Body>
+                <Modal.Body>
+                  <InputGroup className="mb-3">                  
+                    <FormControl type="text" value={importAddress} onChange={(e) => this.setState({ importAddress: e.target.value })} placeholder="0x..." />
+                  </InputGroup>
+                  
+                  </Modal.Body>
+                <Modal.Footer>
+                  {
+                    importAddress.length > 10 && importAddress.length < 50 ? 
+                    <button className="btn btn-primary" onClick={this.importUsers}>
+                      Import
+                    </button> : 
+                    <button className="btn btn-primary" disabled>
+                      Import
+                    </button>
+                  }
+                  
+                  <button className="btn btn-secondary" onClick={() => this.setState({ importModalOpen: false})}>
+                    Cancel
                   </button>
                 </Modal.Footer>
               </Modal>
