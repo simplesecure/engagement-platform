@@ -41,7 +41,15 @@ setGlobal({
   org_id: getCloudUser().getUserData() && getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.org_id : undefined, 
   showSegmentNotification: false, 
   segmentProcessingDone: false, 
-  segmentName: ""
+  segmentName: "", 
+  liveChat: true, 
+  mainThread: {}, 
+  currentThread: {}, 
+  mainThreadPosts: [], 
+  currentThreadPosts: [], 
+  liveChatId: "", 
+  idWallet: {}, 
+  liveChatThreads: []
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

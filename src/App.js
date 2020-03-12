@@ -27,7 +27,7 @@ export default class App extends React.Component {
       const profile = localStorage.getItem(PROFILE_STORAGE) ? JSON.parse(localStorage.getItem(PROFILE_STORAGE)) : {}
       setGlobal({ threeBoxProfile: profile })
       //Need to check if the user is part of an organization from the org table
-      await getCloudUser().fetchOrgDataAndUpdate()
+      getCloudUser().fetchOrgDataAndUpdate()
     } else {
       setGlobal({ loading: false });
     }

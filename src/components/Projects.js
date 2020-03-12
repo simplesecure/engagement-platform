@@ -113,8 +113,8 @@ export default class Projects extends React.Component {
     this.setState({ show: false });
   }
 
-  copy = () => {
-    const elem = document.getElementById('app-id')
+  copy = (idToCopy) => {
+    const elem = document.getElementById(idToCopy)
     const text = elem.innerText
     const copied = copy(text)
     if(copied) {
@@ -126,7 +126,7 @@ export default class Projects extends React.Component {
   }
 
   renderMain() {
-    const { apps, processing } = this.global;
+    const { apps, processing, liveChat, liveChatId } = this.global;
     const { projectName, proj, show } = this.state;
     const appKeys = Object.keys(apps);
     let applications = [];
@@ -168,7 +168,12 @@ export default class Projects extends React.Component {
                         return (
                           <li className="card text-center" key={app.id}>
                             <span className="card-body standard-tile project-title">{app.project_name}</span><br/>
-                            <span className="card-body standard-tile">App ID: <br/><span id="app-id">{app.id}</span><i onClick={this.copy} data-clipboard-target="#app-id" className="copy-button clickable material-icons">content_copy</i></span>
+                            <span className="card-body standard-tile">App ID: <br/><span id="app-id">{app.id}</span><i onClick={() => this.copy('app-id')} data-clipboard-target="#app-id" className="copy-button clickable material-icons">content_copy</i></span>
+                            {
+                              liveChat && liveChatId ?
+                              <span className="card-body standard-tile">Live Chat ID: <br/><span id="app-live-chat">{liveChatId}</span><i onClick={() => this.copy('app-live-chat')} data-clipboard-target="#app-live-chat" className="copy-button clickable material-icons">content_copy</i></span> : 
+                              <div />
+                            }
                             <span onClick={() => this.deleteProject(app, false)} className="right clickable text-danger">Delete</span>
                           </li>
                           )
