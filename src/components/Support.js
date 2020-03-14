@@ -1,4 +1,4 @@
-import React from 'reactn'
+import React, {setGlobal} from 'reactn'
 import StickyNav from './StickyNav'
 import Table from 'react-bootstrap/Table'
 import Card from 'react-bootstrap/Card'
@@ -10,17 +10,18 @@ export default class Support extends React.Component {
     this.state = {
       posts: [], 
       thisConvo: {},
-      messageText: ""
+      messageText: "", 
+      mainConvo: {}
     }
   }
 
   setConversation = async (convo) => {
+    this.setState({ mainConvo: convo })
     try {
       const messageData = JSON.parse(convo.message)
-      const { message, name } = messageData
-      const { space } = this.global
+      const { name } = messageData
       let posts = []
-      const thisConvo = await space.joinThreadByAddress(message)
+      const thisConvo = await this.getConversationData(messageData)
       let bodyDiv
       thisConvo.onUpdate(async() => {
         posts = await thisConvo.getPosts()
@@ -38,6 +39,19 @@ export default class Support extends React.Component {
     }
   }
 
+  getConversationData = async (messageData) => {
+    const { space } = this.global
+    return new Promise(async (resolve, reject) => {
+      const { message } = messageData
+      try {
+        const thisConvo = await space.joinThreadByAddress(message)
+        resolve(thisConvo)
+      } catch(e) {
+        reject(e)
+      }
+    })
+  }
+
   handleEnter = (e) => {
     const { thisConvo, messageText } = this.state
     if(e.key === 'Enter'){
@@ -50,12 +64,51 @@ export default class Support extends React.Component {
     }
   }
 
-  renderConversationsList() {
-    const { liveChatThreads } = this.global    
+  handleClose = async (convo) => {
+    const { openChatThreads, closedChatThreads } = this.global
+    try {
+      const messageData = JSON.parse(convo.message)
+      const thisConvo = await this.getConversationData(messageData)
+      const post = {
+        name: "SimpleID", 
+        message: "CONVERSATION CLOSED"
+      }
+      await thisConvo.post(JSON.stringify(post))
+      // Now, let's remove the thread from the main liveChat threads
+
+      const index = openChatThreads.map(a => a.name).indexOf(convo.name)
+      if(index > -1) {
+        const updatedChatThreads = openChatThreads.splice(index, 1)
+        closedChatThreads.push(convo)
+        //  If there is an open conversation, need to check if it matches the one being closed
+        //  If it does, remove it from the view
+        if(thisConvo && thisConvo.name === convo.name) {
+          this.setState({ thisConvo: {}, posts: [] })
+        }
+        //  Now update state to reflect all the changes (one less liveChatThread, one more closedChatThread)
+        setGlobal({ openChatThreads: openChatThreads.length > 0 ? updatedChatThreads : [], closedChatThreads })
+      } else {
+        console.log("Error with index")
+      }
+    } catch(e) {
+      console.log(e)
+    }
+  }
+
+  renderConversationsList(open) {
+    const { openChatThreads, closedChatThreads } = this.global  
+    let chats = []
+    if(open) {
+      chats = openChatThreads
+    } else {
+      chats = closedChatThreads
+    }
     return (
       <div>
-        <p>Click to open a conversation</p>
       <Card>
+        <Card.Header>
+          {open ? "Open Conversations" : "Closed Conversations"}
+        </Card.Header>
         <Card.Body>
           <Table responsive>
             <thead>
@@ -68,13 +121,13 @@ export default class Support extends React.Component {
             </thead>
             <tbody>
             {
-              liveChatThreads.map((convo) => {
+              chats.map((convo) => {
                 return (
                   <tr key={convo.postId}>
                     <td><button onClick={() => this.setConversation(convo)} className="a-el-fix">{convo.name ? convo.name : "Unknown User"}</button></td>
                     <td>{moment.unix(convo.timestamp).format("MM/DD/YYYY")}</td>
                     <td>{convo.postCount}</td>
-                    <td>Close</td>
+                    <td className="clickable" onClick={open ? () => this.handleClose(convo) : () => this.setConversation(convo)}>{open ? "Close" : "Re-Open"}</td>
                   </tr>
                 )
               })
@@ -88,21 +141,21 @@ export default class Support extends React.Component {
   }
 
   renderSingleConversation() {
-    const { posts, messageText, thisConvo } = this.state
+    const { posts, messageText, thisConvo, mainConvo } = this.state
     const { box, sessionData } = this.global
     const appId = sessionData.id
     if(posts.length > 0) {
       return (
         <div>
           <Card>
-            <Card.Header className="support-card-header">Conversation With {thisConvo.name} <span style={{float: 'right', fontSize: "10px"}}>Close Conversation</span> </Card.Header>
+            <Card.Header className="support-card-header">Conversation With {thisConvo.name} <span onClick={() => this.handleClose(mainConvo)} className="clickable" style={{float: 'right', fontSize: "10px"}}>Close Conversation</span> </Card.Header>
             <Card.Body id="support-card-body">
               {
                 posts.map(post => {  
                   const parsedMessage = JSON.parse(post.message)
                   const { message } = parsedMessage  
                   return (
-                    <div key={post.postId} className={box._3id._subDIDs[appId] === post.author ? 'from-us' : 'from-them'}>{message}</div>
+                    <div key={post.postId} id={post.postId} className={message === "CONVERSATION CLOSED" ? "closed-convo-style" : box._3id._subDIDs[appId] === post.author ? 'from-us' : 'from-them'}>{message}</div>
                   )
                 })
               }
@@ -123,6 +176,8 @@ export default class Support extends React.Component {
   }
 
   render() {
+    // eslint-disable-next-line
+    let openConversations
     return (
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
@@ -136,10 +191,13 @@ export default class Support extends React.Component {
           <div className="row">
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <h5>Support Conversations</h5>
-              
-              {this.renderConversationsList()}
-              
-              
+              <p>Click to open a conversation</p>
+              <div style={{marginTop: "20px"}}>
+                {this.renderConversationsList(openConversations = true)}
+              </div>
+              <div style={{marginTop: "20px"}}>
+                {this.renderConversationsList(openConversations = false)}
+              </div>
             </div>
 
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">

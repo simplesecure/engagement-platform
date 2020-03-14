@@ -100,7 +100,6 @@ class CloudUser {
         })
         const mainThreadHash = mainThread.address.split('orbitdb/')[1].split('/3box')[0]
         mainThreadPosts = await getPosts(mainThread)
-        console.log(mainThreadPosts)
         fetchAllPosts(space, mainThreadPosts)
         setGlobal({ idWallet, box, space, mainThread, mainThreadPosts, liveChatId: mainThreadHash })
       }
@@ -338,7 +337,8 @@ async function getPosts(thread) {
 
 async function fetchAllPosts(space, mainThreadPosts) {
   if(mainThreadPosts) {
-    const threadsToReturn = []
+    const openThreads = []
+    const closedThreads = []
     for(const thread of mainThreadPosts) {
       //  TODO - Clean this all up
       //  There is a combination of parsing and not happening here
@@ -366,15 +366,22 @@ async function fetchAllPosts(space, mainThreadPosts) {
         fetchAllPosts(space, mainThreadPosts)
       })
       let posts = await thisThread.getPosts()
-      
       if(posts && posts.length > 0) {
-
+        //  Check if the most recent message is a closed message
+        const mostRecentMessage = posts[posts.length - 1]
+        const { message } = mostRecentMessage
+        const messageText = JSON.parse(message)
+        thread['postCount'] = posts.length
         if(authorName) {
           thread['name'] = authorName
         }
-        thread['postCount'] = posts.length
-        threadsToReturn.push(thread)
-        setGlobal({ liveChatThreads: threadsToReturn})
+        if(messageText.message !== "CONVERSATION CLOSED") {
+          openThreads.push(thread)
+          setGlobal({ openChatThreads: openThreads })
+        } else {
+          closedThreads.push(thread)
+          setGlobal({ closedChatThreads: closedThreads })
+        }
       }
     }
   }

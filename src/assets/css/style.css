@@ -281,3 +281,14 @@ section {
 .support-card-header {
   border-bottom: 1px solid #dfe1e3!important;
 }
+
+.closed-convo-style {
+  background: "none"!important;
+  color: #eee!important;
+  float: right;
+  clear:both;
+  padding: 10px;
+  border-radius: 30px;
+  margin-bottom: 5px;
+  font-size: 12px;
+}

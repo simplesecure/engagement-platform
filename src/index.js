@@ -49,7 +49,8 @@ setGlobal({
   currentThreadPosts: [], 
   liveChatId: "", 
   idWallet: {}, 
-  liveChatThreads: []
+  openChatThreads: [], 
+  closedChatThreads: []
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));
