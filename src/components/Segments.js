@@ -42,8 +42,8 @@ export default class Segments extends React.Component {
       listOfAddresses: "",
       operator: "",
       conditions: {},
-      condition: {}, 
-      importModalOpen: false, 
+      condition: {},
+      importModalOpen: false,
       importAddress: ""
     }
   }
@@ -169,7 +169,7 @@ export default class Segments extends React.Component {
       const segments = currentSegments ? currentSegments : []
       segments.push(segmentCriteria)
       sessionData.currentSegments = segments
-  
+
       const thisApp = apps[sessionData.id]
       thisApp.currentSegments = segments
       apps[sessionData.id] = thisApp
@@ -280,7 +280,7 @@ export default class Segments extends React.Component {
         console.log("Error with index, not updating")
       }
       sessionData.currentSegments = segments
-  
+
       const thisApp = apps[sessionData.id]
       thisApp.currentSegments = segments
       apps[sessionData.id] = thisApp
@@ -458,13 +458,23 @@ export default class Segments extends React.Component {
   }
 
   importUsers = () => {
+    const { sessionData } = this.global
     const { importAddress } = this.state
-    console.log(importAddress)
-    //  TODO: AC handle import through server here
-    //  We are using the webworker for server calls, so the functionality should look like this: 
-    //  getCloudUser().processData('import', importAddress)
-    //  And in the processData function, you will need to add an import type
-    //  Because it's happening on a webworker, no need for an await here. Just clear the input and close the modal
+
+    const importWalletsCmdObj = {
+      command: 'importWallets',
+      data: {
+        appId: sessionData.id,
+        contractAddress: importAddress,
+        options: {
+          transactions_per_page: 2,
+          max_transactions: "1"
+        }
+      }
+    }
+
+    console.log('Calling import addresses from wallets:\n', JSON.stringify(importWalletsCmdObj, 0, 2))
+    getCloudUser().processData('import', importWalletsCmdObj)
     this.setState({ importModalOpen: false, importAddress: "" })
   }
 
@@ -606,7 +616,7 @@ export default class Segments extends React.Component {
       }
 
       {
-        filterToUse && filterToUse.type !== "Paste" ? 
+        filterToUse && filterToUse.type !== "Paste" ?
         <div className="form-group col-md-12">
           <button onClick={this.addFilter} className="btn btn-secondary">Add Another Filter</button>
         </div> :
@@ -786,22 +796,22 @@ export default class Segments extends React.Component {
                 </Modal.Header>
                 <Modal.Body>You can import your users based on your smart contracts. Simply enter a smart contract address and we will import all of the addresses that have interacted with that address.</Modal.Body>
                 <Modal.Body>
-                  <InputGroup className="mb-3">                  
+                  <InputGroup className="mb-3">
                     <FormControl type="text" value={importAddress} onChange={(e) => this.setState({ importAddress: e.target.value })} placeholder="0x..." />
                   </InputGroup>
-                  
+
                   </Modal.Body>
                 <Modal.Footer>
                   {
-                    importAddress.length > 10 && importAddress.length < 50 ? 
+                    importAddress.length > 10 && importAddress.length < 50 ?
                     <button className="btn btn-primary" onClick={this.importUsers}>
                       Import
-                    </button> : 
+                    </button> :
                     <button className="btn btn-primary" disabled>
                       Import
                     </button>
                   }
-                  
+
                   <button className="btn btn-secondary" onClick={() => this.setState({ importModalOpen: false})}>
                     Cancel
                   </button>

@@ -213,6 +213,20 @@ export async function handleData(dataToProcess) {
     const createProject = await getSidSvcs().createAppId(orgId, appObject)
     log.debug(createProject)
     return createProject
+  } else if (type === 'import') {
+    // Re-using the fetchSegmentWorker (b/c it's really just a command web worker
+    // w/ nothing special for segments).
+    // TODO: rename / refactor it to something sensible
+    //
+    const commandWorker = fetchSegmentWorker
+    const cmdObj = data
+
+    commandWorker.postMessage(JSON.stringify(cmdObj))
+
+    commandWorker.onmessage = async (m) => {
+      log.debug('Finished processing command:')
+      log.debug(JSON.stringify(cmdObj, 0, 2))
+    }
   }
 }
 
