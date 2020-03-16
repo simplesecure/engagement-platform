@@ -4,7 +4,7 @@ import { getCloudUser } from './../utils/cloudUser.js'
 
 export default class StickyNav extends React.Component {
   render() {
-    const { apps, sessionData, org_id, threeBoxProfile, showSegmentNotification, segmentProcessingDone, segmentName } = this.global;
+    const { apps, sessionData, org_id, threeBoxProfile, showSegmentNotification, segmentProcessingDone } = this.global;
     const orgId = org_id ? `${org_id.substring(0,8)}...` : ""
     const headerName = threeBoxProfile && threeBoxProfile.name ? threeBoxProfile.name : orgId
 
@@ -46,7 +46,7 @@ export default class StickyNav extends React.Component {
                     </div>
                     <div className="notification__content">
                       <span className="notification__category">Segmentation Updates</span>
-                      <p>Your segment titled <span className="text-underline">{segmentName}</span> is done processing. See it <Link onClick={() => setGlobal({ showSegmentNotification: false, segmentProcessingDone: false })} to={'/segments'}>here.</Link></p>                        
+                      <p>Your segment update is done processing. See it <Link onClick={() => setGlobal({ showSegmentNotification: false, segmentProcessingDone: false })} to={'/segments'}>here.</Link></p>                        
                     </div>
                   </button>                  
                 </div>

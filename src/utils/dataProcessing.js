@@ -5,6 +5,7 @@ import { getLog } from './debugScopes.js'
 import { setLocalStorage } from './misc'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from './awsUtils.js'
 import work from 'webworkify-webpack';
+import { getCloudUser } from './cloudUser.js'
 // import updateWorker from './updateSegmentWorker'
 // import fetchWorker from './fetchSegmentWorker'
 // import WebWorker from './workerSetup'
@@ -226,6 +227,8 @@ export async function handleData(dataToProcess) {
     commandWorker.onmessage = async (m) => {
       log.debug('Finished processing command:')
       log.debug(JSON.stringify(cmdObj, 0, 2))
+      await getCloudUser().fetchOrgDataAndUpdate()
+      setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
     }
   }
 }
