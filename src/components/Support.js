@@ -3,6 +3,7 @@ import StickyNav from './StickyNav'
 import Table from 'react-bootstrap/Table'
 import Card from 'react-bootstrap/Card'
 import FormControl from 'react-bootstrap/FormControl'
+const Chart = require('chart.js')
 const moment = require('moment')
 export default class Support extends React.Component {
   constructor(props) {
@@ -11,7 +12,8 @@ export default class Support extends React.Component {
       posts: [], 
       thisConvo: {},
       messageText: "", 
-      mainConvo: {}
+      mainConvo: {}, 
+      reportsView: false
     }
   }
 
@@ -55,6 +57,7 @@ export default class Support extends React.Component {
   handleEnter = (e) => {
     const { thisConvo, messageText } = this.state
     if(e.key === 'Enter'){
+      setGlobal({ ourMessage: true })
       const post = {
         name: "SimpleID", //TODO: This should be an actual agent name
         message: messageText
@@ -93,6 +96,11 @@ export default class Support extends React.Component {
     } catch(e) {
       console.log(e)
     }
+  }
+
+  handleRenderReports = () => {
+    const { reportsView } = this.state
+    this.setState({ reportsView: !reportsView})
   }
 
   renderConversationsList(open) {
@@ -175,7 +183,54 @@ export default class Support extends React.Component {
     }
   }
 
+  renderReports() {
+    //const { openChatThreads, closedChatThreads } = this.global
+    const conversationsByDay = document.getElementById('conversationsByDay')
+    if(conversationsByDay) {
+      new Chart(conversationsByDay, {
+        type: 'bar',
+        data: {
+            labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+            datasets: [{
+                label: '# of Votes',
+                data: [12, 19, 3, 5, 2, 3],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        }
+      })
+    }
+    
+    return (
+      <div>
+        <h5>Reports</h5>
+        <p>Here are your default reports.</p>
+        <div className="row">
+          <div className="col col-sm-12 col-md-6">
+            <canvas id="conversationsByDay" width="300" height="300"></canvas>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   render() {
+    const { reportsView } = this.state
     // eslint-disable-next-line
     let openConversations
     return (
@@ -185,28 +240,34 @@ export default class Support extends React.Component {
           <div className="page-header row no-gutters py-4">
             <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
               <span className="text-uppercase page-subtitle">Support</span>
-              <h3 className="page-title">Real-Time Messaging</h3>
+              <h3 className="page-title">Real-Time Messaging <span onClick={this.handleRenderReports} className="clickable"><i className="material-icons">insert_chart</i></span></h3>
             </div>
           </div>
-          <div className="row">
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-              <h5>Support Conversations</h5>
-              <p>Click to open a conversation</p>
-              <div style={{marginTop: "20px"}}>
-                {this.renderConversationsList(openConversations = true)}
+          {
+            reportsView ? 
+            <div>
+              {this.renderReports()}
+            </div> : 
+            <div className="row">
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                <h5>Support Conversations</h5>
+                <p>Click to open a conversation</p>
+                <div style={{marginTop: "20px"}}>
+                  {this.renderConversationsList(openConversations = true)}
+                </div>
+                <div style={{marginTop: "20px"}}>
+                  {this.renderConversationsList(openConversations = false)}
+                </div>
               </div>
-              <div style={{marginTop: "20px"}}>
-                {this.renderConversationsList(openConversations = false)}
-              </div>
-            </div>
 
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-              
-              {this.renderSingleConversation()}
-              
-              
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                
+                {this.renderSingleConversation()}
+                
+                
+              </div>
             </div>
-          </div>
+          }
         </div>
       </main>
     )

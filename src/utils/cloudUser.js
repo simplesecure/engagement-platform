@@ -362,8 +362,15 @@ async function fetchAllPosts(space, mainThreadPosts) {
       }
 
       thisThread.onUpdate(() => {
+        const { ourMessage } = getGlobal()
         //  If there's a new post we need to fetch posts again
         fetchAllPosts(space, mainThreadPosts)
+        //  Play notification but only for the inbound messages
+        if(!ourMessage) {
+          const audio = new Audio(require('../assets/sounds/notification.mp3'))
+          audio.play()
+        }
+        setGlobal({ ourMessage: false })
       })
       let posts = await thisThread.getPosts()
       if(posts && posts.length > 0) {
