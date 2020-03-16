@@ -460,16 +460,15 @@ export default class Segments extends React.Component {
   importUsers = () => {
     const { sessionData } = this.global
     const { importAddress } = this.state
-
     const importWalletsCmdObj = {
       command: 'importWallets',
       data: {
         appId: sessionData.id,
         contractAddress: importAddress,
-        options: {
-          transactions_per_page: 2,
-          max_transactions: "1"
-        }
+        // options: {
+        //   transactions_per_page: 2,
+        //   max_transactions: "10"
+        // }
       }
     }
 
@@ -693,9 +692,13 @@ export default class Segments extends React.Component {
 
         <div className="main-content-container container-fluid px-4">
           <div className="page-header row no-gutters py-4">
-            <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
+            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <span className="text-uppercase page-subtitle">Segments</span>
               <h3 className="page-title">Group People Using Your App <span onClick={this.handleRefreshData} className="clickable refresh"><i className="fas fa-sync-alt"></i></span></h3>
+            </div>
+            <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
+              <span className="text-uppercase page-subtitle">Import Users</span><br/>
+              <button onClick={() => this.setState({ importModalOpen: true })} style={{fontSize: "16px", margin: "5px"}} className="btn btn-success">Import By Smart Contract</button>
             </div>
           </div>
           <div className="row">
@@ -722,8 +725,7 @@ export default class Segments extends React.Component {
                           <td className="clickable link-color" onClick={() => this.handleSegmentModal(seg)}>{seg.name}</td>
                           <td>{seg.userCount}</td>
                           {
-                            seg.id === `1-${currentAppId}` ?
-                            <td className="clickable" onClick={() => this.setState({ importModalOpen: true })}>Import Users</td> :
+                            seg.id === `1-${currentAppId}` ?<td className="clickable" onClick={() => this.setState({ importModalOpen: true })}><strong>Import Users</strong></td> :
                             <td className="clickable" onClick={() => this.handleEditSegment(seg)}>Edit</td>
                           }
                           {
