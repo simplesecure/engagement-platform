@@ -465,9 +465,13 @@ export default class Segments extends React.Component {
       data: {
         appId: sessionData.id,
         contractAddress: importAddress,
+        options: {
+          transactions_per_page: 100,
+          max_transactions: 1000
+        }
         // options: {
-        //   transactions_per_page: 2,
-        //   max_transactions: "10"
+        //   transactions_per_page: 100,
+        //   max_transactions: 99
         // }
       }
     }
