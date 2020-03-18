@@ -477,12 +477,12 @@ export default class Segments extends React.Component {
     }
 
     console.log('Calling import addresses from wallets:\n', JSON.stringify(importWalletsCmdObj, 0, 2))
-    getCloudUser().processData('import', importWalletsCmdObj)
-    this.setState({ importModalOpen: false, importAddress: "" })
     toast.success("Importing users. You'll get a notification when it's complete.", {
       position: toast.POSITION.TOP_RIGHT,
       autoClose: 3000
     })
+    getCloudUser().processData('import', importWalletsCmdObj)
+    this.setState({ importModalOpen: false, importAddress: "" })
   }
 
   renderMultipleConditions() {
