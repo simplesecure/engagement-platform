@@ -1,5 +1,10 @@
 import * as db from './dynamoBasics.js'
 
+if (!process.env.REACT_APP_JOB_TABLE) {
+  console.log(`ERROR ERROR fetchSegmentWorker -- JOB TABLE is not defined.`)
+  throw new Error(`fetchSegmentWorker -- JOB TABLE is not defined.`)
+}
+
 class Log {
   constructor() {
     this.debugOutput = false
@@ -61,7 +66,11 @@ export default function worker(self) {
         try {
           attempts++
           log.debug(`${method} result polling attempt ${attempts} for job ${jobId}.`)
-          dbResults = await db.tableGet('sid_job_status', 'job_id', jobId)
+          dbResults = await db.tableGet(
+            process.env.REACT_APP_JOB_TABLE,
+            process.env.REACT_APP_JOB_TABLE_PK,
+            jobId)
+
         } catch (error) {
           log.warn(`${method} worker polling failed.\n${error}`)
           errors.push(error)
