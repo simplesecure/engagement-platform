@@ -31,6 +31,26 @@ class Log {
 }
 const log = new Log()
 
+const MAX_ERRORS = 3
+const MS_PER_SEC = 1000
+const SEC_PER_MIN = 60
+const MIN_PER_HR = 60
+const TIME_OUT_SEC = 2 * MIN_PER_HR * SEC_PER_MIN
+
+function getPollIntervalSec(secondsElapsed) {
+  if (secondsElapsed <= 1 * SEC_PER_MIN) {
+    return 5
+  } else if (secondsElapsed <= 3 * SEC_PER_MIN) {
+    return 10
+  } else if (secondsElapsed <= 6 * SEC_PER_MIN) {
+    return 20
+  } else if (secondsElapsed <= 12 * SEC_PER_MIN) {
+    return 30
+  }
+
+  return 60
+}
+
 export default function worker(self) {
   self.onmessage = async (e) => { // eslint-disable-line no-restricted-globals
     const method = 'onmessage'
@@ -50,48 +70,44 @@ export default function worker(self) {
 
       log.debug(`${method} polling for result of command ${cmdObj.command} in job id ${jobId}`)
 
-      // Poll the DB until some timeout for the results of the job. Then set
-      // the results here or set them to a timeout error.
-      const POLL_INTERVAL_SECONDS = 5
-      const TIME_OUT_MINUTES = 7
 
-      const intervalMs = POLL_INTERVAL_SECONDS * 1000
-      const maxAttempts = Math.ceil(TIME_OUT_MINUTES * 60 / POLL_INTERVAL_SECONDS)
-      const maxErrors = 3
-      let complete = false
-      let attempts = 0
+      let seconds = 0
       let errors = []
-      while (!complete && (attempts < maxAttempts) && (errors.length < maxErrors)) {
+      while ( (seconds < TIME_OUT_SEC) && (errors.length < MAX_ERRORS) ) {
+        let intervalSec = getPollIntervalSec(seconds)
         let dbResults = undefined
         try {
-          attempts++
-          log.debug(`${method} result polling attempt ${attempts} for job ${jobId}.`)
+          log.debug(`${method} polling job ${jobId}.`)
           dbResults = await db.tableGet(
             process.env.REACT_APP_JOB_TABLE,
             process.env.REACT_APP_JOB_TABLE_PK,
             jobId)
 
         } catch (error) {
-          log.warn(`${method} worker polling failed.\n${error}`)
+          log.warn(`${method} worker polling job ${jobId} failed.\n${error}`)
           errors.push(error)
         }
 
-        if (dbResults && dbResults.Item && dbResults.Item.status === 'complete') {
-          log.debug(`${method} polling discovered job ${jobId} is complete after ${attempts}.`)
-          complete = true
+        if ( dbResults &&
+             dbResults.Item &&
+             (dbResults.Item.status === 'complete' || dbResults.Item.status === 'failed') ) {
+          log.debug(`${method} polling discovered job ${jobId} ${dbResults.Item.status} after ${seconds}s.`)
           results = dbResults.Item.result
+          break
         } else {
           // ty: https://stackoverflow.com/questions/951021/what-is-the-javascript-version-of-sleep
+          const intervalMs = intervalSec * MS_PER_SEC
           await new Promise(r => setTimeout(r, intervalMs));
+          seconds += intervalSec
         }
       }
 
-      if (attempts >= maxAttempts) {
+      if (seconds >= TIME_OUT_SEC) {
         results = {
-          error: `${cmdObj.command} failed. Exceeded maximum attempts to get data for job ${jobId}.`
+          error: `${cmdObj.command} failed. Exceeded maximum time to get data for job ${jobId}.`
         }
         log.error(`${method} failed.\n${results.error}`)
-      } else if (errors.length >= maxErrors) {
+      } else if (errors.length >= MAX_ERRORS) {
         results = {
           error: `${cmdObj.command} failed. Exceeded maximum allowable errors to get data for job ${jobId}. Last error:\n${errors.pop()}`
         }
