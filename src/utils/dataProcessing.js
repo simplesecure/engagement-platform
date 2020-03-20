@@ -230,7 +230,7 @@ export async function handleData(dataToProcess) {
     commandWorker.postMessage(JSON.stringify(cmdObj))
 
     commandWorker.onmessage = async (m) => {
-      log.debug(`fetchSegmentWorker.onmessage called (context-->import).`)
+      log.debug(`fetchSegmentWorker.onmessage called (context-->import).`, m)
 
       await getCloudUser().fetchOrgDataAndUpdate()
       setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })

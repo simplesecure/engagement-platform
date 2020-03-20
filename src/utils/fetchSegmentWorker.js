@@ -5,9 +5,11 @@ if (!process.env.REACT_APP_JOB_TABLE) {
   throw new Error(`fetchSegmentWorker -- JOB TABLE is not defined.`)
 }
 
+const DEBUG_OUTPUT_LOGGING=true
+
 class Log {
   constructor() {
-    this.debugOutput = false
+    this.debugOutput = DEBUG_OUTPUT_LOGGING
     this.prefix = '(fetchSegmentWorker)'
   }
 
@@ -67,17 +69,13 @@ export default function worker(self) {
         serverResults.hasOwnProperty('data') &&
         serverResults.data.hasOwnProperty('job_id')) {
       const jobId = serverResults.data.job_id
-
-      log.debug(`${method} polling for result of command ${cmdObj.command} in job id ${jobId}`)
-
-
       let seconds = 0
       let errors = []
       while ( (seconds < TIME_OUT_SEC) && (errors.length < MAX_ERRORS) ) {
         let intervalSec = getPollIntervalSec(seconds)
         let dbResults = undefined
         try {
-          log.debug(`${method} polling job ${jobId}.`)
+          log.debug(`${method} polling for ${cmdObj.command} command results (job: ${jobId}) every ${intervalSec}s (${seconds}s elapsed.)`)
           dbResults = await db.tableGet(
             process.env.REACT_APP_JOB_TABLE,
             process.env.REACT_APP_JOB_TABLE_PK,
