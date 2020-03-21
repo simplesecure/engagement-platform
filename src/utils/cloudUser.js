@@ -32,9 +32,9 @@ class CloudUser {
     //regardless of whether there is data in local storage, we need to fetch from db
     let appData;
     if(org_id) {
-      console.log(org_id)
+
       appData = await getFromOrganizationDataTable(org_id);
-      console.log(appData)
+
     } else {
       console.log("ERROR: No Org ID")
     }
@@ -62,7 +62,6 @@ class CloudUser {
       //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the fetchSegmentData function
       //Will update state as necessary
       if(data.currentSegments) {
-
         //TODO: We really need to find a good way to update this
         this.fetchSegmentData(appData);
       } else {
@@ -141,7 +140,6 @@ class CloudUser {
       appData,
       org_id
     }
-    console.log(payload)
     this.processData('update-segments', payload)
   }
 
@@ -154,6 +152,7 @@ class CloudUser {
     const payload = {
       type, data
     }
+    console.log("Calling handleData from cloudUser...")
     return await handleData(payload)
   }
 
@@ -170,7 +169,6 @@ class CloudUser {
         setGlobal({ org_id })
       } else {
         log.debug("Org id not set, try again")
-        console.log(userData)
       }
     } catch (error) {
       // TODO: Cognito gives 3 shots at this

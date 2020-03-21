@@ -41,7 +41,8 @@ setGlobal({
   org_id: getCloudUser().getUserData() && getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.org_id : undefined, 
   showSegmentNotification: false, 
   segmentProcessingDone: false, 
-  segmentName: ""
+  segmentName: "", 
+  orgData: {}
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));
