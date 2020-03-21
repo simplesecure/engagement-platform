@@ -21,6 +21,7 @@ socket.on('job error', error => {
 //  we check for the command and execute accordingly
 
 socket.on('job done', async result => {
+  console.log(result)
   switch(result.command) {
     case 'update-segments': 
       handleSegmentUpdate(result)
@@ -28,7 +29,7 @@ socket.on('job done', async result => {
     case 'segment': 
       handleCreateSegmentFunc(result)
       break
-    case 'import': 
+    case 'importWallets': 
       handleImport(result)
       break
     default: 
@@ -146,7 +147,7 @@ export async function handleData(dataToProcess) {
   } else if (type === 'import') {
     const cmdObj = data
     if (QUEUE_IMPORT_WALLETS) {
-      //cmdObj.data.queue = true
+      cmdObj.data.queue = true
     }
 
     //  Here we are opening the connection for this particular request
@@ -198,7 +199,7 @@ async function handleEmails(data, url) {
 
 async function handleSegmentUpdate(result) {
   const { currentSegments, saveToDb } = result
-  const { sessionData, orgData, app_id, org_id } = await getGlobal()
+  const { sessionData, orgData, org_id } = await getGlobal()
   const segs = currentSegments
   sessionData.currentSegments = segs
   setGlobal({ sessionData, initialLoading: false, processing: false, loading: false })
@@ -206,19 +207,21 @@ async function handleSegmentUpdate(result) {
 
   if(saveToDb === true) {
     try {
+
       const anObject = orgData.Item
+
       let apps = anObject.apps
-      let thisApp = apps[app_id]
+      let thisApp = apps[sessionData.id]
       let segments = currentSegments
       thisApp.currentSegments = segments
-      apps[app_id] = thisApp
+      apps[sessionData.id] = thisApp
 
       anObject.apps = apps;
 
       anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
 
       await organizationDataTablePut(anObject)
-      console.log("done")
+
     } catch (suppressedError) {
       log.error(`ERROR: problem writing to DB.\n${suppressedError}`)
       return undefined
@@ -282,7 +285,6 @@ async function handleCreateSegmentFunc(results) {
 }
 
 async function handleImport(results) {
-  console.log(results)
-  //await getCloudUser().fetchOrgDataAndUpdate()
-  //setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
+  await getCloudUser().fetchOrgDataAndUpdate()
+  setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
 }
