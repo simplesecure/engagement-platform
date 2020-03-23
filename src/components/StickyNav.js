@@ -10,9 +10,7 @@ export default class StickyNav extends React.Component {
   }
 
   render() {
-    const { apps, sessionData, org_id, threeBoxProfile, showSegmentNotification, segmentProcessingDone } = this.global;
-    const orgId = org_id ? `${org_id.substring(0,8)}...` : ""
-    const headerName = threeBoxProfile && threeBoxProfile.name ? threeBoxProfile.name : orgId
+    const { apps, sessionData, showSegmentNotification, segmentProcessingDone } = this.global;
 
     const appKeys = Object.keys(apps);
     let projects = [];
@@ -99,11 +97,13 @@ export default class StickyNav extends React.Component {
 
             <li className="nav-item dropdown">
               <button className="a-el-fix project-drop nav-link dropdown-toggle text-nowrap px-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span className="d-none d-md-inline-block">{headerName}</span>
+                <span className="d-none d-md-inline-block"><i className="material-icons">settings</i></span>
               </button>
               <div className="dropdown-menu dropdown-menu-right dropdown-menu-small">
                 <Link to="/account"><button className="a-el-fix dropdown-item">
                   <i className="material-icons">&#xE7FD;</i> Account</button></Link>
+                <Link to="/jobs"><button className="a-el-fix dropdown-item">
+                  <i className="material-icons">hourglass_empty</i> Job Queue</button></Link>
 
                   <a href="mailto:support@simpleid.xyz"><button className="a-el-fix dropdown-item"><i className="material-icons">help</i>Help</button></a>
                 <div className="dropdown-divider"></div>

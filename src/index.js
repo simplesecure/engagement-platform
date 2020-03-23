@@ -42,7 +42,8 @@ setGlobal({
   showSegmentNotification: false, 
   segmentProcessingDone: false, 
   segmentName: "", 
-  orgData: {}
+  orgData: {}, 
+  jobs: []
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

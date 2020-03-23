@@ -7,6 +7,9 @@ import { putInOrganizationDataTable, getFromOrganizationDataTable } from './awsU
 import { getCloudUser } from './cloudUser.js'
 import socketIOClient from 'socket.io-client';
 
+const SID_JOB_QUEUE = 'sid_job_queue'
+const MAX_JOBS_TO_STORE = 10
+
 const log = getLog('dataProcessing')
 const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST)
 
@@ -23,12 +26,26 @@ socket.on('job error', error => {
 
 socket.on('job done', async result => {
   log.debug(`job done`, result)
+  //  Update job queue in local storage and in state
+  //  TODO - We need to decide how many jobs to keep stored (initially set at 10)
+  const jobs = fetchJobQueue()
+  if(jobs) {
+    //  First find the job that just finished
+    const thisJob = jobs.filter(job => job.job_id === result.jobId)[0]
+    
+    if(thisJob) {
+      thisJob.status = "Done"
+
+      setJobQueue(jobs)
+    }
+  } 
+
+
   switch(result.command) {
     case 'updateSegments':
       handleSegmentUpdate(result.data)
       break
     case 'segment':
-      debugger
       handleCreateSegmentFunc(result)
       break
     case 'importWallets':
@@ -42,8 +59,33 @@ socket.on('job done', async result => {
 socket.on('queued job id', async (result) => {
   log.info(`Queued Job: id = ${JSON.stringify(result, 0, 2)}`)
   // TODO: Justin / PB / AC:
-  //  0. Make the server include the job id in the result passed to 'job done' above.
   //  1. Store the queued job ids passed into here.
+
+  //  Fetch existing job IDs from local storage
+  let jobs = fetchJobQueue()
+  
+  //  If there are jobs, update with another job
+  if(jobs) {
+    jobs.unshift({
+      job_id: result.job_id,
+      status: "Pending"
+    })
+    
+    //  Now check if the jobs array is larger than our max setting
+    if(jobs.length > MAX_JOBS_TO_STORE) {
+      const index = jobs.length - 1
+      jobs.splice(index, 1);
+    }
+  } else {
+    jobs = []
+    jobs.unshift({
+      job_id: result.job_id,
+      status: "Pending"
+    })
+  }
+
+  setJobQueue(jobs)
+
   //  2. If 'job done' above receives a job id, remove it from the stored job ids.
   //  3. On startup, check for results for stored job ids.
 })
@@ -62,6 +104,15 @@ const SID_ANALYTICS_APP_ID = '00000000000000000000000000000000'
 const QUEUE_IMPORT_WALLETS = true
 const QUEUE_CREATE_SEGMENT = true
 const QUEUE_UPDATE_SEGMENT = true
+
+function fetchJobQueue() {
+  return localStorage.getItem(SID_JOB_QUEUE) ? JSON.parse(localStorage.getItem('sid_job_queue')) : undefined
+}
+
+function setJobQueue(jobs) {
+  localStorage.setItem(SID_JOB_QUEUE, JSON.stringify(jobs))
+  setGlobal({ jobs })
+}
 
 
 export async function handleData(dataToProcess) {
@@ -86,7 +137,6 @@ export async function handleData(dataToProcess) {
     log.debug("ORG DATA PAYLOAD")
     log.debug(data);
     const thisApp = data.appData && data.appData.Item ? data.appData.Item.apps[data.app_id] : undefined
-    log.debug("This APP : ", thisApp)
     const currentSegments = thisApp.currentSegments
 
     const cmdObj = {
@@ -226,7 +276,7 @@ async function handleCreateSegmentFunc(results) {
   const { currentSegments } = sessionData
   const ERROR_MSG = "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
   const segments = currentSegments ? currentSegments : []
-  const dataFromApi = results && results.data ? results.data : []
+  const dataFromApi = results && results.data ? results.data : undefined
 
   if (dataFromApi.update) {
     //Filter by this segment
@@ -241,7 +291,12 @@ async function handleCreateSegmentFunc(results) {
       log.warn("Error with index, not updating")
     }
   } else {
-    segments.push(dataFromApi)
+    if(dataFromApi) {
+      segments.push(dataFromApi)
+    } else {
+      throw new Error('no data returned from API')
+    }
+    
   }
 
   sessionData.currentSegments = segments
