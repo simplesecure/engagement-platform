@@ -28,7 +28,7 @@ class CloudUser {
     } catch(e) {
       log.debug("org id error: ", e)
     }
-    
+
     //regardless of whether there is data in local storage, we need to fetch from db
     let appData;
     if(org_id) {
@@ -90,13 +90,13 @@ class CloudUser {
     const matchingSegment = currentSegments ? currentSegments.filter(a => a.id === defaultSegmentId) : []
     if(matchingSegment.length === 0) {
       const allUsersSegment = {
-        id: defaultSegmentId, 
-        name: 'All Users', 
-        showOnDashboard: true, 
-        userCount: updatedData.length, 
+        id: defaultSegmentId,
+        name: 'All Users',
+        showOnDashboard: true,
+        userCount: updatedData.length,
         users: updatedData
       }
-      
+
       let segments = []
       if(currentSegments && currentSegments.length > 0) {
         segments = currentSegments
@@ -140,7 +140,7 @@ class CloudUser {
       appData,
       org_id
     }
-    this.processData('update-segments', payload)
+    this.processData('updateSegments', payload)
   }
 
   // This returns user info for the SimpleID user

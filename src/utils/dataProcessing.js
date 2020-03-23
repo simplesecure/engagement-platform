@@ -5,15 +5,16 @@ import { getLog } from './debugScopes.js'
 import { setLocalStorage } from './misc'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from './awsUtils.js'
 import { getCloudUser } from './cloudUser.js'
-import uuid from 'uuid/v4'
 import socketIOClient from 'socket.io-client';
+
+const log = getLog('dataProcessing')
 const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST)
 
-//  The websocket listener needs to be instantiated outside of the  
+//  The websocket listener needs to be instantiated outside of the
 //  handle data function or the results will be returned multiple times.
 //  See here: https://stackoverflow.com/questions/46819575/node-js-socket-io-returning-multiple-values-for-a-single-event
 socket.on('job error', error => {
-  console.log("JOB ERROR: ", error)
+  log.error("JOB ERROR: ", error)
 })
 
 //  The websocket connection returns a message when it's done
@@ -21,20 +22,37 @@ socket.on('job error', error => {
 //  we check for the command and execute accordingly
 
 socket.on('job done', async result => {
-  console.log(result)
+  log.debug(`job done`, result)
   switch(result.command) {
-    case 'update-segments': 
-      handleSegmentUpdate(result)
+    case 'updateSegments':
+      handleSegmentUpdate(result.data)
       break
-    case 'segment': 
+    case 'segment':
+      debugger
       handleCreateSegmentFunc(result)
       break
-    case 'importWallets': 
+    case 'importWallets':
       handleImport(result)
       break
-    default: 
-      console.log("No match on command...")
+    default:
+      log.warn(`No match on command... (${JSON.stringify(result, 0, 2)})`)
   }
+})
+
+socket.on('queued job id', async (result) => {
+  log.info(`Queued Job: id = ${JSON.stringify(result, 0, 2)}`)
+  // TODO: Justin / PB / AC:
+  //  0. Make the server include the job id in the result passed to 'job done' above.
+  //  1. Store the queued job ids passed into here.
+  //  2. If 'job done' above receives a job id, remove it from the stored job ids.
+  //  3. On startup, check for results for stored job ids.
+})
+
+socket.on('update job id', async (result) => {
+  log.info(`Update to job id = ${JSON.stringify(result, 0, 2)}`)
+  // TODO: Justin / PB / AC
+  // 0. Examine the data here and update the UI / UX & possibly stored data
+  //    with the update (i.e. % done, error etc.)
 })
 
 const SESSION_FROM_LOCAL = 'sessionData'
@@ -43,18 +61,10 @@ const SID_ANALYTICS_APP_ID = '00000000000000000000000000000000'
 
 const QUEUE_IMPORT_WALLETS = true
 const QUEUE_CREATE_SEGMENT = true
-
-const log = getLog('dataProcessing')
+const QUEUE_UPDATE_SEGMENT = true
 
 
 export async function handleData(dataToProcess) {
-  //  For the websocket connect, we need to make sure that the connection
-  //  is opened specific to a certain request. Sending a request to the same
-  //  connection would clober the previous requests. To solve this
-  //  a job_id is created for each request and that is used to create
-  //  a unique connection to the websocket server
-  const job_id = uuid()
-
   log.debug("DATA IN HANDLE DATA FUNCTION: ", dataToProcess)
   const { data, type } = dataToProcess;
   setGlobal({ orgData: data.appData })
@@ -70,8 +80,8 @@ export async function handleData(dataToProcess) {
       log.debug("USER FETCH ERROR: ", e)
       return []
     }
-  } else if(type === 'update-segments') {
-    
+  } else if(type === 'updateSegments') {
+
     //Take the whole org data payload and execute on it
     log.debug("ORG DATA PAYLOAD")
     log.debug(data);
@@ -79,17 +89,16 @@ export async function handleData(dataToProcess) {
     log.debug("This APP : ", thisApp)
     const currentSegments = thisApp.currentSegments
 
-    const workerData = {
-      app_id: data.app_id,
-      currentSegments
+    const cmdObj = {
+      command: 'updateSegments',
+      data: {
+        appId: data.app_id,
+        currentSegments,
+        queue: QUEUE_UPDATE_SEGMENT
+      }
     }
 
-    //  Here we are opening the connection for this particular request
-    socket.emit('job_id', job_id)
-
-    //  We are sending the update segments request and data to the
-    //  connection we created for this job_id
-    socket.emit('update segments', JSON.stringify(workerData))
+    socket.emit('command', cmdObj)
 
   } else if(type === 'segment') {
 
@@ -100,13 +109,7 @@ export async function handleData(dataToProcess) {
     if (QUEUE_CREATE_SEGMENT) {
       cmdObj.data.queue = true
     }
-
-    //  Here we are opening the connection for this particular request
-    socket.emit('job_id', job_id)
-
-    //  We are sending the update segments request and data to the
-    //  connection we created for this job_id
-    socket.emit('segment', JSON.stringify(cmdObj))
+    socket.emit('command', cmdObj)
 
   } else if(type === 'email messaging') {
     //Here we will do something similar to segment data except we will send the appropriate message
@@ -150,21 +153,10 @@ export async function handleData(dataToProcess) {
       cmdObj.data.queue = true
     }
 
-    //  Here we are opening the connection for this particular request
-    socket.emit('job_id', job_id)
-
-    //  We are sending the update segments request and data to the
+    //  We are sending the updateSegments request and data to the
     //  connection we created for this job_id
-    socket.emit('segment', JSON.stringify(cmdObj))
-
-    // commandWorker.postMessage(JSON.stringify(cmdObj))
-
-    // commandWorker.onmessage = async (m) => {
-    //   log.debug(`fetchSegmentWorker.onmessage called (context-->import).`, m)
-
-    //   await getCloudUser().fetchOrgDataAndUpdate()
-    //   setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
-    }
+    socket.emit('command', cmdObj)
+  }
 }
 
 async function handleEmails(data, url) {
@@ -246,7 +238,7 @@ async function handleCreateSegmentFunc(results) {
     if(index > -1) {
       segments[index] = thisSegment
     } else {
-      console.log("Error with index, not updating")
+      log.warn("Error with index, not updating")
     }
   } else {
     segments.push(dataFromApi)
@@ -280,7 +272,7 @@ async function handleCreateSegmentFunc(results) {
     setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
   } catch (suppressedError) {
     setGlobal({ error: ERROR_MSG })
-    console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    log.warn(`Suppressed error during DB write\n${suppressedError}`)
   }
 }
 
