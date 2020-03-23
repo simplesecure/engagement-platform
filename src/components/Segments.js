@@ -42,8 +42,8 @@ export default class Segments extends React.Component {
       listOfAddresses: "",
       operator: "",
       conditions: {},
-      condition: {}, 
-      importModalOpen: false, 
+      condition: {},
+      importModalOpen: false,
       importAddress: ""
     }
   }
@@ -169,7 +169,7 @@ export default class Segments extends React.Component {
       const segments = currentSegments ? currentSegments : []
       segments.push(segmentCriteria)
       sessionData.currentSegments = segments
-  
+
       const thisApp = apps[sessionData.id]
       thisApp.currentSegments = segments
       apps[sessionData.id] = thisApp
@@ -280,7 +280,7 @@ export default class Segments extends React.Component {
         console.log("Error with index, not updating")
       }
       sessionData.currentSegments = segments
-  
+
       const thisApp = apps[sessionData.id]
       thisApp.currentSegments = segments
       apps[sessionData.id] = thisApp
@@ -458,13 +458,30 @@ export default class Segments extends React.Component {
   }
 
   importUsers = () => {
+    const { sessionData } = this.global
     const { importAddress } = this.state
-    console.log(importAddress)
-    //  TODO: AC handle import through server here
-    //  We are using the webworker for server calls, so the functionality should look like this: 
-    //  getCloudUser().processData('import', importAddress)
-    //  And in the processData function, you will need to add an import type
-    //  Because it's happening on a webworker, no need for an await here. Just clear the input and close the modal
+    const importWalletsCmdObj = {
+      command: 'importWallets',
+      data: {
+        appId: sessionData.id,
+        contractAddress: importAddress,
+        options: {
+          transactions_per_page: 100,
+          max_transactions: 1000
+        }
+        // options: {
+        //   transactions_per_page: 100,
+        //   max_transactions: 99
+        // }
+      }
+    }
+
+    console.log('Calling import addresses from wallets:\n', JSON.stringify(importWalletsCmdObj, 0, 2))
+    toast.success("Importing users. You'll get a notification when it's complete.", {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 3000
+    })
+    getCloudUser().processData('import', importWalletsCmdObj)
     this.setState({ importModalOpen: false, importAddress: "" })
   }
 
@@ -606,7 +623,7 @@ export default class Segments extends React.Component {
       }
 
       {
-        filterToUse && filterToUse.type !== "Paste" ? 
+        filterToUse && filterToUse.type !== "Paste" ?
         <div className="form-group col-md-12">
           <button onClick={this.addFilter} className="btn btn-secondary">Add Another Filter</button>
         </div> :
@@ -683,9 +700,13 @@ export default class Segments extends React.Component {
 
         <div className="main-content-container container-fluid px-4">
           <div className="page-header row no-gutters py-4">
-            <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
+            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <span className="text-uppercase page-subtitle">Segments</span>
               <h3 className="page-title">Group People Using Your App <span onClick={this.handleRefreshData} className="clickable refresh"><i className="fas fa-sync-alt"></i></span></h3>
+            </div>
+            <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
+              <span className="text-uppercase page-subtitle">Import Users</span><br/>
+              <button onClick={() => this.setState({ importModalOpen: true })} style={{fontSize: "16px", margin: "5px"}} className="btn btn-success">Import By Smart Contract</button>
             </div>
           </div>
           <div className="row">
@@ -712,8 +733,7 @@ export default class Segments extends React.Component {
                           <td className="clickable link-color" onClick={() => this.handleSegmentModal(seg)}>{seg.name}</td>
                           <td>{seg.userCount}</td>
                           {
-                            seg.id === `1-${currentAppId}` ?
-                            <td className="clickable" onClick={() => this.setState({ importModalOpen: true })}>Import Users</td> :
+                            seg.id === `1-${currentAppId}` ?<td className="clickable" onClick={() => this.setState({ importModalOpen: true })}><strong>Import Users</strong></td> :
                             <td className="clickable" onClick={() => this.handleEditSegment(seg)}>Edit</td>
                           }
                           {
@@ -786,22 +806,22 @@ export default class Segments extends React.Component {
                 </Modal.Header>
                 <Modal.Body>You can import your users based on your smart contracts. Simply enter a smart contract address and we will import all of the addresses that have interacted with that address.</Modal.Body>
                 <Modal.Body>
-                  <InputGroup className="mb-3">                  
+                  <InputGroup className="mb-3">
                     <FormControl type="text" value={importAddress} onChange={(e) => this.setState({ importAddress: e.target.value })} placeholder="0x..." />
                   </InputGroup>
-                  
+
                   </Modal.Body>
                 <Modal.Footer>
                   {
-                    importAddress.length > 10 && importAddress.length < 50 ? 
+                    importAddress.length > 10 && importAddress.length < 50 ?
                     <button className="btn btn-primary" onClick={this.importUsers}>
                       Import
-                    </button> : 
+                    </button> :
                     <button className="btn btn-primary" disabled>
                       Import
                     </button>
                   }
-                  
+
                   <button className="btn btn-secondary" onClick={() => this.setState({ importModalOpen: false})}>
                     Cancel
                   </button>

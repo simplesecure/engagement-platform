@@ -5,18 +5,17 @@ import { getLog } from './debugScopes.js'
 import { setLocalStorage } from './misc'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from './awsUtils.js'
 import work from 'webworkify-webpack';
-// import updateWorker from './updateSegmentWorker'
-// import fetchWorker from './fetchSegmentWorker'
-// import WebWorker from './workerSetup'
+import { getCloudUser } from './cloudUser.js'
 
 const SESSION_FROM_LOCAL = 'sessionData'
 
 const SID_ANALYTICS_APP_ID = '00000000000000000000000000000000'
 
+const QUEUE_IMPORT_WALLETS = true
+const QUEUE_CREATE_SEGMENT = true
+
 const log = getLog('dataProcessing')
 
-// const updateSegmentWorker = new WebWorker(updateWorker)
-// const fetchSegmentWorker = new WebWorker(fetchWorker)
 const fetchSegmentWorker = work(require.resolve('./fetchSegmentWorker.js'))
 const updateSegmentWorker = work(require.resolve('./updateSegmentWorker.js'))
 
@@ -116,10 +115,14 @@ export async function handleData(dataToProcess) {
       command: 'segment',
       data: data
     }
+    if (QUEUE_CREATE_SEGMENT) {
+      cmdObj.data.queue = true
+    }
     //  Send the reques to the web worker
     fetchSegmentWorker.postMessage(JSON.stringify(cmdObj))
 
     fetchSegmentWorker.onmessage = async (m) => {
+      log.debug(`fetchSegmentWorker.onmessage called (context-->segment).`)
       const results = JSON.parse(m.data)
 
       const dataFromApi = results && results.data ? results.data : []
@@ -213,6 +216,25 @@ export async function handleData(dataToProcess) {
     const createProject = await getSidSvcs().createAppId(orgId, appObject)
     log.debug(createProject)
     return createProject
+  } else if (type === 'import') {
+    // Re-using the fetchSegmentWorker (b/c it's really just a command web worker
+    // w/ nothing special for segments).
+    // TODO: rename / refactor it to something sensible
+    //
+    const commandWorker = fetchSegmentWorker
+    const cmdObj = data
+    if (QUEUE_IMPORT_WALLETS) {
+      cmdObj.data.queue = true
+    }
+
+    commandWorker.postMessage(JSON.stringify(cmdObj))
+
+    commandWorker.onmessage = async (m) => {
+      log.debug(`fetchSegmentWorker.onmessage called (context-->import).`)
+
+      await getCloudUser().fetchOrgDataAndUpdate()
+      setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
+    }
   }
 }
 

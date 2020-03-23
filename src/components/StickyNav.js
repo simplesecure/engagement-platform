@@ -3,8 +3,14 @@ import { Link } from 'react-router-dom';
 import { getCloudUser } from './../utils/cloudUser.js'
 
 export default class StickyNav extends React.Component {
+  notificationSeen = () => {
+    setTimeout(() => {
+      setGlobal({ showSegmentNotification: false, segmentProcessingDone: false })
+    }, 3000)
+  }
+
   render() {
-    const { apps, sessionData, org_id, threeBoxProfile, showSegmentNotification, segmentProcessingDone, segmentName } = this.global;
+    const { apps, sessionData, org_id, threeBoxProfile, showSegmentNotification, segmentProcessingDone } = this.global;
     const orgId = org_id ? `${org_id.substring(0,8)}...` : ""
     const headerName = threeBoxProfile && threeBoxProfile.name ? threeBoxProfile.name : orgId
 
@@ -31,7 +37,7 @@ export default class StickyNav extends React.Component {
             {
               showSegmentNotification && segmentProcessingDone ? 
               <li className="nav-item border-right dropdown notifications">
-                <button className="a-el-fix nav-link nav-link-icon text-center" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button onClick={this.notificationSeen} className="a-el-fix nav-link nav-link-icon text-center" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                   <div className="nav-link-icon__wrapper">
                     <i className="material-icons">&#xE7F4;</i>
                     <span className="badge badge-pill badge-danger">1</span>
@@ -46,7 +52,7 @@ export default class StickyNav extends React.Component {
                     </div>
                     <div className="notification__content">
                       <span className="notification__category">Segmentation Updates</span>
-                      <p>Your segment titled <span className="text-underline">{segmentName}</span> is done processing. See it <Link onClick={() => setGlobal({ showSegmentNotification: false, segmentProcessingDone: false })} to={'/segments'}>here.</Link></p>                        
+                      <p>Your segment update is done processing. See it <Link onClick={() => setGlobal({ showSegmentNotification: false, segmentProcessingDone: false })} to={'/segments'}>here.</Link></p>                        
                     </div>
                   </button>                  
                 </div>
