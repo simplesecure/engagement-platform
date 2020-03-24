@@ -32,13 +32,13 @@ socket.on('job done', async result => {
   if(jobs) {
     //  First find the job that just finished
     const thisJob = jobs.filter(job => job.job_id === result.jobId)[0]
-    
+
     if(thisJob) {
       thisJob.status = "Done"
 
       setJobQueue(jobs)
     }
-  } 
+  }
 
 
   switch(result.command) {
@@ -63,31 +63,27 @@ socket.on('queued job id', async (result) => {
 
   //  Fetch existing job IDs from local storage
   let jobs = fetchJobQueue()
-  
-  //  If there are jobs, update with another job
-  if(jobs) {
-    jobs.unshift({
-      job_id: result.job_id,
-      status: "Pending"
-    })
-    
-    //  Now check if the jobs array is larger than our max setting
-    if(jobs.length > MAX_JOBS_TO_STORE) {
+
+  //  If there are no stored jobs, create a job queue tracking array.
+  if(!jobs) {
+    jobs = []
+  } else {
+    //  Check if the stored jobs array is larger than our max setting and
+    //  remove a tracked job.
+    if(jobs.length > MAX_JOBS_TO_STORE-1) {
       const index = jobs.length - 1
       jobs.splice(index, 1);
     }
-  } else {
-    jobs = []
-    jobs.unshift({
-      job_id: result.job_id,
-      status: "Pending"
-    })
   }
 
-  setJobQueue(jobs)
+  // Now add the job that we just received.
+  jobs.unshift({
+    command: result.command,
+    job_id: result.data.job_id,
+    status: "Pending"
+  })
 
-  //  2. If 'job done' above receives a job id, remove it from the stored job ids.
-  //  3. On startup, check for results for stored job ids.
+  setJobQueue(jobs)
 })
 
 socket.on('update job id', async (result) => {
@@ -296,7 +292,7 @@ async function handleCreateSegmentFunc(results) {
     } else {
       throw new Error('no data returned from API')
     }
-    
+
   }
 
   sessionData.currentSegments = segments

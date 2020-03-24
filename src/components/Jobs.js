@@ -23,6 +23,7 @@ export default class Jobs extends React.Component {
                   <Table responsive>
                     <thead>
                       <tr>
+                        <th>Command</th>
                         <th>Job ID</th>
                         <th>Status</th>
                       </tr>
@@ -32,6 +33,7 @@ export default class Jobs extends React.Component {
                       {jobs.map(job => {
                         return (
                           <tr key={job.job_id}>
+                            <td>{job.command}</td>
                             <td>{job.job_id}</td>
                             <td>{job.status}</td>
                           </tr>
