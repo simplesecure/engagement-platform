@@ -32,14 +32,13 @@ class CloudUser {
     } catch(e) {
       log.debug("org id error: ", e)
     }
-    
+
     //regardless of whether there is data in local storage, we need to fetch from db
     let appData;
     if(org_id) {
-      appData = await getFromOrganizationDataTable(org_id);
-      console.log(appData)
 
-      
+      appData = await getFromOrganizationDataTable(org_id);
+
     } else {
       console.log("ERROR: No Org ID")
     }
@@ -70,7 +69,6 @@ class CloudUser {
       //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the fetchSegmentData function
       //Will update state as necessary
       if(data.currentSegments) {
-
         //TODO: We really need to find a good way to update this
         this.fetchSegmentData(appData);
       } else {
@@ -125,13 +123,13 @@ class CloudUser {
     const matchingSegment = currentSegments ? currentSegments.filter(a => a.id === defaultSegmentId) : []
     if(matchingSegment.length === 0) {
       const allUsersSegment = {
-        id: defaultSegmentId, 
-        name: 'All Users', 
-        showOnDashboard: true, 
-        userCount: updatedData.length, 
+        id: defaultSegmentId,
+        name: 'All Users',
+        showOnDashboard: true,
+        userCount: updatedData.length,
         users: updatedData
       }
-      
+
       let segments = []
       if(currentSegments && currentSegments.length > 0) {
         segments = currentSegments
@@ -175,8 +173,7 @@ class CloudUser {
       appData,
       org_id
     }
-    console.log(payload)
-    this.processData('update-segments', payload)
+    this.processData('updateSegments', payload)
   }
 
   // This returns user info for the SimpleID user
@@ -188,6 +185,7 @@ class CloudUser {
     const payload = {
       type, data
     }
+    console.log("Calling handleData from cloudUser...")
     return await handleData(payload)
   }
 
@@ -204,7 +202,6 @@ class CloudUser {
         setGlobal({ org_id })
       } else {
         log.debug("Org id not set, try again")
-        console.log(userData)
       }
     } catch (error) {
       // TODO: Cognito gives 3 shots at this

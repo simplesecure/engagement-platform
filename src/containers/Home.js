@@ -9,8 +9,8 @@ import Notifications from '../components/Notifications';
 import Communications from '../components/Communications';
 import Account from '../components/Account';
 import Segments from '../components/Segments';
-import Message from '../components/Message';
 import Projects from '../components/Projects';
+import Jobs from '../components/Jobs';
 import Support from '../components/Support';
 import LoadingModal from '../components/LoadingModal';
 import Modal from 'react-bootstrap/Modal'
@@ -61,16 +61,8 @@ export default class Home extends React.Component {
           <Route path='/communications' component={Communications} />
           <Route path='/support' component={Support} />
           <Route path='/projects' component={Projects} />
-          {/*
-            //This is the component that will render the in-app notifications
-          */}
-          <Route path='/notifications/appId=:id&messageIds=:id' component={Message} />
-          {/*
-            //   This is not a scalable solution, but we can go live with it
-            //   This will throw up a loading modal on any refresh (component mount)
-            //   This ensures the user can't take any action that requires the iframe until
-            //   the fetchSegment process is done
-          */}
+          <Route path='/jobs' component={Jobs} />
+          
           <Modal show={initialLoading} >
             <Modal.Body>
                 <LoadingModal messageToDisplay={"Updating your user segment data..."} />

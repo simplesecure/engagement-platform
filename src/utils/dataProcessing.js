@@ -4,8 +4,94 @@ import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
 import { setLocalStorage } from './misc'
 import { putInOrganizationDataTable, getFromOrganizationDataTable } from './awsUtils.js'
-import work from 'webworkify-webpack';
 import { getCloudUser } from './cloudUser.js'
+import socketIOClient from 'socket.io-client';
+
+const SID_JOB_QUEUE = 'sid_job_queue'
+const MAX_JOBS_TO_STORE = 10
+
+const log = getLog('dataProcessing')
+const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST)
+
+//  The websocket listener needs to be instantiated outside of the
+//  handle data function or the results will be returned multiple times.
+//  See here: https://stackoverflow.com/questions/46819575/node-js-socket-io-returning-multiple-values-for-a-single-event
+socket.on('job error', error => {
+  log.error("JOB ERROR: ", error)
+})
+
+//  The websocket connection returns a message when it's done
+//  We are listening for that message and when it is returned
+//  we check for the command and execute accordingly
+
+socket.on('job done', async result => {
+  log.debug(`job done`, result)
+  //  Update job queue in local storage and in state
+  //  TODO - We need to decide how many jobs to keep stored (initially set at 10)
+  const jobs = fetchJobQueue()
+  if(jobs) {
+    //  First find the job that just finished
+    const thisJob = jobs.filter(job => job.job_id === result.jobId)[0]
+
+    if(thisJob) {
+      thisJob.status = "Done"
+
+      setJobQueue(jobs)
+    }
+  }
+
+
+  switch(result.command) {
+    case 'updateSegments':
+      handleSegmentUpdate(result.data)
+      break
+    case 'segment':
+      handleCreateSegmentFunc(result)
+      break
+    case 'importWallets':
+      handleImport(result)
+      break
+    default:
+      log.warn(`No match on command... (${JSON.stringify(result, 0, 2)})`)
+  }
+})
+
+socket.on('queued job id', async (result) => {
+  log.info(`Queued Job: id = ${JSON.stringify(result, 0, 2)}`)
+  // TODO: Justin / PB / AC:
+  //  1. Store the queued job ids passed into here.
+
+  //  Fetch existing job IDs from local storage
+  let jobs = fetchJobQueue()
+
+  //  If there are no stored jobs, create a job queue tracking array.
+  if(!jobs) {
+    jobs = []
+  } else {
+    //  Check if the stored jobs array is larger than our max setting and
+    //  remove a tracked job.
+    if(jobs.length > MAX_JOBS_TO_STORE-1) {
+      const index = jobs.length - 1
+      jobs.splice(index, 1);
+    }
+  }
+
+  // Now add the job that we just received.
+  jobs.unshift({
+    command: result.command,
+    job_id: result.data.job_id,
+    status: "Pending"
+  })
+
+  setJobQueue(jobs)
+})
+
+socket.on('update job id', async (result) => {
+  log.info(`Update to job id = ${JSON.stringify(result, 0, 2)}`)
+  // TODO: Justin / PB / AC
+  // 0. Examine the data here and update the UI / UX & possibly stored data
+  //    with the update (i.e. % done, error etc.)
+})
 
 const SESSION_FROM_LOCAL = 'sessionData'
 
@@ -13,34 +99,22 @@ const SID_ANALYTICS_APP_ID = '00000000000000000000000000000000'
 
 const QUEUE_IMPORT_WALLETS = true
 const QUEUE_CREATE_SEGMENT = true
+const QUEUE_UPDATE_SEGMENT = true
 
-const log = getLog('dataProcessing')
+function fetchJobQueue() {
+  return localStorage.getItem(SID_JOB_QUEUE) ? JSON.parse(localStorage.getItem('sid_job_queue')) : undefined
+}
 
-const fetchSegmentWorker = work(require.resolve('./fetchSegmentWorker.js'))
-const updateSegmentWorker = work(require.resolve('./updateSegmentWorker.js'))
-
-/**
- *  __issueWebApiCmd:
- *
- *  Note: common to / copied from web API helpers.
- *
- *  cmdObj format is:
- *  {
- *    command: <string>,
- *    data: { <arguments for command as properties> }
- *  }
- *
- *  @returns:  a result object containing an error property that is undefined if
- *             successful with any processed data in a data property. On failure
- *             a message is returned in the error property and data remains
- *             undefined.
- */
+function setJobQueue(jobs) {
+  localStorage.setItem(SID_JOB_QUEUE, JSON.stringify(jobs))
+  setGlobal({ jobs })
+}
 
 
 export async function handleData(dataToProcess) {
-  const { sessionData } = getGlobal()
   log.debug("DATA IN HANDLE DATA FUNCTION: ", dataToProcess)
   const { data, type } = dataToProcess;
+  setGlobal({ orgData: data.appData })
 
   if(type === 'fetch-user-count') {
     log.debug(data.app_id);
@@ -53,63 +127,26 @@ export async function handleData(dataToProcess) {
       log.debug("USER FETCH ERROR: ", e)
       return []
     }
-  } else if(type === 'update-segments') {
+  } else if(type === 'updateSegments') {
+
     //Take the whole org data payload and execute on it
     log.debug("ORG DATA PAYLOAD")
     log.debug(data);
     const thisApp = data.appData && data.appData.Item ? data.appData.Item.apps[data.app_id] : undefined
-    log.debug("This APP : ", thisApp)
     const currentSegments = thisApp.currentSegments
 
-    const workerData = {
-      app_id: data.app_id,
-      currentSegments
-    }
-
-    //  Send the reques to the web worker
-    updateSegmentWorker.postMessage(JSON.stringify(workerData))
-
-    //  When the worker responds, execute
-    updateSegmentWorker.onmessage = async (m) => {
-      const results = JSON.parse(m.data)
-
-      const { saveToDb, updatedSegments } = results
-
-      log.debug("UPDATED SEGMENTS: ", updatedSegments)
-
-      const segs = updatedSegments
-      sessionData.currentSegments = segs
-      setGlobal({ sessionData, initialLoading: false, processing: false, loading: false })
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      if(saveToDb === true) {
-        const orgData = data.appData
-        try {
-          const anObject = orgData.Item
-          let apps = anObject.apps
-          let thisApp = apps[data.app_id]
-          let segments = updatedSegments
-          thisApp.currentSegments = segments
-          apps[data.app_id] = thisApp
-
-          anObject.apps = apps;
-
-          anObject[process.env.REACT_APP_ORG_TABLE_PK] = data.org_id
-
-          await organizationDataTablePut(anObject)
-          return updatedSegments
-        } catch (suppressedError) {
-          log.error(`ERROR: problem writing to DB.\n${suppressedError}`)
-          return undefined
-        }
-      } else {
-        return updatedSegments
+    const cmdObj = {
+      command: 'updateSegments',
+      data: {
+        appId: data.app_id,
+        currentSegments,
+        queue: QUEUE_UPDATE_SEGMENT
       }
     }
+
+    socket.emit('command', cmdObj)
+
   } else if(type === 'segment') {
-    const { sessionData, apps, org_id } = getGlobal()
-    const { currentSegments } = sessionData
-    const segments = currentSegments ? currentSegments : []
-    const ERROR_MSG = "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
 
     const cmdObj = {
       command: 'segment',
@@ -118,68 +155,8 @@ export async function handleData(dataToProcess) {
     if (QUEUE_CREATE_SEGMENT) {
       cmdObj.data.queue = true
     }
-    //  Send the reques to the web worker
-    fetchSegmentWorker.postMessage(JSON.stringify(cmdObj))
+    socket.emit('command', cmdObj)
 
-    fetchSegmentWorker.onmessage = async (m) => {
-      log.debug(`fetchSegmentWorker.onmessage called (context-->segment).`)
-      const results = JSON.parse(m.data)
-
-      const dataFromApi = results && results.data ? results.data : []
-
-      data.userCount = dataFromApi.length
-      data.users = dataFromApi
-      if (data.update) {
-        //Filter by this segment
-        let thisSegment = segments.filter(a => a.id === data.id)[0]
-        if(thisSegment) {
-          thisSegment = data
-        }
-        const index = await segments.map((x) => {return x.id }).indexOf(data.id)
-        if(index > -1) {
-          segments[index] = thisSegment
-        } else {
-          console.log("Error with index, not updating")
-        }
-      } else {
-        segments.push(data)
-      }
-
-      sessionData.currentSegments = segments
-
-      const thisApp = apps[sessionData.id]
-      thisApp.currentSegments = segments
-      apps[sessionData.id] = thisApp
-
-      setGlobal({ sessionData, apps })
-      // Put the new segment in the analytics data for the user signed in to this
-      // id:
-      //      Each App (SimpleID Customer) will have an app_id
-      //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-      //      A segment will be stored in the DB under the primary key 'app_id' in
-      //      the appropriate user_id's segment storage:
-
-
-      // TODO: probably want to wait on this to finish and throw a status/activity
-      //       bar in the app:
-      const orgData = await getFromOrganizationDataTable(org_id)
-
-      try {
-        const anObject = orgData.Item
-        anObject.apps = apps
-        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-        await putInOrganizationDataTable(anObject)
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
-        setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
-      } catch (suppressedError) {
-        setGlobal({ error: ERROR_MSG })
-        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-      }
-    }
-
-
-    // const results = await __issueWebApiCmd(cmdObj)
-    // return results
   } else if(type === 'email messaging') {
     //Here we will do something similar to segment data except we will send the appropriate message
     //Data should include the following:
@@ -217,24 +194,14 @@ export async function handleData(dataToProcess) {
     log.debug(createProject)
     return createProject
   } else if (type === 'import') {
-    // Re-using the fetchSegmentWorker (b/c it's really just a command web worker
-    // w/ nothing special for segments).
-    // TODO: rename / refactor it to something sensible
-    //
-    const commandWorker = fetchSegmentWorker
     const cmdObj = data
     if (QUEUE_IMPORT_WALLETS) {
       cmdObj.data.queue = true
     }
 
-    commandWorker.postMessage(JSON.stringify(cmdObj))
-
-    commandWorker.onmessage = async (m) => {
-      log.debug(`fetchSegmentWorker.onmessage called (context-->import).`)
-
-      await getCloudUser().fetchOrgDataAndUpdate()
-      setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
-    }
+    //  We are sending the updateSegments request and data to the
+    //  connection we created for this job_id
+    socket.emit('command', cmdObj)
   }
 }
 
@@ -266,4 +233,101 @@ async function handleEmails(data, url) {
     log.error('handleData email messaging failed:\n', error)
     return error
   }
+}
+
+async function handleSegmentUpdate(result) {
+  const { currentSegments, saveToDb } = result
+  const { sessionData, orgData, org_id } = await getGlobal()
+  const segs = currentSegments
+  sessionData.currentSegments = segs
+  setGlobal({ sessionData, initialLoading: false, processing: false, loading: false })
+  setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+
+  if(saveToDb === true) {
+    try {
+
+      const anObject = orgData.Item
+
+      let apps = anObject.apps
+      let thisApp = apps[sessionData.id]
+      let segments = currentSegments
+      thisApp.currentSegments = segments
+      apps[sessionData.id] = thisApp
+
+      anObject.apps = apps;
+
+      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+
+      await organizationDataTablePut(anObject)
+
+    } catch (suppressedError) {
+      log.error(`ERROR: problem writing to DB.\n${suppressedError}`)
+      return undefined
+    }
+  }
+}
+
+async function handleCreateSegmentFunc(results) {
+  const { sessionData, apps, org_id } = getGlobal()
+  const { currentSegments } = sessionData
+  const ERROR_MSG = "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
+  const segments = currentSegments ? currentSegments : []
+  const dataFromApi = results && results.data ? results.data : undefined
+
+  if (dataFromApi.update) {
+    //Filter by this segment
+    let thisSegment = segments.filter(a => a.id === dataFromApi.id)[0]
+    if(thisSegment) {
+      thisSegment = dataFromApi
+    }
+    const index = await segments.map((x) => {return x.id }).indexOf(dataFromApi.id)
+    if(index > -1) {
+      segments[index] = thisSegment
+    } else {
+      log.warn("Error with index, not updating")
+    }
+  } else {
+    if(dataFromApi) {
+      segments.push(dataFromApi)
+    } else {
+      throw new Error('no data returned from API')
+    }
+
+  }
+
+  sessionData.currentSegments = segments
+
+  const thisApp = apps[sessionData.id]
+  thisApp.currentSegments = segments
+  apps[sessionData.id] = thisApp
+
+  setGlobal({ sessionData, apps })
+  // Put the new segment in the analytics data for the user signed in to this
+  // id:
+  //      Each App (SimpleID Customer) will have an app_id
+  //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
+  //      A segment will be stored in the DB under the primary key 'app_id' in
+  //      the appropriate user_id's segment storage:
+
+
+  // TODO: probably want to wait on this to finish and throw a status/activity
+  //       bar in the app:
+  const orgData = await getFromOrganizationDataTable(org_id)
+
+  try {
+    const anObject = orgData.Item
+    anObject.apps = apps
+    anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+    await putInOrganizationDataTable(anObject)
+    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+    setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
+  } catch (suppressedError) {
+    setGlobal({ error: ERROR_MSG })
+    log.warn(`Suppressed error during DB write\n${suppressedError}`)
+  }
+}
+
+async function handleImport(results) {
+  await getCloudUser().fetchOrgDataAndUpdate()
+  setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
 }

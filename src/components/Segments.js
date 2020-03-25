@@ -15,6 +15,7 @@ import LoadingModal from './LoadingModal'
 import { getCloudUser } from './../utils/cloudUser.js'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { Link } from 'react-router-dom';
 const listToArray = require('list-to-array')
 
 export default class Segments extends React.Component {
@@ -467,19 +468,19 @@ export default class Segments extends React.Component {
         contractAddress: importAddress,
         options: {
           transactions_per_page: 100,
-          max_transactions: 1000
+          max_transactions: 10000
         }
-        // options: {
-        //   transactions_per_page: 100,
-        //   max_transactions: 99
-        // }
       }
     }
 
     console.log('Calling import addresses from wallets:\n', JSON.stringify(importWalletsCmdObj, 0, 2))
-    toast.success("Importing users. You'll get a notification when it's complete.", {
+    toast.success(<div>Importing users. You'll get a notification when it's complete. Check: &nbsp;
+      <Link style={{color: 'white'}} onClick={() => this.setState({ pathname: '/jobs' })} to="/jobs">
+        <u>job queue</u>.
+      </Link>
+      </div>, {
       position: toast.POSITION.TOP_RIGHT,
-      autoClose: 3000
+      autoClose: 10000
     })
     getCloudUser().processData('import', importWalletsCmdObj)
     this.setState({ importModalOpen: false, importAddress: "" })
