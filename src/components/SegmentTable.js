@@ -33,7 +33,7 @@ export default class SegmentTable extends React.Component {
                 let link = `https://etherscan.io/address/` + user
                 return (
                   <tr key={this.getUniqueKey()}>
-                    <td title={user}><a href={link} target="_blank">{user}</a></td>
+                    <td title={user}><a href={link} target="_blank" rel="noopener noreferrer">{user}</a></td>
                     {/*<td>Coming Soon...</td>*/}
                     <td>Coming Soon...</td>
                   </tr>
