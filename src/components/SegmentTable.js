@@ -20,7 +20,7 @@ export default class SegmentTable extends React.Component {
           <thead>
             <tr>
               <th>Wallet Address</th>
-              <th>Provider</th>
+              {/*<th>Provider</th>*/}
               <th>Last Sign In</th>
             </tr>
           </thead>
@@ -28,11 +28,13 @@ export default class SegmentTable extends React.Component {
           <tbody>
             {
               //TODO: the users returned here are just addresses right now. Need more info to be included
-              users.map(user => {
+              users.map(user =>
+              {
+                let link = `https://etherscan.io/address/` + user
                 return (
                   <tr key={this.getUniqueKey()}>
-                    <td title={user}>{user}</td>
-                    <td>Coming Soon...</td>
+                    <td title={user}><a href={link} target="_blank">{user}</a></td>
+                    {/*<td>Coming Soon...</td>*/}
                     <td>Coming Soon...</td>
                   </tr>
                 )
