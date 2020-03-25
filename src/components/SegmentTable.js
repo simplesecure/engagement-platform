@@ -14,12 +14,19 @@ export default class SegmentTable extends React.Component {
   render() {
     const { seg } = this.props;
     let users = seg.users ? seg.users : []
+    let count = users.length
+    debugger
+    let heading = 'Wallet Addresses'
+    if (count > 100) {
+      users = users.slice(0, 99)
+      heading = `Wallet Address (100 of ` + count + `)`
+    }
     return (
       <div>
         <Table responsive>
           <thead>
             <tr>
-              <th>Wallet Address</th>
+              <th>{heading}</th>
               {/*<th>Provider</th>*/}
               <th>Last Sign In</th>
             </tr>
