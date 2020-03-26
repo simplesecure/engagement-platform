@@ -88,6 +88,21 @@ socket.on('queued job id', async (result) => {
 
 socket.on('update job id', async (result) => {
   log.info(`Update to job id = ${JSON.stringify(result, 0, 2)}`)
+
+  //  Update job queue in local storage and in state
+  //  TODO - We need to decide how many jobs to keep stored (initially set at 10)
+  const jobs = fetchJobQueue()
+  if(jobs) {
+    //  First find the job that just finished
+    const thisJob = jobs.filter(job => job.job_id === result.jobId)[0]
+
+    if(thisJob) {
+      thisJob.status = result.status
+
+      setJobQueue(jobs)
+    }
+  }
+
   // TODO: Justin / PB / AC
   // 0. Examine the data here and update the UI / UX & possibly stored data
   //    with the update (i.e. % done, error etc.)
