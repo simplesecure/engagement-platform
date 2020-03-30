@@ -14,6 +14,7 @@ import copy from "copy-to-clipboard";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getCloudUser } from "./../utils/cloudUser.js";
+const moment = require('moment');
 const ERROR_MSG =
   "Failed to create project, please try again. If this continues, please contact support@simpleid.xyz";
 
@@ -208,7 +209,7 @@ export default class Projects extends React.Component {
                                   {app.project_name}
                                 </button>
                               </td>
-                              <td>{app.date_created}</td>
+                              <td>{moment(app.date_created).format("MM/DD/YYYY")}</td>
                               <td
                                 className="clickable text-danger"
                                 onClick={() => this.deleteProject(app, false)}
