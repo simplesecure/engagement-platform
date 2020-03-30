@@ -100,10 +100,9 @@ export default class Projects extends React.Component {
         updatedApps = {};
         setGlobal({ apps: updatedApps });
       } else {
-        setGlobal({ apps });
+        updatedApps = apps;
+        setGlobal({ apps: updatedApps });
       }
-
-      //TODO: Need to move this functionality to the iframe to avoid conflicts in how writes are handled
 
       this.setState({ show: false });
       //Now we update in the DB
@@ -119,6 +118,7 @@ export default class Projects extends React.Component {
           ? updatedApps[appKeys[0]]
           : "";
         const data = appKeys.length > 0 ? updatedApps[appKeys[0]] : {};
+
         setGlobal({ currentAppId, sessionData: data, processing: false });
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
       } catch (suppressedError) {
