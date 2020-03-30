@@ -39,7 +39,7 @@ export default class StickyNav extends React.Component {
           </form>
           <ul className="navbar-nav border-left flex-row ">
             {
-              showSegmentNotification && segmentProcessingDone ? 
+              showSegmentNotification && segmentProcessingDone ?
               <li className="nav-item border-right dropdown notifications">
                 <button onClick={this.notificationSeen} className="a-el-fix nav-link nav-link-icon text-center" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                   <div className="nav-link-icon__wrapper">
@@ -56,11 +56,11 @@ export default class StickyNav extends React.Component {
                     </div>
                     <div className="notification__content">
                       <span className="notification__category">Segmentation Updates</span>
-                      <p>Your segment update is done processing. See it <Link onClick={() => setGlobal({ showSegmentNotification: false, segmentProcessingDone: false })} to={'/segments'}>here.</Link></p>                        
+                      <p>Your segment update is done processing. See it <Link onClick={() => setGlobal({ showSegmentNotification: false, segmentProcessingDone: false })} to={'/segments'}>here.</Link></p>
                     </div>
-                  </button>                  
+                  </button>
                 </div>
-              </li> : 
+              </li> :
               <li style={{dispay: "none"}} />
             }
             {
@@ -108,8 +108,8 @@ export default class StickyNav extends React.Component {
               <div className="dropdown-menu dropdown-menu-right dropdown-menu-small">
                 <Link to="/account"><button className="a-el-fix dropdown-item">
                   <i className="material-icons">&#xE7FD;</i> Account</button></Link>
-                <Link to="/jobs"><button className="a-el-fix dropdown-item">
-                  <i className="material-icons">hourglass_empty</i> Job Queue</button></Link>
+                {/*<Link to="/jobs"><button className="a-el-fix dropdown-item">
+                  <i className="material-icons">hourglass_empty</i> Job Queue</button></Link>*/}
 
                   <a href="mailto:support@simpleid.xyz"><button className="a-el-fix dropdown-item"><i className="material-icons">help</i>Help</button></a>
                 <div className="dropdown-divider"></div>

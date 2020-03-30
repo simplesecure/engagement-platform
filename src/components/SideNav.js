@@ -23,7 +23,7 @@ export default class SideNav extends React.Component {
             <Link className="navbar-brand w-100 mr-0" to="#" style={{lineHeight: "25px"}}>
               <div className="d-table m-auto">
                 <img id="main-logo" className="d-inline-block align-top mr-1" style={{maxWidth: "25px"}} src={require('../assets/img/logo.png')} alt="SimpleID Dashboard" /> <br/>
-                <span className="beta-text">BETA</span>                
+                <span className="beta-text">BETA</span>
               </div>
             </Link>
             <button className="a-el-fix toggle-sidebar d-sm-inline d-md-none d-lg-none">
@@ -43,7 +43,7 @@ export default class SideNav extends React.Component {
         <div className="nav-wrapper">
           <ul className="nav flex-column">
             <li className="nav-item">
-              <Link onClick={() => this.setState({ pathname: '/' })} className={`nav-link ${pathname ==='/' && currentAppId !== undefined ? "active" : ""}`} to="/">                
+              <Link onClick={() => this.setState({ pathname: '/' })} className={`nav-link ${pathname ==='/' && currentAppId !== undefined ? "active" : ""}`} to="/">
                 <i className="material-icons">equalizer</i>
                 <span>Dashboard</span>
               </Link>
@@ -54,6 +54,12 @@ export default class SideNav extends React.Component {
                 <span>Customize</span>
               </Link>
             </li>*/}
+            <li className="nav-item">
+              <Link onClick={() => this.setState({ pathname: '/jobs' })} className={`nav-link ${pathname.includes('/jobs') && currentAppId !== undefined ? "active" : ""}`} to="/jobs">
+                <i className="material-icons">build</i>
+                <span>Job Queue</span>
+              </Link>
+            </li>
             <li className="nav-item">
               <Link onClick={() => this.setState({ pathname: '/segments' })} className={`nav-link ${pathname.includes('/segments') && currentAppId !== undefined ? "active" : ""}`} to="/segments">
                 <i className="material-icons">view_module</i>
