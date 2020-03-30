@@ -9,6 +9,12 @@ export default class StickyNav extends React.Component {
     }, 3000)
   }
 
+  setProject = (app) => {
+    const { apps } = this.global;
+    setGlobal({ sessionData: apps[app.id], currentAppId: app.id });
+    getCloudUser().fetchUsersCount();
+  }
+
   render() {
     const { apps, sessionData, showSegmentNotification, segmentProcessingDone } = this.global;
 
@@ -68,10 +74,10 @@ export default class StickyNav extends React.Component {
                     Object.keys(apps).length > 1 ?
                     <div>
                       {
-                        apps.map(app => {
+                        projects.map(app => {
                         return (
-                          <button className="a-el-fix dropdown-item">
-                            <i className="material-icons">web</i> {app.projectName}
+                          <button key={app.id} onClick={() => this.setProject(app)} className="a-el-fix dropdown-item">
+                            <i className="material-icons">web</i> {app.project_name}
                           </button>
                         )
                         })
