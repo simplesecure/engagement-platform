@@ -16,9 +16,11 @@ export default class StickyNav extends React.Component {
 
   handleNotificationClick = notification => {
     const { notifications, apps } = this.global;
-
-    const index = notifications.map(n => n.id).indexOf(notification.id);
-    const updatedNotifications = notifications.splice(index, 1);
+   
+    const updatedNotifications = notifications.filter(n => n.id !== notification.id);
+    if(updatedNotifications.length < 1) {
+      setGlobal({ showSegmentNotification: false, segmentProcessingDone: false });
+    }
 
     setGlobal({ notifications: updatedNotifications });
     setGlobal({
@@ -64,7 +66,7 @@ export default class StickyNav extends React.Component {
               <li className="nav-item border-right dropdown walkthrough">
                 <button onClick={this.startOnboarding} className="a-el-fix nav-link nav-link-icon text-center">
                   <div className="nav-link-icon__wrapper">
-                    <i className="material-icons" color="yellow">new_releases</i>
+                    <i className="material-icons text-warning">new_releases</i>
                   </div>
                 </button>
               </li>
