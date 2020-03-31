@@ -45,7 +45,8 @@ setGlobal({
   orgData: {}, 
   jobs: [], 
   notifications: [],
-  notificationId: ''
+  notificationId: '', 
+  onboardingComplete: true
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

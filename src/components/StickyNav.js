@@ -3,14 +3,10 @@ import { Link } from "react-router-dom";
 import { getCloudUser } from "./../utils/cloudUser.js";
 
 export default class StickyNav extends React.Component {
-  notificationSeen = () => {
-    setTimeout(() => {
-      setGlobal({
-        showSegmentNotification: false,
-        segmentProcessingDone: false
-      });
-    }, 3000);
-  };
+
+  startOnboarding = () => {
+    setGlobal({ onboardingComplete: false })
+  }
 
   setProject = app => {
     const { apps } = this.global;
@@ -38,7 +34,7 @@ export default class StickyNav extends React.Component {
       sessionData,
       showSegmentNotification,
       segmentProcessingDone,
-      notifications
+      notifications, 
     } = this.global;
     const notificationsProcessed = notifications.filter(
       notification => notification.processingDone === true
@@ -65,10 +61,17 @@ export default class StickyNav extends React.Component {
             </div>
           </form>
           <ul className="navbar-nav border-left flex-row ">
-            {showSegmentNotification && segmentProcessingDone && notificationsProcessed.length > 0 ? (
-              <li className="nav-item border-right dropdown notifications">
-                <button
-                  onClick={this.notificationSeen}
+              <li className="nav-item border-right dropdown walkthrough">
+                <button onClick={this.startOnboarding} className="a-el-fix nav-link nav-link-icon text-center">
+                  <div className="nav-link-icon__wrapper">
+                    <i className="material-icons" color="yellow">new_releases</i>
+                  </div>
+                </button>
+              </li>
+            {
+              showSegmentNotification && segmentProcessingDone && notificationsProcessed.length > 0 ?
+              (<li className="nav-item border-right dropdown notifications">
+                <button                  
                   className="a-el-fix nav-link nav-link-icon text-center"
                   id="dropdownMenuLink"
                   data-toggle="dropdown"
@@ -86,7 +89,8 @@ export default class StickyNav extends React.Component {
                   className="dropdown-menu dropdown-menu-small"
                   aria-labelledby="dropdownMenuLink"
                 >
-                  {notificationsProcessed.map(notification => {
+                  {
+                    notificationsProcessed.map(notification => {
                     return (
                       <button
                         key={notification.id}
@@ -116,12 +120,14 @@ export default class StickyNav extends React.Component {
                         </div>
                       </button>
                     );
-                  })}
+                  })
+                  }
                 </div>
               </li>
             ) : (
               <li style={{ dispay: "none" }} />
-            )}
+            )
+            }       
             {projects.length > 0 ? (
               <li className="nav-item dropdown border-right">
                 <button
@@ -195,16 +201,8 @@ export default class StickyNav extends React.Component {
                 </span>
               </button>
               <div className="dropdown-menu dropdown-menu-right dropdown-menu-small">
-                <Link to="/account">
-                  <button className="a-el-fix dropdown-item">
-                    <i className="material-icons">&#xE7FD;</i> Account
-                  </button>
-                </Link>
-                <Link to="/jobs">
-                  <button className="a-el-fix dropdown-item">
-                    <i className="material-icons">hourglass_empty</i> Job Queue
-                  </button>
-                </Link>
+                <Link to="/account"><button className="a-el-fix dropdown-item">
+                  <i className="material-icons">&#xE7FD;</i> Account</button></Link>
 
                 <a href="mailto:support@simpleid.xyz">
                   <button className="a-el-fix dropdown-item">
