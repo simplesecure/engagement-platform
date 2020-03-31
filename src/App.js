@@ -5,6 +5,7 @@ import './assets/css/theme.css';
 import './assets/css/shards.min.css';
 import './assets/css/style.css';
 import Home from './containers/Home';
+import OnboardingSteps from './components/OnboardingSteps'
 import CookieConsent from "react-cookie-consent";
 import { getCloudUser } from './utils/cloudUser.js'
 const PROFILE_STORAGE = 'engagement-app-profile'
@@ -22,7 +23,7 @@ export default class App extends React.Component {
     if(sessionFromLocal) {
       setGlobal({ sessionData: JSON.parse(sessionFromLocal), loading: false });
     }
-    
+
     if(signedIn) {
       //First try to fetch the profile from local storage
       const profile = localStorage.getItem(PROFILE_STORAGE) ? JSON.parse(localStorage.getItem(PROFILE_STORAGE)) : {}
@@ -42,6 +43,7 @@ export default class App extends React.Component {
   render() {
     return (
       <div>
+        <OnboardingSteps />
         <CookieConsent
           location="bottom"
           buttonText="I accept"

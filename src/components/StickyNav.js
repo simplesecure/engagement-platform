@@ -8,6 +8,9 @@ export default class StickyNav extends React.Component {
       setGlobal({ showSegmentNotification: false, segmentProcessingDone: false })
     }, 3000)
   }
+  startOnboarding = () => {
+    setGlobal({ startJoyride: true })
+  }
 
   setProject = (app) => {
     const { apps } = this.global;
@@ -38,6 +41,15 @@ export default class StickyNav extends React.Component {
             </div>
           </form>
           <ul className="navbar-nav border-left flex-row ">
+            {
+              <li className="nav-item border-right dropdown walkthrough">
+                <button onClick={this.startOnboarding} className="a-el-fix nav-link nav-link-icon text-center">
+                  <div className="nav-link-icon__wrapper">
+                    <i className="material-icons" color="yellow">new_releases</i>
+                  </div>
+                </button>
+              </li>
+            }
             {
               showSegmentNotification && segmentProcessingDone ?
               <li className="nav-item border-right dropdown notifications">
