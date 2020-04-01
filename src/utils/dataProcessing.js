@@ -57,6 +57,7 @@ socket.on('job done', async result => {
 })
 
 socket.on('queued job id', async (result) => {
+  const { notifications, notificationId } = getGlobal();
   log.info(`Queued Job: id = ${JSON.stringify(result, 0, 2)}`)
   // TODO: Justin / PB / AC:
   //  1. Store the queued job ids passed into here.
@@ -83,11 +84,34 @@ socket.on('queued job id', async (result) => {
     status: "Pending"
   })
 
+  const newNotification = {
+    id: result.data.job_id, 
+    appId: notificationId
+  }
+
+  notifications.unshift(newNotification);
+  setGlobal({ notifications });
+
   setJobQueue(jobs)
 })
 
 socket.on('update job id', async (result) => {
   log.info(`Update to job id = ${JSON.stringify(result, 0, 2)}`)
+
+  //  Update job queue in local storage and in state
+  //  TODO - We need to decide how many jobs to keep stored (initially set at 10)
+  const jobs = fetchJobQueue()
+  if(jobs) {
+    //  First find the job that just finished
+    const thisJob = jobs.filter(job => job.job_id === result.jobId)[0]
+
+    if(thisJob) {
+      thisJob.status = result.status
+
+      setJobQueue(jobs)
+    }
+  }
+
   // TODO: Justin / PB / AC
   // 0. Examine the data here and update the UI / UX & possibly stored data
   //    with the update (i.e. % done, error etc.)
@@ -114,7 +138,7 @@ function setJobQueue(jobs) {
 export async function handleData(dataToProcess) {
   log.debug("DATA IN HANDLE DATA FUNCTION: ", dataToProcess)
   const { data, type } = dataToProcess;
-  setGlobal({ orgData: data.appData })
+  setGlobal({ orgData: data.appData, notificationId: data.app_id })
 
   if(type === 'fetch-user-count') {
     log.debug(data.app_id);
@@ -128,13 +152,12 @@ export async function handleData(dataToProcess) {
       return []
     }
   } else if(type === 'updateSegments') {
-
     //Take the whole org data payload and execute on it
     log.debug("ORG DATA PAYLOAD")
     log.debug(data);
     const thisApp = data.appData && data.appData.Item ? data.appData.Item.apps[data.app_id] : undefined
     const currentSegments = thisApp.currentSegments
-
+    setGlobal({ notificationId: data.app_id });
     const cmdObj = {
       command: 'updateSegments',
       data: {
@@ -194,6 +217,7 @@ export async function handleData(dataToProcess) {
     log.debug(createProject)
     return createProject
   } else if (type === 'import') {
+    setGlobal({ notificationId: data.app_id });
     const cmdObj = data
     if (QUEUE_IMPORT_WALLETS) {
       cmdObj.data.queue = true
@@ -268,8 +292,24 @@ async function handleSegmentUpdate(result) {
 }
 
 async function handleCreateSegmentFunc(results) {
-  const { sessionData, apps, org_id } = getGlobal()
-  const { currentSegments } = sessionData
+  const { apps, org_id, notifications } = getGlobal()
+  let { sessionData } = getGlobal();
+
+  //  First we need to check if the correct project is currently selected in state
+  //  To do that, we need to get the project/app_id from the list of notifications
+
+  const matchingNotification = notifications.filter(n => n.id === results.jobId)[0];
+  const app_id = matchingNotification.appId;
+  let updatedSession;
+
+  if(sessionData.id !== app_id) {
+    //  This means we need to switch to the right project to update segments
+    updatedSession = apps[app_id];
+  } else {
+    updatedSession = sessionData;
+  }
+
+  const { currentSegments } = updatedSession
   const ERROR_MSG = "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
   const segments = currentSegments ? currentSegments : []
   const dataFromApi = results && results.data ? results.data : undefined
@@ -295,11 +335,17 @@ async function handleCreateSegmentFunc(results) {
 
   }
 
-  sessionData.currentSegments = segments
+  apps[app_id].currentSegments = segments;
 
-  const thisApp = apps[sessionData.id]
-  thisApp.currentSegments = segments
-  apps[sessionData.id] = thisApp
+  if(sessionData.id === app_id) {
+    const thisApp = apps[sessionData.id]
+    thisApp.currentSegments = segments
+    sessionData = thisApp;
+  } 
+
+  
+
+  
 
   setGlobal({ sessionData, apps })
   // Put the new segment in the analytics data for the user signed in to this
@@ -320,7 +366,14 @@ async function handleCreateSegmentFunc(results) {
     anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
     await putInOrganizationDataTable(anObject)
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
-    setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
+
+    //  Now we find the notifications and ensure we show it properly in the notifications dropdown
+    const index = notifications.map(notification => notification.id).indexOf(results.jobId)
+    const thisNotification = notifications.filter((notification) => notification.id === results.jobId)[0];
+    thisNotification['processingDone'] = true;
+    notifications[index] = thisNotification;
+
+    setGlobal({ notifications, showSegmentNotification: true, segmentProcessingDone: true })
   } catch (suppressedError) {
     setGlobal({ error: ERROR_MSG })
     log.warn(`Suppressed error during DB write\n${suppressedError}`)
@@ -328,6 +381,7 @@ async function handleCreateSegmentFunc(results) {
 }
 
 async function handleImport(results) {
+  console.log("IMPORT RESULTS")
   await getCloudUser().fetchOrgDataAndUpdate()
   setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
 }

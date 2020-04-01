@@ -51,7 +51,12 @@ setGlobal({
   idWallet: {}, 
   openChatThreads: [], 
   closedChatThreads: [], 
-  ourMessage: false
+  ourMessage: false,
+  orgData: {}, 
+  jobs: [], 
+  notifications: [],
+  notificationId: '', 
+  onboardingComplete: true
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

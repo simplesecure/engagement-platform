@@ -14,13 +14,19 @@ export default class SegmentTable extends React.Component {
   render() {
     const { seg } = this.props;
     let users = seg.users ? seg.users : []
+    let count = users.length
+    let heading = 'Wallet Addresses'
+    if (count > 100) {
+      users = users.slice(0, 99)
+      heading = `Wallet Address (100 of ` + count + `)`
+    }
     return (
       <div>
         <Table responsive>
           <thead>
             <tr>
-              <th>Wallet Address</th>
-              <th>Provider</th>
+              <th>{heading}</th>
+              {/*<th>Provider</th>*/}
               <th>Last Sign In</th>
             </tr>
           </thead>
@@ -28,11 +34,13 @@ export default class SegmentTable extends React.Component {
           <tbody>
             {
               //TODO: the users returned here are just addresses right now. Need more info to be included
-              users.map(user => {
+              users.map(user =>
+              {
+                let link = `https://etherscan.io/address/` + user
                 return (
                   <tr key={this.getUniqueKey()}>
-                    <td title={user}>{user}</td>
-                    <td>Coming Soon...</td>
+                    <td title={user}><a href={link} target="_blank" rel="noopener noreferrer">{user}</a></td>
+                    {/*<td>Coming Soon...</td>*/}
                     <td>Coming Soon...</td>
                   </tr>
                 )
