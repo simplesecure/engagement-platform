@@ -43,7 +43,10 @@ setGlobal({
   segmentProcessingDone: false, 
   segmentName: "", 
   orgData: {}, 
-  jobs: []
+  jobs: [], 
+  notifications: [],
+  notificationId: '', 
+  onboardingComplete: true
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

@@ -119,6 +119,7 @@ export default class Segments extends React.Component {
     }
     const segmentCriteria = {
       appId: sessionData.id,
+      app_id: sessionData.id,
       showOnDashboard: showOnDashboard,
       id: segId,
       name: newSegName,

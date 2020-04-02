@@ -15,7 +15,6 @@ export default class SegmentTable extends React.Component {
     const { seg } = this.props;
     let users = seg.users ? seg.users : []
     let count = users.length
-    debugger
     let heading = 'Wallet Addresses'
     if (count > 100) {
       users = users.slice(0, 99)

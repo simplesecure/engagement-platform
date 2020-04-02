@@ -62,7 +62,7 @@ export default class Home extends React.Component {
           <Route path='/support' component={Support} />
           <Route path='/projects' component={Projects} />
           <Route path='/jobs' component={Jobs} />
-          
+
           <Modal show={initialLoading} >
             <Modal.Body>
                 <LoadingModal messageToDisplay={"Updating your user segment data..."} />
@@ -82,8 +82,8 @@ export default class Home extends React.Component {
             <SideNav />
             <Projects />
           </div>
-          </div>
-        </BrowserRouter>
+        </div>
+      </BrowserRouter>
     )
   }
 

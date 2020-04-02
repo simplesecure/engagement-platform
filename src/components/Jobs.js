@@ -12,7 +12,7 @@ export default class Jobs extends React.Component {
           <StickyNav />
           <div className="main-content-container container-fluid px-4">
             <div className="page-header row no-gutters py-4">
-              <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
+              <div className="col-12 col-sm-12 text-center text-sm-left mb-0">
                 <h3 className="page-title">Job Queue</h3>
                 <p>Jobs are long-running processes like importing wallets, updating segments, and creating segments</p>
               </div>

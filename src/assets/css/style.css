@@ -246,3 +246,7 @@ section {
 .text-underline {
   text-decoration: underline;
 }
+
+.__floater {
+  z-index: 2000!important;
+}
