@@ -56,7 +56,9 @@ setGlobal({
   jobs: [], 
   notifications: [],
   notificationId: '', 
-  onboardingComplete: true
+  onboardingComplete: true, 
+  emailEditor: false, 
+  templateToUpdate: {}
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

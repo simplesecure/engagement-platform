@@ -11,7 +11,7 @@ import {
 import { setLocalStorage } from "../utils/misc";
 import LoadingModal from "./LoadingModal";
 import copy from "copy-to-clipboard";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getCloudUser } from "./../utils/cloudUser.js";
 const moment = require('moment');
@@ -233,8 +233,6 @@ export default class Projects extends React.Component {
                   )}
                 </Card.Body>
               </Card>
-
-              <ToastContainer />
             </div>
 
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
