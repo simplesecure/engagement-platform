@@ -16,7 +16,7 @@ async function getFromDb(aTable, aKeyName, aKeyValue) {
   }
   params.Key[aKeyName] = aKeyValue
 
-  return new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     docClient.get(params, (err, data) => {
       if (err) {
         reject(err)
@@ -33,7 +33,7 @@ async function putInDb(aTable, anObject) {
     Item: anObject
   }
 
-  return new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     docClient.put(params, (err, data) => {
       if (err) {
         reject(err)
@@ -46,17 +46,17 @@ async function putInDb(aTable, anObject) {
 
 
 export async function getFromAnalyticsDataTable(aKeyValue) {
-  return getFromDb(process.env.REACT_APP_AD_TABLE, process.env.REACT_APP_AD_TABLE_PK, aKeyValue)
+  return await getFromDb(process.env.REACT_APP_AD_TABLE, process.env.REACT_APP_AD_TABLE_PK, aKeyValue)
 }
 
 export async function putInAnalyticsDataTable(anObject) {
-  return putInDb(process.env.REACT_APP_AD_TABLE, anObject)
+  return await putInDb(process.env.REACT_APP_AD_TABLE, anObject)
 }
 
 export async function getFromOrganizationDataTable(aKeyValue) {
-  return getFromDb(process.env.REACT_APP_ORG_TABLE, process.env.REACT_APP_ORG_TABLE_PK, aKeyValue)
+  return await getFromDb(process.env.REACT_APP_ORG_TABLE, process.env.REACT_APP_ORG_TABLE_PK, aKeyValue)
 }
 
 export async function putInOrganizationDataTable(anObject) {
-  return putInDb(process.env.REACT_APP_ORG_TABLE, anObject)
+  return await putInDb(process.env.REACT_APP_ORG_TABLE, anObject)
 }
