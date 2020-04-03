@@ -4,10 +4,7 @@ import StickyNav from "./StickyNav";
 import Modal from "react-bootstrap/Modal";
 import Table from "react-bootstrap/Table";
 import Card from "react-bootstrap/Card";
-import {
-  putInOrganizationDataTable,
-  getFromOrganizationDataTable
-} from "../utils/awsUtils";
+import * as dc from './../utils/dynamoConveniences.js'
 import { setLocalStorage } from "../utils/misc";
 import LoadingModal from "./LoadingModal";
 import copy from "copy-to-clipboard";
@@ -106,13 +103,13 @@ export default class Projects extends React.Component {
 
       this.setState({ show: false });
       //Now we update in the DB
-      const orgData = await getFromOrganizationDataTable(org_id);
+      const orgData = await dc.organizationDataTableGet(org_id);
 
       try {
         const anObject = orgData.Item;
         anObject.apps = updatedApps;
         anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-        await putInOrganizationDataTable(anObject);
+        await dc.organizationDataTablePut(anObject);
         const appKeys = Object.keys(updatedApps);
         const currentAppId = updatedApps[appKeys[0]]
           ? updatedApps[appKeys[0]]
@@ -305,12 +302,12 @@ export default class Projects extends React.Component {
                 <div />
                 <h5>App ID</h5>
                 <p id='app-id'>{proj.id}<i onClick={this.copy} data-clipboard-target="#app-id" className="copy-button clickable material-icons">content_copy</i></p>
-                
+
               </Modal.Body>
               <Modal.Footer>
                 <button className="btn btn-secondary" onClick={() => this.setState({ projectModalOpen: false })}>
                   Close
-                </button>                
+                </button>
               </Modal.Footer>
             </Modal>
 

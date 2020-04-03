@@ -13,7 +13,7 @@ AWS.config.update({
 //
 // _docClientAK: AK --> AWS Access Key Credentialing (vs. Cognito Credentials).
 //
-const _docClientAK = new AWS.DynamoDB.DocumentClient()
+const _docClientAK = new AWS.DynamoDB.DocumentClient({convertEmptyValues: true})
 
 const DEBUG_DYNAMO = ( process.env.REACT_APP_DEBUG_DYNAMO ||
                        process.env.REACT_APP_DEBUG_DYNAMO) ? true : false
@@ -47,7 +47,7 @@ export async function tableGet(aTable, aKeyName, aKeyValue) {
     }
   }
 
-  return new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     _docClientAK.get(params, (err, data) => {
       if (err) {
         dbRequestDebugLog('tableGet', params, err)
@@ -127,7 +127,7 @@ export async function tablePut(aTable, anObject) {
     Item: anObject
   }
 
-  return new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     _docClientAK.put(params, (err, data) => {
       if (err) {
         dbRequestDebugLog('tablePut', params, err)
@@ -154,7 +154,7 @@ export async function tableQuerySpecificItem(aTable, aKeyName, aKeyValue, aSpeci
     ProjectionExpression: aSpecificKey
   }
 
-  return new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     _docClientAK.query(params, (err, data) => {
       if (err) {
         dbRequestDebugLog('tableQuerySpecificItem', params, err)
@@ -186,7 +186,7 @@ export async function tableGetBySecondaryIndex(aTable, anIndexName, aKeyName, aK
     }
   }
   if(aKeyName) {
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       _docClientAK.query(params, (err, data) => {
         if (err) {
           dbRequestDebugLog('tableGetBySecondaryIndex', params, err)
@@ -220,7 +220,7 @@ export async function tableUpdateListAppend(aTable, aPrimKeyObj, anArrayKey, anA
     ReturnValues:"NONE"
   }
 
-  return new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     _docClientAK.update(params, (err, data) => {
       if (err) {
         dbRequestDebugLog('tableUpdateListAppend', params, err)
@@ -293,7 +293,7 @@ export async function tableUpdateAppendNestedObjectProperty(
 
   console.log("UPDATE PARAMS: ", params);
 
-  return new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     _docClientAK.update(params, (err, data) => {
       if (err) {
         dbRequestDebugLog('tableUpdateAppendNestedObjectProperty', params, err)

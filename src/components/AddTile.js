@@ -2,7 +2,7 @@ import React, { setGlobal } from 'reactn';
 import StickyNav from './StickyNav';
 import uuid from 'uuid/v4'
 import { setLocalStorage } from '../utils/misc';
-import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils';
+import * as dc from './../utils/dynamoConveniences.js'
 
 export default class AddTile extends React.Component {
   constructor(props) {
@@ -45,12 +45,12 @@ export default class AddTile extends React.Component {
     // TODO: probably want to wait on this to finish and throw a status/activity
     //       bar in the app:
 
-    const orgData = await getFromOrganizationDataTable(org_id);
+    const orgData = await dc.organizationDataTableGet(org_id);
     const anObject = orgData.Item
     try {
       anObject.apps = apps;
       anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      await putInOrganizationDataTable(anObject)
+      await dc.organizationDataTablePut(anObject)
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
@@ -71,13 +71,13 @@ export default class AddTile extends React.Component {
       thisApp.currentTiles = currentTiles;
       setGlobal({ sessionData, apps });
       //Update in DB
-      const orgData = await getFromOrganizationDataTable(org_id);
+      const orgData = await dc.organizationDataTableGet(org_id);
 
       try {
         const anObject = orgData.Item
         anObject.apps = apps;
         anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-        await putInOrganizationDataTable(anObject)
+        await dc.organizationDataTablePut(anObject)
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
       } catch (suppressedError) {
         console.log(`ERROR: problem writing to DB.\n${suppressedError}`)

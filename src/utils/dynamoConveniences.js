@@ -1,13 +1,11 @@
-import { tableGet,
-         tableBatchGet,
-         tablePut } from './dynamoBasics.js'
+import { tableGet, tableBatchGet, tablePut } from './dynamoBasics.js'
 
 export async function walletAnalyticsDataTableGet(anAppId) {
   if (!anAppId) {
     throw new Error(`DB access method walletAnalyticsDataTableGet requires a value for anAppId.  anAppId="${anAppId}".`)
   }
 
-  return tableGet(
+  return await tableGet(
     process.env.REACT_APP_AD_TABLE,
     process.env.REACT_APP_AD_TABLE_PK,
     anAppId
@@ -19,7 +17,7 @@ export async function walletAnalyticsDataTablePut(aWalletAnalyticsRowObj) {
     throw new Error(`DB access method walletAnalyticsDataTablePut requires a value for aWalletAnalyticsRowObj.  aWalletAnalyticsRowObj=${aWalletAnalyticsRowObj}".`)
   }
 
-  return tablePut(
+  return await tablePut(
     process.env.REACT_APP_AD_TABLE,
     aWalletAnalyticsRowObj
   )
@@ -30,7 +28,7 @@ export async function organizationDataTableGet(anOrgId) {
     throw new Error(`DB access method organizationDataTableGet requires a value for anOrgId.  anOrgId="${anOrgId}".`)
   }
 
-  return tableGet(
+  return await tableGet(
     process.env.REACT_APP_ORG_TABLE,
     process.env.REACT_APP_ORG_TABLE_PK,
     anOrgId
@@ -42,7 +40,7 @@ export async function organizationDataTablePut(aOrganizationDataRowObj) {
     throw new Error(`DB access method organizationDataTablePut requires a value for aOrganizationDataRowObj.  aOrganizationDataRowObj=${aOrganizationDataRowObj}".`)
   }
 
-  return tablePut(
+  return await tablePut(
     process.env.REACT_APP_ORG_TABLE,
     aOrganizationDataRowObj
   )

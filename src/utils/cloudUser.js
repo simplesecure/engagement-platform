@@ -2,7 +2,7 @@ import { setGlobal, getGlobal } from 'reactn'
 import { handleData } from './dataProcessing.js'
 import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
-import { getFromOrganizationDataTable, getFromAnalyticsDataTable } from './awsUtils';
+import * as dc from './dynamoConveniences.js'
 import { setLocalStorage } from './misc';
 
 const SIMPLEID_USER_SESSION = 'SID_SVCS';
@@ -33,7 +33,7 @@ class CloudUser {
     let appData;
     if(org_id) {
 
-      appData = await getFromOrganizationDataTable(org_id);
+      appData = await dc.organizationDataTableGet(org_id);
 
     } else {
       console.log("ERROR: No Org ID")
@@ -49,7 +49,7 @@ class CloudUser {
       await setGlobal({ signedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data, loading: false });
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
       //Check if app has been verified
-      const verificationData = await getFromAnalyticsDataTable(currentAppId)
+      const verificationData = await dc.walletAnalyticsDataTableGet(currentAppId)
       try {
         const verified = Object.keys(verificationData.Item.analytics).length > 0
         setGlobal({ verified })
@@ -124,7 +124,7 @@ class CloudUser {
       log.debug("org id error: ", e)
     }
 
-    const appData = await getFromOrganizationDataTable(org_id)
+    const appData = await dc.organizationDataTableGet(org_id)
     const thisApp = appData.Item.apps[currentAppId]
     if(thisApp.currentSegments) {
       this.fetchSegmentData(appData)

@@ -6,7 +6,7 @@ import Card from 'react-bootstrap/Card'
 import InputGroup from 'react-bootstrap/InputGroup'
 import FormControl from 'react-bootstrap/FormControl'
 import SegmentTable from './SegmentTable'
-import { putInOrganizationDataTable, getFromOrganizationDataTable } from '../utils/awsUtils.js'
+import * as dc from './../utils/dynamoConveniences.js'
 import filters from '../utils/filterOptions.json'
 import DatePicker from 'react-date-picker'
 import uuid from 'uuid/v4'
@@ -62,13 +62,13 @@ export default class Segments extends React.Component {
         const thisApp = apps[sessionData.id]
         thisApp.currentSegments = currentSegments
         setGlobal({ sessionData, apps })
-        const orgData = await getFromOrganizationDataTable(org_id)
+        const orgData = await dc.organizationDataTableGet(org_id)
 
         try {
           const anObject = orgData.Item
           anObject.apps = apps
           anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-          await putInOrganizationDataTable(anObject)
+          await dc.organizationDataTablePut(anObject)
         } catch (suppressedError) {
           console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
         }
@@ -187,13 +187,13 @@ export default class Segments extends React.Component {
 
       // TODO: probably want to wait on this to finish and throw a status/activity
       //       bar in the app:
-      const orgData = await getFromOrganizationDataTable(org_id)
+      const orgData = await dc.organizationDataTableGet(org_id)
 
       try {
         const anObject = orgData.Item
         anObject.apps = apps
         anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-        await putInOrganizationDataTable(anObject)
+        await dc.organizationDataTablePut(anObject)
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
       } catch (suppressedError) {
@@ -298,13 +298,13 @@ export default class Segments extends React.Component {
 
       // TODO: probably want to wait on this to finish and throw a status/activity
       //       bar in the app:
-      const orgData = await getFromOrganizationDataTable(org_id)
+      const orgData = await dc.organizationDataTableGet(org_id)
 
       try {
         const anObject = orgData.Item
         anObject.apps = apps
         anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-        await putInOrganizationDataTable(anObject)
+        await dc.organizationDataTablePut(anObject)
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
       } catch (suppressedError) {
