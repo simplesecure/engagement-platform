@@ -8,7 +8,7 @@ import * as dc from './../utils/dynamoConveniences.js'
 import { setLocalStorage } from "../utils/misc";
 import LoadingModal from "./LoadingModal";
 import copy from "copy-to-clipboard";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getCloudUser } from "./../utils/cloudUser.js";
 const moment = require('moment');
@@ -128,8 +128,8 @@ export default class Projects extends React.Component {
     this.setState({ show: false });
   };
 
-  copy = () => {
-    const elem = document.getElementById("app-id");
+  copy = (elemId) => {
+    const elem = document.getElementById(elemId);
     const text = elem.innerText;
     const copied = copy(text);
     if (copied) {
@@ -145,7 +145,7 @@ export default class Projects extends React.Component {
   }
 
   renderMain() {
-    const { apps, processing } = this.global;
+    const { apps, processing, liveChat, liveChatId } = this.global;
     const { projectName, proj, show, projectModalOpen } = this.state;
     const appKeys = Object.keys(apps);
     let applications = [];
@@ -160,7 +160,8 @@ export default class Projects extends React.Component {
         <StickyNav />
         <Link style={{ display: "none" }} id="hidden-redirect" to="/projects" />
         <div className="main-content-container container-fluid px-4">
-          {applications ? (
+          {
+          applications ? (
             <div className="page-header row no-gutters py-4">
               <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
                 <span className="text-uppercase page-subtitle">Projects</span>
@@ -176,12 +177,12 @@ export default class Projects extends React.Component {
                 <h3 className="page-title">Add a Project to Begin</h3>
               </div>
             </div>
-          )}
-          <div className="row">
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+          )
+          }
+            <div className="row">            
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <Card>
                 <Card.Body>
-                  <h5>Projects</h5>
 
                   {applications.length > 0 ? (
                     <Table responsive>
@@ -229,8 +230,6 @@ export default class Projects extends React.Component {
                   )}
                 </Card.Body>
               </Card>
-
-              <ToastContainer />
             </div>
 
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
@@ -301,8 +300,15 @@ export default class Projects extends React.Component {
                 <p>{proj.project_name}</p>
                 <div />
                 <h5>App ID</h5>
-                <p id='app-id'>{proj.id}<i onClick={this.copy} data-clipboard-target="#app-id" className="copy-button clickable material-icons">content_copy</i></p>
-
+                <p><span id='app-id'>{proj.id}</span><i onClick={() => this.copy('app-id')} data-clipboard-target="#app-id" className="copy-button clickable material-icons">content_copy</i></p>
+                {
+                  liveChat ? 
+                  <div>
+                    <h5>Chat Address</h5>
+                    <p><span id='chat-id'>{liveChatId}</span> <i onClick={() => this.copy('chat-id')} data-clipboard-target="#chat-id" className="copy-button clickable material-icons">content_copy</i></p>
+                  </div> : 
+                  <div />
+                }
               </Modal.Body>
               <Modal.Footer>
                 <button className="btn btn-secondary" onClick={() => this.setState({ projectModalOpen: false })}>

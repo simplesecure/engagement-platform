@@ -5,7 +5,7 @@ import Modal from 'react-bootstrap/Modal'
 import LoadingModal from './LoadingModal'
 import SegmentTable from './SegmentTable'
 import { getCloudUser } from '../utils/cloudUser'
-import { ToastContainer, toast } from 'react-toastify'
+import { toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
 export default class Dashboard extends React.Component {
@@ -88,8 +88,6 @@ export default class Dashboard extends React.Component {
                 </div>
               }
             </div>
-
-            <ToastContainer />
 
             <Modal className="custom-modal" show={showSegmentModal} onHide={() => this.setState({ showSegmentModal: false, segmentToShow: {}})}>
               <Modal.Header closeButton>
