@@ -7,12 +7,13 @@ import {
 } from "../../utils/awsUtils";
 import { setLocalStorage } from "../../utils/misc";
 import { toast } from "react-toastify";
+import Loader from '../Loader';
 const uuid = require("uuid/v4");
 
 const EmailEditor = props => {
   const [data, setData] = useState();
-  const [loading, setLoading] = useState();
-  const [templateToUpdate] = useGlobal('templateToUpdate');
+  const [loading, setLoading] = useState(false);
+  const [templateToUpdate, setTemplate] = useGlobal('templateToUpdate');
   const [SESSION_FROM_LOCAL] = useGlobal('SESSION_FROM_LOCAL');
   const [sessionData, setSessionData] = useGlobal('sessionData');
   const [apps, setApps] = useGlobal('apps');
@@ -21,12 +22,36 @@ const EmailEditor = props => {
   const [templateName, setTemplateName] = useState('');
 
   const handleInit = data => {
+    const existingTemplate = Object.keys(templateToUpdate).length > 0;
+
+    //  We are disabling the image upload capabilities to prevent base64 encoding problems
+    //  See this article about embeded images in email clients: 
+    //  https://www.campaignmonitor.com/blog/email-marketing/2019/04/embedded-images-in-html-email/
+    
+    const imageUploadConfig = data.AssetManager.getConfig();
+    console.log(imageUploadConfig);
+    imageUploadConfig.dropzone = 0;
+    imageUploadConfig.upload = 0;
+
+    //  This ensures the the url enters for the image path is handled properly.
+
+    imageUploadConfig.handleAdd = (textFromInput) => {
+      data.AssetManager.add(textFromInput);
+    }
+
+    //  Note: we also disabled the dropzone via css. In style.css, find this under the 
+    //  .gjs-am-file-uploader class and the .gjs-am-assets-cont class. Remove both to reset to 
+    //  defaults
+
     if (Object.keys(templateToUpdate).length > 0) {
       data.setComponents(templateToUpdate.html);
     } else {
       data.setComponents('');
     }
     setData(data);
+    if(existingTemplate) {
+      setTemplateName(templateToUpdate.name);
+    }
   };
   const handleSave = async() => {
     //  Check if we're updating an existing template or not
@@ -81,6 +106,7 @@ const EmailEditor = props => {
   };
 
   const handleClose = () => {
+    setTemplate({});
     setEmailEditor(false)
   }
 
@@ -89,7 +115,7 @@ const EmailEditor = props => {
   };
   if(loading) {
     return (
-      <h5>Just a second...</h5>
+      <Loader />
     )
   } else {
     return (

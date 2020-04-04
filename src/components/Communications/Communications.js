@@ -158,13 +158,13 @@ export default class Communications extends React.Component {
       campaignName,
       fromAddress
     } = this.state;
-    const { currentSegments, currentTemplates, campaigns } = sessionData;
+    const { currentSegments, campaigns } = sessionData;
     const seg = currentSegments.filter(a => a.id === selectedSegment)[0];
     this.setState({ userCount: seg.users.length ? seg.users.length : 0 });
     const camps = campaigns ? campaigns : [];
     if (confirmed) {
       this.setState({ confirmModal: false });
-      //First we need to take the campaign data and send it to the iframe to process
+      
       const newCampaign = {
         id: uuid(),
         name: campaignName,
@@ -177,9 +177,10 @@ export default class Communications extends React.Component {
       const emailPayload = {
         app_id: sessionData.id,
         addresses: newCampaign.users,
+        template: selectedTemplate,
         from: fromAddress,
-        template: currentTemplates.filter(a => a.id === selectedTemplate)[0],
-        subject: campaignName
+        subject: campaignName, 
+        org_id
       };
 
       setGlobal({ processing: true });

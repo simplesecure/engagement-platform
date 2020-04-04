@@ -186,7 +186,7 @@ export async function handleData(dataToProcess) {
     //const { addresses, app_id, template, subject } = data;
     //Commented out because we don't need each individual item separately
     log.info(`handleData ${type} ...`)
-    const { template, subject, from } = data
+    const { template, subject, from, app_id, org_id } = data
     if (!template || !subject || !from) {
       throw new Error('Email messaging expects the template, subject, and from address to be defined.')
     }
@@ -203,6 +203,8 @@ export async function handleData(dataToProcess) {
       data: {
         uuidList,
         template,
+        app_id, 
+        org_id,
         subject,
         from,
         appId: SID_ANALYTICS_APP_ID
