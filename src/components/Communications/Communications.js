@@ -6,10 +6,7 @@ import LoadingModal from "../LoadingModal";
 import EmailEditor from './EmailEditor';
 import Table from "react-bootstrap/Table";
 import Card from "react-bootstrap/Card";
-import {
-  putInOrganizationDataTable,
-  getFromOrganizationDataTable
-} from "../../utils/awsUtils";
+import * as dc from '../../utils/dynamoConveniences.js'
 import { setLocalStorage } from "../../utils/misc";
 import { getCloudUser } from "../../utils/cloudUser.js";
 // const ERROR_MSG = "Failed to send email. If this continues, please contact support@simpleid.xyz"
@@ -57,14 +54,14 @@ export default class Communications extends React.Component {
         //
         // TODO: probably want to wait on this to finish and throw a status/activity
         //       bar in the app:
-        const orgData = await getFromOrganizationDataTable(org_id);
+        const orgData = await dc.organizationDataTableGet(org_id)
 
         try {
           const anObject = orgData.Item;
           anObject.apps = apps;
           anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
 
-          await putInOrganizationDataTable(anObject);
+          await dc.organizationDataTablePut(anObject)
           setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
           setGlobal({ templateName: "" });
         } catch (suppressedError) {
@@ -92,14 +89,14 @@ export default class Communications extends React.Component {
         //
         // TODO: probably want to wait on this to finish and throw a status/activity
         //       bar in the app:
-        const orgData = await getFromOrganizationDataTable(org_id);
+        const orgData = await dc.organizationDataTableGet(org_id);
 
         try {
           const anObject = orgData.Item;
           anObject.apps = apps;
           anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
 
-          await putInOrganizationDataTable(anObject);
+          await dc.organizationDataTablePut(anObject)
           setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
         } catch (suppressedError) {
           console.log(`ERROR: problem writing to DB.\n${suppressedError}`);
@@ -125,13 +122,13 @@ export default class Communications extends React.Component {
       this.setState({ deleteTempModal: false, templateToDelete: {} });
       setGlobal({ sessionData, apps });
       //Update in DB
-      const orgData = await getFromOrganizationDataTable(org_id);
+      const orgData = await dc.organizationDataTableGet(org_id);
 
       try {
         const anObject = orgData.Item;
         anObject.apps = apps;
         anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-        await putInOrganizationDataTable(anObject);
+        await dc.organizationDataTablePut(anObject)
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
       } catch (suppressedError) {
         console.log(`ERROR: problem writing to DB.\n${suppressedError}`);
@@ -200,13 +197,13 @@ export default class Communications extends React.Component {
 
         setGlobal({ sessionData, apps });
         // On a successful send, we can then update the db to reflect the sent campaigns and set this.state.
-        const orgData = await getFromOrganizationDataTable(org_id);
+        const orgData = await dc.organizationDataTableGet(org_id);
 
         try {
           const anObject = orgData.Item;
           anObject.apps = apps;
           anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-          await putInOrganizationDataTable(anObject);
+          await dc.organizationDataTablePut(anObject)
           setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
           this.setState({
             selectedSegment: "Choose...",
@@ -240,13 +237,13 @@ export default class Communications extends React.Component {
 
         setGlobal({ sessionData, apps });
         // On a successful send, we can then update the db to reflect the sent campaigns and set this.state.
-        const orgData = await getFromOrganizationDataTable(org_id);
+        const orgData = await dc.organizationDataTableGet(org_id);
 
         try {
           const anObject = orgData.Item;
           anObject.apps = apps;
           anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-          await putInOrganizationDataTable(anObject);
+          await dc.organizationDataTablePut(anObject)
           setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
           this.setState({
             selectedSegment: "Choose...",
