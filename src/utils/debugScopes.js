@@ -11,11 +11,17 @@ const prefix = require('loglevel-plugin-prefix');
 // TODO: Figure out a good way to refactor the consts below and method to a common
 //       file shared with the widget (which uses these from the file debugScopes.js)
 //
+// TODO: make this f@#$ing thing data driven--it's ugly AF.
+//
 const ROOT_KEY = 'loglevel'
 const ALLOWED_SCOPES = [ ROOT_KEY,
                         `${ROOT_KEY}:cloudUser`,
                         `${ROOT_KEY}:dataProcessing`,
-                        `${ROOT_KEY}:sidServices` ]
+                        `${ROOT_KEY}:sidServices`,
+                        `${ROOT_KEY}:s3Utils`,
+                        `${ROOT_KEY}:helpers`,
+                        `${ROOT_KEY}:cloudUser`,
+                        `${ROOT_KEY}:dynamoConveniences`]
 const ALLOWED_LEVELS = [ 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR' ]
 const DEFAULT_LOG_LEVEL="INFO"
 
