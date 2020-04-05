@@ -13,7 +13,7 @@ import uuid from 'uuid/v4'
 import { setLocalStorage } from '../utils/misc'
 import LoadingModal from './LoadingModal'
 import { getCloudUser } from './../utils/cloudUser.js'
-import { ToastContainer, toast } from 'react-toastify'
+import { toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { Link } from 'react-router-dom';
 const listToArray = require('list-to-array')
@@ -756,8 +756,6 @@ export default class Segments extends React.Component {
                  <li className="card"><span className="card-body">You haven't created any segments yet, let's do that now!.</span></li>
                </ul>
               }
-
-              <ToastContainer />
 
               <Modal className="custom-modal" show={show} onHide={this.closeModal}>
                 <Modal.Header closeButton>

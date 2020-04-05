@@ -6,7 +6,7 @@ import SideNav from '../components/SideNav';
 import Search from '../components/Search';
 import AddTile from '../components/AddTile';
 import Notifications from '../components/Notifications';
-import Communications from '../components/Communications';
+import Communications from '../components/Communications/Communications';
 import Account from '../components/Account';
 import Segments from '../components/Segments';
 import Projects from '../components/Projects';

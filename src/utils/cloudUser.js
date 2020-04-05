@@ -4,7 +4,11 @@ import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
 import * as dc from './dynamoConveniences.js'
 import { setLocalStorage } from './misc';
+const IdentityWallet = require('identity-wallet')
+const ethers = require('ethers')
+const Box = require('3box')
 
+const CHAT_WALLET_KEY = 'chat-wallet'
 const SIMPLEID_USER_SESSION = 'SID_SVCS';
 const SESSION_FROM_LOCAL = 'sessionData';
 const log = getLog('cloudUser')
@@ -41,11 +45,14 @@ class CloudUser {
 
     await setGlobal({ org_id });
     if(appData && appData.Item && Object.keys(appData.Item.apps).length > 0) {
+      const { liveChat } = await getGlobal()
+
       const appKeys = Object.keys(appData.Item.apps);
       const allApps = appData.Item.apps;
       const currentAppId = appKeys[0]
       const data = allApps[appKeys[0]];
       data['id'] = currentAppId
+
       await setGlobal({ signedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data, loading: false });
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
       //Check if app has been verified
@@ -68,7 +75,33 @@ class CloudUser {
         this.fetchUsersCount(appData)
       }
 
-      //setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data));
+      if(liveChat) {
+        //  This is where we need to check for the chat support address
+        //  This address is the one used to connect to 3Box without a web3 wallet
+        //  If it's not available, need to create one
+        //  For initial testing, none will be available so we will check localStorage
+
+        const chatSupportWallet = await getChatSupportAddress()
+        const { signingKey } = chatSupportWallet
+        const { privateKey } = signingKey
+        const seed = privateKey
+        const idWallet = new IdentityWallet(getConsent, { seed })
+        const box = await handle3BoxConnection(idWallet)
+        const space = await connectToSpace(box, currentAppId)
+        const mainThread = await accessThread(space, currentAppId)
+        let mainThreadPosts
+        mainThread.onUpdate(async () => {
+          console.log("New User - Getting posts...")
+          mainThreadPosts = await getPosts(mainThread)
+          fetchAllPosts(space, mainThreadPosts)
+          setGlobal({ mainThreadPosts })
+        })
+        const mainThreadHash = mainThread.address.split('orbitdb/')[1].split('/3box')[0]
+        mainThreadPosts = await getPosts(mainThread)
+        fetchAllPosts(space, mainThreadPosts)
+        setGlobal({ idWallet, box, space, mainThread, mainThreadPosts, liveChatId: mainThreadHash })
+      }
+
     } else {
       setGlobal({ loading: false, projectFound: false })
       //If there's nothing returned from the DB but something is still in local storage, what do we do?
@@ -219,4 +252,141 @@ export function getCloudUser() {
     cuInstance = new CloudUser()
   }
   return cuInstance
+}
+
+function getChatSupportAddress() {
+  //  When the the chat wallet data is returned from the DB, this function will be 
+  //  relegated to chat wallet creation only
+  return new Promise((resolve, reject) => {
+    const chatWallet = localStorage.getItem(CHAT_WALLET_KEY) ? JSON.parse(localStorage.getItem(CHAT_WALLET_KEY)) : undefined
+    if(chatWallet) {
+      //  If the chat wallet is found, 
+      resolve(chatWallet)
+    } else {
+      try {
+        const randomWallet = ethers.Wallet.createRandom()
+        localStorage.setItem(CHAT_WALLET_KEY, JSON.stringify(randomWallet))
+        resolve(randomWallet)
+      } catch(e) {
+        reject(e)
+      }
+    }
+  })
+}
+
+async function getConsent({ type, origin, spaces }) {
+  // For testing purposes a function that just returns
+  // true can be used. In prodicution systems the user
+  // should be prompted for input.
+  return true
+}
+
+async function handle3BoxConnection(idWallet) {
+  return new Promise(async (resolve, reject) => {
+    const threeIdProvider = idWallet.get3idProvider()
+    try {
+      const box = await Box.openBox(null, threeIdProvider)
+      resolve(box)
+    } catch(e) {
+      reject(e)
+    }
+  })
+}
+
+async function connectToSpace(box, spaceId) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const space = await box.openSpace(spaceId)
+      resolve(space)
+    } catch(e) {
+      reject(e)
+    }
+  })
+}
+
+async function accessThread(space, threadId, firstModAddress) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let thread
+      if(firstModAddress) {
+        thread = await space.joinThread(threadId, { firstModerator: firstModAddress })
+      } else {
+        thread = await space.joinThread(threadId)
+      }
+      resolve(thread)
+    } catch(e) {
+      reject(e)
+    }
+  })
+}
+
+async function getPosts(thread) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const posts = await thread.getPosts()      
+      resolve(posts)
+    } catch(e) {
+      console.log("Fetching posts error: ", e)
+      reject(e)
+    }
+  })
+}
+
+async function fetchAllPosts(space, mainThreadPosts) {
+  if(mainThreadPosts) {
+    const openThreads = []
+    const closedThreads = []
+    for(const thread of mainThreadPosts) {
+      //  TODO - Clean this all up
+      //  There is a combination of parsing and not happening here
+      //  We should be parsing posts going forward because they include a 
+      //  name and a message
+      let threadJson = undefined
+      try {
+        threadJson = JSON.parse(thread.message)
+      } catch(e) {
+        console.log("not json")
+      }
+
+      let thisThread = undefined
+      let authorName = undefined
+      if(threadJson) {
+        const { name, message } = threadJson
+        authorName = name
+        thisThread = await space.joinThreadByAddress(message)
+      } else {
+        thisThread = await space.joinThreadByAddress(thread.message)
+      }
+
+      thisThread.onUpdate(() => {
+        const { ourMessage } = getGlobal()
+        //  If there's a new post we need to fetch posts again
+        fetchAllPosts(space, mainThreadPosts)
+        //  Play notification but only for the inbound messages
+        if(!ourMessage) {
+          const audio = new Audio(require('../assets/sounds/notification.mp3'))
+          audio.play()
+        }
+        setGlobal({ ourMessage: false })
+      })
+      let posts = await thisThread.getPosts()
+      if(posts && posts.length > 0) {
+        //  Check if the most recent message is a closed message
+        const mostRecentMessage = posts[posts.length - 1]
+        const { message } = mostRecentMessage
+        const messageText = JSON.parse(message)
+        thread['postCount'] = posts.length
+        if(authorName) {
+          thread['name'] = authorName
+        }
+        if(messageText.message !== "CONVERSATION CLOSED") {
+          openThreads.push(thread)
+          setGlobal({ openChatThreads: openThreads })
+        } else {
+          closedThreads.push(thread)
+          setGlobal({ closedChatThreads: closedThreads })
+        }
+      }
+    }
+  }
 }

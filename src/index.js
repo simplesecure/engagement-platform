@@ -42,11 +42,23 @@ setGlobal({
   showSegmentNotification: false, 
   segmentProcessingDone: false, 
   segmentName: "", 
+  liveChat: true, 
+  mainThread: {}, 
+  currentThread: {}, 
+  mainThreadPosts: [], 
+  currentThreadPosts: [], 
+  liveChatId: "", 
+  idWallet: {}, 
+  openChatThreads: [], 
+  closedChatThreads: [], 
+  ourMessage: false,
   orgData: {}, 
   jobs: [], 
   notifications: [],
   notificationId: '', 
-  onboardingComplete: true
+  onboardingComplete: true, 
+  emailEditor: false, 
+  templateToUpdate: {}
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

@@ -8,6 +8,7 @@ import Home from './containers/Home';
 import OnboardingSteps from './components/OnboardingSteps'
 import CookieConsent from "react-cookie-consent";
 import { getCloudUser } from './utils/cloudUser.js'
+import { ToastContainer } from 'react-toastify';
 const PROFILE_STORAGE = 'engagement-app-profile'
 const SESSION_FROM_LOCAL = 'sessionData';
 const SID_JOB_QUEUE = 'sid_job_queue'
@@ -40,7 +41,7 @@ export default class App extends React.Component {
       }
       setGlobal({ threeBoxProfile: profile })
       //Need to check if the user is part of an organization from the org table
-      await getCloudUser().fetchOrgDataAndUpdate()
+      getCloudUser().fetchOrgDataAndUpdate()
     } else {
       setGlobal({ loading: false });
     }
@@ -55,7 +56,7 @@ export default class App extends React.Component {
           <OnboardingSteps /> : 
           <div />
         }
-        
+        <ToastContainer />
         <CookieConsent
           location="bottom"
           buttonText="I accept"
