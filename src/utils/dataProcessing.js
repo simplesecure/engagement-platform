@@ -185,8 +185,8 @@ export async function handleData(dataToProcess) {
     //const { addresses, app_id, template, subject } = data;
     //Commented out because we don't need each individual item separately
     log.info(`handleData ${type} ...`)
-    const { template, subject, from, app_id, org_id } = data
-    if (!template || !subject || !from) {
+    const { template_id, subject, from, app_id, org_id, campaign_id } = data
+    if (!template_id || !subject || !from) {
       throw new Error('Email messaging expects the template, subject, and from address to be defined.')
     }
 
@@ -201,17 +201,40 @@ export async function handleData(dataToProcess) {
     const dataForEmailService = {
       data: {
         uuidList,
-        template,
+        template_id,
         app_id, 
         org_id,
         subject,
         from,
+        campaign_id,
         appId: SID_ANALYTICS_APP_ID
       },
       command: 'sendEmails'
     }
 
     return await handleEmails(dataForEmailService, process.env.REACT_APP_EMAIL_SVC_URL)
+  } else if(type === 'email data') {
+    console.log(dataToProcess)
+    const payload = {
+      command: 'getEmailData', 
+      data: {
+        appId: data.appId, 
+        params: dataToProcess
+      }
+    }
+
+    console.log(payload)
+
+    const resp = await fetch(process.env.REACT_APP_WEB_API_HOST, {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+
+    const res = await resp.json();
+    return res
   } else if(type === 'create-project') {
     const { appObject, orgId } = data;
     const createProject = await getSidSvcs().createAppId(orgId, appObject)
