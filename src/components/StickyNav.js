@@ -1,6 +1,7 @@
 import React, { setGlobal } from "reactn";
 import { Link } from "react-router-dom";
 import { getCloudUser } from "./../utils/cloudUser.js";
+import { getEmailData } from './../utils/emailData.js';
 
 export default class StickyNav extends React.Component {
 
@@ -8,10 +9,13 @@ export default class StickyNav extends React.Component {
     setGlobal({ onboardingComplete: false })
   }
 
-  setProject = app => {
+  setProject = async app => {
     const { apps } = this.global;
     setGlobal({ sessionData: apps[app.id], currentAppId: app.id });
     getCloudUser().fetchUsersCount();
+    const emailData = await getEmailData();
+    console.log(emailData);
+    setGlobal({ emailData: emailData.data });
   };
 
   handleNotificationClick = notification => {

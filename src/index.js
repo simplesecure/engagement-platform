@@ -58,7 +58,8 @@ setGlobal({
   notificationId: '', 
   onboardingComplete: true, 
   emailEditor: false, 
-  templateToUpdate: {}
+  templateToUpdate: {}, 
+  emailData: {}
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

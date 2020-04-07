@@ -454,3 +454,11 @@ section {
 .gjs-four-color {
   color: #fff!important;
 }
+
+.margin-left {
+  margin-left: 10px;
+}
+
+.margin-top {
+  margin-top: 25px;
+}
