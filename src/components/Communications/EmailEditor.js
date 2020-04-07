@@ -80,6 +80,7 @@ const EmailEditor = (props) => {
         sessionData.currentTemplates = templates;
       } else {
         templates.unshift(thisTemplate);
+        sessionData.currentTemplates = templates;
       }
 
       try {
@@ -148,7 +149,7 @@ const EmailEditor = (props) => {
 
                   <div style={{ marginTop: "15px" }}>
                     <button
-                      onClick={handleSave}
+                      onClick={() => handleSave()}
                       style={{ marginRight: "8px" }}
                       className="btn btn-primary"
                     >

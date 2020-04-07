@@ -125,13 +125,15 @@ export async function organizationDataTableGet(anOrgId) {
       const orgDataRowObj = data.Item
       for (const appId in orgDataRowObj.apps) {
         const app = orgDataRowObj.apps[appId]
-        for (const seg of app.currentSegments) {
-          const { users_s3 } = seg
-          const hasBlob = !!users_s3
-          if (hasBlob) {
-            const usersBlob = await s3Utils.getJsonObject(users_s3.s3_key, users_s3.compressed)
-            blobsProcessed++
-            seg.users = usersBlob
+        if(app && app.currentSegments) {
+          for (const seg of app.currentSegments) {
+            const { users_s3 } = seg
+            const hasBlob = !!users_s3
+            if (hasBlob) {
+              const usersBlob = await s3Utils.getJsonObject(users_s3.s3_key, users_s3.compressed)
+              blobsProcessed++
+              seg.users = usersBlob
+            }
           }
         }
       }
@@ -174,9 +176,11 @@ export async function organizationDataTablePut(aOrganizationDataRowObj) {
       orgDataRowObj = _deepCopy(aOrganizationDataRowObj)
       for (const appId in orgDataRowObj.apps) {
         const app = orgDataRowObj.apps[appId]
-        for (const seg of app.currentSegments) {
-          if (seg.hasOwnProperty('users_s3')) {
-            seg.users = []
+        if(app && app.currentSegments) {
+          for (const seg of app.currentSegments) {
+            if (seg.hasOwnProperty('users_s3')) {
+              seg.users = []
+            }
           }
         }
       }
