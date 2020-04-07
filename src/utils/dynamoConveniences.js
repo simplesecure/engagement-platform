@@ -4,6 +4,7 @@ import { getLog } from './debugScopes.js'
 const log = getLog('dynamoConveniences')
 
 const S3_ANALYTICS_BLOB = true
+const S3_ORG_DATA_USERS_BLOBS = true
 
 
 
@@ -97,25 +98,98 @@ export async function walletAnalyticsDataTablePut(aWalletAnalyticsRowObj) {
 }
 
 export async function organizationDataTableGet(anOrgId) {
+  const method = 'organizationDataTableGet'
+
   if (!anOrgId) {
     throw new Error(`DB access method organizationDataTableGet requires a value for anOrgId.  anOrgId="${anOrgId}".`)
   }
 
-  return await tableGet(
+  const data = await tableGet(
     process.env.REACT_APP_ORG_TABLE,
     process.env.REACT_APP_ORG_TABLE_PK,
     anOrgId
   )
+
+  // With S3_ORG_DATA_USERS_BLOBS turned on--the users property for any segments
+  // that have property users_s3 will be empty.  We may need to re-inflate that
+  // with a read from S3 here (however, before doing that, it's likely that the
+  // server will do that for us on update segments).
+  // For safety, we're just going to restore that here, but if testing shows
+  // it's not needed then lets disable this:  <-- TODO (maybe)
+  if (S3_ORG_DATA_USERS_BLOBS) {
+    try {
+      log.debug(`${method} expanding stored blobs for org data (id=${anOrgId})`)
+      const startTime = Date.now()
+      let blobsProcessed = 0
+
+      const orgDataRowObj = data.Item
+      for (const appId in orgDataRowObj.apps) {
+        const app = orgDataRowObj.apps[appId]
+        for (const seg of app.currentSegments) {
+          const { users_s3 } = seg
+          const hasBlob = !!users_s3
+          if (hasBlob) {
+            const usersBlob = await s3Utils.getJsonObject(users_s3.s3_key, users_s3.compressed)
+            blobsProcessed++
+            seg.users = usersBlob
+          }
+        }
+      }
+      log.debug(`${method} expanded ${blobsProcessed} in ${Date.now()-startTime} ms.`)
+    } catch (error) {
+      throw new Error(`${method} failed while expanding blobs.\n${error}`)
+    }
+  }
+
+  return data
+}
+
+// TODO: move this to utils & find a better method (this has limitations
+//       for classes etc)
+function _deepCopy(anObj) {
+  const method = 'dynamoConveniences::_deepCopy'
+  try {
+    return JSON.parse(JSON.stringify(anObj))
+  } catch (error) {
+    throw new Error(`${method} failed.\n${error}`)
+  }
 }
 
 export async function organizationDataTablePut(aOrganizationDataRowObj) {
+  const method = 'organizationDataTablePut'
+
   if (!aOrganizationDataRowObj) {
     throw new Error(`DB access method organizationDataTablePut requires a value for aOrganizationDataRowObj.  aOrganizationDataRowObj=${aOrganizationDataRowObj}".`)
   }
 
+  let orgDataRowObj
+  if (S3_ORG_DATA_USERS_BLOBS) {
+    // The property users in segments grows too large for storage in Dynamo. This
+    // conditional detects if we have s3 storage of the users property and clears
+    // it before writing to Dynamo (since it's stored in S3).
+
+    // Copy the object to prevent side effects on the client which may be using
+    // properties we're about to blow away:
+    try {
+      orgDataRowObj = _deepCopy(aOrganizationDataRowObj)
+      for (const appId in orgDataRowObj.apps) {
+        const app = orgDataRowObj.apps[appId]
+        for (const seg of app.currentSegments) {
+          if (seg.hasOwnProperty('users_s3')) {
+            seg.users = []
+          }
+        }
+      }
+    } catch (error) {
+      throw new Error(`${method} failed to trim segment data stored in blobs.\n${error}`)
+    }
+  } else {
+    orgDataRowObj = aOrganizationDataRowObj
+  }
+
   return await tablePut(
     process.env.REACT_APP_ORG_TABLE,
-    aOrganizationDataRowObj
+    orgDataRowObj
   )
 }
 
