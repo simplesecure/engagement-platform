@@ -4,6 +4,8 @@ import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
 import * as dc from './dynamoConveniences.js'
 import { setLocalStorage } from './misc';
+import { getWeb2Analytics } from './web2Analytics';
+const filter = require('./filterOptions.json');
 const IdentityWallet = require('identity-wallet')
 const ethers = require('ethers')
 const Box = require('3box')
@@ -22,6 +24,7 @@ class CloudUser {
   }
 
   async fetchOrgDataAndUpdate() {
+
     let userData
     let sid
     let org_id
@@ -63,6 +66,36 @@ class CloudUser {
       } catch(e) {
         setGlobal({ verified: false })
       }
+
+      //  Fetch web2 analytics eventNames - we will fetch the actual event results in Segment handling
+      const web2AnalyticsCmdObj = {
+        command: 'getWeb2Analytics',
+            data: {
+             appId: currentAppId   
+          }     
+      }
+
+      const web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
+      
+      setGlobal({ web2Events: web2Analytics.data ? web2Analytics.data : [] });
+      const { allFilters } = await getGlobal();
+      if(web2Analytics.data) {
+        
+        const events = web2Analytics.data;
+        
+        for(const event of events) {
+          const data = {
+            type: 'web2', 
+            filter: `Web2: ${event}`
+          }
+          allFilters.push(data);
+        }
+        allFilters.push(...filter);
+        setGlobal({ allFilters });
+      }  else {
+        allFilters.push(...filter);
+      }
+      
 
       //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to
       //Get the correct results

@@ -1,30 +1,30 @@
 import React, { useState, useGlobal } from "reactn";
 import { Editor } from "grapesjs-react";
 import "grapesjs/dist/css/grapes.min.css";
-import * as dc from '../../utils/dynamoConveniences.js'
+import * as dc from "../../utils/dynamoConveniences.js";
 import { setLocalStorage } from "../../utils/misc";
 import { toast } from "react-toastify";
-import Loader from '../Loader';
+import Loader from "../Loader";
 const uuid = require("uuid/v4");
 
-const EmailEditor = props => {
+const EmailEditor = (props) => {
   const [data, setData] = useState();
   const [loading, setLoading] = useState(false);
-  const [templateToUpdate, setTemplate] = useGlobal('templateToUpdate');
-  const [SESSION_FROM_LOCAL] = useGlobal('SESSION_FROM_LOCAL');
-  const [sessionData, setSessionData] = useGlobal('sessionData');
-  const [apps, setApps] = useGlobal('apps');
-  const [org_id] = useGlobal('org_id');
-  const [emailEditor, setEmailEditor] = useGlobal('emailEditor');//eslint-disable-line
-  const [templateName, setTemplateName] = useState('');
+  const [templateToUpdate, setTemplate] = useGlobal("templateToUpdate");
+  const [SESSION_FROM_LOCAL] = useGlobal("SESSION_FROM_LOCAL");
+  const [sessionData, setSessionData] = useGlobal("sessionData");
+  const [apps, setApps] = useGlobal("apps");
+  const [org_id] = useGlobal("org_id");
+  const [emailEditor, setEmailEditor] = useGlobal("emailEditor"); //eslint-disable-line
+  const [templateName, setTemplateName] = useState("");
 
-  const handleInit = data => {
+  const handleInit = (data) => {
     const existingTemplate = Object.keys(templateToUpdate).length > 0;
 
     //  We are disabling the image upload capabilities to prevent base64 encoding problems
-    //  See this article about embeded images in email clients: 
+    //  See this article about embeded images in email clients:
     //  https://www.campaignmonitor.com/blog/email-marketing/2019/04/embedded-images-in-html-email/
-    
+
     const imageUploadConfig = data.AssetManager.getConfig();
     console.log(imageUploadConfig);
     imageUploadConfig.dropzone = 0;
@@ -34,109 +34,118 @@ const EmailEditor = props => {
 
     imageUploadConfig.handleAdd = (textFromInput) => {
       data.AssetManager.add(textFromInput);
-    }
+    };
 
-    //  Note: we also disabled the dropzone via css. In style.css, find this under the 
-    //  .gjs-am-file-uploader class and the .gjs-am-assets-cont class. Remove both to reset to 
+    //  Note: we also disabled the dropzone via css. In style.css, find this under the
+    //  .gjs-am-file-uploader class and the .gjs-am-assets-cont class. Remove both to reset to
     //  defaults
 
     if (Object.keys(templateToUpdate).length > 0) {
       data.setComponents(templateToUpdate.html);
     } else {
-      data.setComponents('');
+      data.setComponents("");
     }
     setData(data);
-    if(existingTemplate) {
+    if (existingTemplate) {
       setTemplateName(templateToUpdate.name);
     }
   };
-  const handleSave = async() => {
-    //  Check if we're updating an existing template or not
-    const existingTemplate = Object.keys(templateToUpdate).length > 0;
-    const id = existingTemplate ? templateToUpdate.id : uuid();
-    const html = data.runCommand("gjs-get-inlined-html");
-    
-    let { currentTemplates } = sessionData;
+  const handleSave = async () => {
+    if (templateName) {
+      //  Check if we're updating an existing template or not
+      const existingTemplate = Object.keys(templateToUpdate).length > 0;
+      const id = existingTemplate ? templateToUpdate.id : uuid();
+      const html = data.runCommand("gjs-get-inlined-html");
 
-    const thisTemplate = {
-      id, 
-      name: templateName, 
-      html
-    }
+      let { currentTemplates } = sessionData;
+      const templates = currentTemplates ? currentTemplates : []
 
-    if(existingTemplate) {
+      const thisTemplate = {
+        id,
+        name: templateName,
+        html,
+      };
+
+      if (existingTemplate) {
         //  Find the template
-        const index = currentTemplates.map(a => a.id).indexOf(templateToUpdate.id);
-        if(index > -1) {
-
+        const index = templates
+          .map((a) => a.id)
+          .indexOf(templateToUpdate.id);
+        if (index > -1) {
         } else {
-          console.log('Error with index');
-          toast.error('Could not update template');
+          console.log("Error with index");
+          toast.error("Could not update template");
         }
-        currentTemplates[index] = thisTemplate;
-        sessionData.currentTemplates = currentTemplates;
+        templates[index] = thisTemplate;
+        sessionData.currentTemplates = templates;
+      } else {
+        templates.unshift(thisTemplate);
+      }
+
+      try {
+        setLoading(true);
+        apps[sessionData.id] = sessionData;
+        const orgData = await dc.organizationDataTableGet(org_id);
+
+        const anObject = orgData.Item;
+        anObject.apps = apps;
+        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
+
+        await dc.organizationDataTablePut(anObject);
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+        setSessionData(sessionData);
+        setApps(apps);
+        setLoading(false);
+
+        handleClose();
+      } catch (error) {
+        setLoading(false);
+        console.log(error);
+        toast.error(error.message);
+      }
     } else {
-      currentTemplates.unshift(thisTemplate);
-    }
-    
-    try {
-      setLoading(true);
-      apps[sessionData.id] = sessionData;
-      const orgData = await dc.organizationDataTableGet(org_id);
-
-      const anObject = orgData.Item;
-      anObject.apps = apps;
-      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-
-      await dc.organizationDataTablePut(anObject)
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      setSessionData(sessionData);
-      setApps(apps);
-      setLoading(false);
-      
-      handleClose();
-    } catch (error) {
-      setLoading(false);
-      console.log(error);
-      toast.error(error.message);
+      toast.error('Please give your template a name');
     }
   };
 
   const handleClose = () => {
     setTemplate({});
-    setEmailEditor(false)
-  }
+    setEmailEditor(false);
+  };
 
-  const handleDestroy = async data => {
+  const handleDestroy = async (data) => {
     data.destroy();
   };
-  if(loading) {
-    return (
-      <Loader />
-    )
+  if (loading) {
+    return <Loader />;
   } else {
     return (
       <div>
         <div className="main-content-container container-fluid px-4">
           <div className="page-header row no-gutters py-4">
             <div className="col-12 col-sm-12 text-center text-sm-left mb-0">
-              <span className="text-uppercase page-subtitle">Communications</span>
+              <span className="text-uppercase page-subtitle">
+                Communications
+              </span>
               <h3 className="page-title">Create or Edit an Email Template</h3>
               <div>
                 <div>
-                  <div style={{marginTop: "15px"}}>
-                    <label htmlFor="inputSeg" style={{fontSize: "16px"}}>Template Name</label> <br />
+                  <div style={{ marginTop: "15px" }}>
+                    <label htmlFor="inputSeg" style={{ fontSize: "16px" }}>
+                      Template Name
+                    </label>{" "}
+                    <br />
                     <input
                       value={templateName}
-                      style={{width: "45%"}}
-                      onChange={e => setTemplateName(e.target.value)}
+                      style={{ width: "45%" }}
+                      onChange={(e) => setTemplateName(e.target.value)}
                       type="text"
                       className="form-control"
                       id="templateName"
                       placeholder="Give it a name"
                     />
                   </div>
-  
+
                   <div style={{ marginTop: "15px" }}>
                     <button
                       onClick={handleSave}
@@ -145,16 +154,12 @@ const EmailEditor = props => {
                     >
                       Save
                     </button>
-                    <button
-                      onClick={handleClose}
-                      className="btn btn-secondary"
-                    >
+                    <button onClick={handleClose} className="btn btn-secondary">
                       Cancel
                     </button>
                   </div>
                 </div>
               </div>
-              
             </div>
           </div>
           <div className="row">

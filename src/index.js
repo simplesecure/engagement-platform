@@ -59,7 +59,9 @@ setGlobal({
   onboardingComplete: true, 
   emailEditor: false, 
   templateToUpdate: {}, 
-  emailData: {}
+  emailData: {}, 
+  web2Events: [], 
+  allFilters: []
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));
