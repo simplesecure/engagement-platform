@@ -26,11 +26,11 @@ export default class App extends React.Component {
 
     if(signedIn) {
       const onboardingComplete = localStorage.getItem('onboarding-complete')
-      
+
       if(!onboardingComplete) {
         setGlobal({ onboardingComplete : false });
       }
-      
+
       //First try to fetch the profile from local storage
       const profile = localStorage.getItem(PROFILE_STORAGE) ? JSON.parse(localStorage.getItem(PROFILE_STORAGE)) : {}
       //  Fetch job queue
@@ -41,6 +41,29 @@ export default class App extends React.Component {
       setGlobal({ threeBoxProfile: profile })
       //Need to check if the user is part of an organization from the org table
       getCloudUser().fetchOrgDataAndUpdate()
+
+      const cmdObj = {
+        command: 'getWeb2Analytics',
+        data: {
+          appId: '660928cd-3ca8-44a6-b375-6b38027fb93d'
+        }
+      }
+      const options = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cmdObj)
+      }
+
+      // TODO: consider timeout / abortable fetch:
+      //  - https://developers.google.com/web/updates/2017/09/abortable-fetch
+      //  - https://developer.mozilla.org/en-US/docs/Web/API/AbortController
+      //
+      try {
+        const response = await fetch(process.env.REACT_APP_WEB_API_HOST, options)
+        console.log("all the events", response)
+      } catch (error) {
+        console.log(error)
+      }
     } else {
       setGlobal({ loading: false });
     }
@@ -51,11 +74,11 @@ export default class App extends React.Component {
     return (
       <div>
         {
-          !onboardingComplete ? 
-          <OnboardingSteps /> : 
+          !onboardingComplete ?
+          <OnboardingSteps /> :
           <div />
         }
-        
+
         <CookieConsent
           location="bottom"
           buttonText="I accept"
