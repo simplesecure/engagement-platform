@@ -1,6 +1,8 @@
 import { tableGet, tableBatchGet, tablePut } from './dynamoBasics.js'
 import * as s3Utils from './s3Utils.js'
+import * as misc from './misc.js'
 import { getLog } from './debugScopes.js'
+
 const log = getLog('dynamoConveniences')
 
 const S3_ANALYTICS_BLOB = true
@@ -153,17 +155,6 @@ export async function organizationDataTableGet(anOrgId) {
   return data
 }
 
-// TODO: move this to utils & find a better method (this has limitations
-//       for classes etc)
-function _deepCopy(anObj) {
-  const method = 'dynamoConveniences::_deepCopy'
-  try {
-    return JSON.parse(JSON.stringify(anObj))
-  } catch (error) {
-    throw new Error(`${method} failed.\n${error}`)
-  }
-}
-
 export async function organizationDataTablePut(aOrganizationDataRowObj) {
   const method = 'organizationDataTablePut'
 
@@ -180,7 +171,7 @@ export async function organizationDataTablePut(aOrganizationDataRowObj) {
     // Copy the object to prevent side effects on the client which may be using
     // properties we're about to blow away:
     try {
-      orgDataRowObj = _deepCopy(aOrganizationDataRowObj)
+      orgDataRowObj = misc.deepCopy(aOrganizationDataRowObj)
       for (const appId in orgDataRowObj.apps) {
         const app = orgDataRowObj.apps[appId]
         if(app && app.currentSegments) {

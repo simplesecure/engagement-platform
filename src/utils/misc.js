@@ -37,3 +37,14 @@ export function setLocalStorage(key, data) {
   }
   localStorage.setItem(key, dataToStore);
 }
+
+// TODO: move this to utils & find a better method (this has limitations
+//       for classes etc)
+export function deepCopy(anObjToCopy) {
+  const method = 'misc::deepCopy'
+  try {
+    return jsonParseToBuffer(JSON.stringify(anObjToCopy))
+  } catch (error) {
+    throw new Error(`${method} failed to deep copy anObjToCopy.\n${error}`)
+  }
+}
