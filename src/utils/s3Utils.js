@@ -11,22 +11,17 @@ const path = require('path')
 
 require('dotenv').config()
 const AWS = require('aws-sdk')
-if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
-  log.info(`Using AWS creds specified in Environment. (AWS_ACCESS_KEY_ID=${process.env.AWS_ACCESS_KEY_ID})`)
-  AWS.config.update({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.REGION
-  })
-} else {
-  // When the ACCESS KEY env vars aren't defined we're running on EC2 under a
-  // role with perms to the DB:
-  AWS.config.update({
-    region: process.env.REGION
-  })
+if (!process.env.REACT_APP_AWS_ACCESS_KEY_ID ||
+    !process.env.REACT_APP_AWS_SECRET_ACCESS_KEY ||
+    !process.env.REACT_APP_REGION) {
+  throw new Error('s3Utils: expected environment variables are not defined.')
 }
 
-const s3 = new AWS.S3()
+const s3 = new AWS.S3({
+  accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.REACT_APP_AWS_SECRET_ACCESS_KEY,
+  region: process.env.REACT_APP_REGION
+})
 
 export const BUCKET_NAME = 'simple-id-data'
 export const ZIP_OBJ_EXT='zip'

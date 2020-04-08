@@ -130,9 +130,16 @@ export async function organizationDataTableGet(anOrgId) {
             const { users_s3 } = seg
             const hasBlob = !!users_s3
             if (hasBlob) {
-              const usersBlob = await s3Utils.getJsonObject(users_s3.s3_key, users_s3.compressed)
-              blobsProcessed++
-              seg.users = usersBlob
+              try {
+                const usersBlob = await s3Utils.getJsonObject(users_s3.s3_key, users_s3.compressed)
+                blobsProcessed++
+                seg.users = usersBlob
+              } catch (blobFetchError) {
+                debugger
+                log.error(`${method} failed to tech blob.\n` +
+                          `${JSON.stringify(users_s3, 0, 2)}\n` +
+                          `${blobFetchError}`)
+              }
             }
           }
         }
