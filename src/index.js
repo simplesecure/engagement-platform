@@ -42,7 +42,7 @@ setGlobal({
   showSegmentNotification: false, 
   segmentProcessingDone: false, 
   segmentName: "", 
-  liveChat: true, 
+  liveChat: false, 
   mainThread: {}, 
   currentThread: {}, 
   mainThreadPosts: [], 

@@ -1,4 +1,5 @@
 import React, { setGlobal } from 'reactn';
+import { BrowserRouter } from 'react-router-dom'
 import './assets/css/loader-pulse.css'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './assets/css/theme.css';
@@ -50,8 +51,8 @@ export default class App extends React.Component {
   }
 
   render() {
-    const { onboardingComplete, allFilters } = this.global;
-    console.log(allFilters)
+    const { onboardingComplete } = this.global;
+
     return (
       <div>
         {
@@ -59,7 +60,12 @@ export default class App extends React.Component {
           <OnboardingSteps /> :
           <div />
         }
-        <ToastContainer />
+
+        {/* Set this up so that a toast with a Link redirect would work properly */}
+        <BrowserRouter>
+          <ToastContainer />
+        </BrowserRouter>
+        
         <CookieConsent
           location="bottom"
           buttonText="I accept"

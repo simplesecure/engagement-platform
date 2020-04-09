@@ -24,7 +24,7 @@ class CloudUser {
   }
 
   async fetchOrgDataAndUpdate() {
-
+    await setGlobal({ allFilters: [] });
     let userData
     let sid
     let org_id
@@ -41,7 +41,7 @@ class CloudUser {
     if(org_id) {
 
       appData = await dc.organizationDataTableGet(org_id);
-
+      console.log(appData);
     } else {
       console.log("ERROR: No Org ID")
     }

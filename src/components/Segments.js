@@ -53,6 +53,7 @@ export default class Segments extends React.Component {
   deleteSegment = async(seg, confirm) => {
     const { sessionData, SESSION_FROM_LOCAL, apps, org_id } = this.global
     const { currentSegments } = sessionData
+    console.log(currentSegments);
     this.setState({ seg })
     if(confirm) {
       const index = currentSegments.map(a => a.id).indexOf(seg.id)
