@@ -13,6 +13,9 @@ import { setLocalStorage } from "../../utils/misc";
 import { getCloudUser } from "../../utils/cloudUser.js";
 import { toast } from "react-toastify";
 import { getEmailData } from "../../utils/emailData.js";
+import { importEmailArray } from '../../utils/emailImport.js';
+import InputGroup from "react-bootstrap/InputGroup";
+const csv = require("csvtojson");
 
 export default class Communications extends React.Component {
   constructor(props) {
@@ -32,6 +35,9 @@ export default class Communications extends React.Component {
       deleteTempModal: false,
       emailEditor: false,
       createCampaign: false,
+      importModalOpen: false,
+      csvUploaded: false,
+      fileName: ''
     };
   }
 
@@ -258,6 +264,70 @@ export default class Communications extends React.Component {
     }
   };
 
+  importEmails = () => {
+    const { sessionData } = this.global;
+    const csvFile = document.getElementById("csv-file").files[0];
+  
+    const reader = new FileReader();
+    let emailData = [];
+    reader.onabort = () => console.log("file reading was aborted");
+    reader.onerror = () => console.log("file reading has failed");
+    reader.onload = async () => {
+      // Do whatever you want with the file contents
+      const binaryStr = reader.result;
+      csv({
+        noheader: false,
+        output: "csv",
+      })
+        .fromString(binaryStr)
+        .then(async (csvRow) => {
+
+          for(const item of csvRow) {
+            for(const innerItem of item) {
+              //  Taken from here: https://stackoverflow.com/a/16424756
+              //eslint-disable-next-line
+              var re = /(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
+              const isEmail = re.test(innerItem);
+              if(isEmail) {
+                emailData.push(innerItem);
+              }
+            }
+          }
+          try {
+            //  TODO - plug this into AC's email handler
+            const cmdObj = {
+              command: 'importEmails', 
+              data: {
+                appId: sessionData.id, 
+                emails: emailData
+              }
+            }
+
+            const emailsImported = await importEmailArray(cmdObj);
+            if(emailsImported) {
+              this.setState({ csvUploaded: false, importModalOpen: false, importing: false, fileName: '' });
+              toast.success('Email addresses imported');
+              //  TODO - refresh org data to show emails...somewhere
+            }
+          } catch (error) {
+            console.log(error);
+            toast.error(error.message);
+          }                 
+        });
+    };
+    reader.readAsText(csvFile);
+  };
+
+  triggerUpload = () => {
+    const upload = document.getElementById("csv-file");
+    upload.click();
+    document.getElementById('csv-file').addEventListener("change", () => {
+      if(upload.files) {
+        this.setState({ fileName: upload.files[0].name, csvUploaded: true });
+      }
+    }, false);
+  };
+
   renderCreateCampaign() {
     const {
       fromAddress,
@@ -265,7 +335,7 @@ export default class Communications extends React.Component {
       selectedTemplate,
       campaignName,
       confirmModal,
-      userCount
+      userCount,
     } = this.state;
 
     const { sessionData, processing } = this.global;
@@ -481,7 +551,7 @@ export default class Communications extends React.Component {
       deleteTempModal,
 
       templateName,
-      createCampaign
+      createCampaign,
     } = this.state;
 
     const { sessionData, processing, emailEditor } = this.global;
@@ -496,11 +566,24 @@ export default class Communications extends React.Component {
         <div>
           <div className="main-content-container container-fluid px-4">
             <div className="page-header row no-gutters py-4">
-              <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
+              <div className="col-lg-6 col-md-6 col-sm-4 text-center text-sm-left mb-0">
                 <span className="text-uppercase page-subtitle">
                   Communications
                 </span>
                 <h3 className="page-title">Connect Through Email</h3>
+              </div>
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
+                <span className="text-uppercase page-subtitle">
+                  Import Emails
+                </span>
+                <br />
+                <button
+                  onClick={() => this.setState({ importModalOpen: true })}
+                  style={{ fontSize: "16px", margin: "5px" }}
+                  className="btn btn-success"
+                >
+                  Import Email Addresses
+                </button>
               </div>
             </div>
             <div className="row">
@@ -749,10 +832,62 @@ export default class Communications extends React.Component {
   }
 
   render() {
+    const { importModalOpen, csvUploaded, fileName } = this.state;
+  
     return (
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
         {this.renderEmailComms()}
+        <Modal
+          className="custom-modal"
+          show={importModalOpen}
+          onHide={() => this.setState({ importModalOpen: false })}
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Import Emails</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div>
+              You can import a list of email addresses and use SimpleID to send
+              all of your email communications to these people.{" "}
+            </div>{" "}
+            <br />
+            <div>
+              <span className="text-muted text-small">
+                You will not be able to segment these people based on blockchain
+                data unless you have wallet addresses associated with the email
+                addresses.
+              </span>
+            </div>
+          </Modal.Body>
+          <Modal.Body>
+            <InputGroup className="mb-3">
+              <button onClick={this.triggerUpload} className="btn btn-primary">
+                Upload CSV
+              </button>
+              <p className='text-muted'>{fileName}</p>
+              <input style={{ display: "none" }} type="file" id="csv-file" />
+            </InputGroup>
+          </Modal.Body>
+          <Modal.Footer>
+            {csvUploaded ? (
+              <button className="btn btn-primary" onClick={this.importEmails}>
+                Import
+              </button>
+            ) : (
+              <button className="btn btn-primary" disabled>
+                Import
+              </button>
+            )}
+
+            <button
+              className="btn btn-secondary"
+              onClick={() => this.setState({ importModalOpen: false })}
+            >
+              Cancel
+            </button>
+          </Modal.Footer>
+        </Modal>
       </main>
     );
   }
