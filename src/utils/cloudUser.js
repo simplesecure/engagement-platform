@@ -68,24 +68,24 @@ class CloudUser {
       }
 
       //  Fetch web2 analytics eventNames - we will fetch the actual event results in Segment handling
-      const web2AnalyticsCmdObj = {
+      let web2AnalyticsCmdObj = {
         command: 'getWeb2Analytics',
             data: {
-             appId: currentAppId   
-          }     
+             appId: currentAppId
+          }
       }
 
-      const web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
-      
+      let web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
+
       setGlobal({ web2Events: web2Analytics.data ? web2Analytics.data : [] });
       const { allFilters } = await getGlobal();
       if(web2Analytics.data) {
-        
+
         const events = web2Analytics.data;
-        
+
         for(const event of events) {
           const data = {
-            type: 'web2', 
+            type: 'web2',
             filter: `Web2: ${event}`
           }
           allFilters.push(data);
@@ -95,12 +95,38 @@ class CloudUser {
       }  else {
         allFilters.push(...filter);
       }
-      
+
+      //  Fetch weekly users
+      web2AnalyticsCmdObj = {
+        command: 'getWeb2Analytics',
+            data: {
+             appId: currentAppId,
+             type: "weekly"
+          }
+      }
+
+      web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
+      const weekly = web2Analytics.data
+
+      //  Fetch monthly users
+      web2AnalyticsCmdObj = {
+        command: 'getWeb2Analytics',
+            data: {
+             appId: currentAppId,
+             type: "monthly"
+          }
+      }
+
+      web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
+      const monthly = web2Analytics.data
+
+      setGlobal({weekly, monthly})
 
       //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to
       //Get the correct results
       //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the fetchSegmentData function
       //Will update state as necessary
+
       if(data.currentSegments) {
         //TODO: We really need to find a good way to update this
         this.fetchSegmentData(appData);
@@ -288,12 +314,12 @@ export function getCloudUser() {
 }
 
 function getChatSupportAddress() {
-  //  When the the chat wallet data is returned from the DB, this function will be 
+  //  When the the chat wallet data is returned from the DB, this function will be
   //  relegated to chat wallet creation only
   return new Promise((resolve, reject) => {
     const chatWallet = localStorage.getItem(CHAT_WALLET_KEY) ? JSON.parse(localStorage.getItem(CHAT_WALLET_KEY)) : undefined
     if(chatWallet) {
-      //  If the chat wallet is found, 
+      //  If the chat wallet is found,
       resolve(chatWallet)
     } else {
       try {
@@ -356,7 +382,7 @@ async function accessThread(space, threadId, firstModAddress) {
 async function getPosts(thread) {
   return new Promise(async (resolve, reject) => {
     try {
-      const posts = await thread.getPosts()      
+      const posts = await thread.getPosts()
       resolve(posts)
     } catch(e) {
       console.log("Fetching posts error: ", e)
@@ -372,7 +398,7 @@ async function fetchAllPosts(space, mainThreadPosts) {
     for(const thread of mainThreadPosts) {
       //  TODO - Clean this all up
       //  There is a combination of parsing and not happening here
-      //  We should be parsing posts going forward because they include a 
+      //  We should be parsing posts going forward because they include a
       //  name and a message
       let threadJson = undefined
       try {
