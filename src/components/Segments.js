@@ -115,7 +115,7 @@ export default class Segments extends React.Component {
 
     const filterToUse = allFilters.filter(a => a.filter === filterType)[0]
     const segId = uuid()
-    let addrArray = [] 
+    let addrArray = []
     if(listOfAddresses) {
       addrArray = listToArray(listOfAddresses)
     }
@@ -165,9 +165,9 @@ export default class Segments extends React.Component {
         const web2AnalyticsCmdObj = {
           command: 'getWeb2Analytics',
             data: {
-             appId: sessionData.id, 
-             event: segmentCriteria.filter.filter.split('Web2: ')[1]   
-          }     
+             appId: sessionData.id,
+             event: segmentCriteria.filter.filter.split('Web2: ')[1]
+          }
         }
         try {
           const web2AnalyticsData = await getWeb2Analytics(web2AnalyticsCmdObj);
@@ -178,7 +178,7 @@ export default class Segments extends React.Component {
           if(data) {
             userCount = data.length;
             users = data;
-          } else { 
+          } else {
             userCount = 0;
             users = []
           }
@@ -315,9 +315,9 @@ export default class Segments extends React.Component {
         const web2AnalyticsCmdObj = {
           command: 'getWeb2Analytics',
             data: {
-             appId: sessionData.id, 
-             event: segmentCriteria.filter.filter.split('Web2: ')[1]   
-          }     
+             appId: sessionData.id,
+             event: segmentCriteria.filter.filter.split('Web2: ')[1]
+          }
         }
         try {
           const web2AnalyticsData = await getWeb2Analytics(web2AnalyticsCmdObj);
@@ -328,7 +328,7 @@ export default class Segments extends React.Component {
           if(data) {
             userCount = data.length;
             users = data;
-          } else { 
+          } else {
             userCount = 0;
             users = []
           }
@@ -564,7 +564,7 @@ export default class Segments extends React.Component {
         contractAddress: importAddress,
         options: {
           transactions_per_page: 100,
-          max_transactions: 10000
+          max_transactions: 250000
         }
       }
     }

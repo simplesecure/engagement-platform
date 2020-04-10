@@ -130,7 +130,7 @@ export async function putJsonObject(aKey, theData, compress=COMPRESS_OBJS) {
   const method = 'putJsonObject'
 
   const strData = JSON.stringify(theData)
-  const body = (compress) ? compressData(aKey, strData) : strData
+  const body = (compress) ? await compressData(aKey, strData) : strData
 
   const params = {
     Bucket: BUCKET_NAME,
@@ -195,7 +195,7 @@ export async function getJsonObject(aKey, compress=COMPRESS_OBJS) {
     throw new Error(`${method} failed to get object ${aKey}.\n${error}`)
   }
 
-  const uncompressedData = (compress) ? uncompressData(aKey, body) : body
+  const uncompressedData = (compress) ? await uncompressData(aKey, body) : body
 
   try {
     return JSON.parse(uncompressedData)

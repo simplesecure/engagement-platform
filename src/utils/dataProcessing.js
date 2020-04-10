@@ -197,17 +197,21 @@ export async function handleData(dataToProcess) {
       log.error("Error fetching list of uuids for wallet addresses: ", e)
     }
 
+    const INCLUDE_IMPORTED_EMAILS = true
+    const DRY_RUN = true
     //Now we need to take this list and fetch the emails for the users
     const dataForEmailService = {
       data: {
         uuidList,
         template_id,
-        app_id, 
+        app_id,
         org_id,
         subject,
         from,
         campaign_id,
-        appId: SID_ANALYTICS_APP_ID
+        appId: SID_ANALYTICS_APP_ID,
+        imported_emails: INCLUDE_IMPORTED_EMAILS,
+        dry_run: DRY_RUN,
       },
       command: 'sendEmails'
     }
@@ -216,9 +220,9 @@ export async function handleData(dataToProcess) {
   } else if(type === 'email data') {
     console.log(dataToProcess)
     const payload = {
-      command: 'getEmailData', 
+      command: 'getEmailData',
       data: {
-        appId: data.appId, 
+        appId: data.appId,
         params: dataToProcess
       }
     }
