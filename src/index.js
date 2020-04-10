@@ -61,7 +61,9 @@ setGlobal({
   templateToUpdate: {}, 
   emailData: {}, 
   web2Events: [], 
-  allFilters: []
+  allFilters: [], 
+  weekly: [], 
+  monthly: []
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));
