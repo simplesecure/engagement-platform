@@ -17,6 +17,8 @@ import { importEmailArray } from '../../utils/emailImport.js';
 import InputGroup from "react-bootstrap/InputGroup";
 const csv = require("csvtojson");
 
+const CAMPAIGN_SPEC_CHANGE_V2 = true
+
 export default class Communications extends React.Component {
   constructor(props) {
     super(props);
@@ -210,6 +212,20 @@ export default class Communications extends React.Component {
       if (sendEmail && sendEmail.success === true) {
         newCampaign["emailsSent"] = sendEmail.emailCount;
 
+        if (CAMPAIGN_SPEC_CHANGE_V2) {
+          // V2 Spec of Campaign does away with the users field for storage
+          // because it is not used and storing all those addresses poses a
+          // scalability challeng in dynamo.
+          // It introduces the segment data (id, name, userCount).
+          //
+          delete newCampaign.users
+          newCampaign['segment'] = {
+            id: seg.id,
+            name: seg.name,
+            userCount: (seg.users) ? seg.users.length : 0,
+          }
+        }
+
         camps.push(newCampaign);
         sessionData.campaigns = camps;
         const thisApp = apps[sessionData.id];
@@ -267,7 +283,7 @@ export default class Communications extends React.Component {
   importEmails = () => {
     const { sessionData } = this.global;
     const csvFile = document.getElementById("csv-file").files[0];
-  
+
     const reader = new FileReader();
     let emailData = [];
     reader.onabort = () => console.log("file reading was aborted");
@@ -296,9 +312,9 @@ export default class Communications extends React.Component {
           try {
             //  TODO - plug this into AC's email handler
             const cmdObj = {
-              command: 'importEmails', 
+              command: 'importEmails',
               data: {
-                appId: sessionData.id, 
+                appId: sessionData.id,
                 emails: emailData
               }
             }
@@ -312,7 +328,7 @@ export default class Communications extends React.Component {
           } catch (error) {
             console.log(error);
             toast.error(error.message);
-          }                 
+          }
         });
     };
     reader.readAsText(csvFile);
@@ -833,7 +849,7 @@ export default class Communications extends React.Component {
 
   render() {
     const { importModalOpen, csvUploaded, fileName } = this.state;
-  
+
     return (
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
