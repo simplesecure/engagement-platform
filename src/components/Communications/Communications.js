@@ -13,7 +13,7 @@ import { setLocalStorage } from "../../utils/misc";
 import { getCloudUser } from "../../utils/cloudUser.js";
 import { toast } from "react-toastify";
 import { getEmailData } from "../../utils/emailData.js";
-import { importEmailArray } from '../../utils/emailImport.js';
+import { importEmailArray } from "../../utils/emailImport.js";
 import InputGroup from "react-bootstrap/InputGroup";
 const csv = require("csvtojson");
 
@@ -39,11 +39,20 @@ export default class Communications extends React.Component {
       createCampaign: false,
       importModalOpen: false,
       csvUploaded: false,
-      fileName: ''
+      fileName: "",
+      allEmailsGroup: {},
     };
   }
 
   async componentDidMount() {
+    const { sessionData } = this.global;
+    if(sessionData.imports && sessionData.imports.email) {
+      const allEmailsGroup = {
+        userCount: sessionData.imports.email.count
+      }
+      this.setState({ allEmailsGroup });
+    }
+
     const emailData = await getEmailData();
     setGlobal({ emailData: emailData.data });
   }
@@ -281,9 +290,10 @@ export default class Communications extends React.Component {
   };
 
   importEmails = () => {
-    const { sessionData } = this.global;
+    const { sessionData, org_id, SESSION_FROM_LOCAL } = this.global;
+    let { apps } = this.global;
     const csvFile = document.getElementById("csv-file").files[0];
-
+    setGlobal({ processing: true, loadingMessage: "Importing emails..." });
     const reader = new FileReader();
     let emailData = [];
     reader.onabort = () => console.log("file reading was aborted");
@@ -297,36 +307,95 @@ export default class Communications extends React.Component {
       })
         .fromString(binaryStr)
         .then(async (csvRow) => {
-
-          for(const item of csvRow) {
-            for(const innerItem of item) {
+          for (const item of csvRow) {
+            for (const innerItem of item) {
               //  Taken from here: https://stackoverflow.com/a/16424756
               //eslint-disable-next-line
               var re = /(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/;
               const isEmail = re.test(innerItem);
-              if(isEmail) {
+              if (isEmail) {
                 emailData.push(innerItem);
               }
             }
           }
           try {
-            //  TODO - plug this into AC's email handler
             const cmdObj = {
-              command: 'importEmails',
+              command: "importEmails",
               data: {
                 appId: sessionData.id,
-                emails: emailData
-              }
-            }
+                emails: emailData,
+              },
+            };
 
             const emailsImported = await importEmailArray(cmdObj);
-            if(emailsImported) {
-              this.setState({ csvUploaded: false, importModalOpen: false, importing: false, fileName: '' });
-              toast.success('Email addresses imported');
-              //  TODO - refresh org data to show emails...somewhere
+            if (emailsImported.data) {
+              const { data } = emailsImported;
+              const { message, previouslyImported, imported } = data;
+
+              const allEmailsGroup = {
+                id: `4-${sessionData.id}`,
+                name: "All Emails",
+                users: [],
+                userCount: previouslyImported + imported,
+              };
+
+              const thisApp = apps[sessionData.id];
+              if(thisApp.imports) {
+                thisApp.imports['email'] = {
+                  count: previouslyImported + imported, 
+                  updated: Date.now()
+                }
+              } else {
+                thisApp['imports'] = {
+                  email: {
+                    count: previouslyImported + imported, 
+                    updated: Date.now()
+                  }
+                }
+              }
+
+              apps[sessionData.id] = thisApp;
+
+              setGlobal({ sessionData: thisApp });
+
+              const orgData = await dc.organizationDataTableGet(org_id);
+
+              try {
+                const anObject = orgData.Item;
+                anObject.apps = apps;
+                anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
+                await dc.organizationDataTablePut(anObject);
+                setLocalStorage(
+                  SESSION_FROM_LOCAL,
+                  JSON.stringify(sessionData)
+                );
+                this.setState({
+                  selectedSegment: "Choose...",
+                  message: "",
+                  notificationName: "",
+                });
+              } catch (suppressedError) {
+                console.log(
+                  `ERROR: problem writing to DB.\n${suppressedError}`
+                );
+                toast.error("Email sent but data update failed");
+              }
+              this.setState({ allEmailsGroup });
+              this.setState({
+                csvUploaded: false,
+                importModalOpen: false,
+                importing: false,
+                fileName: "",
+              });
+              setGlobal({ processing: false });
+              toast.success(message);
+            } else {
+              setGlobal({ processing: false });
+              toast.error("Toruble importing emails");
             }
           } catch (error) {
             console.log(error);
+            setGlobal({ processing: false });
             toast.error(error.message);
           }
         });
@@ -337,11 +406,15 @@ export default class Communications extends React.Component {
   triggerUpload = () => {
     const upload = document.getElementById("csv-file");
     upload.click();
-    document.getElementById('csv-file').addEventListener("change", () => {
-      if(upload.files) {
-        this.setState({ fileName: upload.files[0].name, csvUploaded: true });
-      }
-    }, false);
+    document.getElementById("csv-file").addEventListener(
+      "change",
+      () => {
+        if (upload.files) {
+          this.setState({ fileName: upload.files[0].name, csvUploaded: true });
+        }
+      },
+      false
+    );
   };
 
   renderCreateCampaign() {
@@ -565,12 +638,16 @@ export default class Communications extends React.Component {
       showExisting,
       templateToDelete,
       deleteTempModal,
-
       templateName,
       createCampaign,
     } = this.state;
 
-    const { sessionData, processing, emailEditor } = this.global;
+    const {
+      sessionData,
+      processing,
+      emailEditor,
+      loadingMessage,
+    } = this.global;
     const { campaigns, currentTemplates } = sessionData;
 
     if (emailEditor) {
@@ -603,7 +680,7 @@ export default class Communications extends React.Component {
               </div>
             </div>
             <div className="row">
-              <Charts />
+              <Charts allEmailsGroup={this.state.allEmailsGroup} />
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4 margin-top">
                 <h5>
                   Campaigns{" "}
@@ -811,7 +888,11 @@ export default class Communications extends React.Component {
 
           <Modal className="custom-modal" show={processing}>
             <Modal.Body>
-              <LoadingModal messageToDisplay={"Send emails..."} />
+              <LoadingModal
+                messageToDisplay={
+                  loadingMessage ? loadingMessage : "Sending emails..."
+                }
+              />
             </Modal.Body>
           </Modal>
 
@@ -881,7 +962,7 @@ export default class Communications extends React.Component {
               <button onClick={this.triggerUpload} className="btn btn-primary">
                 Upload CSV
               </button>
-              <p className='text-muted'>{fileName}</p>
+              <p className="text-muted">{fileName}</p>
               <input style={{ display: "none" }} type="file" id="csv-file" />
             </InputGroup>
           </Modal.Body>

@@ -14,7 +14,6 @@ const CHAT_WALLET_KEY = "chat-wallet";
 const SIMPLEID_USER_SESSION = "SID_SVCS";
 const SESSION_FROM_LOCAL = "sessionData";
 const log = getLog("cloudUser");
-const uuid = require("uuid/v4");
 
 class CloudUser {
   async signOut() {
@@ -105,7 +104,7 @@ class CloudUser {
       }
 
       //  Fetch weekly users
-      web2AnalyticsCmdObj = {
+      const weeklyWeb2AnalyticsCmdObj = {
         command: "getWeb2Analytics",
         data: {
           appId: currentAppId,
@@ -113,11 +112,12 @@ class CloudUser {
         },
       };
 
-      web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
-      const weekly = web2Analytics.data;
+      const weeklyWeb2Analytics = await getWeb2Analytics(weeklyWeb2AnalyticsCmdObj);
+
+      const weekly = weeklyWeb2Analytics.data;
 
       //  Fetch monthly users
-      web2AnalyticsCmdObj = {
+      const monthlyWeb2AnalyticsCmdObj = {
         command: "getWeb2Analytics",
         data: {
           appId: currentAppId,
@@ -125,84 +125,69 @@ class CloudUser {
         },
       };
 
-      web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
-      const monthly = web2Analytics.data;
+      const monthlyWeb2Analytics = await getWeb2Analytics(monthlyWeb2AnalyticsCmdObj);
+
+      const monthly = monthlyWeb2Analytics.data;
 
       setGlobal({ weekly, monthly });
 
-      const { sessionData } = await getGlobal();
-      const segments = sessionData.currentSegments ? sessionData.currentSegments : [];
-      if (segments) {
-        const defaultWeeklySegId = `2-${currentAppId}`;
-        const defaultMonthlySegId = `3-${currentAppId}`;
+      console.log({weekly, monthly})
 
-        if (weekly) {
-          const weeklySeg = {
-            id: uuid(),
-            name: "Weekly Active Users",
-            users: weekly,
-            userCount: weekly.length,
-          };
-          let thisSegment = segments.filter(
-            (a) => a.id === defaultWeeklySegId
-          )[0];
-          if (thisSegment) {
-            thisSegment = weeklySeg;
-          } else {
-            segments.push(weeklySeg);
-          }
+      //  Need to update these segments and post back to DB
+      const weeklySegment = {
+        id: `2-${currentAppId}`,
+        name: 'Weekly Active Users', 
+        userCount: weekly && weekly.length ? weekly.length : 0, 
+        users: weekly ? weekly : []
+      }
+
+      const monthlySegment = {
+        id: `3-${currentAppId}`,
+        name: 'Monthly Active Users',
+        userCount: monthly && monthly.length ? monthly.length : 0, 
+        users: monthly ? monthly : []
+      }
+
+      let segments = []
+
+      if(data.currentSegments) {
+        segments = data.currentSegments
+
+        let weeklySeg = segments.filter(seg => seg.id === weeklySegment.id)[0];
+        if(weeklySeg) {
+          weeklySeg = weeklySegment;
         } else {
-          // const weeklySeg = {
-          //   id: uuid(),
-          //   name: "Weekly Active Users",
-          //   users: [],
-          //   userCount: 0,
-          // };
-          // let thisSegment = segments.filter(
-          //   (a) => a.id === defaultWeeklySegId
-          // )[0];
-
-          // if (thisSegment) {
-          //   thisSegment = weeklySeg;
-          // } else {
-          //   segments.push(weeklySeg);
-          // }
+          segments.push(weeklySegment);
         }
 
-        if (monthly) {
-          const monthlySeg = {
-            id: uuid(),
-            name: "Monthly Active Users",
-            users: monthly,
-            userCount: monthly.length,
-          };
-          let thisMonthlySeg = segments.filter(
-            (a) => a.id === defaultMonthlySegId
-          )[0];
-          if (thisMonthlySeg) {
-            thisMonthlySeg = monthlySeg;
-          } else {
-            segments.push(monthlySeg);
-          }
-        } else {
-          // const monthlySeg = {
-          //   id: uuid(),
-          //   name: "Monthly Active Users",
-          //   users: [],
-          //   userCount: 0,
-          // };
-          // let thisMonthlySeg = segments.filter(
-          //   (a) => a.id === defaultMonthlySegId
-          // )[0];
-          // if (thisMonthlySeg) {
-          //   thisMonthlySeg = monthlySeg;
-          // } else {
-          //   segments.push(monthlySeg);
-          // }
+        let monthlySeg = segments.filter(seg => seg.id === monthlySegment.id)[0];
+        if(monthlySeg) {
+          monthlySeg = monthlySegment;
+        } else { 
+          segments.push(monthlySegment)
         }
+      } else {
+        segments.push(monthlySegment)
+        segments.push(weeklySegment);
+      }
+      
+      //  Post this data to the DB
+      const { apps } = await getGlobal();
+      const thisApp = apps[currentAppId];
+      thisApp.currentSegments = segments;
+      apps[currentAppId] = thisApp;
 
-        sessionData.currentSegments = segments;
-        setGlobal({ sessionData });
+      try {
+        const anObject = appData.Item;
+        anObject.apps = apps;
+        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
+        await dc.organizationDataTablePut(anObject);
+        
+      } catch (suppressedError) {
+        const ERROR_MSG =
+          "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz.";
+        setGlobal({ error: ERROR_MSG });
+        console.log(`ERROR: problem writing to DB.\n${suppressedError}`);
       }
 
       //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to

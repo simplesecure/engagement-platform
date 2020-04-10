@@ -2,7 +2,7 @@ import React, { useGlobal, useState, useEffect } from "reactn";
 import Card from "react-bootstrap/Card";
 import { Line } from "react-chartjs-2";
 
-const Charts = () => {
+const Charts = (props) => {
   const [emailData] = useGlobal("emailData");
   const [lineChartData, setLineChartData] = useState({});
   const [basicStats, setBasicStats] = useState({
@@ -133,6 +133,10 @@ const Charts = () => {
               <Card.Body>
                 <div className="row">
                   <div className="col-md-6 col-sm-6 col-lg-6 text-center">
+                    <h6>Total Emails Imported</h6>
+                    <h3>{props.allEmailsGroup.userCount ? props.allEmailsGroup.userCount : 0}</h3>
+                  </div>
+                  <div className="col-md-6 col-sm-6 col-lg-6 text-center">
                     <h6>Total Emails Sent</h6>
                     <h3>{basicStats.totalEmailsSent}</h3>
                   </div>
@@ -147,6 +151,10 @@ const Charts = () => {
                   <div className="col-md-6 col-sm-6 col-lg-6 text-center">
                     <h6>Total Bounces</h6>
                     <h3>{basicStats.totalBounces}</h3>
+                  </div>
+                  <div className="col-md-6 col-sm-6 col-lg-6 text-center">
+                    <h6>Total Unsubscribes</h6>
+                    <h3>0</h3>
                   </div>
                 </div>
               </Card.Body>

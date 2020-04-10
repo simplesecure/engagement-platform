@@ -63,7 +63,8 @@ setGlobal({
   web2Events: [], 
   allFilters: [], 
   weekly: [], 
-  monthly: []
+  monthly: [], 
+  loadingMessage: ''
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));
