@@ -414,8 +414,19 @@ export default class Segments extends React.Component {
     this.setState({ date })
   }
 
-  handleSegmentModal = (seg) => {
-    this.setState({ segmentToShow: seg, showSegmentModal: true })
+  handleSegmentModal = (seg, activeUsers) => {
+    const { sessionData } = this.global
+    if(activeUsers === 'Monthly' || activeUsers === 'Weekly') {
+      const segmentToShow = {
+        id: `2-${sessionData.id}`, 
+        name: activeUsers, 
+        users: seg,
+        userCount: seg.length
+      }
+      this.setState({ segmentToShow, showSegmentModal: true })
+    } else {
+      this.setState({ segmentToShow: seg, showSegmentModal: true })
+    }
   }
 
   handleEditSegment = async (seg, singleCondition) => {
@@ -787,7 +798,7 @@ export default class Segments extends React.Component {
   }
 
   render() {
-    const { sessionData, processing, currentAppId } = this.global
+    const { sessionData, processing, currentAppId, weekly, monthly } = this.global
     const { currentSegments } = sessionData
     const { importAddress, importModalOpen, loadingMessage, condition, editSegment, showSegmentModal, segmentToShow, show, seg, existingSeg, newSegName, existingSegmentToFilter } = this.state
     const segments = currentSegments ? currentSegments : []
@@ -842,6 +853,26 @@ export default class Segments extends React.Component {
                         </tr>
                       )
                     })
+                  }
+
+                  {
+                    weekly && weekly.length > 0 ?
+                    <tr>
+                      <td className="clickable link-color" onClick={() => this.handleSegmentModal(weekly, "Weekly")}>Weekly Active Users</td>
+                      <td>{weekly.length}</td>
+                      <td></td>
+                    </tr> : 
+                    <tr style={{display: "none"}} />
+                  }
+
+                  {
+                    monthly && monthly.length > 0 ?
+                    <tr>
+                      <td className="clickable link-color" onClick={() => this.handleSegmentModal(monthly, "Monthly")}>Monthly Active Users</td>
+                      <td>{monthly.length}</td>
+                      <td></td>
+                    </tr> : 
+                    <tr style={{display: "none"}} />
                   }
                   </tbody>
                 </Table>

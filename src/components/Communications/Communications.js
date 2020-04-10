@@ -37,12 +37,17 @@ export default class Communications extends React.Component {
       createCampaign: false,
       importModalOpen: false,
       csvUploaded: false,
-      fileName: ''
+      fileName: '', 
+      allEmailsGroup: {}
     };
   }
 
   async componentDidMount() {
-    const emailData = await getEmailData();
+    const allEmailsGroup = localStorage.getItem('email-list');
+    if(allEmailsGroup) {
+      this.setState({ allEmailsGroup: JSON.parse(allEmailsGroup) });
+    }
+    const emailData = await getEmailData();    
     setGlobal({ emailData: emailData.data });
   }
 
@@ -267,7 +272,7 @@ export default class Communications extends React.Component {
   importEmails = () => {
     const { sessionData } = this.global;
     const csvFile = document.getElementById("csv-file").files[0];
-  
+    setGlobal({ processing: true, loadingMessage: 'Importing emails...' });
     const reader = new FileReader();
     let emailData = [];
     reader.onabort = () => console.log("file reading was aborted");
@@ -304,13 +309,36 @@ export default class Communications extends React.Component {
             }
 
             const emailsImported = await importEmailArray(cmdObj);
-            if(emailsImported) {
+            if(emailsImported.data) {
+              const { data } = emailsImported;
+              const { message, previouslyImported, imported } = data;
+              //  TODO - need to save the results somewhere so in the UI it's clear how many people are being emailed. 
+              const emailList = localStorage.getItem('email-list');
+              let allEmailsGroup;
+              if(emailList) {
+                const emailSeg = JSON.parse(emailList);
+                emailSeg.userCount = previouslyImported + imported
+                allEmailsGroup = emailSeg
+              } else {
+                allEmailsGroup = {
+                  id: `4-${sessionData.id}`, 
+                  name: 'All Emails', 
+                  users: [], 
+                  userCount: previouslyImported + imported
+                }
+              }
+              localStorage.setItem('email-list', JSON.stringify(allEmailsGroup));
+              this.setState({ allEmailsGroup });
               this.setState({ csvUploaded: false, importModalOpen: false, importing: false, fileName: '' });
-              toast.success('Email addresses imported');
-              //  TODO - refresh org data to show emails...somewhere
+              setGlobal({ processing: false });
+              toast.success(message);
+            } else {
+              setGlobal({ processing: false });
+              toast.error('Toruble importing emails')
             }
           } catch (error) {
             console.log(error);
+            setGlobal({ processing: false })
             toast.error(error.message);
           }                 
         });
@@ -549,12 +577,11 @@ export default class Communications extends React.Component {
       showExisting,
       templateToDelete,
       deleteTempModal,
-
       templateName,
       createCampaign,
     } = this.state;
 
-    const { sessionData, processing, emailEditor } = this.global;
+    const { sessionData, processing, emailEditor, loadingMessage } = this.global;
     const { campaigns, currentTemplates } = sessionData;
 
     if (emailEditor) {
@@ -587,7 +614,7 @@ export default class Communications extends React.Component {
               </div>
             </div>
             <div className="row">
-              <Charts />
+              <Charts allEmailsGroup={this.state.allEmailsGroup} />
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4 margin-top">
                 <h5>
                   Campaigns{" "}
@@ -795,7 +822,7 @@ export default class Communications extends React.Component {
 
           <Modal className="custom-modal" show={processing}>
             <Modal.Body>
-              <LoadingModal messageToDisplay={"Send emails..."} />
+              <LoadingModal messageToDisplay={loadingMessage ? loadingMessage : 'Sending emails...'} />
             </Modal.Body>
           </Modal>
 

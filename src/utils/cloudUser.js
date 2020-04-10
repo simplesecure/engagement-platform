@@ -14,7 +14,6 @@ const CHAT_WALLET_KEY = "chat-wallet";
 const SIMPLEID_USER_SESSION = "SID_SVCS";
 const SESSION_FROM_LOCAL = "sessionData";
 const log = getLog("cloudUser");
-const uuid = require("uuid/v4");
 
 class CloudUser {
   async signOut() {
@@ -105,7 +104,7 @@ class CloudUser {
       }
 
       //  Fetch weekly users
-      web2AnalyticsCmdObj = {
+      const weeklyWeb2AnalyticsCmdObj = {
         command: "getWeb2Analytics",
         data: {
           appId: currentAppId,
@@ -113,11 +112,12 @@ class CloudUser {
         },
       };
 
-      web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
-      const weekly = web2Analytics.data;
+      const weeklyWeb2Analytics = await getWeb2Analytics(weeklyWeb2AnalyticsCmdObj);
+
+      const weekly = weeklyWeb2Analytics.data;
 
       //  Fetch monthly users
-      web2AnalyticsCmdObj = {
+      const monthlyWeb2AnalyticsCmdObj = {
         command: "getWeb2Analytics",
         data: {
           appId: currentAppId,
@@ -125,85 +125,11 @@ class CloudUser {
         },
       };
 
-      web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
-      const monthly = web2Analytics.data;
+      const monthlyWeb2Analytics = await getWeb2Analytics(monthlyWeb2AnalyticsCmdObj);
+
+      const monthly = monthlyWeb2Analytics.data;
 
       setGlobal({ weekly, monthly });
-
-      const { sessionData } = await getGlobal();
-      const segments = sessionData.currentSegments ? sessionData.currentSegments : [];
-      if (segments) {
-        const defaultWeeklySegId = `2-${currentAppId}`;
-        const defaultMonthlySegId = `3-${currentAppId}`;
-
-        if (weekly) {
-          const weeklySeg = {
-            id: uuid(),
-            name: "Weekly Active Users",
-            users: weekly,
-            userCount: weekly.length,
-          };
-          let thisSegment = segments.filter(
-            (a) => a.id === defaultWeeklySegId
-          )[0];
-          if (thisSegment) {
-            thisSegment = weeklySeg;
-          } else {
-            segments.push(weeklySeg);
-          }
-        } else {
-          // const weeklySeg = {
-          //   id: uuid(),
-          //   name: "Weekly Active Users",
-          //   users: [],
-          //   userCount: 0,
-          // };
-          // let thisSegment = segments.filter(
-          //   (a) => a.id === defaultWeeklySegId
-          // )[0];
-
-          // if (thisSegment) {
-          //   thisSegment = weeklySeg;
-          // } else {
-          //   segments.push(weeklySeg);
-          // }
-        }
-
-        if (monthly) {
-          const monthlySeg = {
-            id: uuid(),
-            name: "Monthly Active Users",
-            users: monthly,
-            userCount: monthly.length,
-          };
-          let thisMonthlySeg = segments.filter(
-            (a) => a.id === defaultMonthlySegId
-          )[0];
-          if (thisMonthlySeg) {
-            thisMonthlySeg = monthlySeg;
-          } else {
-            segments.push(monthlySeg);
-          }
-        } else {
-          // const monthlySeg = {
-          //   id: uuid(),
-          //   name: "Monthly Active Users",
-          //   users: [],
-          //   userCount: 0,
-          // };
-          // let thisMonthlySeg = segments.filter(
-          //   (a) => a.id === defaultMonthlySegId
-          // )[0];
-          // if (thisMonthlySeg) {
-          //   thisMonthlySeg = monthlySeg;
-          // } else {
-          //   segments.push(monthlySeg);
-          // }
-        }
-
-        sessionData.currentSegments = segments;
-        setGlobal({ sessionData });
-      }
 
       //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to
       //Get the correct results

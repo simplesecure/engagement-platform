@@ -13,6 +13,7 @@
 
 
 export const getWeb2Analytics = async (cmdObj) => {
+  console.log(cmdObj)
   return new Promise(async (resolve, reject) => {
     const options = {
       method: 'POST',

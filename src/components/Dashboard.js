@@ -26,14 +26,25 @@ export default class Dashboard extends React.Component {
     getCloudUser().fetchOrgDataAndUpdate()
   }
 
-  handleShowSeg = (seg) => {
-    this.setState({ segmentToShow: seg, showSegmentModal: true })
+  handleShowSeg = (seg, activeUsers) => {
+    const { sessionData } = this.global;
+    if(activeUsers === 'Monthly' || activeUsers === 'Weekly') {
+      const segmentToShow = {
+        id: `2-${sessionData.id}`, 
+        name: activeUsers, 
+        users: seg,
+        userCount: seg.length
+      }
+      this.setState({ segmentToShow, showSegmentModal: true })
+    } else {
+      this.setState({ segmentToShow: seg, showSegmentModal: true })
+    }
   }
 
   render() {
-    const { sessionData, verified, showDemo, processing } = this.global;
+    const { sessionData, verified, showDemo, processing, weekly, monthly } = this.global;
+    console.log({weekly, monthly})
     const { loadingMessage, showSegmentModal, segmentToShow } = this.state
-    
     const { currentSegments } = sessionData
     const allTiles = currentSegments ? currentSegments : []
     const tiles = allTiles.filter(a => a.showOnDashboard === true || a.showOnDashboard === undefined)
@@ -57,6 +68,48 @@ export default class Dashboard extends React.Component {
               </div>
              
               <div className="row">
+                {
+                  weekly && weekly.length > 0 ? 
+                  <div onClick={() => this.handleShowSeg(weekly, 'Weekly')} className="clickable col-lg-4 col-md-6 col-sm-6 mb-4">
+                        <div className="stats-small stats-small--1 card card-small">
+                          <div className="card-body p-0 d-flex">
+                            <div className="d-flex flex-column m-auto">
+                              <div className="stats-small__data text-center">
+                                <span className="stats-small__label text-uppercase">Weekly Active Users</span>
+                                <h6 className="stats-small__value count my-3">{weekly.length}</h6>
+                              </div>
+                              <div className="stats-small__data">
+                                {/*<span className="stats-small__percentage stats-small__percentage--increase">4.7%</span>*/}
+                              </div>
+                            </div>
+                            <canvas height="120" className="blog-overview-stats-small-1"></canvas>
+                          </div>
+                        </div>
+                      </div> : 
+                      <div />
+                }
+
+                {
+                  monthly && monthly.length > 0 ? 
+                  <div onClick={() => this.handleShowSeg(monthly, 'Monthly')} className="clickable col-lg-4 col-md-6 col-sm-6 mb-4">
+                        <div className="stats-small stats-small--1 card card-small">
+                          <div className="card-body p-0 d-flex">
+                            <div className="d-flex flex-column m-auto">
+                              <div className="stats-small__data text-center">
+                                <span className="stats-small__label text-uppercase">Monthly Active Users</span>
+                                <h6 className="stats-small__value count my-3">{monthly.length}</h6>
+                              </div>
+                              <div className="stats-small__data">
+                                {/*<span className="stats-small__percentage stats-small__percentage--increase">4.7%</span>*/}
+                              </div>
+                            </div>
+                            <canvas height="120" className="blog-overview-stats-small-1"></canvas>
+                          </div>
+                        </div>
+                      </div> : 
+                      <div />
+                }
+
                 {
                   tiles.map(tile => {
                     return (
