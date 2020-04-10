@@ -80,11 +80,14 @@ export default class StickyNav extends React.Component {
 
     const appKeys = Object.keys(apps);
     let projects = [];
-    for (const appKey of appKeys) {
-      const thisApp = apps[appKey];
-      thisApp.id = appKey;
-      projects.push(thisApp);
+    if(appKeys.length > 0) {
+      for (const appKey of appKeys) {
+        const thisApp = apps[appKey];
+        thisApp.id = appKey;
+        projects.push(thisApp);
+      }
     }
+    
     return (
       <div className="main-navbar sticky-top bg-white">
         <nav className="navbar align-items-stretch navbar-light flex-md-nowrap p-0">

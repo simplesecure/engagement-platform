@@ -131,6 +131,8 @@ class CloudUser {
 
       setGlobal({ weekly, monthly });
 
+      console.log({weekly, monthly})
+
       //  Need to update these segments and post back to DB
       const weeklySegment = {
         id: `2-${currentAppId}`,
@@ -150,7 +152,7 @@ class CloudUser {
 
       if(data.currentSegments) {
         segments = data.currentSegments
-        console.log(segments)
+
         let weeklySeg = segments.filter(seg => seg.id === weeklySegment.id)[0];
         if(weeklySeg) {
           weeklySeg = weeklySegment;
