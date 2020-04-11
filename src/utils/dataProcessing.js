@@ -260,7 +260,7 @@ export async function handleData(dataToProcess) {
     log.debug(createProject)
     return createProject
   } else if (type === 'import') {
-    setGlobal({ notificationId: data.app_id });
+    setGlobal({ notificationId: data.appId });
     const cmdObj = data
     if (QUEUE_IMPORT_WALLETS) {
       cmdObj.data.queue = true
