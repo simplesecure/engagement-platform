@@ -135,7 +135,6 @@ export default class Segments extends React.Component {
     }
     const segmentCriteria = {
       appId: sessionData.id,
-      app_id: sessionData.id,
       showOnDashboard: showOnDashboard,
       id: segId,
       name: newSegName,
@@ -1141,11 +1140,11 @@ export default class Segments extends React.Component {
                                 >
                                   <strong>Import Users</strong>
                                 </td>
-                              ) : 
-                              seg.id === `2-${currentAppId}` || seg.id === `3-${currentAppId}` ? 
+                              ) :
+                              seg.id === `2-${currentAppId}` || seg.id === `3-${currentAppId}` ?
                               (
                                 <td></td>
-                              ) : 
+                              ) :
                               (
                                 <td
                                   className="clickable"

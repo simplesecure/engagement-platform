@@ -137,8 +137,7 @@ export async function organizationDataTableGet(anOrgId) {
                 blobsProcessed++
                 seg.users = usersBlob
               } catch (blobFetchError) {
-                debugger
-                log.error(`${method} failed to tech blob.\n` +
+                log.error(`${method} failed to fetch blob.\n` +
                           `${JSON.stringify(users_s3, 0, 2)}\n` +
                           `${blobFetchError}`)
               }

@@ -118,8 +118,6 @@ socket.on('update job id', async (result) => {
 
 const SESSION_FROM_LOCAL = 'sessionData'
 
-const SID_ANALYTICS_APP_ID = '00000000000000000000000000000000'
-
 const QUEUE_IMPORT_WALLETS = true
 const QUEUE_CREATE_SEGMENT = true
 const QUEUE_UPDATE_SEGMENT = true
@@ -170,6 +168,17 @@ export async function handleData(dataToProcess) {
 
   } else if(type === 'segment') {
 
+    // Adding the next line b/c w/o it the command to create a segment fails with
+    // destructuring.  There's lots of problems with it though:
+    //  - it's everywhere here for some reason
+    //  - it's in global state so when I set it and another command for another
+    //    app_id is queued, it will cause a failure.  For example:
+    //      - issue command segment 1, app_id=1
+    //      - issue command segment 2, app_id=2
+    //      - command segment 1 finishes and tries to run handle create segment.
+    //        which might fail b/c the notificationId has been set to 2.
+    //  - setting global may cause re-renders
+    setGlobal({ notificationId: data.appId });
     const cmdObj = {
       command: 'segment',
       data: data
@@ -185,7 +194,7 @@ export async function handleData(dataToProcess) {
     //const { addresses, app_id, template, subject } = data;
     //Commented out because we don't need each individual item separately
     log.info(`handleData ${type} ...`)
-    const { template_id, subject, from, app_id, org_id, campaign_id } = data
+    const { template_id, subject, from, app_id, org_id, campaign_id, include_imported_emails } = data
     if (!template_id || !subject || !from) {
       throw new Error('Email messaging expects the template, subject, and from address to be defined.')
     }
@@ -197,20 +206,26 @@ export async function handleData(dataToProcess) {
       log.error("Error fetching list of uuids for wallet addresses: ", e)
     }
 
-    const INCLUDE_IMPORTED_EMAILS = true
-    const DRY_RUN = true
+    let DRY_RUN = true
+    try {
+      // Odd logic designed to ensure this defaults to true unless
+      // we explicitly set REACT_APP_EMAILS_DRY_RUN to some variant of
+      // the string 'false' in env file.
+      DRY_RUN = !(process.env.REACT_APP_EMAILS_DRY_RUN.toLowerCase() === 'false')
+    } catch (suppressedError) {}
+    debugger
+
     //Now we need to take this list and fetch the emails for the users
     const dataForEmailService = {
       data: {
+        appId: app_id,
         uuidList,
         template_id,
-        app_id,
         org_id,
         subject,
         from,
         campaign_id,
-        appId: SID_ANALYTICS_APP_ID,
-        imported_emails: INCLUDE_IMPORTED_EMAILS,
+        imported_emails: !!include_imported_emails,
         dry_run: DRY_RUN,
       },
       command: 'sendEmails'

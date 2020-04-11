@@ -619,13 +619,9 @@ export class SidServices
     //
     for (const encryptedUuidCipherText of encryptedUuids) {
       try {
-        console.log(orgEcPriKey.toString('base64'))
         //console.log(orgEcPriKey, encryptedUuidCipherText)
         if(encryptedUuidCipherText) {
-          console.log(JSON.stringify(encryptedUuidCipherText))
           const uuid = await eccrypto.decrypt(orgEcPriKey, encryptedUuidCipherText)
-          console.log("UUID: ")
-          console.log(uuid)
           uuids.push(uuid.toString())
         }
       } catch (suppressedError) {
