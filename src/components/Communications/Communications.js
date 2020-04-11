@@ -1,4 +1,4 @@
-import React, { setGlobal } from "reactn";
+import React, { setGlobal, getGlobal } from "reactn";
 import StickyNav from "../StickyNav";
 import Modal from "react-bootstrap/Modal";
 import uuid from "uuid/v4";
@@ -7,6 +7,7 @@ import EmailEditor from "./EmailEditor";
 import Charts from "./Charts";
 import Table from "react-bootstrap/Table";
 import Card from "react-bootstrap/Card";
+import Form from "react-bootstrap/Form"
 import Loader from "../Loader";
 import * as dc from "../../utils/dynamoConveniences.js";
 import { setLocalStorage } from "../../utils/misc";
@@ -16,6 +17,8 @@ import { getEmailData } from "../../utils/emailData.js";
 import { importEmailArray } from "../../utils/emailImport.js";
 import InputGroup from "react-bootstrap/InputGroup";
 const csv = require("csvtojson");
+
+const CAMPAIGN_SPEC_CHANGE_V2 = true
 
 export default class Communications extends React.Component {
   constructor(props) {
@@ -39,7 +42,10 @@ export default class Communications extends React.Component {
       csvUploaded: false,
       fileName: "",
       allEmailsGroup: {},
+      includeImportedEmails: false
     };
+
+    this.numImportedEmails = 0
   }
 
   async componentDidMount() {
@@ -182,6 +188,7 @@ export default class Communications extends React.Component {
       selectedTemplate,
       campaignName,
       fromAddress,
+      includeImportedEmails,
     } = this.state;
     const { currentSegments, campaigns } = sessionData;
     const seg = currentSegments.filter((a) => a.id === selectedSegment)[0];
@@ -197,6 +204,15 @@ export default class Communications extends React.Component {
         users: seg.users,
         dateSent: new Date(),
       };
+      if (CAMPAIGN_SPEC_CHANGE_V2) {
+        // V2 introduces the segment data (id, name, userCount).
+        // and deletes users after sending the campaign.
+        newCampaign['segment'] = {
+          id: seg.id,
+          name: seg.name,
+          userCount: (seg.users) ? seg.users.length : 0,
+        }
+      }
 
       //Process the actual email send
       const emailPayload = {
@@ -207,6 +223,7 @@ export default class Communications extends React.Component {
         org_id,
         template_id: selectedTemplate,
         campaign_id: newCampaign.id,
+        include_imported_emails: includeImportedEmails
       };
 
       setGlobal({ processing: true });
@@ -218,6 +235,14 @@ export default class Communications extends React.Component {
 
       if (sendEmail && sendEmail.success === true) {
         newCampaign["emailsSent"] = sendEmail.emailCount;
+
+        if (CAMPAIGN_SPEC_CHANGE_V2) {
+          // V2 Spec of Campaign does away with the users field for storage
+          // because it is not used and storing all those addresses poses a
+          // scalability challeng in dynamo.
+          //
+          delete newCampaign.users
+        }
 
         camps.push(newCampaign);
         sessionData.campaigns = camps;
@@ -326,13 +351,13 @@ export default class Communications extends React.Component {
               const thisApp = apps[sessionData.id];
               if(thisApp.imports) {
                 thisApp.imports['email'] = {
-                  count: previouslyImported + imported, 
+                  count: previouslyImported + imported,
                   updated: Date.now()
                 }
               } else {
                 thisApp['imports'] = {
                   email: {
-                    count: previouslyImported + imported, 
+                    count: previouslyImported + imported,
                     updated: Date.now()
                   }
                 }
@@ -401,15 +426,48 @@ export default class Communications extends React.Component {
     );
   };
 
+  getImportEmailsCheckbox(numImportedEmails=0) {
+    if (numImportedEmails >= 0) {
+      const checkBoxLabel = `Include ${numImportedEmails} imported emails.`
+
+      return (
+        <Form.Group controlId="importedEmailsCheckbox">
+          <Form.Check
+            type="checkbox"
+            label={checkBoxLabel}
+            onChange={(evt) => {
+              const includeImportedEmails = evt.target.checked
+              this.setState({ includeImportedEmails })
+            }}/>
+        </Form.Group>
+      )
+    }
+
+    return undefined
+  }
+
+  getCampaignPossibleEmailCount() {
+    const { userCount, includeImportedEmails } = this.state
+    const possibleEmails = (includeImportedEmails) ?
+      userCount + this.numImportedEmails : userCount
+
+    return possibleEmails
+  }
+
   renderCreateCampaign() {
     const {
       fromAddress,
       selectedSegment,
       selectedTemplate,
       campaignName,
-      confirmModal,
-      userCount,
+      confirmModal
     } = this.state;
+
+
+    try {
+      const { currentAppId, apps } = getGlobal()
+      this.numImportedEmails = apps[currentAppId].imports.email.count
+    } catch (suppressedError) {}
 
     const { sessionData, processing } = this.global;
     const { currentSegments, currentTemplates } = sessionData;
@@ -454,6 +512,7 @@ export default class Communications extends React.Component {
                       );
                     })}
                   </select>
+                  {this.getImportEmailsCheckbox(this.numImportedEmails)}
                 </div>
                 <div className="form-group col-md-12">
                   <label htmlFor="inputSeg">Next, Choose a Template</label>
@@ -585,7 +644,7 @@ export default class Communications extends React.Component {
               <Modal.Title>You're About To Send An Email</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-              Are you sure you want to send this email to up to {userCount}{" "}
+              Are you sure you want to send this email to up to {this.getCampaignPossibleEmailCount()}{" "}
               people?* It can't be undone. <br />
               <br />
               <span className="text-muted">

@@ -23,16 +23,20 @@ const s3 = new AWS.S3({
   region: process.env.REACT_APP_REGION
 })
 
-export const BUCKET_NAME = 'simple-id-data'
+export const BUCKET_NAME = process.env.REACT_APP_S3_DATA_BUCKET
 export const ZIP_OBJ_EXT='zip'
-export const COMPRESS_OBJS=false
+export const COMPRESS_OBJS=true
+
+if (!BUCKET_NAME) {
+  throw new Error(`s3Utils: BUCKET_NAME is not defined.`)
+}
 
 const ZIP_OPTIONS = {
   COMPRESSION: 'DEFLATE',
-  LEVEL: 5,                   // 1 is fastest and least compressed, 9 is slowest and most compressed
+  LEVEL: 5,                    // 1 is fastest and least compressed, 9 is slowest and most compressed
   DATA_TYPE: 'nodebuffer'     // in browser this should be 'blob' or 'arraybuffer'
-                              // TODO: use JSZip.support as mentioned here:
-                              //       https://stuk.github.io/jszip/documentation/api_jszip/generate_async.html
+                               // TODO: use JSZip.support as mentioned here:
+                               //       https://stuk.github.io/jszip/documentation/api_jszip/generate_async.html
 }
 
 // Zip Related functions
@@ -48,34 +52,8 @@ function getFileName(aKey) {
   }
 }
 
-async function compressData(aKey, theData) {
-  const method = `compressData`
-
-  const fileName = getFileName(aKey)
-
-  const zip = new JSZip()
-  zip.file(fileName, theData)
-
-  try {
-    return await new Promise((resolve, reject) => {
-      zip.generateAsync({
-        type: ZIP_OPTIONS.DATA_TYPE,
-        compression: ZIP_OPTIONS.COMPRESSION,
-        compressionOptions: {
-          level: ZIP_OPTIONS.LEVEL
-        }})
-      .then((compressedData) => {
-        resolve(compressedData)
-      })
-    })
-  } catch (zipError) {
-    throw new Error(`${method} failed to compress ${aKey}.\n${zipError}`)
-  }
-}
-
 async function uncompressData(aKey, theCompressedData) {
   const method = 'uncompressData'
-
   try {
     const fileName = getFileName(aKey)
 
@@ -126,43 +104,6 @@ function s3DebugLog(anOperation, params, error) {
 
 // Basic Access Methods
 //
-export async function putJsonObject(aKey, theData, compress=COMPRESS_OBJS) {
-  const method = 'putJsonObject'
-
-  const strData = JSON.stringify(theData)
-  const body = (compress) ? await compressData(aKey, strData) : strData
-
-  const params = {
-    Bucket: BUCKET_NAME,
-    Key: aKey,
-    Body: body
-  }
-
-  try {
-    return await new Promise((resolve, reject) => {
-      s3.putObject(params, (err, data) => {
-        if (err) {
-          const paramsNoBody = {
-            Bucket: BUCKET_NAME,
-            Key: aKey,
-            Body: `Omitted for brevity... (compress=${compress})`
-          }
-          s3DebugLog(method, paramsNoBody, err)
-
-          reject(err)
-        } else {
-          // log.debug(`s3Utils::putObject: ${aKey}`)
-          // log.debug(data)
-
-          resolve()
-        }
-      })
-    })
-  } catch (error) {
-    throw new Error(`${method} failed to put object.\n${error}`)
-  }
-}
-
 export async function getJsonObject(aKey, compress=COMPRESS_OBJS) {
   const method = 'getJsonObject'
 
@@ -194,7 +135,6 @@ export async function getJsonObject(aKey, compress=COMPRESS_OBJS) {
   } catch (error) {
     throw new Error(`${method} failed to get object ${aKey}.\n${error}`)
   }
-
   const uncompressedData = (compress) ? await uncompressData(aKey, body) : body
 
   try {
