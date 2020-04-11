@@ -23,9 +23,13 @@ const s3 = new AWS.S3({
   region: process.env.REACT_APP_REGION
 })
 
-export const BUCKET_NAME = 'simple-id-data'
+export const BUCKET_NAME = process.env.REACT_APP_S3_DATA_BUCKET
 export const ZIP_OBJ_EXT='zip'
 export const COMPRESS_OBJS=true
+
+if (!BUCKET_NAME) {
+  throw new Error(`s3Utils: BUCKET_NAME is not defined.`)
+}
 
 const ZIP_OPTIONS = {
   COMPRESSION: 'DEFLATE',
