@@ -947,7 +947,7 @@ export default class Communications extends React.Component {
                 Upload CSV
               </button>
               <p className="text-muted">{fileName}</p>
-              <input style={{ display: "none" }} type="file" id="csv-file" />
+              <input style={{ display: "none" }} type="file" accept=".csv" id="csv-file" />
             </InputGroup>
           </Modal.Body>
           <Modal.Footer>
