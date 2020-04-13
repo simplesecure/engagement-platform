@@ -31,6 +31,8 @@ export default class App extends React.Component {
 
       if(!onboardingComplete) {
         setGlobal({ onboardingComplete : false });
+      } else {
+        setGlobal({ onboardingComplete: true })
       }
 
       //First try to fetch the profile from local storage
