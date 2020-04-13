@@ -32,7 +32,7 @@ export default class App extends React.Component {
       if(!onboardingComplete) {
         setGlobal({ onboardingComplete : false });
       } else {
-        setGlobal({ onboardingComplete: true })
+        setGlobal({ onboardingComplete: true });
       }
 
       //First try to fetch the profile from local storage
@@ -53,12 +53,12 @@ export default class App extends React.Component {
   }
 
   render() {
-    const { onboardingComplete } = this.global;
+    const { onboardingComplete, signedIn } = this.global;
 
     return (
       <div>
         {
-          !onboardingComplete ?
+          !onboardingComplete && signedIn ?
           <OnboardingSteps /> :
           <div />
         }
