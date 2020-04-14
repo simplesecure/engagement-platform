@@ -313,7 +313,28 @@ async function handleEmails(data, url) {
 
 async function handleSegmentUpdate(result) {
   const { currentSegments, saveToDb } = result;
-  const { sessionData, orgData, org_id } = await getGlobal();
+  const { sessionData, orgData, org_id, weekly, monthly } = await getGlobal();
+  console.log({weekly, monthly});
+  const weeklySegmentIndex = currentSegments.map(a => a.id).indexOf(`2-${sessionData.id}`)
+  const monthlySegmentIndex = currentSegments.map(a => a.id).indexOf(`3-${sessionData.id}`)
+  let weeklySegment;
+  let monthlySegment;
+
+  if(weeklySegmentIndex > -1) {
+    weeklySegment = currentSegments[weeklySegmentIndex];
+    weeklySegmentIndex.users = weekly ? weekly : [];
+    weeklySegmentIndex.userCount = weekly ? weekly.length : 0;
+  }
+
+  if(monthlySegmentIndex > -1) {
+    monthlySegment = currentSegments[monthlySegmentIndex];
+    monthlySegment.users = monthly ? monthly : [];
+    monthlySegment.userCount = monthly ? monthly.length : 0;
+  }
+
+  currentSegments[weeklySegmentIndex] = weeklySegment;
+  currentSegments[monthlySegmentIndex] = monthlySegment;
+
   const segs = currentSegments;
   sessionData.currentSegments = segs;
   setGlobal({

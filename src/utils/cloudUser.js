@@ -182,9 +182,11 @@ class CloudUser {
       //Get the correct results
       //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the fetchSegmentData function
       //Will update state as necessary
-
+      
+      
       if(data.currentSegments) {
-        //TODO: We really need to find a good way to update this
+        //  Find the weekly and monthly segments and update them with the correct data
+        
         this.fetchSegmentData(appData);
       } else {
         this.fetchUsersCount(appData)
@@ -225,7 +227,7 @@ class CloudUser {
   }
 
   async fetchUsersCount(appData) {
-    const { org_id, currentAppId, sessionData } = await getGlobal()
+    const { org_id, currentAppId, sessionData, weekly, monthly } = await getGlobal()
     const payload = {
       app_id: currentAppId,
       appData,
@@ -250,6 +252,45 @@ class CloudUser {
         segments = currentSegments
       }
       segments.push(allUsersSegment)
+
+      //  Need to update these segments and post back to DB
+      const weeklySegment = {
+        id: `2-${currentAppId}`,
+        name: 'Weekly Active Users', 
+        userCount: weekly && weekly.length ? weekly.length : 0, 
+        users: weekly ? weekly : []
+      }
+
+      const monthlySegment = {
+        id: `3-${currentAppId}`,
+        name: 'Monthly Active Users',
+        userCount: monthly && monthly.length ? monthly.length : 0, 
+        users: monthly ? monthly : []
+      }
+
+      
+      segments.push(monthlySegment)
+      segments.push(weeklySegment);
+
+      // //  Post this data to the DB
+      // const { apps } = await getGlobal();
+      // const thisApp = apps[currentAppId];
+      // thisApp.currentSegments = segments;
+      // apps[currentAppId] = thisApp;
+
+      // try {
+      //   const anObject = appData.Item;
+      //   anObject.apps = apps;
+      //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
+      //   await dc.organizationDataTablePut(anObject);
+
+      // } catch (suppressedError) {
+      //   const ERROR_MSG =
+      //     "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz.";
+      //   setGlobal({ error: ERROR_MSG });
+      //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`);
+      // }
+
       sessionData['currentSegments'] = segments
       await setGlobal({ sessionData })
 
