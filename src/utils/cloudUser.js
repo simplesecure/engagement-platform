@@ -120,64 +120,6 @@ class CloudUser {
       const monthly = web2Analytics.data
 
       setGlobal({weekly, monthly})
-
-      //  Need to update these segments and post back to DB
-      const weeklySegment = {
-        id: `2-${currentAppId}`,
-        name: 'Weekly Active Users',
-        userCount: weekly && weekly.length ? weekly.length : 0,
-        users: weekly ? weekly : []
-      }
-
-      const monthlySegment = {
-        id: `3-${currentAppId}`,
-        name: 'Monthly Active Users',
-        userCount: monthly && monthly.length ? monthly.length : 0,
-        users: monthly ? monthly : []
-      }
-
-      let segments = []
-
-      if(data.currentSegments) {
-        segments = data.currentSegments
-        console.log(segments)
-        let weeklySeg = segments.filter(seg => seg.id === weeklySegment.id)[0];
-        if(weeklySeg) {
-          weeklySeg = weeklySegment;
-        } else {
-          segments.push(weeklySegment);
-        }
-
-        let monthlySeg = segments.filter(seg => seg.id === monthlySegment.id)[0];
-        if(monthlySeg) {
-          monthlySeg = monthlySegment;
-        } else {
-          segments.push(monthlySegment)
-        }
-      } else {
-        segments.push(monthlySegment)
-        segments.push(weeklySegment);
-      }
-
-      //  Post this data to the DB
-      const { apps } = await getGlobal();
-      const thisApp = apps[currentAppId];
-      thisApp.currentSegments = segments;
-      apps[currentAppId] = thisApp;
-
-      try {
-        const anObject = appData.Item;
-        anObject.apps = apps;
-        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-        await dc.organizationDataTablePut(anObject);
-
-      } catch (suppressedError) {
-        const ERROR_MSG =
-          "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz.";
-        setGlobal({ error: ERROR_MSG });
-        console.log(`ERROR: problem writing to DB.\n${suppressedError}`);
-      }
-
       //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to
       //Get the correct results
       //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the fetchSegmentData function
