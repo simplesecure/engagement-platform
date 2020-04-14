@@ -8,8 +8,8 @@ import { setLocalStorage } from '../utils/misc'
 const PROFILE_STORAGE = 'engagement-app-profile'
 
 const Web3 = require('web3')
-const Box = require('3box')
-let web3 = new Web3(Web3.givenProvider) 
+// const Box = require('3box')
+let web3 = new Web3(Web3.givenProvider)
 
 const providerOptions = {
   walletconnect: {
@@ -35,80 +35,80 @@ const providerOptions = {
 export default class Account extends React.Component {
 
   async componentDidMount() {
-    const accounts = await web3.eth.getAccounts()
-    const profile = await Box.getProfile(accounts[0])
-    profile.address = accounts[0]
-    if(profile && profile.image) {
-      const profileImage = profile.image[0].contentUrl
-      if(profileImage) {
-        const profileImageHash = Object.values(profileImage)[0]
-        const fetchImageUrl = `https://gateway.ipfs.io/ipfs/${profileImageHash}`
-        profile.imageUrl = fetchImageUrl
-      }
-    }
-
-    setGlobal({ threeBoxProfile: profile })
-    setLocalStorage(PROFILE_STORAGE, JSON.stringify(profile));
+    // const accounts = await web3.eth.getAccounts()
+    // const profile = await Box.getProfile(accounts[0])
+    // profile.address = accounts[0]
+    // if(profile && profile.image) {
+    //   const profileImage = profile.image[0].contentUrl
+    //   if(profileImage) {
+    //     const profileImageHash = Object.values(profileImage)[0]
+    //     const fetchImageUrl = `https://gateway.ipfs.io/ipfs/${profileImageHash}`
+    //     profile.imageUrl = fetchImageUrl
+    //   }
+    // }
+    //
+    // setGlobal({ threeBoxProfile: profile })
+    // setLocalStorage(PROFILE_STORAGE, JSON.stringify(profile));
   }
 
-  disconnect3Box = () => {
-    const WEB3_CONNECT = 'WEB3_CONNECT_CACHED_PROVIDER'
-    const ENGAGEMENT_PROFILE = 'engagement-app-profile'
-    localStorage.removeItem(WEB3_CONNECT)
-    localStorage.removeItem(ENGAGEMENT_PROFILE)
-    setGlobal({ threeBoxProfile: {} })
-  }
-
-  connect3Box = async() => {
-    const web3Connect = new Web3Connect.Core({
-      network: "mainnet", // optional
-      cacheProvider: true, // optional
-      providerOptions // required
-    });
-    let accounts = undefined
-    web3Connect.toggleModal();
-    web3Connect.on('connect', async (provider) => {
-      web3 = await new Web3(provider)
-      setGlobal({ web3 })
-      accounts = await web3.eth.getAccounts()
-      setGlobal({ provider })
-      if(accounts && accounts.length > 0) {
-        const msgParams = [
-          {
-            type: 'string',      // Any valid solidity type
-            name: 'Message',     // Any string label you want
-            value: 'This application is trying to access your 3Box profile data.'  // The value to sign
-         }
-        ] 
-        web3.currentProvider.sendAsync({
-          method: 'eth_signTypedData',
-          params: [msgParams, accounts[0]],
-          from: accounts[0],
-        }, async (err, result) => {
-          if (err) return console.error(err)
-          if (result.error) {
-            return console.error(result.error.message)
-          } else {
-            const profile = await Box.getProfile(accounts[0])
-            profile.address = accounts[0]
-            if(profile && profile.image) {
-              const profileImage = profile.image[0].contentUrl
-              if(profileImage) {
-                const profileImageHash = Object.values(profileImage)[0]
-                const fetchImageUrl = `https://gateway.ipfs.io/ipfs/${profileImageHash}`
-                profile.imageUrl = fetchImageUrl
-              }
-            }
-            console.log(profile)
-            setGlobal({ threeBoxProfile: profile })
-            setLocalStorage(PROFILE_STORAGE, JSON.stringify(profile));
-          }
-        })
-      } else {
-        console.log("Web3 provider error")
-      }
-    })
-  }
+  // disconnect3Box = () => {
+  //   const WEB3_CONNECT = 'WEB3_CONNECT_CACHED_PROVIDER'
+  //   const ENGAGEMENT_PROFILE = 'engagement-app-profile'
+  //   localStorage.removeItem(WEB3_CONNECT)
+  //   localStorage.removeItem(ENGAGEMENT_PROFILE)
+  //   setGlobal({ threeBoxProfile: {} })
+  // }
+  //
+  // connect3Box = async() => {
+  //   const web3Connect = new Web3Connect.Core({
+  //     network: "mainnet", // optional
+  //     cacheProvider: true, // optional
+  //     providerOptions // required
+  //   });
+  //   let accounts = undefined
+  //   web3Connect.toggleModal();
+  //   web3Connect.on('connect', async (provider) => {
+  //     web3 = await new Web3(provider)
+  //     setGlobal({ web3 })
+  //     accounts = await web3.eth.getAccounts()
+  //     setGlobal({ provider })
+  //     if(accounts && accounts.length > 0) {
+  //       const msgParams = [
+  //         {
+  //           type: 'string',      // Any valid solidity type
+  //           name: 'Message',     // Any string label you want
+  //           value: 'This application is trying to access your 3Box profile data.'  // The value to sign
+  //        }
+  //       ]
+  //       web3.currentProvider.sendAsync({
+  //         method: 'eth_signTypedData',
+  //         params: [msgParams, accounts[0]],
+  //         from: accounts[0],
+  //       }, async (err, result) => {
+  //         if (err) return console.error(err)
+  //         if (result.error) {
+  //           return console.error(result.error.message)
+  //         } else {
+  //           const profile = await Box.getProfile(accounts[0])
+  //           profile.address = accounts[0]
+  //           if(profile && profile.image) {
+  //             const profileImage = profile.image[0].contentUrl
+  //             if(profileImage) {
+  //               const profileImageHash = Object.values(profileImage)[0]
+  //               const fetchImageUrl = `https://gateway.ipfs.io/ipfs/${profileImageHash}`
+  //               profile.imageUrl = fetchImageUrl
+  //             }
+  //           }
+  //           console.log(profile)
+  //           setGlobal({ threeBoxProfile: profile })
+  //           setLocalStorage(PROFILE_STORAGE, JSON.stringify(profile));
+  //         }
+  //       })
+  //     } else {
+  //       console.log("Web3 provider error")
+  //     }
+  //   })
+  // }
 
   render() {
     const { threeBoxProfile } = this.global
@@ -127,28 +127,28 @@ export default class Account extends React.Component {
             </div>
           </div>
           <div className="row">
-            <div className="col-lg-4">
+            {/*<div className="col-lg-4">
               <div className="card card-small mb-4 pt-3">
                 <div className="card-header border-bottom text-center">
                   <div className="mb-3 mx-auto">
                     {
-                      imageUrl ? 
-                      <img className="rounded-circle" src={imageUrl} alt="User Avatar" width="110" /> : 
+                      imageUrl ?
+                      <img className="rounded-circle" src={imageUrl} alt="User Avatar" width="110" /> :
                       <img className="rounded-circle" src={require('../assets/img/dog_avatar.png')} alt="User Avatar" width="110" />
                     }
                   </div>
                   <h4 className="mb-0">{name}</h4>
                   <span className="text-muted d-block mb-2">{description}</span>
                     {
-                      !threeBoxProfile.address ? 
-                      <button onClick={this.connect3Box} type="button" className="mb-2 btn btn-sm btn-pill btn-outline-primary mr-2"><i className="material-icons mr-1">person_add</i>Connect 3Box</button> : 
+                      !threeBoxProfile.address ?
+                      <button onClick={this.connect3Box} type="button" className="mb-2 btn btn-sm btn-pill btn-outline-primary mr-2"><i className="material-icons mr-1">person_add</i>Connect 3Box</button> :
                       <button onClick={this.disconnect3Box} type="button" className="mb-2 btn btn-sm btn-pill btn-outline-primary mr-2"><i className="material-icons mr-1">person_remove</i>Disconnect 3Box</button>
                     }
                     <div><p>Want to update your 3Box profile? <a href="https://3box.io/hub" target="_blank" rel="noreferrer noopener">Do it here.</a></p></div>
                 </div>
-                
+
               </div>
-            </div>
+            </div>*/}
             <div className="col-lg-8">
               <div className="card card-small mb-4">
                 <div className="card-header border-bottom">

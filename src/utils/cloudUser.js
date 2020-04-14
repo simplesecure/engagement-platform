@@ -8,7 +8,7 @@ import { getWeb2Analytics } from './web2Analytics';
 const filter = require('./filterOptions.json');
 const IdentityWallet = require('identity-wallet')
 const ethers = require('ethers')
-const Box = require('3box')
+// const Box = require('3box')
 
 const CHAT_WALLET_KEY = 'chat-wallet'
 const SIMPLEID_USER_SESSION = 'SID_SVCS';
@@ -125,15 +125,15 @@ class CloudUser {
       //  Need to update these segments and post back to DB
       const weeklySegment = {
         id: `2-${currentAppId}`,
-        name: 'Weekly Active Users', 
-        userCount: weekly && weekly.length ? weekly.length : 0, 
+        name: 'Weekly Active Users',
+        userCount: weekly && weekly.length ? weekly.length : 0,
         users: weekly ? weekly : []
       }
 
       const monthlySegment = {
         id: `3-${currentAppId}`,
         name: 'Monthly Active Users',
-        userCount: monthly && monthly.length ? monthly.length : 0, 
+        userCount: monthly && monthly.length ? monthly.length : 0,
         users: monthly ? monthly : []
       }
 
@@ -152,7 +152,7 @@ class CloudUser {
         let monthlySeg = segments.filter(seg => seg.id === monthlySegment.id)[0];
         if(monthlySeg) {
           monthlySeg = monthlySegment;
-        } else { 
+        } else {
           segments.push(monthlySegment)
         }
       } else {
@@ -191,32 +191,32 @@ class CloudUser {
         this.fetchUsersCount(appData)
       }
 
-      if(liveChat) {
-        //  This is where we need to check for the chat support address
-        //  This address is the one used to connect to 3Box without a web3 wallet
-        //  If it's not available, need to create one
-        //  For initial testing, none will be available so we will check localStorage
-
-        const chatSupportWallet = await getChatSupportAddress()
-        const { signingKey } = chatSupportWallet
-        const { privateKey } = signingKey
-        const seed = privateKey
-        const idWallet = new IdentityWallet(getConsent, { seed })
-        const box = await handle3BoxConnection(idWallet)
-        const space = await connectToSpace(box, currentAppId)
-        const mainThread = await accessThread(space, currentAppId)
-        let mainThreadPosts
-        mainThread.onUpdate(async () => {
-          console.log("New User - Getting posts...")
-          mainThreadPosts = await getPosts(mainThread)
-          fetchAllPosts(space, mainThreadPosts)
-          setGlobal({ mainThreadPosts })
-        })
-        const mainThreadHash = mainThread.address.split('orbitdb/')[1].split('/3box')[0]
-        mainThreadPosts = await getPosts(mainThread)
-        fetchAllPosts(space, mainThreadPosts)
-        setGlobal({ idWallet, box, space, mainThread, mainThreadPosts, liveChatId: mainThreadHash })
-      }
+      // if(liveChat) {
+      //   //  This is where we need to check for the chat support address
+      //   //  This address is the one used to connect to 3Box without a web3 wallet
+      //   //  If it's not available, need to create one
+      //   //  For initial testing, none will be available so we will check localStorage
+      //
+      //   const chatSupportWallet = await getChatSupportAddress()
+      //   const { signingKey } = chatSupportWallet
+      //   const { privateKey } = signingKey
+      //   const seed = privateKey
+      //   const idWallet = new IdentityWallet(getConsent, { seed })
+      //   const box = await handle3BoxConnection(idWallet)
+      //   const space = await connectToSpace(box, currentAppId)
+      //   const mainThread = await accessThread(space, currentAppId)
+      //   let mainThreadPosts
+      //   mainThread.onUpdate(async () => {
+      //     console.log("New User - Getting posts...")
+      //     mainThreadPosts = await getPosts(mainThread)
+      //     fetchAllPosts(space, mainThreadPosts)
+      //     setGlobal({ mainThreadPosts })
+      //   })
+      //   const mainThreadHash = mainThread.address.split('orbitdb/')[1].split('/3box')[0]
+      //   mainThreadPosts = await getPosts(mainThread)
+      //   fetchAllPosts(space, mainThreadPosts)
+      //   setGlobal({ idWallet, box, space, mainThread, mainThreadPosts, liveChatId: mainThreadHash })
+      // }
 
     } else {
       setGlobal({ loading: false, projectFound: false })
@@ -397,28 +397,28 @@ async function getConsent({ type, origin, spaces }) {
   return true
 }
 
-async function handle3BoxConnection(idWallet) {
-  return new Promise(async (resolve, reject) => {
-    const threeIdProvider = idWallet.get3idProvider()
-    try {
-      const box = await Box.openBox(null, threeIdProvider)
-      resolve(box)
-    } catch(e) {
-      reject(e)
-    }
-  })
-}
-
-async function connectToSpace(box, spaceId) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const space = await box.openSpace(spaceId)
-      resolve(space)
-    } catch(e) {
-      reject(e)
-    }
-  })
-}
+// async function handle3BoxConnection(idWallet) {
+//   return new Promise(async (resolve, reject) => {
+//     const threeIdProvider = idWallet.get3idProvider()
+//     try {
+//       const box = await Box.openBox(null, threeIdProvider)
+//       resolve(box)
+//     } catch(e) {
+//       reject(e)
+//     }
+//   })
+// }
+//
+// async function connectToSpace(box, spaceId) {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const space = await box.openSpace(spaceId)
+//       resolve(space)
+//     } catch(e) {
+//       reject(e)
+//     }
+//   })
+// }
 
 async function accessThread(space, threadId, firstModAddress) {
   return new Promise(async (resolve, reject) => {

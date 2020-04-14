@@ -13,6 +13,8 @@ import { ToastContainer } from 'react-toastify';
 const PROFILE_STORAGE = 'engagement-app-profile'
 const SESSION_FROM_LOCAL = 'sessionData';
 const SID_JOB_QUEUE = 'sid_job_queue'
+const eccrypto = require('eccrypto')
+eccrypto.runTests()
 
 export default class App extends React.Component {
 
@@ -46,7 +48,7 @@ export default class App extends React.Component {
       //Need to check if the user is part of an organization from the org table
       getCloudUser().fetchOrgDataAndUpdate()
 
-      
+
     } else {
       setGlobal({ loading: false });
     }
@@ -67,7 +69,7 @@ export default class App extends React.Component {
         <BrowserRouter>
           <ToastContainer />
         </BrowserRouter>
-        
+
         <CookieConsent
           location="bottom"
           buttonText="I accept"
