@@ -225,7 +225,6 @@ export async function handleData(dataToProcess) {
         process.env.REACT_APP_EMAILS_DRY_RUN.toLowerCase() === "false"
       );
     } catch (suppressedError) {}
-    debugger;
 
     //Now we need to take this list and fetch the emails for the users
     const dataForEmailService = {
@@ -269,11 +268,6 @@ export async function handleData(dataToProcess) {
 
     const res = await resp.json();
     return res;
-  } else if (type === "create-project") {
-    const { appObject, orgId } = data;
-    const createProject = await getSidSvcs().createAppId(orgId, appObject);
-    log.debug(createProject);
-    return createProject;
   } else if (type === "import") {
     setGlobal({ notificationId: data.data.appId });
     const cmdObj = data;

@@ -8,6 +8,7 @@ import { jsonParseToBuffer } from './misc.js'
 import { getLog } from './debugScopes.js'
 const log = getLog('sidServices')
 const AWS = require('aws-sdk')
+const ethers = require('ethers')
 
 // v4 = random. Might consider using v5 (namespace, in conjunction w/ app id)
 // see: https://github.com/kelektiv/node-uuid
@@ -66,6 +67,15 @@ const SID_SVCS_LS_KEY = 'SID_SVCS'
 
 if (!process.env.REACT_APP_AWS_ACCESS_KEY_ID) {
   throw new Error('Cloud services provider not defined!')
+} else if (process.env.REACT_APP_AWS_ACCESS_KEY_ID !== 'AKIARVK4F3CUFEBZSRLS' &&    // Test account
+           process.env.REACT_APP_AWS_ACCESS_KEY_ID !== 'AKIAZKPB3EA6LGT6NUVN') {    // Prod. account
+  //
+  // DANGER:  If you get this it's because your .env file doen't have one of the
+  //          two keys above.  If they've changed, you need to search and replace
+  //          them in the code base with the new key id (otherwise bad things will happen,
+  //          for instance below you will pull the wrong HSM keys and then lose
+  //          user data).
+  throw new Error('Unexpected access key id.')
 }
 
 // TODO: Remove this soon.  #Bicycle
@@ -181,7 +191,26 @@ export class SidServices
   }
 
   async signInOrUpWithPassword(anEmail, aPassword) {
-    log.debug(`DBG: signInOrUpWithPassword e:${anEmail},  p:<redacted>`)
+    const method = 'signInOrUpWithPassword'
+    log.debug(`${method} e:${anEmail},  p:<redacted>`)
+
+    // Blow existing cognito token keys away from local storage (they cause
+    // problems)...
+    try {
+      const keys = Object.keys(localStorage)
+      const keysToClear = []
+      for (const key of keys) {
+        if (key.startsWith('aws.cognito.identity')) {
+          keysToClear.push(key)
+        }
+      }
+      log.debug(`Clearing keys ${JSON.stringify(keysToClear, 0, 2)}`)
+      for (const key of keysToClear) {
+        localStorage.removeItem(key)
+      }
+    } catch (suppressedError) {
+      log.warn(`${method} failed to clear tokens before sign in.\n${suppressedError}\ncontinuing...\n`)
+    }
 
     // TODO: Can we do this here too:
     // const authenticated = await this.isAuthenticated(anEmail)
@@ -734,6 +763,8 @@ export class SidServices
    *         newly created organization id.
    */
   async createAppId(anOrgId, anAppObject) {
+    const method = 'createAppId'
+
     // await this.getUuidsForWalletAddresses()
     // return
     // TODO: 1. Might want to check if the user has the org_id in their sid
@@ -747,28 +778,53 @@ export class SidServices
 
     const appId = uuidv4()
 
-    // 1. Update the Organization Data table:
+    // 1. Fetch the organization data
     //
     let orgData = undefined
     try {
       // TODO: See TODO.3 above!
       orgData = await organizationDataTableGet(anOrgId)
-      orgData.Item.apps[appId] = anAppObject
-      await organizationDataTablePut(orgData.Item)
     } catch (error) {
-      throw new Error(`ERROR: Failed to update apps in Organization Data table.\n${error}`)
+      throw new Error(`${method} Failed to fetch organization data.\n${error}`)
     }
 
-    // 1.5 Get the public key
+    // 2 Get the public key
     //
     let publicKey = undefined
     try {
       publicKey = orgData.Item.cryptography.pub_key
+
+      if (!publicKey) {
+        throw new Error(`publicKey is undefined in organization data.`)
+      }
     } catch (error) {
-      throw new Error(`Error: Failed to fetch public key from Org Data.\n${error}`)
+      throw new Error(`${method} Failed to fetch public key from organization data.\n${error}`)
     }
 
-    // 2. Update the Wallet Analytics Data table
+    // 3. Create an entry for 3Box in the new app's data. Encrypt the 3Box id for
+    //    this app using the same shared public key used for analytics:
+    //      - TODO: very similar to getChatSupportAddress code in 3.a.  (Unify if possible)
+    try {
+      const chatSupportWallet = ethers.Wallet.createRandom()
+      const chatSupportWalletStr = JSON.stringify(chatSupportWallet)
+      let chatSupportWalletCipherText = await eccrypto.encrypt(publicKey, Buffer.from(chatSupportWalletStr))
+      anAppObject.chat_support = {
+        wallet: chatSupportWalletCipherText
+      }
+    } catch (error) {
+      throw new Error(`${method} Failed to create chat support address.\n${error}`)
+    }
+
+    // 4. Update the apps entry for the organization with the new app's data:
+    //
+    try {
+      orgData.Item.apps[appId] = anAppObject
+      await organizationDataTablePut(orgData.Item)
+    } catch (error) {
+      throw new Error(`${method} Failed to update organization data.\n${error}`)
+    }
+
+    // 5. Update the Wallet Analytics Data table
     //
     try {
       const walletAnalyticsRowObj = {
@@ -779,15 +835,107 @@ export class SidServices
       }
       await walletAnalyticsDataTablePut(walletAnalyticsRowObj)
     } catch (error) {
-      throw new Error(`ERROR: Failed to add row Wallet Analytics Data table.\n${error}`)
+      throw new Error(`${method} Failed to add wallet analytics data table row.\n${error}`)
     }
 
     // AC: Not sure if this is needed.
-    // // 3. TODO: Update the user data using Cognito IDP (the 'sid' property)
+    // // 6. TODO: Update the user data using Cognito IDP (the 'sid' property)
     // //
     // await this.tableUpdateWithIdpCredentials('sid', 'apps', appId, {})
 
     return appId
+  }
+
+  async getChatSupportAddress(anOrgDataObj, anAppId) {
+    const method = 'getChatSupportAddress'
+    log.debug(`${method} called for app id ${anAppId}`)
+
+    // 0. Basic checks to make sure we can run this function.
+    //
+    if (!anOrgDataObj || !anAppId) {
+      throw new Error(`${method} requires organization data and an app id.`)
+    }
+    if (!anOrgDataObj.apps || !anOrgDataObj.apps[anAppId]) {
+      throw new Error(`${method} no organization data for application id ${anAppId}`)
+    }
+
+    // 1. Try to get the chat support wallet cipher text from the org data
+    //
+    let chatSupportWalletCipherText = undefined
+    try {
+      chatSupportWalletCipherText = anOrgDataObj.apps[anAppId].chat_support.wallet
+    } catch (suppressedError) {
+      log.warn(`${method} Application id ${anAppId} does not have chat support. Creating now...\n${suppressedError}`)
+    }
+
+    let chatSupportWallet = undefined
+    if (chatSupportWalletCipherText) {
+      // 2. a) If we were able to get the chat support wallet cipher text, then
+      //       decrypt and return it to the user. Start by fetching this user's
+      //       pri key to decrypt the org pri key:
+      //
+      //        TODO: this is sorta shared w/ getUuidsForWalletAddresses (refactor)
+      //
+      let userEcPriKey = undefined
+      try {
+        const userEcPriKeyCipherText = this.persist.sid.pri_key_cipher_text
+        userEcPriKey = await this.decryptWithKmsUsingIdpCredentials(userEcPriKeyCipherText)
+      } catch (error) {
+        throw new Error(`${method} Failed to decrypt user's EC private key on HSM.\n${error}`)
+      }
+
+      // 2. b) Now decrypt the org EC private key with the user's private key:
+      //
+      let orgEcPriKey = undefined
+      try {
+        const cipherObj = anOrgDataObj.cryptography.pri_key_ciphertexts[this.persist.userUuid]
+        orgEcPriKey = await eccrypto.decrypt(userEcPriKey, cipherObj)
+      } catch (error) {
+        throw new Error(`${method} Failed to decrypt the organization EC private key locally.\n${error}`)
+      }
+
+      // 2. c) Now decrypt this apps chat support wallet with the org EC private key:
+      //
+      try {
+        const chatSupportWalletStr = await eccrypto.decrypt(orgEcPriKey, chatSupportWalletCipherText)
+        chatSupportWallet = jsonParseToBuffer(chatSupportWalletStr)
+      } catch (error) {
+        throw new Error(`${method} Failed to decrypt the organization chat support wallet locally.\n${error}`)
+      }
+    } else {
+      // 3. a) If we were not able to get the chat support wallet cipher text, then
+      //       create a chat support wallet (this feature was introduced mid-stream
+      //       and not all users/ors have it) and an encrypted version of it for
+      //       storing in the org data.
+      //
+      try {
+        const publicKey = anOrgDataObj.cryptography.pub_key
+        chatSupportWallet = ethers.Wallet.createRandom()
+        const chatSupportWalletStr = JSON.stringify(chatSupportWallet)
+        chatSupportWalletCipherText = await eccrypto.encrypt(publicKey, Buffer.from(chatSupportWalletStr))
+      } catch (error) {
+        throw new Error(`${method} failed creating and encrypting chat support wallet.\n${error}`)
+      }
+
+      // 3. b) Now store the new encrypted chat support wallet in the org data
+      //       and return the the unencrypted support wallet to the user
+      //
+      try {
+        anOrgDataObj.apps[anAppId].chat_support = {
+          wallet: chatSupportWalletCipherText
+        }
+        // TODO: this could be an update expression for just the app not requireing
+        //       the whole org updated (or refactor apps out)
+        await organizationDataTablePut(anOrgDataObj)
+      } catch (error) {
+        throw new Error(`${method} failed to store newly created encrypted chat support wallet.\n${error}`)
+      }
+    }
+
+    log.debug(`${method} returning a chat support wallet for app id ${anAppId}:\n` +
+              `  address:   ${chatSupportWallet.signingKey.address}\n` +
+              `  publicKey: ${chatSupportWallet.signingKey.publicKey}\n\n`)
+    return chatSupportWallet
   }
 
 

@@ -46,15 +46,8 @@ export default class Projects extends React.Component {
       project_name: projectName
     };
 
-    const payload = {
-      orgId: org_id,
-      appObject: newProject
-    };
     try {
-      const projectId = await getCloudUser().processData(
-        "create-project",
-        payload
-      );
+      const projectId = await getCloudUser().createProject(org_id, newProject)
       let data;
       if (projectId) {
         apps[projectId] = newProject;
@@ -179,7 +172,7 @@ export default class Projects extends React.Component {
             </div>
           )
           }
-            <div className="row">            
+            <div className="row">
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <Card>
                 <Card.Body>
@@ -302,11 +295,11 @@ export default class Projects extends React.Component {
                 <h5>App ID</h5>
                 <p><span id='app-id'>{proj.id}</span><i onClick={() => this.copy('app-id')} data-clipboard-target="#app-id" className="copy-button clickable material-icons">content_copy</i></p>
                 {
-                  liveChat ? 
+                  liveChat ?
                   <div>
                     <h5>Chat Address</h5>
                     <p><span id='chat-id'>{liveChatId}</span> <i onClick={() => this.copy('chat-id')} data-clipboard-target="#chat-id" className="copy-button clickable material-icons">content_copy</i></p>
-                  </div> : 
+                  </div> :
                   <div />
                 }
               </Modal.Body>

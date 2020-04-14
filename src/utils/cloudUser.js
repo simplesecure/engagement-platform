@@ -7,10 +7,9 @@ import { setLocalStorage } from './misc';
 import { getWeb2Analytics } from './web2Analytics';
 const filter = require('./filterOptions.json');
 const IdentityWallet = require('identity-wallet')
-const ethers = require('ethers')
 const Box = require('3box')
 
-const CHAT_WALLET_KEY = 'chat-wallet'
+// const CHAT_WALLET_KEY = 'chat-wallet'
 const SIMPLEID_USER_SESSION = 'SID_SVCS';
 const SESSION_FROM_LOCAL = 'sessionData';
 const log = getLog('cloudUser')
@@ -125,15 +124,15 @@ class CloudUser {
       //  Need to update these segments and post back to DB
       const weeklySegment = {
         id: `2-${currentAppId}`,
-        name: 'Weekly Active Users', 
-        userCount: weekly && weekly.length ? weekly.length : 0, 
+        name: 'Weekly Active Users',
+        userCount: weekly && weekly.length ? weekly.length : 0,
         users: weekly ? weekly : []
       }
 
       const monthlySegment = {
         id: `3-${currentAppId}`,
         name: 'Monthly Active Users',
-        userCount: monthly && monthly.length ? monthly.length : 0, 
+        userCount: monthly && monthly.length ? monthly.length : 0,
         users: monthly ? monthly : []
       }
 
@@ -152,7 +151,7 @@ class CloudUser {
         let monthlySeg = segments.filter(seg => seg.id === monthlySegment.id)[0];
         if(monthlySeg) {
           monthlySeg = monthlySegment;
-        } else { 
+        } else {
           segments.push(monthlySegment)
         }
       } else {
@@ -197,7 +196,7 @@ class CloudUser {
         //  If it's not available, need to create one
         //  For initial testing, none will be available so we will check localStorage
 
-        const chatSupportWallet = await getChatSupportAddress()
+        const chatSupportWallet = await getSidSvcs().getChatSupportAddress(appData.Item, currentAppId)
         const { signingKey } = chatSupportWallet
         const { privateKey } = signingKey
         const seed = privateKey
@@ -297,12 +296,30 @@ class CloudUser {
     return JSON.parse(localStorage.getItem(SIMPLEID_USER_SESSION));
   }
 
+
+  // TODO: this needs to go away and the methods need to be brought in to
+  //       cloud user and then reorganized logically:
   async processData(type, data) {
     const payload = {
       type, data
     }
     console.log("Calling handleData from cloudUser...")
     return await handleData(payload)
+  }
+
+  async createProject(anOrgId, theAppObj) {
+    // #JustinRideToTheMoon
+    //
+    // History:  setGlobal( {..., notificationId: data.appId }) was at the
+    //           start of dataProcessing::handleData.  When called with create
+    //           project as the type, appId is undefined, so we preserve that
+    //           behavior here with notificationId --> undefined in case
+    //           it's required for side effects:
+    //           Also, I'm confused about orgData as in many cases in data
+    //           processing, it would actually be appData... (TODO ask Justin)
+    setGlobal({ orgData: theAppObj, notificationId: undefined })
+
+    return await getSidSvcs().createAppId(anOrgId, theAppObj)
   }
 
   async approveSignIn(token) {
@@ -368,26 +385,6 @@ export function getCloudUser() {
     cuInstance = new CloudUser()
   }
   return cuInstance
-}
-
-function getChatSupportAddress() {
-  //  When the the chat wallet data is returned from the DB, this function will be
-  //  relegated to chat wallet creation only
-  return new Promise((resolve, reject) => {
-    const chatWallet = localStorage.getItem(CHAT_WALLET_KEY) ? JSON.parse(localStorage.getItem(CHAT_WALLET_KEY)) : undefined
-    if(chatWallet) {
-      //  If the chat wallet is found,
-      resolve(chatWallet)
-    } else {
-      try {
-        const randomWallet = ethers.Wallet.createRandom()
-        localStorage.setItem(CHAT_WALLET_KEY, JSON.stringify(randomWallet))
-        resolve(randomWallet)
-      } catch(e) {
-        reject(e)
-      }
-    }
-  })
 }
 
 async function getConsent({ type, origin, spaces }) {
