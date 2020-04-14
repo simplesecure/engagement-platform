@@ -322,8 +322,8 @@ async function handleSegmentUpdate(result) {
 
   if(weeklySegmentIndex > -1) {
     weeklySegment = currentSegments[weeklySegmentIndex];
-    weeklySegmentIndex.users = weekly ? weekly : [];
-    weeklySegmentIndex.userCount = weekly ? weekly.length : 0;
+    weeklySegment.users = weekly ? weekly : [];
+    weeklySegment.userCount = weekly ? weekly.length : 0;
   }
 
   if(monthlySegmentIndex > -1) {
