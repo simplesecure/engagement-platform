@@ -36,7 +36,6 @@ const EmailEditor = (props) => {
 
         data = grapesJS.init({
             container: '#gjs',
-            height: '400px',
             storageManager: {type: 'none'},
             plugins: [newsletter]
         });
