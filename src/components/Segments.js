@@ -679,7 +679,7 @@ export default class Segments extends React.Component {
         contractAddress: importAddress,
         options: {
           transactions_per_page: 100,
-          max_transactions: 250000,
+          max_transactions: 250000
         },
       },
     };

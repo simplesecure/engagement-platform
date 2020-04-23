@@ -634,14 +634,9 @@ export class SidServices
     let orgEcPriKey = undefined
     try {
       const orgData = await organizationDataTableGet(this.persist.sid.org_id)
-      const cipherObj = orgData.Item.cryptography.pri_key_ciphertexts[this.persist.userUuid]
-
-      const userEcPriKeyCipherText = this.persist.sid.pri_key_cipher_text
-      const userEcPriKey = await this.decryptWithKmsUsingIdpCredentials(userEcPriKeyCipherText)
-
-      orgEcPriKey = await eccrypto.decrypt(userEcPriKey, cipherObj)
+      orgEcPriKey = await this.getOrgEcPriKey(orgData.Item)
     } catch (error) {
-      throw new Error(`Failed to fetch user EC private key.\n${error}`)
+      throw new Error(`Failed to restore organization private key.\n${error}`)
     }
 
     // 3. Decrypt the encrypted uuids and return them:
@@ -873,25 +868,13 @@ export class SidServices
       // 2. a) If we were able to get the chat support wallet cipher text, then
       //       decrypt and return it to the user. Start by fetching this user's
       //       pri key to decrypt the org pri key:
-      //
-      //        TODO: this is sorta shared w/ getUuidsForWalletAddresses (refactor)
-      //
-      let userEcPriKey = undefined
-      try {
-        const userEcPriKeyCipherText = this.persist.sid.pri_key_cipher_text
-        userEcPriKey = await this.decryptWithKmsUsingIdpCredentials(userEcPriKeyCipherText)
-      } catch (error) {
-        throw new Error(`${method} Failed to decrypt user's EC private key on HSM.\n${error}`)
-      }
-
-      // 2. b) Now decrypt the org EC private key with the user's private key:
+      //    b) Now decrypt the org EC private key with the user's private key:
       //
       let orgEcPriKey = undefined
       try {
-        const cipherObj = anOrgDataObj.cryptography.pri_key_ciphertexts[this.persist.userUuid]
-        orgEcPriKey = await eccrypto.decrypt(userEcPriKey, cipherObj)
+        orgEcPriKey = await this.getOrgEcPriKey(anOrgDataObj)
       } catch (error) {
-        throw new Error(`${method} Failed to decrypt the organization EC private key locally.\n${error}`)
+        throw new Error(`${method} failed to restore organization private key.\n${error}`)
       }
 
       // 2. c) Now decrypt this apps chat support wallet with the org EC private key:
@@ -936,6 +919,34 @@ export class SidServices
               `  address:   ${chatSupportWallet.signingKey.address}\n` +
               `  publicKey: ${chatSupportWallet.signingKey.publicKey}\n\n`)
     return chatSupportWallet
+  }
+
+  async getOrgEcPriKey(anOrgDataObj) {
+    const method = 'getOrgEcPriKey'
+
+    let userEcPriKey = undefined
+    let orgEcPriKey = undefined
+
+    try {
+      const userEcPriKeyCipherText = this.persist.sid.pri_key_cipher_text
+      userEcPriKey = await this.decryptWithKmsUsingIdpCredentials(userEcPriKeyCipherText)
+    } catch (error) {
+      throw new Error(`${method} failed to decrypt user's private key.\n${error}`)
+    }
+
+    try {
+      const cipherObj = anOrgDataObj.cryptography.pri_key_ciphertexts[this.persist.userUuid]
+      orgEcPriKey = await eccrypto.decrypt(userEcPriKey, cipherObj)
+    } catch (error) {
+      throw new Error(`${method} failed to decrypt organization private key.\n${error}`)
+    }
+
+    return orgEcPriKey
+  }
+
+  async getExportableOrgEcKey(anOrgDataObj, anEncoding='hex') {
+    const orgEcPriKey = await this.getOrgEcPriKey(anOrgDataObj)
+    return orgEcPriKey.toString(anEncoding)
   }
 
 
