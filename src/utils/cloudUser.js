@@ -41,6 +41,8 @@ class CloudUser {
 
       appData = await dc.organizationDataTableGet(org_id);
       console.log(appData);
+      const experimentalFeatures = appData.Item.experimentalFeatures ? true : false;
+      setGlobal({experimentalFeatures});
     } else {
       console.log("ERROR: No Org ID")
     }
@@ -461,7 +463,7 @@ async function fetchAllPosts(space, mainThreadPosts) {
         //  Play notification but only for the inbound messages
         if(!ourMessage) {
           const audio = new Audio(require('../assets/sounds/notification.mp3'))
-          audio.play()
+          //audio.play()
         }
         setGlobal({ ourMessage: false })
       })
