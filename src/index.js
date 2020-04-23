@@ -64,7 +64,8 @@ setGlobal({
   allFilters: [],
   weekly: [],
   monthly: [],
-  loadingMessage: ''
+  loadingMessage: '', 
+  experimentalFeatures: false
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

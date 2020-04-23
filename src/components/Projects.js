@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getCloudUser } from "./../utils/cloudUser.js";
 import { getSidSvcs } from "../utils/sidServices";
+const SID_TESTING_KEY_REVEAL = process.env.REACT_APP_SID_TESTING_KEY_REVEAL === 'true' ? true : false;
 const moment = require('moment');
 const ERROR_MSG =
   "Failed to create project, please try again. If this continues, please contact support@simpleid.xyz";
@@ -148,7 +149,7 @@ export default class Projects extends React.Component {
   }
 
   renderMain() {
-    const { apps, processing, liveChat, liveChatId } = this.global;
+    const { apps, processing, liveChat, liveChatId, experimentalFeatures } = this.global;
     const { projectName, proj, show, projectModalOpen, keyReveal, key } = this.state;
     const appKeys = Object.keys(apps);
     let applications = [];
@@ -312,8 +313,14 @@ export default class Projects extends React.Component {
                   </div> :
                   <div />
                 }
-                <h5>Organization Private Key</h5>
-                <p>{keyReveal ? <span><span id='ec-key'>{key}</span><i onClick={() => this.copy('ec-key')} data-clipboard-target="#ec-key" className="copy-button clickable material-icons">content_copy</i></span> : <span><span className='obfuscated-text'>12fh4789923kfhhs7499hhsgffs890hs37k</span><span className='clickable reveal-button' onClick={this.getExportableKey}>Click to reveal</span></span>}</p>
+                {
+                  SID_TESTING_KEY_REVEAL || experimentalFeatures ? 
+                  <div>
+                    <h5>Organization Private Key</h5>
+                    <p>{keyReveal ? <span><span id='ec-key'>{key}</span><i onClick={() => this.copy('ec-key')} data-clipboard-target="#ec-key" className="copy-button clickable material-icons">content_copy</i></span> : <span><span className='obfuscated-text'>12fh4789923kfhhs7499hhsgffs890hs37k</span><span className='clickable reveal-button' onClick={this.getExportableKey}>Click to reveal</span></span>}</p>
+                  </div> : 
+                  <div />
+                }                
               </Modal.Body>
               <Modal.Footer>
                 <button className="btn btn-secondary" onClick={() => this.setState({ projectModalOpen: false, keyReveal: false })}>
