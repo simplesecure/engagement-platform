@@ -1,10 +1,11 @@
-import React, { useState, useGlobal } from "reactn";
-import { Editor } from "grapesjs-react";
+import React, { useState, useGlobal, useEffect } from "reactn";
 import "grapesjs/dist/css/grapes.min.css";
 import * as dc from "../../utils/dynamoConveniences.js";
 import { setLocalStorage } from "../../utils/misc";
 import { toast } from "react-toastify";
 import Loader from "../Loader";
+import grapesJS from "grapesjs";
+import newsletter from "grapesjs-preset-newsletter";
 const uuid = require("uuid/v4");
 
 const EmailEditor = (props) => {
@@ -18,23 +19,32 @@ const EmailEditor = (props) => {
   const [emailEditor, setEmailEditor] = useGlobal("emailEditor"); //eslint-disable-line
   const [templateName, setTemplateName] = useState("");
 
+  useEffect(() => {
+    handleInit();
+    //eslint-disable-next-line
+}, []);
+
   const handleInit = (data) => {
     const existingTemplate = Object.keys(templateToUpdate).length > 0;
 
+    var div = document.getElementById("gjs");
+    if (!div) {
+   	    div = document.createElement('div');
+        div.id = 'gjs';
+        const container = document.getElementById('grape-container');
+        container.appendChild(div);
+
+        data = grapesJS.init({
+            container: '#gjs',
+            storageManager: {type: 'none'},
+            plugins: [newsletter]
+        });
+        setData(data);
+    }
     //  We are disabling the image upload capabilities to prevent base64 encoding problems
     //  See this article about embeded images in email clients:
     //  https://www.campaignmonitor.com/blog/email-marketing/2019/04/embedded-images-in-html-email/
 
-    const imageUploadConfig = data.AssetManager.getConfig();
-    console.log(imageUploadConfig);
-    imageUploadConfig.dropzone = 0;
-    imageUploadConfig.upload = 0;
-
-    //  This ensures the the url enters for the image path is handled properly.
-
-    imageUploadConfig.handleAdd = (textFromInput) => {
-      data.AssetManager.add(textFromInput);
-    };
 
     //  Note: we also disabled the dropzone via css. In style.css, find this under the
     //  .gjs-am-file-uploader class and the .gjs-am-assets-cont class. Remove both to reset to
@@ -58,7 +68,7 @@ const EmailEditor = (props) => {
       const html = data.runCommand("gjs-get-inlined-html");
 
       let { currentTemplates } = sessionData;
-      const templates = currentTemplates ? currentTemplates : []
+      const templates = currentTemplates ? currentTemplates : [];
 
       const thisTemplate = {
         id,
@@ -68,9 +78,7 @@ const EmailEditor = (props) => {
 
       if (existingTemplate) {
         //  Find the template
-        const index = templates
-          .map((a) => a.id)
-          .indexOf(templateToUpdate.id);
+        const index = templates.map((a) => a.id).indexOf(templateToUpdate.id);
         if (index > -1) {
         } else {
           console.log("Error with index");
@@ -105,7 +113,7 @@ const EmailEditor = (props) => {
         toast.error(error.message);
       }
     } else {
-      toast.error('Please give your template a name');
+      toast.error("Please give your template a name");
     }
   };
 
@@ -114,9 +122,6 @@ const EmailEditor = (props) => {
     setEmailEditor(false);
   };
 
-  const handleDestroy = async (data) => {
-    data.destroy();
-  };
   if (loading) {
     return <Loader />;
   } else {
@@ -164,8 +169,10 @@ const EmailEditor = (props) => {
             </div>
           </div>
           <div className="row">
-            <div className="col-lg-12 col-md-12 col-sm-12 mb-4">
-              <Editor onInit={handleInit} onDestroy={handleDestroy} />
+            <div className="col-lg-12 col-md-12 col-sm-12 mb-4">              
+              <div id="grape-container">
+                
+              </div>
             </div>
           </div>
         </div>
