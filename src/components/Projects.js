@@ -11,6 +11,7 @@ import copy from "copy-to-clipboard";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getCloudUser } from "./../utils/cloudUser.js";
+import { getSidSvcs } from "../utils/sidServices";
 const moment = require('moment');
 const ERROR_MSG =
   "Failed to create project, please try again. If this continues, please contact support@simpleid.xyz";
@@ -23,7 +24,9 @@ export default class Projects extends React.Component {
       show: false,
       proj: {},
       redirect: false,
-      projectModalOpen: false
+      projectModalOpen: false, 
+      keyReveal: false, 
+      key: ''
     };
   }
 
@@ -137,9 +140,16 @@ export default class Projects extends React.Component {
     this.setState({ projectModalOpen: true, proj })
   }
 
+  getExportableKey = async () => {
+    const { org_id } = this.global;
+    const orgData = await dc.organizationDataTableGet(org_id);
+    const key = await getSidSvcs().getExportableOrgEcKey(orgData.Item);
+    this.setState({ keyReveal: true, key})
+  }
+
   renderMain() {
     const { apps, processing, liveChat, liveChatId } = this.global;
-    const { projectName, proj, show, projectModalOpen } = this.state;
+    const { projectName, proj, show, projectModalOpen, keyReveal, key } = this.state;
     const appKeys = Object.keys(apps);
     let applications = [];
     for (const appKey of appKeys) {
@@ -302,9 +312,11 @@ export default class Projects extends React.Component {
                   </div> :
                   <div />
                 }
+                <h5>Organization Private Key</h5>
+                <p>{keyReveal ? <span><span id='ec-key'>{key}</span><i onClick={() => this.copy('ec-key')} data-clipboard-target="#ec-key" className="copy-button clickable material-icons">content_copy</i></span> : <span><span className='obfuscated-text'>12fh4789923kfhhs7499hhsgffs890hs37k</span><span className='clickable reveal-button' onClick={this.getExportableKey}>Click to reveal</span></span>}</p>
               </Modal.Body>
               <Modal.Footer>
-                <button className="btn btn-secondary" onClick={() => this.setState({ projectModalOpen: false })}>
+                <button className="btn btn-secondary" onClick={() => this.setState({ projectModalOpen: false, keyReveal: false })}>
                   Close
                 </button>
               </Modal.Footer>

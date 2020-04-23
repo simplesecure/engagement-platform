@@ -462,3 +462,16 @@ section {
 .margin-top {
   margin-top: 25px;
 }
+
+.obfuscated-text {
+  position: absolute;
+  color: transparent;
+  text-shadow: 0 0 8px #000;
+}
+
+.reveal-button {
+  position: absolute;
+  z-index: 1;
+  margin-left: 50px;
+  font-weight: 800;
+}
