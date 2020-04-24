@@ -15,9 +15,9 @@ import LoadingModal from "./LoadingModal";
 import { getCloudUser } from "./../utils/cloudUser.js";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Link } from "react-router-dom";
 import { getWeb2Analytics } from "../utils/web2Analytics";
 const listToArray = require("list-to-array");
+const NETWORK_OPTIONS = ["mainnet", "ropsten", "rinkeby", "goerli", "kovan"];
 
 export default class Segments extends React.Component {
   constructor(props) {
@@ -47,6 +47,7 @@ export default class Segments extends React.Component {
       condition: {},
       importModalOpen: false,
       importAddress: "",
+      selectedNetwork: "mainnet",
     };
   }
 
@@ -107,7 +108,7 @@ export default class Segments extends React.Component {
 
   createSegment = async () => {
     const { sessionData, apps, allFilters } = this.global;
-    const { currentSegments } = sessionData;
+    const { currentSegments, network } = sessionData;
     const {
       listOfAddresses,
       newSegName,
@@ -135,6 +136,7 @@ export default class Segments extends React.Component {
     }
     const segmentCriteria = {
       appId: sessionData.id,
+      network, 
       showOnDashboard: showOnDashboard,
       id: segId,
       name: newSegName,
@@ -671,15 +673,16 @@ export default class Segments extends React.Component {
 
   importUsers = () => {
     const { sessionData } = this.global;
-    const { importAddress } = this.state;
+    const { importAddress, network } = this.state;
     const importWalletsCmdObj = {
       command: "importWallets",
       data: {
         appId: sessionData.id,
         contractAddress: importAddress,
+        network,
         options: {
           transactions_per_page: 100,
-          max_transactions: 250000
+          max_transactions: 250000,
         },
       },
     };
@@ -690,15 +693,7 @@ export default class Segments extends React.Component {
     );
     toast.success(
       <div>
-        Importing users. You'll get a notification when it's complete. Check:
-        &nbsp;
-        <Link
-          style={{ color: "white" }}
-          onClick={() => this.setState({ pathname: "/jobs" })}
-          to="/jobs"
-        >
-          <u>job queue</u>.
-        </Link>
+        Importing users. You'll get a notification when it's complete. View progress by clicking Job Queue on the sidebar.
       </div>,
       {
         position: toast.POSITION.TOP_RIGHT,
@@ -708,6 +703,22 @@ export default class Segments extends React.Component {
     getCloudUser().processData("import", importWalletsCmdObj);
     this.setState({ importModalOpen: false, importAddress: "" });
   };
+
+  renderNetworksDrop() {
+    return (
+      <div>
+        <label>Choose Ethereum Network</label>
+        <select
+          onChange={(e) => this.setState({ network: e.target.value })}
+          className="form-control"
+        >
+          {NETWORK_OPTIONS.map((network) => {
+            return <option value={network}>{network}</option>;
+          })}
+        </select>
+      </div>
+    );
+  }
 
   renderMultipleConditions() {
     const { conditions, operator, editSegment } = this.state;
@@ -788,7 +799,7 @@ export default class Segments extends React.Component {
   }
 
   renderCreateSegment(condition) {
-    const { allFilters } = this.global;
+    const { allFilters, experimentalFeatures } = this.global;
     const {
       listOfAddresses,
       tokenAddress,
@@ -808,10 +819,13 @@ export default class Segments extends React.Component {
       (condition && condition.id);
 
     return (
-      <div>
+      <div>        
         {this.renderMultipleConditions()}
         <div className="form-group col-md-12">
-          <label htmlFor="chartSty">First, Choose a Filter</label>
+          {experimentalFeatures ? this.renderNetworksDrop() : <div/>}
+        </div>
+        <div className="form-group col-md-12">        
+          <label htmlFor="chartSty">Choose a Filter</label>
           <select
             value={filterType}
             onChange={(e) => this.setState({ filterType: e.target.value })}
@@ -1053,11 +1067,7 @@ export default class Segments extends React.Component {
   }
 
   render() {
-    const {
-      sessionData,
-      processing,
-      currentAppId
-    } = this.global;
+    const { sessionData, processing, currentAppId, experimentalFeatures } = this.global;
     const { currentSegments } = sessionData;
     const {
       importAddress,
@@ -1140,12 +1150,10 @@ export default class Segments extends React.Component {
                                 >
                                   <strong>Import Users</strong>
                                 </td>
-                              ) :
-                              seg.id === `2-${currentAppId}` || seg.id === `3-${currentAppId}` ?
-                              (
+                              ) : seg.id === `2-${currentAppId}` ||
+                                seg.id === `3-${currentAppId}` ? (
                                 <td></td>
-                              ) :
-                              (
+                              ) : (
                                 <td
                                   className="clickable"
                                   onClick={() => this.handleEditSegment(seg)}
@@ -1153,7 +1161,9 @@ export default class Segments extends React.Component {
                                   Edit
                                 </td>
                               )}
-                              {seg.id === `1-${currentAppId}` || seg.id === `2-${currentAppId}` || seg.id === `3-${currentAppId}` ? (
+                              {seg.id === `1-${currentAppId}` ||
+                              seg.id === `2-${currentAppId}` ||
+                              seg.id === `3-${currentAppId}` ? (
                                 <td disabled></td>
                               ) : (
                                 <td
@@ -1272,16 +1282,23 @@ export default class Segments extends React.Component {
                   of the addresses that have interacted with that address.
                 </Modal.Body>
                 <Modal.Body>
-                  <InputGroup className="mb-3">
-                    <FormControl
-                      type="text"
-                      value={importAddress}
-                      onChange={(e) =>
-                        this.setState({ importAddress: e.target.value })
-                      }
-                      placeholder="0x..."
-                    />
-                  </InputGroup>
+                  <div className="form-group col-md-12">
+                    {experimentalFeatures ? this.renderNetworksDrop() : <div/>}
+                    <div className="top-15">
+                      <label>Enter Contract Address</label>
+                      <InputGroup className="mb-3 form-group">
+                        <FormControl
+                          type="text"
+                          className="form-control"
+                          value={importAddress}
+                          onChange={(e) =>
+                            this.setState({ importAddress: e.target.value })
+                          }
+                          placeholder="0x..."
+                        />
+                      </InputGroup>
+                    </div>
+                  </div>
                 </Modal.Body>
                 <Modal.Footer>
                   {importAddress.length > 10 && importAddress.length < 50 ? (

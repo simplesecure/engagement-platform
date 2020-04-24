@@ -2,6 +2,10 @@ section {
   z-index: 0!important;;
 }
 
+.top-15 {
+  margin-top: 15px;
+}
+
 .d-table {
   text-align: center!important;
 }

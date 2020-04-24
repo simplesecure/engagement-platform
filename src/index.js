@@ -65,7 +65,7 @@ setGlobal({
   weekly: [],
   monthly: [],
   loadingMessage: '', 
-  experimentalFeatures: false
+  experimentalFeatures: process.env.REACT_APP_SID_EXPERIMENTAL_FEATURES === 'true' ? true : false
 })
 
 ReactDOM.render(<App />, document.getElementById('root'));

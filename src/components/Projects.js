@@ -12,7 +12,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getCloudUser } from "./../utils/cloudUser.js";
 import { getSidSvcs } from "../utils/sidServices";
-const SID_TESTING_KEY_REVEAL = process.env.REACT_APP_SID_TESTING_KEY_REVEAL === 'true' ? true : false;
+const SID_EXPERIMENTAL_FEATURES = process.env.REACT_APP_SID_EXPERIMENTAL_FEATURES === 'true' ? true : false;
 const moment = require('moment');
 const ERROR_MSG =
   "Failed to create project, please try again. If this continues, please contact support@simpleid.xyz";
@@ -314,7 +314,7 @@ export default class Projects extends React.Component {
                   <div />
                 }
                 {
-                  SID_TESTING_KEY_REVEAL || experimentalFeatures ? 
+                  SID_EXPERIMENTAL_FEATURES || experimentalFeatures ? 
                   <div>
                     <h5>Organization Private Key</h5>
                     <p>{keyReveal ? <span><span id='ec-key'>{key}</span><i onClick={() => this.copy('ec-key')} data-clipboard-target="#ec-key" className="copy-button clickable material-icons">content_copy</i></span> : <span><span className='obfuscated-text'>12fh4789923kfhhs7499hhsgffs890hs37k</span><span className='clickable reveal-button' onClick={this.getExportableKey}>Click to reveal</span></span>}</p>
