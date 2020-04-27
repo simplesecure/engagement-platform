@@ -463,13 +463,13 @@ export default class Communications extends React.Component {
       "command": "sendEmails", 
       "data": {
         "appId": ${currentAppId}, 
-        "template_id": "", 
+        "template_id": ${temp.id}, 
         "subject": "", 
         "from": "", 
         "org_id": ${org_id}, 
         "campaign_id": ${id}, 
         "uuidList": []
-      }
+      }  
     }`
 
     const copied = copy(dataObject);
