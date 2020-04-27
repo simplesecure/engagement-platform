@@ -814,8 +814,9 @@ export default class Segments extends React.Component {
       contractAddress,
     } = this.state;
     const filterToUse = allFilters.filter((a) => a.filter === filterType)[0];
+    const erc20Balance = tokenType === 'ERC-20';
     const createCriteria =
-      (filterType !== "Choose" && newSegName ? true : false) ||
+      (filterType !== "Choose" && newSegName && erc20Balance !== true ? true : false) || (filterType !== "Choose" && newSegName && erc20Balance === true && tokenAddress) ||
       (condition && condition.id);
 
     return (
