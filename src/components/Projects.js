@@ -300,7 +300,7 @@ export default class Projects extends React.Component {
                 <Modal.Title>Project Details</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <h5>Project Name</h5>
+                <h5>Project Name <span style={{fontSize: '10px'}}><button>Edit</button></span></h5>
                 <p>{proj.project_name}</p>
                 <div />
                 <h5>App ID</h5>
