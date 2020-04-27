@@ -462,12 +462,12 @@ export default class Communications extends React.Component {
     `{
       "command": "sendEmails", 
       "data": {
-        "appId": ${currentAppId}, 
-        "template_id": ${temp.id}, 
+        "appId": "${currentAppId}", 
+        "template_id": "${temp.id}", 
         "subject": "", 
         "from": "", 
-        "org_id": ${org_id}, 
-        "campaign_id": ${id}, 
+        "org_id": "${org_id}", 
+        "campaign_id": "${id}", 
         "uuidList": []
       }  
     }`
