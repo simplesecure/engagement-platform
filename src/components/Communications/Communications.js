@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 import { getEmailData } from "../../utils/emailData.js";
 import { importEmailArray } from "../../utils/emailImport.js";
 import InputGroup from "react-bootstrap/InputGroup";
+import copy from "copy-to-clipboard";
 const csv = require("csvtojson");
 
 const CAMPAIGN_SPEC_CHANGE_V2 = true
@@ -454,6 +455,32 @@ export default class Communications extends React.Component {
     return possibleEmails
   }
 
+  copyTemplateData = (temp) => {
+    const { org_id, currentAppId } = this.global;
+    const id = uuid();
+    const dataObject = 
+    `{
+      "command": "sendEmails", 
+      "data": {
+        "appId": ${currentAppId}, 
+        "template_id": "", 
+        "subject": "", 
+        "from": "", 
+        "org_id": ${org_id}, 
+        "campaign_id": ${id}, 
+        "uuidList": []
+      }
+    }`
+
+    const copied = copy(dataObject);
+    if (copied) {
+      toast.success("Copied!", {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 1000
+      });
+    }
+  }
+
   renderCreateCampaign() {
     const {
       fromAddress,
@@ -790,6 +817,7 @@ export default class Communications extends React.Component {
                             <tr>
                               <th>Name</th>
                               <th></th>
+                              <th></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -802,6 +830,7 @@ export default class Communications extends React.Component {
                                   >
                                     {temp.name}
                                   </td>
+                                  <td className='clickable' onClick={() => this.copyTemplateData(temp)}>Get Template Data</td>
                                   <td
                                     className="clickable text-danger"
                                     onClick={() => this.deleteTemplate(temp)}
