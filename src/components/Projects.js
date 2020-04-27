@@ -27,7 +27,9 @@ export default class Projects extends React.Component {
       redirect: false,
       projectModalOpen: false, 
       keyReveal: false, 
-      key: ''
+      key: '', 
+      updatedProjectName: '', 
+      editName: false
     };
   }
 
@@ -148,9 +150,31 @@ export default class Projects extends React.Component {
     this.setState({ keyReveal: true, key})
   }
 
+  editName = () => {
+    this.setState({ editName: true })
+  }
+
+  saveUpdatedProject = async (proj) => {
+    const { org_id } = this.global;
+    const { updatedProjectName } = this.state;
+    
+    const orgData = await dc.organizationDataTableGet(org_id);
+
+    try {
+      const anObject = orgData.Item;
+      anObject.apps[proj.id].project_name = updatedProjectName;
+      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
+      await dc.organizationDataTablePut(anObject);      
+      getCloudUser().fetchOrgDataAndUpdate();
+      this.setState({ editName: false });
+    } catch (suppressedError) {
+      console.log(`ERROR: problem writing to DB.\n${suppressedError}`);
+    }
+  }
+
   renderMain() {
     const { apps, processing, liveChat, liveChatId, experimentalFeatures } = this.global;
-    const { projectName, proj, show, projectModalOpen, keyReveal, key } = this.state;
+    const { projectName, proj, show, projectModalOpen, keyReveal, key, updatedProjectName, editName } = this.state;
     const appKeys = Object.keys(apps);
     let applications = [];
     for (const appKey of appKeys) {
@@ -300,8 +324,10 @@ export default class Projects extends React.Component {
                 <Modal.Title>Project Details</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <h5>Project Name <span style={{fontSize: '10px'}}><button>Edit</button></span></h5>
-                <p>{proj.project_name}</p>
+                  <h5>Project Name <span onClick={this.editName} style={{marginLeft: "10px", cursor: "pointer"}}><i className="far fa-edit"></i></span></h5>
+                  <p>
+                  {editName ? <span><input onChange={(e) => this.setState({ updatedProjectName: e.target.value })} type='text' value={updatedProjectName} /> <i onClick={() => this.saveUpdatedProject(proj)} className="clickable fas fa-check"></i></span> : updatedProjectName ? updatedProjectName : proj.project_name }
+                  </p>
                 <div />
                 <h5>App ID</h5>
                 <p><span id='app-id'>{proj.id}</span><i onClick={() => this.copy('app-id')} data-clipboard-target="#app-id" className="copy-button clickable material-icons">content_copy</i></p>
