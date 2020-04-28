@@ -2,8 +2,9 @@ import React, { useGlobal, useState, useEffect } from "reactn";
 import Card from "react-bootstrap/Card";
 import { Line } from "react-chartjs-2";
 
-const Charts = (props) => {
+const Charts = () => {
   const [emailData] = useGlobal("emailData");
+  const [sessionData] = useGlobal("sessionData");
   const [lineChartData, setLineChartData] = useState({});
   const [basicStats, setBasicStats] = useState({
     totalEmailsSent: 0, 
@@ -134,7 +135,7 @@ const Charts = (props) => {
                 <div className="row">
                   <div className="col-md-6 col-sm-6 col-lg-6 text-center">
                     <h6>Total Emails Imported</h6>
-                    <h3>{props.allEmailsGroup.userCount ? props.allEmailsGroup.userCount : 0}</h3>
+                    <h3>{sessionData.imports && sessionData.imports.email.count ? sessionData.imports.email.count : 0}</h3>
                   </div>
                   <div className="col-md-6 col-sm-6 col-lg-6 text-center">
                     <h6>Total Emails Sent</h6>
