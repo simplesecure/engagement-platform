@@ -111,7 +111,7 @@ export default class Account extends React.Component {
   }
 
   render() {
-    const { threeBoxProfile } = this.global
+    const { threeBoxProfile, plan } = this.global
     const imageUrl = threeBoxProfile && threeBoxProfile.imageUrl ? threeBoxProfile.imageUrl : undefined
     const name = threeBoxProfile && threeBoxProfile.name ? threeBoxProfile.name : "Anonymous Human"
     const description = threeBoxProfile && threeBoxProfile.description ? threeBoxProfile.description : "You're awesome and people like you"
@@ -153,7 +153,17 @@ export default class Account extends React.Component {
               <div className="card card-small mb-4">
                 <div className="card-header border-bottom">
                   <h6 className="m-0">Billing Information</h6>
-                  <p>You're currently in Beta. When the Beta release is over, we will contact you.</p>
+                  {
+                    plan ? 
+                    <div>
+                      <p>Your current plan is: <strong><u>{plan}</u></strong></p>
+                      <a className="btn btn-primary" href="mailto:support@simpleid.xyz">Contact Us To Make Changes</a>
+                    </div> : 
+                    <div>
+                    <p>You are currently on our <strong><u>free plan</u></strong>.</p>
+                    <a className="btn btn-primary" href="mailto:support@simpleid.xyz">Contact Us To Make Changes</a>
+                  </div>
+                  }
                 </div>
                 {/*<ul className="list-group list-group-flush">
                   <li className="list-group-item p-3">

@@ -22,8 +22,7 @@ export default class SideNav extends React.Component {
           <nav className="navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0">
             <Link className="navbar-brand w-100 mr-0" to="#" style={{lineHeight: "25px"}}>
               <div className="d-table m-auto">
-                <img id="main-logo" className="d-inline-block align-top mr-1" style={{maxWidth: "25px"}} src={require('../assets/img/logo.png')} alt="SimpleID Dashboard" /> <br/>
-                <span className="beta-text">BETA</span>
+                <img id="main-logo" className="d-inline-block align-top mr-1" style={{maxWidth: "25px"}} src={require('../assets/img/logo.png')} alt="SimpleID Dashboard" /> <br/>                
               </div>
             </Link>
             <button className="a-el-fix toggle-sidebar d-sm-inline d-md-none d-lg-none">

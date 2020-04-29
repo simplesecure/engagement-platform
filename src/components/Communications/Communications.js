@@ -7,7 +7,7 @@ import EmailEditor from "./EmailEditor";
 import Charts from "./Charts";
 import Table from "react-bootstrap/Table";
 import Card from "react-bootstrap/Card";
-import Form from "react-bootstrap/Form"
+import Form from "react-bootstrap/Form";
 import Loader from "../Loader";
 import * as dc from "../../utils/dynamoConveniences.js";
 import { setLocalStorage } from "../../utils/misc";
@@ -19,7 +19,7 @@ import InputGroup from "react-bootstrap/InputGroup";
 import copy from "copy-to-clipboard";
 const csv = require("csvtojson");
 
-const CAMPAIGN_SPEC_CHANGE_V2 = true
+const CAMPAIGN_SPEC_CHANGE_V2 = true;
 
 export default class Communications extends React.Component {
   constructor(props) {
@@ -43,18 +43,18 @@ export default class Communications extends React.Component {
       csvUploaded: false,
       fileName: "",
       allEmailsGroup: {},
-      includeImportedEmails: false
+      includeImportedEmails: false,
     };
 
-    this.numImportedEmails = 0
+    this.numImportedEmails = 0;
   }
 
   async componentDidMount() {
     const { sessionData } = this.global;
-    if(sessionData.imports && sessionData.imports.email) {
+    if (sessionData.imports && sessionData.imports.email) {
       const allEmailsGroup = {
-        userCount: sessionData.imports.email.count
-      }
+        userCount: sessionData.imports.email.count,
+      };
       this.setState({ allEmailsGroup });
     }
 
@@ -208,11 +208,11 @@ export default class Communications extends React.Component {
       if (CAMPAIGN_SPEC_CHANGE_V2) {
         // V2 introduces the segment data (id, name, userCount).
         // and deletes users after sending the campaign.
-        newCampaign['segment'] = {
+        newCampaign["segment"] = {
           id: seg.id,
           name: seg.name,
-          userCount: (seg.users) ? seg.users.length : 0,
-        }
+          userCount: seg.users ? seg.users.length : 0,
+        };
       }
 
       //Process the actual email send
@@ -224,7 +224,7 @@ export default class Communications extends React.Component {
         org_id,
         template_id: selectedTemplate,
         campaign_id: newCampaign.id,
-        include_imported_emails: includeImportedEmails
+        include_imported_emails: includeImportedEmails,
       };
 
       setGlobal({ processing: true });
@@ -242,7 +242,7 @@ export default class Communications extends React.Component {
           // because it is not used and storing all those addresses poses a
           // scalability challeng in dynamo.
           //
-          delete newCampaign.users
+          delete newCampaign.users;
         }
 
         camps.push(newCampaign);
@@ -350,18 +350,18 @@ export default class Communications extends React.Component {
               };
 
               const thisApp = apps[sessionData.id];
-              if(thisApp.imports) {
-                thisApp.imports['email'] = {
+              if (thisApp.imports) {
+                thisApp.imports["email"] = {
                   count: previouslyImported + imported,
-                  updated: Date.now()
-                }
+                  updated: Date.now(),
+                };
               } else {
-                thisApp['imports'] = {
+                thisApp["imports"] = {
                   email: {
                     count: previouslyImported + imported,
-                    updated: Date.now()
-                  }
-                }
+                    updated: Date.now(),
+                  },
+                };
               }
 
               apps[sessionData.id] = thisApp;
@@ -427,9 +427,9 @@ export default class Communications extends React.Component {
     );
   };
 
-  getImportEmailsCheckbox(numImportedEmails=0) {
+  getImportEmailsCheckbox(numImportedEmails = 0) {
     if (numImportedEmails >= 0) {
-      const checkBoxLabel = `Include ${numImportedEmails} imported emails.`
+      const checkBoxLabel = `Include ${numImportedEmails} imported emails.`;
 
       return (
         <Form.Group controlId="importedEmailsCheckbox">
@@ -437,29 +437,30 @@ export default class Communications extends React.Component {
             type="checkbox"
             label={checkBoxLabel}
             onChange={(evt) => {
-              const includeImportedEmails = evt.target.checked
-              this.setState({ includeImportedEmails })
-            }}/>
+              const includeImportedEmails = evt.target.checked;
+              this.setState({ includeImportedEmails });
+            }}
+          />
         </Form.Group>
-      )
+      );
     }
 
-    return undefined
+    return undefined;
   }
 
   getCampaignPossibleEmailCount() {
-    const { userCount, includeImportedEmails } = this.state
-    const possibleEmails = (includeImportedEmails) ?
-      userCount + this.numImportedEmails : userCount
+    const { userCount, includeImportedEmails } = this.state;
+    const possibleEmails = includeImportedEmails
+      ? userCount + this.numImportedEmails
+      : userCount;
 
-    return possibleEmails
+    return possibleEmails;
   }
 
   copyTemplateData = (temp) => {
     const { org_id, currentAppId } = this.global;
     const id = uuid();
-    const dataObject = 
-    `{
+    const dataObject = `{
       "command": "sendEmails", 
       "data": {
         "appId": "${currentAppId}", 
@@ -470,16 +471,16 @@ export default class Communications extends React.Component {
         "campaign_id": "${id}", 
         "uuidList": []
       }  
-    }`
+    }`;
 
     const copied = copy(dataObject);
     if (copied) {
       toast.success("Copied!", {
         position: toast.POSITION.TOP_RIGHT,
-        autoClose: 1000
+        autoClose: 1000,
       });
     }
-  }
+  };
 
   renderCreateCampaign() {
     const {
@@ -487,13 +488,12 @@ export default class Communications extends React.Component {
       selectedSegment,
       selectedTemplate,
       campaignName,
-      confirmModal
+      confirmModal,
     } = this.state;
 
-
     try {
-      const { currentAppId, apps } = getGlobal()
-      this.numImportedEmails = apps[currentAppId].imports.email.count
+      const { currentAppId, apps } = getGlobal();
+      this.numImportedEmails = apps[currentAppId].imports.email.count;
     } catch (suppressedError) {}
 
     const { sessionData, processing } = this.global;
@@ -671,8 +671,9 @@ export default class Communications extends React.Component {
               <Modal.Title>You're About To Send An Email</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-              Are you sure you want to send this email to up to {this.getCampaignPossibleEmailCount()}{" "}
-              people?* It can't be undone. <br />
+              Are you sure you want to send this email to up to{" "}
+              {this.getCampaignPossibleEmailCount()} people?* It can't be
+              undone. <br />
               <br />
               <span className="text-muted">
                 * It's possible that not all of your users made their email
@@ -717,6 +718,7 @@ export default class Communications extends React.Component {
       processing,
       emailEditor,
       loadingMessage,
+      plan,
     } = this.global;
     const { campaigns, currentTemplates } = sessionData;
 
@@ -735,33 +737,49 @@ export default class Communications extends React.Component {
                 </span>
                 <h3 className="page-title">Connect Through Email</h3>
               </div>
-              <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
-                <span className="text-uppercase page-subtitle">
-                  Import Emails
-                </span>
-                <br />
-                <button
-                  onClick={() => this.setState({ importModalOpen: true })}
-                  style={{ fontSize: "16px", margin: "5px" }}
-                  className="btn btn-success"
-                >
-                  Import Email Addresses
-                </button>
-              </div>
+              {plan === "enterprise" ? (
+                <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
+                  <span className="text-uppercase page-subtitle">
+                    Import Emails
+                  </span>
+                  <br />
+
+                  <button
+                    onClick={() => this.setState({ importModalOpen: true })}
+                    style={{ fontSize: "16px", margin: "5px" }}
+                    className="btn btn-success"
+                  >
+                    Import Email Addresses
+                  </button>
+                </div>
+              ) : (
+                <div />
+              )}
             </div>
             <div className="row">
               <Charts allEmailsGroup={this.state.allEmailsGroup} />
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4 margin-top">
                 <h5>
                   Campaigns{" "}
-                  <span>
-                    <button
-                      onClick={() => this.setState({ createCampaign: true })}
-                      className="btn btn-primary margin-left"
-                    >
-                      New Campaign
-                    </button>
-                  </span>
+                  {plan === "enterprise" ? (
+                    <span>
+                      <button
+                        onClick={() => this.setState({ createCampaign: true })}
+                        className="btn btn-primary margin-left"
+                      >
+                        New Campaign
+                      </button>
+                    </span>
+                  ) : (
+                    <span>
+                      <a
+                        href="mailto:support@simpleid.xyz"
+                        className="btn btn-primary margin-left"
+                      >
+                        Contact Us To Upgrade
+                      </a>
+                    </span>
+                  )}
                 </h5>
                 {campaigns && campaigns.length > 0 ? (
                   <Card>
@@ -800,14 +818,25 @@ export default class Communications extends React.Component {
                 <div>
                   <h5>
                     Templates{" "}
-                    <span>
-                      <button
-                        onClick={() => setGlobal({ emailEditor: true })}
-                        className="btn btn-success margin-left"
-                      >
-                        New Template
-                      </button>
-                    </span>
+                    {plan === "enterprise" ? (
+                      <span>
+                        <button
+                          onClick={() => setGlobal({ emailEditor: true })}
+                          className="btn btn-success margin-left"
+                        >
+                          New Template
+                        </button>
+                      </span>
+                    ) : (
+                      <span>
+                        <a
+                          href="mailto:support@simpleid.xyz"
+                          className="btn btn-success margin-left"
+                        >
+                          Contact Us To Upgrade
+                        </a>
+                      </span> 
+                    )}
                   </h5>
                   {currentTemplates && currentTemplates.length > 0 ? (
                     <Card>
@@ -830,7 +859,12 @@ export default class Communications extends React.Component {
                                   >
                                     {temp.name}
                                   </td>
-                                  <td className='clickable' onClick={() => this.copyTemplateData(temp)}>Get Template Data</td>
+                                  <td
+                                    className="clickable"
+                                    onClick={() => this.copyTemplateData(temp)}
+                                  >
+                                    Get Template Data
+                                  </td>
                                   <td
                                     className="clickable text-danger"
                                     onClick={() => this.deleteTemplate(temp)}
@@ -1035,7 +1069,12 @@ export default class Communications extends React.Component {
                 Upload CSV
               </button>
               <p className="text-muted">{fileName}</p>
-              <input style={{ display: "none" }} type="file" accept=".csv" id="csv-file" />
+              <input
+                style={{ display: "none" }}
+                type="file"
+                accept=".csv"
+                id="csv-file"
+              />
             </InputGroup>
           </Modal.Body>
           <Modal.Footer>

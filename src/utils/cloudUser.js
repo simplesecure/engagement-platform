@@ -44,7 +44,7 @@ class CloudUser {
       appData = await dc.organizationDataTableGet(org_id);
       console.log(appData);
       const experimentalFeatures = appData.Item.experimentalFeatures ? true : false;
-      setGlobal({experimentalFeatures: SID_EXPERIMENTAL_FEATURES === true ? SID_EXPERIMENTAL_FEATURES : experimentalFeatures });
+      setGlobal({experimentalFeatures: SID_EXPERIMENTAL_FEATURES === true ? SID_EXPERIMENTAL_FEATURES : experimentalFeatures, plan: appData.Item.plan ? appData.Item.plan : null });
     } else {
       console.log("ERROR: No Org ID")
     }

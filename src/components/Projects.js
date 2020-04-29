@@ -173,7 +173,7 @@ export default class Projects extends React.Component {
   }
 
   renderMain() {
-    const { apps, processing, liveChat, liveChatId, experimentalFeatures } = this.global;
+    const { apps, processing, liveChat, liveChatId, experimentalFeatures, plan } = this.global;
     const { projectName, proj, show, projectModalOpen, keyReveal, key, updatedProjectName, editName } = this.state;
     const appKeys = Object.keys(apps);
     let applications = [];
@@ -259,9 +259,11 @@ export default class Projects extends React.Component {
                 </Card.Body>
               </Card>
             </div>
-
+            
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-              <div>
+              {
+                applications.length === 0 || plan === 'enterprise' ?
+                <div>
                 <h5>Add a Project</h5>
                 <div className="form-group col-md-12">
                   <label htmlFor="inputSeg">
@@ -288,7 +290,18 @@ export default class Projects extends React.Component {
                     Create Project
                   </button>
                 </div>
+              </div> : 
+              <div>
+                <h5>Upgrade your plan to create additional projects</h5>
+                <a
+                  href='mailto:support@simpleid.xyz'
+                  className="btn btn-primary"
+                >
+                  Contact Us
+                </a>
               </div>
+              }
+              
             </div>
 
             <Modal

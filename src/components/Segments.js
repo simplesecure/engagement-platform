@@ -136,7 +136,7 @@ export default class Segments extends React.Component {
     }
     const segmentCriteria = {
       appId: sessionData.id,
-      network, 
+      network,
       showOnDashboard: showOnDashboard,
       id: segId,
       name: newSegName,
@@ -693,7 +693,8 @@ export default class Segments extends React.Component {
     );
     toast.success(
       <div>
-        Importing users. You'll get a notification when it's complete. View progress by clicking Job Queue on the sidebar.
+        Importing users. You'll get a notification when it's complete. View
+        progress by clicking Job Queue on the sidebar.
       </div>,
       {
         position: toast.POSITION.TOP_RIGHT,
@@ -814,18 +815,24 @@ export default class Segments extends React.Component {
       contractAddress,
     } = this.state;
     const filterToUse = allFilters.filter((a) => a.filter === filterType)[0];
-    const erc20Balance = tokenType === 'ERC-20';
+    const erc20Balance = tokenType === "ERC-20";
     const createCriteria =
-      (filterType !== "Choose" && newSegName && erc20Balance !== true ? true : false) || (filterType !== "Choose" && newSegName && erc20Balance === true && tokenAddress) ||
+      (filterType !== "Choose" && newSegName && erc20Balance !== true
+        ? true
+        : false) ||
+      (filterType !== "Choose" &&
+        newSegName &&
+        erc20Balance === true &&
+        tokenAddress) ||
       (condition && condition.id);
 
     return (
-      <div>        
+      <div>
         {this.renderMultipleConditions()}
         <div className="form-group col-md-12">
-          {experimentalFeatures ? this.renderNetworksDrop() : <div/>}
+          {experimentalFeatures ? this.renderNetworksDrop() : <div />}
         </div>
-        <div className="form-group col-md-12">        
+        <div className="form-group col-md-12">
           <label htmlFor="chartSty">Choose a Filter</label>
           <select
             value={filterType}
@@ -1068,8 +1075,15 @@ export default class Segments extends React.Component {
   }
 
   render() {
-    const { sessionData, processing, currentAppId, experimentalFeatures } = this.global;
+    const {
+      sessionData,
+      processing,
+      currentAppId,
+      experimentalFeatures,
+      plan,
+    } = this.global;
     const { currentSegments } = sessionData;
+
     const {
       importAddress,
       importModalOpen,
@@ -1104,17 +1118,24 @@ export default class Segments extends React.Component {
                 </span>
               </h3>
             </div>
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
-              <span className="text-uppercase page-subtitle">Import Users</span>
-              <br />
-              <button
-                onClick={() => this.setState({ importModalOpen: true })}
-                style={{ fontSize: "16px", margin: "5px" }}
-                className="btn btn-success"
-              >
-                Import By Smart Contract
-              </button>
-            </div>
+
+            <br />
+            {plan === "enterprise" || plan === "premium" ? (
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
+                <span className="text-uppercase page-subtitle">
+                  Import Users
+                </span>
+                <button
+                  onClick={() => this.setState({ importModalOpen: true })}
+                  style={{ fontSize: "16px", margin: "5px" }}
+                  className="btn btn-success"
+                >
+                  Import By Smart Contract
+                </button>
+              </div>
+            ) : (
+              <div />
+            )}
           </div>
           <div className="row">
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
@@ -1284,7 +1305,7 @@ export default class Segments extends React.Component {
                 </Modal.Body>
                 <Modal.Body>
                   <div className="form-group col-md-12">
-                    {experimentalFeatures ? this.renderNetworksDrop() : <div/>}
+                    {experimentalFeatures ? this.renderNetworksDrop() : <div />}
                     <div className="top-15">
                       <label>Enter Contract Address</label>
                       <InputGroup className="mb-3 form-group">
@@ -1363,7 +1384,22 @@ export default class Segments extends React.Component {
               ) : (
                 <div />
               )}
-              {this.renderCreateSegment()}
+              {plan === "enterprise" ||
+              plan === "premium" ||
+              segments.length < 4 ? (
+                this.renderCreateSegment()
+              ) : (
+                <div>
+                  <h5>Upgrade Your Plan</h5>
+                  <p>Upgrade to create more segments</p>
+                  <a
+                    className="btn btn-primary"
+                    href="mailto:support@simpleid.xyz"
+                  >
+                    Contact Us To Upgrade
+                  </a>
+                </div>
+              )}
             </div>
           </div>
 
