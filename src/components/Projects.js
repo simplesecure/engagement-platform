@@ -297,7 +297,7 @@ export default class Projects extends React.Component {
                   href='mailto:support@simpleid.xyz'
                   className="btn btn-primary"
                 >
-                  Contact Us
+                  Contact Us To Upgrade
                 </a>
               </div>
               }

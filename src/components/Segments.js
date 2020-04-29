@@ -1390,8 +1390,7 @@ export default class Segments extends React.Component {
                 this.renderCreateSegment()
               ) : (
                 <div>
-                  <h5>Upgrade Your Plan</h5>
-                  <p>Upgrade to create more segments</p>
+                  <h5>Upgrade to create more segments</h5>
                   <a
                     className="btn btn-primary"
                     href="mailto:support@simpleid.xyz"
