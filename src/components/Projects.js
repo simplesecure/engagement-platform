@@ -173,7 +173,7 @@ export default class Projects extends React.Component {
   }
 
   renderMain() {
-    const { apps, processing, liveChat, liveChatId, experimentalFeatures, plan } = this.global;
+    const { apps, processing, liveChat, liveChatId, plan } = this.global;
     const { projectName, proj, show, projectModalOpen, keyReveal, key, updatedProjectName, editName } = this.state;
     const appKeys = Object.keys(apps);
     let applications = [];
@@ -353,7 +353,7 @@ export default class Projects extends React.Component {
                   <div />
                 }
                 {
-                  SID_EXPERIMENTAL_FEATURES || experimentalFeatures ? 
+                  plan === 'enterprise' || plan === 'premium' ? 
                   <div>
                     <h5>Organization Private Key</h5>
                     <p>{keyReveal ? <span><span id='ec-key'>{key}</span><i onClick={() => this.copy('ec-key')} data-clipboard-target="#ec-key" className="copy-button clickable material-icons">content_copy</i></span> : <span><span className='obfuscated-text'>12fh4789923kfhhs7499hhsgffs890hs37k</span><span className='clickable reveal-button' onClick={this.getExportableKey}>Click to reveal</span></span>}</p>
