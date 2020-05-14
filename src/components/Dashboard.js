@@ -59,41 +59,6 @@ export default class Dashboard extends React.Component {
     this.setState({ showContracts: true })
   }
 
-  getChartDiv = (options) => {
-    return (
-       <div className="d-flex"
-            style={{margin:10, flex:1, width:'100%'}}>
-         <CanvasJSChart options={options} /* onRef = {ref => this.chart = ref} */ />
-       </div>
-     )
-  }
-
-  getCrappyDonutChart = () => {
-    const options = {
-      animationEnabled: false,
-      theme: "light2",
-      // title:{ text: "Proxy Wallet Sources" },
-      data: [{
-            type: "doughnut",
-            startAngle: 60,
-            //innerRadius: 60,
-            indexLabelFontSize: 17,
-            indexLabel: "{label} - #percent%",
-            toolTipContent: "<b>{label}:</b> {y} (#percent%)",
-            dataPoints: [
-                  { y: 37, label: "Oasis" },
-                  { y: 23, label: "InstaDapp" },
-                  { y: 10, label: "Kyber" },
-                  { y: 12, label: "UniSwap"},
-                  { y: 8, label: "Aave"},
-                  { y: 10, label: "Other"}
-            ]
-      }]
-    }
-
-    return this.getChartDiv(options)
-  }
-
   getNotCrappyDonutChart = () => {
     return (
       <div style={{flex:1, width:'100%'}}>
@@ -118,7 +83,7 @@ export default class Dashboard extends React.Component {
             },
             chartArea: {
               width: '85%',
-              height: '90%'
+              height: '85%'
             }
           }}
         />
@@ -126,35 +91,109 @@ export default class Dashboard extends React.Component {
     );
   }
 
-  getCdpLockInChart = () => {
+  getBubbleChart = () => {
+    const data = [
+      ["ID", "Wallet Interactions", "Eth in Oasis", "Address", "Total Eth in Wallet"],
+      ["0x123", 80.66, 93400, "Oasis", 33739900],
+      ["0x321", 79.84, 300033, "InstaDapp", 81902307],
+      ["0x457", 78.6, 52000, "Kyber", 5523095],
+      ["0x623", 72.73, 172000, "Kyber", 79716203],
+      ["0x989", 80.05, 155000, "Aave", 61801570],
+      ["0x113", 72.49, 345000, "InstaDapp", 73137148],
+      ["0x543", 68.09, 70000, "Kyber", 31090763],
+      ["0x080", 81.55, 50000, "Oasis", 7485600],
+      ["0x139", 68.6, 220000, "Oasis", 141850000],
+      ["0x776", 78.09, 380000, "Aave", 307007000]
+    ];
+
     const options = {
-      theme: "light2", // "light1", "light2", "dark1", "dark2"
-      animationEnabled: true,
-      // title: { text: "Value locked in CDPs" },
-      axisY: { title: "Assets (USD MM)", prefix: "$", includeZero: false },
-      data: [{
-            type: "rangeColumn",
-            yValueFormatString: "$#,##0.00",
-            xValueFormatString: "MMM YYYY",
-            toolTipContent: "{x}<br>High: {y[0]}<br>Low: {y[1]}",
-            dataPoints: [
-                  { x: new Date(2020, 0), y: [27.10, 38.99] },
-                  { x: new Date(2020, 1), y: [29.92, 37.00] },
-                  { x: new Date(2020, 2), y: [35.95, 42.54] },
-                  { x: new Date(2020, 3), y: [37.27, 48.50] },
-                  { x: new Date(2020, 4), y: [43.33, 50.51] },
-                  { x: new Date(2020, 5), y: [46.69, 52.86] },
-                  { x: new Date(2020, 6), y: [41.80, 50.75] },
-                  { x: new Date(2020, 7), y: [41.51, 51.22] },
-                  { x: new Date(2020, 8), y: [45.09, 50.14] },
-                  { x: new Date(2020, 9), y: [47.98, 53.73] },
-                  { x: new Date(2020, 10), y: [43.57, 50.49] },
-                  { x: new Date(2020, 11), y: [51.51, 57.89] }
-            ]
-        }]
+    //   title: "Wallet Interactions vs Total Value Locked in Oasis - Top 20",
+      hAxis: { title: "Wallet Interacations" },
+      vAxis: { title: "Assets in Oasis ($)" },
+      bubble: { textStyle: { fontSize: 11 } },
+      legend: {
+        position: 'top'
+      },
+      chartArea: {
+        top: '10%',
+        left: '20%',
+        width: '70%',
+        height: '70%'
+      },
+      bubble: {
+        textStyle: {color: 'none'}
+      }
+    };
+
+    return (
+      <div style={{flex:1, width:'100%'}}>
+        <Chart
+          chartType="BubbleChart"
+          height="100%"
+          data={data}
+          options={options}
+        />
+      </div>
+    )
+  }
+
+  getCandleStickChart = () => {
+    const data = [
+      [
+        {
+          type: "string",
+          id: "Date"
+        },
+        {
+          type: "number",
+          label: "Something"
+        },
+        {
+          type: "number",
+          label: "Something"
+        },
+        {
+          type: "number",
+          label: "Something"
+        },
+        {
+          type: "number",
+          label: "Something"
+        }
+      ],
+      ["Jan", 20, 28, 38, 45],
+      ["Feb", 31, 38, 55, 66],
+      ["Mar", 50, 55, 77, 80],
+      ["Apr", 77, 77, 66, 50],
+      ["May", 68, 66, 22, 15],
+      ["Jun", 22, 42, 86, 100]
+    ]
+
+    const options = {
+      // title: "Value locked in CDPs",
+      vAxis: { title: "Assets in Millions ($)" },
+      legend: 'none',
+      bar: { groupWidth: '90%' }, // Remove space between bars.
+      candlestick: {
+        fallingColor: { strokeWidth: 0, fill: '#a52714' }, // red
+        risingColor: { strokeWidth: 0, fill: '#0f9d58' }, // green
+      },
+      chartArea: {
+        top: '10%',
+        left: '20%',
+        width: '70%',
+        height: '70%'
+      }
     }
 
-    return this.getChartDiv(options)
+    return (
+      <Chart
+         chartType="CandlestickChart"
+         width="100%"
+         height="100%"
+         data={data}
+         options={options} />
+    )
   }
 
   getChartCard = (aTitle, theChart, minHeight=420) => {
@@ -206,18 +245,20 @@ export default class Dashboard extends React.Component {
         <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
           <StickyNav />
           <div className="main-content-container container-fluid px-4">
-            <div className="page-header row no-gutters py-4">
+            {/*<div className="page-header row no-gutters py-4">*/}
+            <div className="row no-gutters py-4">
               <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
-                <span className="text-uppercase page-subtitle">Dashboard</span>
-                <h3 className="page-title">
-                  App Overview{" "}
+                {/*<span className="text-uppercase page-subtitle">Dashboard</span>*/}
+                <h2 className="page-title">
+                  {sessionData.project_name}{"  "}
+{/*                  App Overview{" "}*/}
                   <span
                     onClick={this.handleRefreshData}
                     className="clickable refresh"
                   >
-                    <i className="fas fa-sync-alt"></i>
+                    <i className="fas fa-sync-alt" style={{fontSize:21}}></i>
                   </span>
-                </h3>
+                </h2>
               </div>
             </div>
 
@@ -287,6 +328,34 @@ export default class Dashboard extends React.Component {
                   </div>
                 </div>
 
+                <div
+                  // onClick={() => this.handleShowSeg(tile)}
+                  key={this.getUniqueKey()}
+                  className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
+                >
+                  <div className="stats-small stats-small--1 card card-small">
+                    <div className="card-body p-0 d-flex">
+                      <div className="d-flex flex-column m-auto">
+                        <div className="stats-small__data text-center">
+                          <span className="stats-small__label text-uppercase">
+                            Your plan
+                          </span>
+                          <h6 className="stats-small__value count my-3">
+                            Enterprise
+                          </h6>
+                        </div>
+                        <div className="stats-small__data">
+                          {/*<span className="stats-small__percentage stats-small__percentage--increase">4.7%</span>*/}
+                        </div>
+                      </div>
+                      <canvas
+                        height="120"
+                        className="blog-overview-stats-small-1"
+                      ></canvas>
+                    </div>
+                  </div>
+                </div>
+
             </div>
 
 
@@ -304,12 +373,9 @@ export default class Dashboard extends React.Component {
                 {this.getChartCard('Source Breakdown', this.getNotCrappyDonutChart())}
 
                 {this.getChartCard('Wallet Interactions vs Total Value Locked In (Top 20)',
-                                    (<Image className="sid-logo" src={require('../assets/img/wallet-interactions.jpg')} alt="Data coming soon..." />))}
-
+                                   this.getBubbleChart())}
                 {this.getChartCard('Value Locked In CDPs',
-                                   (<Image className="sid-logo" src={require('../assets/img/cdp-value.jpg')} alt="Data coming soon..." />))}
-
-
+                                   this.getCandleStickChart())}
 
             </div>
 
