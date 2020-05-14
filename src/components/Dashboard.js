@@ -9,7 +9,22 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import Image from 'react-bootstrap/Image'
-import Table from 'react-bootstrap/Table';
+import Table from 'react-bootstrap/Table'
+
+import Chart from "react-google-charts";
+
+// TODO: Burn this shit library after converting to google charts ... (i.e.
+//       remove it, refs to it, and the stupid files--yeah, I hate it--it's
+//       crap and doesn't respect responsiveness!)
+//
+// TODO: get a license for this if we go with it for production or get another
+//       library
+//
+// From: https://canvasjs.com/docs/charts/integration/react/
+import CanvasJSReact from './../canvasjs.react';
+var CanvasJS = CanvasJSReact.CanvasJS;
+var CanvasJSChart = CanvasJSReact.CanvasJSChart;
+
 
 export default class Dashboard extends React.Component {
   constructor(props) {
@@ -42,6 +57,129 @@ export default class Dashboard extends React.Component {
 
   handleShowContracts = () => {
     this.setState({ showContracts: true })
+  }
+
+  getChartDiv = (options) => {
+    return (
+       <div className="d-flex"
+            style={{margin:10, flex:1, width:'100%'}}>
+         <CanvasJSChart options={options} /* onRef = {ref => this.chart = ref} */ />
+       </div>
+     )
+  }
+
+  getCrappyDonutChart = () => {
+    const options = {
+      animationEnabled: false,
+      theme: "light2",
+      // title:{ text: "Proxy Wallet Sources" },
+      data: [{
+            type: "doughnut",
+            startAngle: 60,
+            //innerRadius: 60,
+            indexLabelFontSize: 17,
+            indexLabel: "{label} - #percent%",
+            toolTipContent: "<b>{label}:</b> {y} (#percent%)",
+            dataPoints: [
+                  { y: 37, label: "Oasis" },
+                  { y: 23, label: "InstaDapp" },
+                  { y: 10, label: "Kyber" },
+                  { y: 12, label: "UniSwap"},
+                  { y: 8, label: "Aave"},
+                  { y: 10, label: "Other"}
+            ]
+      }]
+    }
+
+    return this.getChartDiv(options)
+  }
+
+  getNotCrappyDonutChart = () => {
+    return (
+      <div style={{flex:1, width:'100%'}}>
+        <Chart
+          chartType="PieChart"
+          height="100%"
+          data={[
+            ["Frontend", "Wallet Percentage"],
+            ["Oasis", 37],
+            ["InstaDapp", 23],
+            ["Kyber", 10],
+            ["UniSwap", 12],
+            ["Aave", 8],
+            ["Other", 10]
+          ]}
+          options={{
+            is3D: false,
+            pieHole: 0.5,
+            pieSliceText: 'none',
+            legend: {
+              position: 'labeled'
+            },
+            chartArea: {
+              width: '85%',
+              height: '90%'
+            }
+          }}
+        />
+      </div>
+    );
+  }
+
+  getCdpLockInChart = () => {
+    const options = {
+      theme: "light2", // "light1", "light2", "dark1", "dark2"
+      animationEnabled: true,
+      // title: { text: "Value locked in CDPs" },
+      axisY: { title: "Assets (USD MM)", prefix: "$", includeZero: false },
+      data: [{
+            type: "rangeColumn",
+            yValueFormatString: "$#,##0.00",
+            xValueFormatString: "MMM YYYY",
+            toolTipContent: "{x}<br>High: {y[0]}<br>Low: {y[1]}",
+            dataPoints: [
+                  { x: new Date(2020, 0), y: [27.10, 38.99] },
+                  { x: new Date(2020, 1), y: [29.92, 37.00] },
+                  { x: new Date(2020, 2), y: [35.95, 42.54] },
+                  { x: new Date(2020, 3), y: [37.27, 48.50] },
+                  { x: new Date(2020, 4), y: [43.33, 50.51] },
+                  { x: new Date(2020, 5), y: [46.69, 52.86] },
+                  { x: new Date(2020, 6), y: [41.80, 50.75] },
+                  { x: new Date(2020, 7), y: [41.51, 51.22] },
+                  { x: new Date(2020, 8), y: [45.09, 50.14] },
+                  { x: new Date(2020, 9), y: [47.98, 53.73] },
+                  { x: new Date(2020, 10), y: [43.57, 50.49] },
+                  { x: new Date(2020, 11), y: [51.51, 57.89] }
+            ]
+        }]
+    }
+
+    return this.getChartDiv(options)
+  }
+
+  getChartCard = (aTitle, theChart, minHeight=420) => {
+    return (
+      <div
+        // onClick={() => this.handleShowSeg(tile)}
+        key={this.getUniqueKey()}
+        className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
+      >
+        <div className="stats-small stats-small--1 card card-small">
+          <div className="card-body p-0 d-flex" style={{width:'100%', justifyContent:'center', minHeight:420}}>
+            <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
+
+                <span
+                  className="stats-small__label text-uppercase"
+                  style={{marginTop:32, textAlign:'center'}} >
+                  {aTitle}
+                </span>
+              {theChart}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    )
   }
 
   render() {
@@ -149,37 +287,6 @@ export default class Dashboard extends React.Component {
                   </div>
                 </div>
 
-                <div
-                  // onClick={() => this.handleShowSeg(tile)}
-                  key={this.getUniqueKey()}
-                  className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
-                >
-                  <div className="stats-small stats-small--1 card card-small">
-                    <div className="card-body p-0 d-flex">
-                      <div className="d-flex flex-column m-auto">
-                        <div className="stats-small__data text-center">
-                          <span
-                            className="stats-small__label text-uppercase"
-                            style={{marginTop:32}} >   {/* align with non-image titles*/}
-                            Source Breakdown
-                          </span>
-                          <Image className="sid-logo" src={require('../assets/img/radar-chart.jpg')} alt="Data coming soon..." />
-                          {/*<h6 className="stats-small__value count my-3">
-                            2
-                          </h6>*/}
-                        </div>
-                        <div className="stats-small__data">
-                          {/*<span className="stats-small__percentage stats-small__percentage--increase">4.7%</span>*/}
-                        </div>
-                      </div>
-                      <canvas
-                        height="120"
-                        className="blog-overview-stats-small-1"
-                      ></canvas>
-                    </div>
-                  </div>
-                </div>
-
             </div>
 
 
@@ -194,98 +301,16 @@ export default class Dashboard extends React.Component {
 
             <div className="row">
 
-                <div
-                  // onClick={() => this.handleShowSeg(tile)}
-                  key={this.getUniqueKey()}
-                  className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
-                >
-                  <div className="stats-small stats-small--1 card card-small">
-                    <div className="card-body p-0 d-flex">
-                      <div className="d-flex flex-column m-auto">
-                        <div className="stats-small__data text-center">
-                          <span
-                            className="stats-small__label text-uppercase"
-                            style={{marginTop:32}} >   {/* align with non-image titles*/}
-                            Wallet Interactions vs Total Value Locked In
-                          </span>
-                          <Image className="sid-logo" src={require('../assets/img/wallet-interactions.jpg')} alt="Data coming soon..." />
-                          {/*<h6 className="stats-small__value count my-3">
-                            2
-                          </h6>*/}
-                        </div>
-                        <div className="stats-small__data">
-                          {/*<span className="stats-small__percentage stats-small__percentage--increase">4.7%</span>*/}
-                        </div>
-                      </div>
-                      <canvas
-                        height="120"
-                        className="blog-overview-stats-small-1"
-                      ></canvas>
-                    </div>
-                  </div>
-                </div>
+                {this.getChartCard('Source Breakdown', this.getNotCrappyDonutChart())}
 
-                <div
-                  // onClick={() => this.handleShowSeg(tile)}
-                  key={this.getUniqueKey()}
-                  className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
-                >
-                  <div className="stats-small stats-small--1 card card-small">
-                    <div className="card-body p-0 d-flex">
-                      <div className="d-flex flex-column m-auto">
-                        <div className="stats-small__data text-center">
-                          <span
-                            className="stats-small__label text-uppercase"
-                            style={{marginTop:32}} >   {/* align with non-image titles*/}
-                            Value Locked In CDPs
-                          </span>
-                          <Image className="sid-logo" src={require('../assets/img/cdp-value.jpg')} alt="Data coming soon..." />
-                          {/*<h6 className="stats-small__value count my-3">
-                            2
-                          </h6>*/}
-                        </div>
-                        <div className="stats-small__data">
-                          {/*<span className="stats-small__percentage stats-small__percentage--increase">4.7%</span>*/}
-                        </div>
-                      </div>
-                      <canvas
-                        height="120"
-                        className="blog-overview-stats-small-1"
-                      ></canvas>
-                    </div>
-                  </div>
-                </div>
+                {this.getChartCard('Wallet Interactions vs Total Value Locked In (Top 20)',
+                                    (<Image className="sid-logo" src={require('../assets/img/wallet-interactions.jpg')} alt="Data coming soon..." />))}
 
-                <div
-                  // onClick={() => this.handleShowSeg(tile)}
-                  key={this.getUniqueKey()}
-                  className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
-                >
-                  <div className="stats-small stats-small--1 card card-small">
-                    <div className="card-body p-0 d-flex">
-                      <div className="d-flex flex-column m-auto">
-                        <div className="stats-small__data text-center">
-                          <span
-                            className="stats-small__label text-uppercase"
-                            style={{marginTop:32}} >   {/* align with non-image titles*/}
-                            Daily Transfers Heat Map
-                          </span>
-                          <Image className="sid-logo" src={require('../assets/img/daily-transfers.jpg')} alt="Data coming soon..." />
-                          {/*<h6 className="stats-small__value count my-3">
-                            2
-                          </h6>*/}
-                        </div>
-                        <div className="stats-small__data">
-                          {/*<span className="stats-small__percentage stats-small__percentage--increase">4.7%</span>*/}
-                        </div>
-                      </div>
-                      <canvas
-                        height="120"
-                        className="blog-overview-stats-small-1"
-                      ></canvas>
-                    </div>
-                  </div>
-                </div>
+                {this.getChartCard('Value Locked In CDPs',
+                                   (<Image className="sid-logo" src={require('../assets/img/cdp-value.jpg')} alt="Data coming soon..." />))}
+
+
+
             </div>
 
 
