@@ -115,6 +115,14 @@ socket.on("update job id", async (result) => {
   //    with the update (i.e. % done, error etc.)
 });
 
+// TODO: common repo for constants etc.
+const BLOCK_ID_EVENT_NAME = "block id"
+socket.on(BLOCK_ID_EVENT_NAME, (aBlockId) => {
+  console.log(`---------------------------------------------------------------------\n` +
+              `Processing Ethereum Block ID: ${aBlockId}\n` +
+              `---------------------------------------------------------------------`  )
+})
+
 const SESSION_FROM_LOCAL = "sessionData";
 
 const QUEUE_IMPORT_WALLETS = true;
