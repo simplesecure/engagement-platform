@@ -13,17 +13,6 @@ import Table from 'react-bootstrap/Table'
 
 import Chart from "react-google-charts";
 
-// TODO: Burn this shit library after converting to google charts ... (i.e.
-//       remove it, refs to it, and the stupid files--yeah, I hate it--it's
-//       crap and doesn't respect responsiveness!)
-//
-// TODO: get a license for this if we go with it for production or get another
-//       library
-//
-// From: https://canvasjs.com/docs/charts/integration/react/
-import CanvasJSReact from './../canvasjs.react';
-var CanvasJS = CanvasJSReact.CanvasJS;
-var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
 
 export default class Dashboard extends React.Component {
