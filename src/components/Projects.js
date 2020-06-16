@@ -1,12 +1,21 @@
 import React, { setGlobal } from "reactn";
 import { Link } from "react-router-dom";
 import StickyNav from "./StickyNav";
-import Modal from "react-bootstrap/Modal";
-import Table from "react-bootstrap/Table";
 import Card from "react-bootstrap/Card";
+import {
+  Button,
+  Grid,
+  Segment,
+  Header,
+  Input,
+  Icon,
+  Message,
+  Dimmer,
+  Loader
+} from 'semantic-ui-react'
+import { Dialog } from 'evergreen-ui'
 import * as dc from './../utils/dynamoConveniences.js'
 import { setLocalStorage } from "../utils/misc";
-import LoadingModal from "./LoadingModal";
 import copy from "copy-to-clipboard";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -25,10 +34,10 @@ export default class Projects extends React.Component {
       show: false,
       proj: {},
       redirect: false,
-      projectModalOpen: false, 
-      keyReveal: false, 
-      key: '', 
-      updatedProjectName: '', 
+      projectModalOpen: false,
+      keyReveal: false,
+      key: '',
+      updatedProjectName: '',
       editName: false
     };
   }
@@ -157,14 +166,14 @@ export default class Projects extends React.Component {
   saveUpdatedProject = async (proj) => {
     const { org_id } = this.global;
     const { updatedProjectName } = this.state;
-    
+
     const orgData = await dc.organizationDataTableGet(org_id);
 
     try {
       const anObject = orgData.Item;
       anObject.apps[proj.id].project_name = updatedProjectName;
       anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-      await dc.organizationDataTablePut(anObject);      
+      await dc.organizationDataTablePut(anObject);
       getCloudUser().fetchOrgDataAndUpdate();
       this.setState({ editName: false });
     } catch (suppressedError) {
@@ -173,7 +182,7 @@ export default class Projects extends React.Component {
   }
 
   renderMain() {
-    const { apps, processing, liveChat, liveChatId, plan } = this.global;
+    const { apps, processing, plan } = this.global;
     const { projectName, proj, show, projectModalOpen, keyReveal, key, updatedProjectName, editName } = this.state;
     const appKeys = Object.keys(apps);
     let applications = [];
@@ -184,7 +193,7 @@ export default class Projects extends React.Component {
     }
 
     return (
-      <div>
+      <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
         <Link style={{ display: "none" }} id="hidden-redirect" to="/projects" />
         <div className="main-content-container container-fluid px-4">
@@ -210,180 +219,132 @@ export default class Projects extends React.Component {
             <div className="row">
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <Card>
-                <Card.Body>
-
                   {applications.length > 0 ? (
-                    <Table responsive>
-                      <thead>
-                        <tr>
-                          <th>App Name</th>
-                          <th>Date</th>
-                          <th></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {applications.map(app => {
-                          return (
-                            <tr key={app.id}>
-                              <td>
-                                <button
-                                  onClick={() =>
-                                    this.handleProjectModal(app)
-                                  }
-                                  className="a-el-fix"
-                                >
-                                  {app.project_name}
-                                </button>
-                              </td>
-                              <td>{moment(app.date_created).format("MM/DD/YYYY")}</td>
-                              <td
-                                className="clickable text-danger"
-                                onClick={() => this.deleteProject(app, false)}
-                              >
-                                Delete
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </Table>
+                    applications.map(app => {
+                      return (
+                        <Segment key={app.id} padded raised>
+                          <Grid columns={2}>
+                            <Grid.Row>
+                              <Grid.Column width={10}>
+                                <Header as='h3'>{app.project_name}</Header>
+                                <p className='name'>{moment(app.date_created).format("MM/DD/YYYY")}</p>
+                              </Grid.Column>
+                              <Grid.Column width={6}>
+                                <Button.Group floated="right">
+                                  <Button onClick={() => this.handleProjectModal(app)} icon basic>
+                                    <Icon name='options' size='large' color='blue' />
+                                    <p className='name'>Details</p>
+                                  </Button>
+                                  <Button onClick={() => this.deleteProject(app, false)} icon basic>
+                                    <Icon color='red' name='trash alternate outline' size='large' />
+                                    <p className='name'>Delete</p>
+                                  </Button>
+                                </Button.Group>
+                              </Grid.Column>
+                            </Grid.Row>
+                          </Grid>
+                        </Segment>
+                      );
+                    })
                   ) : (
-                    <div>
-                      <h5>No Projects Created Yet</h5>
-                      <p>
-                        Add a new project to get started. Once you do and once
-                        your app is integrated, you'll be able use SimpleID.
-                      </p>
-                    </div>
+                  <Message
+                    header='No Projects Created Yet'
+                    content="Add a new project to get started. Once you do and once your app is integrated, you'll be able use SimpleID."
+                  />
                   )}
-                </Card.Body>
               </Card>
             </div>
-            
+
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               {
-                applications.length === 0 || plan === 'enterprise' ?
+                applications.length === 0 || plan === "enterprise" ?
                 <div>
                 <h5>Add a Project</h5>
                 <div className="form-group col-md-12">
-                  <label htmlFor="inputSeg">
-                    First, Give Your Project a Name
-                  </label>
-                  <input
-                    type="text"
+                  <Input
+                    fluid
                     value={projectName}
                     onChange={e =>
                       this.setState({ projectName: e.target.value })
                     }
-                    className="form-control"
-                    id="tileName"
-                    placeholder="Give it a name"
+                    placeholder="First, Give Your Project a Name"
                   />
                 </div>
                 <div className="form-group col-md-12">
-                  <label htmlFor="inputSeg">Then, Create It</label>
-                  <br />
-                  <button
+                  <Button
+                    floated="right"
                     onClick={this.createProject}
-                    className="btn btn-primary"
+                    positive
                   >
                     Create Project
-                  </button>
+                  </Button>
                 </div>
-              </div> : 
+              </div> :
               <div>
                 <h5>Upgrade your plan to create additional projects</h5>
-                <a
-                  href='mailto:support@simpleid.xyz'
-                  className="btn btn-primary"
-                >
+                <Button primary as='a' href="mailto:hello@simpleid.xyz">
                   Contact Us To Upgrade
-                </a>
+                </Button>
               </div>
               }
-              
+
             </div>
 
-            <Modal
-              className="custom-modal"
-              show={show}
-              onHide={this.closeModal}
+            <Dialog
+              isShown={show}
+              title="Delete Project?"
+              onConfirm={() => this.deleteProject(proj, true)}
+              onCancel={() => this.closeModal()}
+              onCloseComplete={() => this.closeModal()}
+              confirmLabel='Delete'
+              intent="danger"
+              width={640}
             >
-              <Modal.Header closeButton>
-                <Modal.Title>Are you sure?</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                You're about to delete the project{" "}
-                <strong>
-                  <u>{proj.name}</u>
-                </strong>
-                . Are you sure you want to do this? It can't be undone.
-              </Modal.Body>
-              <Modal.Footer>
-                <button className="btn btn-secondary" onClick={this.closeModal}>
-                  Cancel
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={() => this.deleteProject(proj, true)}
-                >
-                  Delete
-                </button>
-              </Modal.Footer>
-            </Modal>
+              You're about to delete the project{" "}
+              <strong>
+                <u>{projectName}</u>
+              </strong>
+              . Are you sure you want to do this? It can't be undone.
+            </Dialog>
 
-            <Modal className="custom-modal" show={projectModalOpen} onHide={() => this.setState({ projectModalOpen: false })}>
-              <Modal.Header closeButton>
-                <Modal.Title>Project Details</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                  <h5>Project Name <span onClick={this.editName} style={{marginLeft: "10px", cursor: "pointer"}}><i className="far fa-edit"></i></span></h5>
-                  <p>
-                  {editName ? <span><input onChange={(e) => this.setState({ updatedProjectName: e.target.value })} type='text' value={updatedProjectName} /> <i onClick={() => this.saveUpdatedProject(proj)} className="clickable fas fa-check"></i></span> : updatedProjectName ? updatedProjectName : proj.project_name }
-                  </p>
+            <Dialog
+              isShown={projectModalOpen}
+              title="Project Details"
+              onConfirm={() => this.setState({ projectModalOpen: false, keyReveal: false })}
+              onCancel={() => this.setState({ projectModalOpen: false, keyReveal: false })}
+              onCloseComplete={() => this.setState({ projectModalOpen: false, keyReveal: false })}
+              confirmLabel="Close"
+              hasCancel={false}
+              width={640}
+            >
+              <h5>Project Name <span onClick={this.editName} style={{marginLeft: "10px", cursor: "pointer"}}><i className="far fa-edit"></i></span></h5>
+                <p>
+                {editName ? <span><input onChange={(e) => this.setState({ updatedProjectName: e.target.value })} type='text' value={updatedProjectName} /> <i onClick={() => this.saveUpdatedProject(proj)} className="clickable fas fa-check"></i></span> : updatedProjectName ? updatedProjectName : proj.project_name }
+                </p>
+              <div />
+              <h5>App ID</h5>
+              <p><span id='app-id'>{proj.id}</span><i onClick={() => this.copy('app-id')} data-clipboard-target="#app-id" className="copy-button clickable material-icons">content_copy</i></p>
+              {
+                plan === 'enterprise' || plan === 'premium' ?
+                <div>
+                  <h5>Organization Private Key</h5>
+                  <p>{keyReveal ? <span><span id='ec-key'>{key}</span><i onClick={() => this.copy('ec-key')} data-clipboard-target="#ec-key" className="copy-button clickable material-icons">content_copy</i></span> : <span><span className='obfuscated-text'>12fh4789923kfhhs7499hhsgffs890hs37k</span><span className='clickable reveal-button' onClick={this.getExportableKey}>Click to reveal</span></span>}</p>
+                </div> :
                 <div />
-                <h5>App ID</h5>
-                <p><span id='app-id'>{proj.id}</span><i onClick={() => this.copy('app-id')} data-clipboard-target="#app-id" className="copy-button clickable material-icons">content_copy</i></p>
-                {
-                  liveChat ?
-                  <div>
-                    <h5>Chat Address</h5>
-                    <p><span id='chat-id'>{liveChatId}</span> <i onClick={() => this.copy('chat-id')} data-clipboard-target="#chat-id" className="copy-button clickable material-icons">content_copy</i></p>
-                  </div> :
-                  <div />
-                }
-                {
-                  plan === 'enterprise' || plan === 'premium' ? 
-                  <div>
-                    <h5>Organization Private Key</h5>
-                    <p>{keyReveal ? <span><span id='ec-key'>{key}</span><i onClick={() => this.copy('ec-key')} data-clipboard-target="#ec-key" className="copy-button clickable material-icons">content_copy</i></span> : <span><span className='obfuscated-text'>12fh4789923kfhhs7499hhsgffs890hs37k</span><span className='clickable reveal-button' onClick={this.getExportableKey}>Click to reveal</span></span>}</p>
-                  </div> : 
-                  <div />
-                }                
-              </Modal.Body>
-              <Modal.Footer>
-                <button className="btn btn-secondary" onClick={() => this.setState({ projectModalOpen: false, keyReveal: false })}>
-                  Close
-                </button>
-              </Modal.Footer>
-            </Modal>
-
-            <Modal className="custom-modal" show={processing}>
-              <Modal.Body>
-                <LoadingModal messageToDisplay={"Creating project..."} />
-              </Modal.Body>
-            </Modal>
+              }
+            </Dialog>
+            <Dimmer active={processing}>
+              <Loader inline='centered' indeterminate>{"Creating project..."}</Loader>
+            </Dimmer>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   render() {
     return (
-      <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
-        {this.renderMain()}
-      </main>
+      this.renderMain()
     );
   }
 }

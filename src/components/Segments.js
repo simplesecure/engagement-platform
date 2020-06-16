@@ -1,8 +1,21 @@
 import React, { setGlobal } from "reactn";
 import StickyNav from "./StickyNav";
-import Modal from "react-bootstrap/Modal";
-import Table from "react-bootstrap/Table";
-import Card from "react-bootstrap/Card";
+import {
+  Dialog,
+} from 'evergreen-ui'
+import {
+  Button,
+  Grid,
+  Segment,
+  Header,
+  Dropdown,
+  Input,
+  Label,
+  Icon,
+  Dimmer,
+  Loader
+} from 'semantic-ui-react'
+// import BlockDiagram from './BlockDiagram'
 import InputGroup from "react-bootstrap/InputGroup";
 import FormControl from "react-bootstrap/FormControl";
 import SegmentTable from "./SegmentTable";
@@ -11,11 +24,17 @@ import * as dc from "./../utils/dynamoConveniences.js";
 import DatePicker from "react-date-picker";
 import uuid from "uuid/v4";
 import { setLocalStorage } from "../utils/misc";
-import LoadingModal from "./LoadingModal";
 import { getCloudUser } from "./../utils/cloudUser.js";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getWeb2Analytics } from "../utils/web2Analytics";
+import {
+  createSegment,
+  updateSegment,
+  deleteSegment,
+  addFilter,
+  clearState
+} from './SegmentHelpers'
+
 const listToArray = require("list-to-array");
 const NETWORK_OPTIONS = ["mainnet", "ropsten", "rinkeby", "goerli", "kovan"];
 
@@ -27,7 +46,7 @@ export default class Segments extends React.Component {
       seg: "",
       existingSeg: false,
       allUsers: true,
-      filterType: "Choose...",
+      filterType: "",
       rangeType: "Before",
       operatorType: "More Than",
       newSegName: "",
@@ -39,7 +58,7 @@ export default class Segments extends React.Component {
       tokenAddress: "",
       showSegmentModal: false,
       segmentToShow: {},
-      dashboardShow: "Yes",
+      dashboardShow: "",
       loadingMessage: "Creating segment",
       listOfAddresses: "",
       operator: "",
@@ -48,431 +67,12 @@ export default class Segments extends React.Component {
       importModalOpen: false,
       importAddress: "",
       selectedNetwork: "mainnet",
+      showBlockDiagram: false
     };
   }
 
-  deleteSegment = async (seg, confirm) => {
-    const { sessionData, SESSION_FROM_LOCAL, apps, org_id } = this.global;
-    const { currentSegments } = sessionData;
-    console.log(currentSegments);
-    this.setState({ seg });
-    if (confirm) {
-      const index = currentSegments.map((a) => a.id).indexOf(seg.id);
-      if (index > -1) {
-        currentSegments.splice(index, 1);
-        sessionData.currentSegments = currentSegments;
-        //Update in DB
-        const thisApp = apps[sessionData.id];
-        thisApp.currentSegments = currentSegments;
-        setGlobal({ sessionData, apps });
-        const orgData = await dc.organizationDataTableGet(org_id);
-
-        try {
-          const anObject = orgData.Item;
-          anObject.apps = apps;
-          anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-          await dc.organizationDataTablePut(anObject);
-        } catch (suppressedError) {
-          console.log(`ERROR: problem writing to DB.\n${suppressedError}`);
-        }
-
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-        this.setState({ show: false });
-      } else {
-        console.log("Error with index");
-      }
-    } else {
-      this.setState({ show: true });
-    }
-  };
-
   closeModal = () => {
     this.setState({ show: false });
-  };
-
-  clearState = () => {
-    this.setState({
-      conditions: {},
-      tokenType: "Ether",
-      newSegName: "",
-      filterType: "Choose...",
-      contractAddress: "",
-      tokenAddress: "",
-      rangeType: "Before",
-      operatorType: "More Than",
-      date: new Date(),
-      amount: 0,
-      listOfAddresses: "",
-    });
-  };
-
-  createSegment = async () => {
-    const { sessionData, apps, allFilters } = this.global;
-    const { currentSegments, network } = sessionData;
-    const {
-      listOfAddresses,
-      newSegName,
-      tokenType,
-      tokenAddress,
-      filterType,
-      rangeType,
-      operatorType,
-      amount,
-      date,
-      contractAddress,
-      allUsers,
-      existingSegmentToFilter,
-      dashboardShow,
-    } = this.state;
-    let { conditions } = this.state;
-    let { filterConditions } = conditions;
-    const showOnDashboard = dashboardShow === "Yes" ? true : false;
-
-    const filterToUse = allFilters.filter((a) => a.filter === filterType)[0];
-    const segId = uuid();
-    let addrArray = [];
-    if (listOfAddresses) {
-      addrArray = listToArray(listOfAddresses);
-    }
-    const segmentCriteria = {
-      appId: sessionData.id,
-      network,
-      showOnDashboard: showOnDashboard,
-      id: segId,
-      name: newSegName,
-      startWithExisting: !allUsers,
-      existingSegmentToFilter:
-        allUsers === false ? existingSegmentToFilter : null,
-      conditions: conditions && conditions.id ? conditions : undefined,
-      filter: filterToUse,
-      dateRange:
-        filterToUse.type === "Date Range"
-          ? {
-              rangeType,
-              date: Date.parse(date),
-            }
-          : null,
-      numberRange:
-        filterToUse.type === "Number Range"
-          ? {
-              operatorType,
-              tokenType,
-              tokenAddress: tokenType === "ERC-20" ? tokenAddress : undefined,
-              amount,
-            }
-          : null,
-      contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
-      userCount: addrArray.length > 0 ? addrArray.length : null,
-    };
-
-    setGlobal({
-      showSegmentNotification: true,
-      segmentProcessingDone: false,
-      segmentName: segmentCriteria.name,
-    });
-
-    toast.success(
-      "Creating Segments. You'll get a notification when it's complete.",
-      {
-        position: toast.POSITION.TOP_RIGHT,
-        autoClose: 3000,
-      }
-    );
-    if (filterConditions && filterConditions.length > 0) {
-      this.addFilter();
-      conditions = this.state.conditions;
-      this.setState({ conditions });
-      segmentCriteria.conditions = conditions;
-
-      //  TODO handle multiple conditions that include web2 analytics
-    }
-
-    if (addrArray.length === 0) {
-      //  Quick solution for the web2 analytics stuff. Will break on multiple conditions though. See todo above
-      if (segmentCriteria.filter.type === "web2") {
-        //  Send request to web2 analytics handler
-        const web2AnalyticsCmdObj = {
-          command: "getWeb2Analytics",
-          data: {
-            appId: sessionData.id,
-            event: segmentCriteria.filter.filter.split("Web2: ")[1],
-          },
-        };
-        try {
-          const web2AnalyticsData = await getWeb2Analytics(web2AnalyticsCmdObj);
-          console.log(web2AnalyticsData);
-          const data = web2AnalyticsData.data;
-          let userCount;
-          let users;
-          if (data) {
-            userCount = data.length;
-            users = data;
-          } else {
-            userCount = 0;
-            users = [];
-          }
-          segmentCriteria.userCount = userCount;
-          segmentCriteria.users = users;
-          const segments = currentSegments ? currentSegments : [];
-          segments.push(segmentCriteria);
-          sessionData.currentSegments = segments;
-
-          const thisApp = apps[sessionData.id];
-          thisApp.currentSegments = segments;
-          apps[sessionData.id] = thisApp;
-          this.clearState();
-          setGlobal({ sessionData, apps });
-          this.updateOrgData(apps);
-        } catch (error) {
-          console.log(error);
-          toast.error(error.message, {
-            position: toast.POSITION.TOP_RIGHT,
-            autoClose: 2000,
-          });
-        }
-      } else {
-        try {
-          getCloudUser().processData("segment", segmentCriteria);
-          this.clearState();
-        } catch (e) {
-          console.log(e);
-        }
-      }
-    } else {
-      this.clearState();
-      segmentCriteria.userCount = addrArray.length;
-      segmentCriteria.users = addrArray;
-      segmentCriteria.userCount = addrArray.length;
-      const segments = currentSegments ? currentSegments : [];
-      segments.push(segmentCriteria);
-      sessionData.currentSegments = segments;
-
-      const thisApp = apps[sessionData.id];
-      thisApp.currentSegments = segments;
-      apps[sessionData.id] = thisApp;
-      this.clearState();
-      setGlobal({ sessionData, apps });
-      this.updateOrgData(apps);
-    }
-  };
-
-  updateOrgData = async (apps) => {
-    const { org_id, SESSION_FROM_LOCAL, sessionData } = this.global;
-    // Put the new segment in the analytics data for the user signed in to this
-    // id:
-    //      Each App (SimpleID Customer) will have an app_id
-    //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-    //      A segment will be stored in the DB under the primary key 'app_id' in
-    //      the appropriate user_id's segment storage:
-
-    // TODO: probably want to wait on this to finish and throw a status/activity
-    //       bar in the app:
-    const orgData = await dc.organizationDataTableGet(org_id);
-
-    try {
-      const anObject = orgData.Item;
-      anObject.apps = apps;
-      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-      await dc.organizationDataTablePut(anObject);
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      setGlobal({ showSegmentNotification: true, segmentProcessingDone: true });
-    } catch (suppressedError) {
-      const ERROR_MSG =
-        "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz.";
-      setGlobal({ error: ERROR_MSG });
-      console.log(`ERROR: problem writing to DB.\n${suppressedError}`);
-    }
-  };
-
-  updateSegment = async () => {
-    const {
-      sessionData,
-      apps,
-      org_id,
-      SESSION_FROM_LOCAL,
-      allFilters,
-    } = this.global;
-    const { currentSegments } = sessionData;
-    const {
-      conditions,
-      listOfAddresses,
-      segmentToShow,
-      newSegName,
-      tokenType,
-      tokenAddress,
-      filterType,
-      rangeType,
-      operatorType,
-      amount,
-      date,
-      contractAddress,
-      allUsers,
-      existingSegmentToFilter,
-      dashboardShow,
-    } = this.state;
-    const showOnDashboard = dashboardShow === "Yes" ? true : false;
-    const filterToUse = allFilters.filter((a) => a.filter === filterType)[0];
-
-    this.setState({ editSegment: false, showSegmentModal: false });
-
-    let addrArray = [];
-    if (listOfAddresses) {
-      addrArray = listToArray(listOfAddresses);
-    }
-
-    //First we set the segment criteria to be stored
-    const segmentCriteria = {
-      appId: sessionData.id,
-      showOnDashboard: showOnDashboard,
-      id: segmentToShow.id,
-      name: newSegName,
-      startWithExisting: !allUsers,
-      existingSegmentToFilter:
-        allUsers === false ? existingSegmentToFilter : null,
-      conditions: conditions && conditions.id ? conditions : undefined,
-      filter: filterToUse,
-      dateRange:
-        filterToUse.type === "Date Range"
-          ? {
-              rangeType,
-              date: Date.parse(date),
-            }
-          : null,
-      numberRange:
-        filterToUse.type === "Number Range"
-          ? {
-              operatorType,
-              tokenType,
-              tokenAddress: tokenType === "ERC-20" ? tokenAddress : undefined,
-              amount,
-            }
-          : null,
-      contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
-      userCount:
-        addrArray.length > 0 ? addrArray.length : segmentToShow.userCount,
-      users: segmentToShow.users,
-    };
-
-    const { filterConditions } = conditions;
-    let updatedConditions;
-    if (filterConditions && filterConditions.length > 0) {
-      this.addFilter();
-      updatedConditions = this.state.conditions;
-      this.setState({ conditions: updatedConditions });
-      segmentCriteria.conditions = conditions;
-    } else {
-      updatedConditions = {};
-      this.setState({ conditions: updatedConditions });
-    }
-    segmentCriteria["update"] = true;
-    //Now we fetch the actual results
-
-    //If the segment needs to be process via api, use the processData call
-    if (addrArray.length === 0) {
-      if (segmentCriteria.filter.type === "web2") {
-        //  Send request to web2 analytics handler
-        const web2AnalyticsCmdObj = {
-          command: "getWeb2Analytics",
-          data: {
-            appId: sessionData.id,
-            event: segmentCriteria.filter.filter.split("Web2: ")[1],
-          },
-        };
-        try {
-          const web2AnalyticsData = await getWeb2Analytics(web2AnalyticsCmdObj);
-          console.log(web2AnalyticsData);
-          const data = web2AnalyticsData.data;
-          let userCount;
-          let users;
-          if (data) {
-            userCount = data.length;
-            users = data;
-          } else {
-            userCount = 0;
-            users = [];
-          }
-          segmentCriteria.userCount = userCount;
-          segmentCriteria.users = users;
-          const segments = currentSegments ? currentSegments : [];
-          segments.push(segmentCriteria);
-          sessionData.currentSegments = segments;
-
-          const thisApp = apps[sessionData.id];
-          thisApp.currentSegments = segments;
-          apps[sessionData.id] = thisApp;
-          this.clearState();
-          setGlobal({ sessionData, apps });
-          this.updateOrgData(apps);
-        } catch (error) {
-          console.log(error);
-          toast.error(error.message, {
-            position: toast.POSITION.TOP_RIGHT,
-            autoClose: 2000,
-          });
-        }
-      } else {
-        try {
-          getCloudUser().processData("segment", segmentCriteria);
-          this.clearState();
-        } catch (e) {
-          console.log(e);
-        }
-      }
-    } else {
-      this.clearState();
-      segmentCriteria.userCount = addrArray.length;
-      segmentCriteria.users = addrArray;
-      segmentCriteria.userCount = addrArray.length;
-      const segments = currentSegments ? currentSegments : [];
-      let thisSegment = segments.filter((a) => a.id === segmentCriteria.id)[0];
-      if (thisSegment) {
-        thisSegment = segmentCriteria;
-      }
-      const index = await segments
-        .map((x) => {
-          return x.id;
-        })
-        .indexOf(segmentCriteria.id);
-      if (index > -1) {
-        segments[index] = thisSegment;
-      } else {
-        console.log("Error with index, not updating");
-      }
-      sessionData.currentSegments = segments;
-
-      const thisApp = apps[sessionData.id];
-      thisApp.currentSegments = segments;
-      apps[sessionData.id] = thisApp;
-      this.clearState();
-      setGlobal({ sessionData, apps });
-      // Put the new segment in the analytics data for the user signed in to this
-      // id:
-      //      Each App (SimpleID Customer) will have an app_id
-      //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-      //      A segment will be stored in the DB under the primary key 'app_id' in
-      //      the appropriate user_id's segment storage:
-
-      // TODO: probably want to wait on this to finish and throw a status/activity
-      //       bar in the app:
-      const orgData = await dc.organizationDataTableGet(org_id);
-
-      try {
-        const anObject = orgData.Item;
-        anObject.apps = apps;
-        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-        await dc.organizationDataTablePut(anObject);
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-        setGlobal({
-          showSegmentNotification: true,
-          segmentProcessingDone: true,
-        });
-      } catch (suppressedError) {
-        const ERROR_MSG =
-          "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz.";
-        setGlobal({ error: ERROR_MSG });
-        console.log(`ERROR: problem writing to DB.\n${suppressedError}`);
-      }
-    }
   };
 
   handleDateChange = (date) => {
@@ -483,6 +83,8 @@ export default class Segments extends React.Component {
   handleSegmentModal = (seg) => {
     this.setState({ segmentToShow: seg, showSegmentModal: true });
   };
+
+  toggleBlocky = () => this.setState({ showBlockDiagram: !this.state.showBlockDiagram })
 
   handleEditSegment = async (seg, singleCondition) => {
     //  This function is re-used across both the edit segment functionality and the edit signle criteria functionality
@@ -559,7 +161,7 @@ export default class Segments extends React.Component {
       showSegmentModal: false,
       editSegment: false,
     });
-    this.clearState();
+    clearState(this);
   };
 
   handleRefreshData = async () => {
@@ -568,87 +170,6 @@ export default class Segments extends React.Component {
       autoClose: 2000,
     });
     getCloudUser().fetchOrgDataAndUpdate();
-  };
-
-  addFilter = (condition) => {
-    const { allFilters } = this.global;
-    const {
-      conditions,
-      operator,
-      listOfAddresses,
-      tokenType,
-      tokenAddress,
-      filterType,
-      rangeType,
-      operatorType,
-      amount,
-      date,
-      contractAddress,
-      allUsers,
-      existingSegmentToFilter,
-      dashboardShow,
-    } = this.state;
-    const showOnDashboard = dashboardShow === "Yes" ? true : false;
-    const filterToUse = allFilters.filter((a) => a.filter === filterType)[0];
-    let addrArray = [];
-
-    if (listOfAddresses) {
-      addrArray = listToArray(listOfAddresses);
-    }
-
-    //First we set the segment criteria to be stored
-    const segmentCriteria = {
-      id: uuid(),
-      startWithExisting: !allUsers,
-      existingSegmentToFilter:
-        allUsers === false ? existingSegmentToFilter : null,
-      filter: filterToUse,
-      dateRange:
-        filterToUse.type === "Date Range"
-          ? {
-              rangeType,
-              date: Date.parse(date),
-            }
-          : null,
-      numberRange:
-        filterToUse.type === "Number Range"
-          ? {
-              operatorType,
-              tokenType,
-              tokenAddress: tokenType === "ERC-20" ? tokenAddress : undefined,
-              amount,
-            }
-          : null,
-      contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
-      userCount: addrArray.length > 0 ? addrArray.length : null,
-    };
-    let { filterConditions } = conditions;
-    const thisOperator = operator ? operator : "And";
-    this.setState({ operator: thisOperator });
-
-    conditions["operator"] = thisOperator;
-    conditions["showOnDashboard"] = showOnDashboard;
-    if (condition && condition.id) {
-      console.log(condition);
-      const index = filterConditions
-        .map((condition) => condition.id)
-        .indexOf(condition.id);
-      if (index > -1) {
-        filterConditions[index] = segmentCriteria;
-      } else {
-        console.log("Error with index");
-      }
-    } else {
-      if (filterConditions) {
-        filterConditions.push(segmentCriteria);
-      } else {
-        filterConditions = [];
-        filterConditions.push(segmentCriteria);
-      }
-    }
-
-    conditions["filterConditions"] = filterConditions;
-    //this.clearState()
   };
 
   handleOperatorChange = (e) => {
@@ -722,7 +243,7 @@ export default class Segments extends React.Component {
   }
 
   renderMultipleConditions() {
-    const { conditions, operator, editSegment } = this.state;
+    const { conditions, editSegment } = this.state;
     const { filterConditions } = conditions;
 
     if (filterConditions && filterConditions.length > 0) {
@@ -735,58 +256,63 @@ export default class Segments extends React.Component {
                   {
                     filterConditions.map((a) => a.id).indexOf(condition.id) ===
                       0 && filterConditions.length === 1 ? (
-                      <select
+                      <Dropdown
+                        placeholder='Operator...'
+                        compact
                         onChange={this.handleOperatorChange}
-                        className="custom-select"
-                        value={operator}
-                      >
-                        <option value="And">And</option>
-                        <option value="Or">Or</option>
-                      </select>
+                        openOnFocus={false}
+                        selection
+                        options={[
+                          { key: 'and', text: 'And', value: 'And' },
+                          { key: 'or', text: 'Or', value: 'Or' }
+                        ]}
+                      />
                     ) : filterConditions
                         .map((a) => a.id)
                         .indexOf(condition.id) === 0 ? (
-                      <select
+                      <Dropdown
+                        placeholder='Operator...'
+                        compact
                         onChange={this.handleOperatorChange}
-                        className="custom-select"
-                        value={operator}
-                      >
-                        <option value="And">And</option>
-                        <option value="Or">Or</option>
-                      </select>
+                        openOnFocus={false}
+                        selection
+                        options={[
+                          { key: 'and', text: 'And', value: 'And' },
+                          { key: 'or', text: 'Or', value: 'Or' }
+                        ]}
+                      />
                     ) : (
-                      <select
-                        className="custom-select"
+                      <Dropdown
+                        placeholder='Operator...'
+                        compact
+                        onChange={this.handleOperatorChange}
+                        openOnFocus={false}
                         disabled
-                        value={operator}
-                      >
-                        <option value="And">And</option>
-                        <option value="Or">Or</option>
-                      </select>
+                        selection
+                        options={[
+                          { key: 'and', text: 'And', value: 'And' },
+                          { key: 'or', text: 'Or', value: 'Or' }
+                        ]}
+                      />
                     )
                     // <button onClick={() => this.setState({ operator: operator === "And" ? "Or" : "And"})} className="btn btn-flat">{operator}</button> :
                     // <button className="btn btn-flat" disabled>{operator}</button>
                   }
+                  <br />
+                  <br />
                   <span>
-                    Filter type:
-                    {editSegment ? (
-                      <button disabled className="btn btn-flat">
-                        {condition.filter.filter}
-                      </button>
-                    ) : (
-                      <button
-                        className="clickable a-el-fix"
-                        onClick={() => this.handleEditSegment(condition, true)}
-                      >
-                        {condition.filter.filter}
-                      </button>
+                    {editSegment ? <div /> : (
+                      <Button.Group>
+                        <Button onClick={() => this.handleEditSegment(condition, true)} animated>
+                          <Button.Content visible>{condition.filter.filter}</Button.Content>
+                          <Button.Content hidden>
+                            <Icon name='wrench' />
+                          </Button.Content>
+                        </Button>
+                        <Button.Or />
+                        <Button onClick={() => this.deleteCondition(condition)} color='red'>Delete</Button>
+                      </Button.Group>
                     )}
-                    <button
-                      onClick={() => this.deleteCondition(condition)}
-                      className="btn btn-flat"
-                    >
-                      <i className="material-icons segment-icon">clear</i>
-                    </button>
                   </span>
                 </p>
               </div>
@@ -814,6 +340,7 @@ export default class Segments extends React.Component {
       amount,
       contractAddress,
     } = this.state;
+    const showOnDashboard = dashboardShow === "Yes" ? true : false;
     const filterToUse = allFilters.filter((a) => a.filter === filterType)[0];
     const erc20Balance = tokenType === "ERC-20";
     const createCriteria =
@@ -825,7 +352,12 @@ export default class Segments extends React.Component {
         erc20Balance === true &&
         tokenAddress) ||
       (condition && condition.id);
-
+    let options = allFilters
+    options.map(filter => {
+      filter.text = filter.filter
+      filter.key = filter.filter
+      filter.value = filter.filter
+    })
     return (
       <div>
         {this.renderMultipleConditions()}
@@ -834,51 +366,44 @@ export default class Segments extends React.Component {
         </div>
         <div className="form-group col-md-12">
           <label htmlFor="chartSty">Choose a Filter</label>
-          <select
+          <Dropdown
+            placeholder='Choose a Filter...'
             value={filterType}
-            onChange={(e) => this.setState({ filterType: e.target.value })}
-            id="chartSty"
-            className="form-control"
-          >
-            <option value="Choose...">Choose...</option>
-            {allFilters.map((filter) => {
-              return (
-                <option key={filter.filter} value={filter.filter}>
-                  {filter.filter}
-                </option>
-              );
-            })}
-          </select>
+            onChange={(e, {value}) => this.setState({ filterType: value })}
+            fluid
+            openOnFocus={false}
+            selection
+            options={options}
+          />
         </div>
         {filterToUse && filterToUse.type === "Contract" ? (
           <div className="form-group col-md-12">
             <label htmlFor="contractAddress">Enter The Contract Address</label>
-            <input
-              value={contractAddress}
-              onChange={(e) =>
-                this.setState({ contractAddress: e.target.value })
-              }
-              type="text"
-              className="form-control"
-              id="contractAddress"
-              placeholder="Contract Address"
-            />
+            <Input placeholder="Contract Address" fluid>
+              <input
+                type="text"
+                value={contractAddress}
+                onChange={(e) => this.setState({ contractAddress: e.target.value })}
+              />
+            </Input>
           </div>
         ) : filterToUse && filterToUse.type === "Date Range" ? (
           <div className="row form-group col-md-12">
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <label htmlFor="chartSty">Make a Selection</label>
-              <select
+              <Dropdown
+                placeholder='Range...'
+                onChange={(e, {value}) => this.setState({ rangeType: value })}
                 value={rangeType}
-                onChange={(e) => this.setState({ rangeType: e.target.value })}
-                id="chartSty"
-                className="form-control"
-              >
-                <option value="Choose...">Choose...</option>
-                <option value="Before">Before</option>
-                <option value="After">After</option>
-                {/* TODO: Add this later <option value="Between">Between</option>*/}
-              </select>
+                openOnFocus={false}
+                fluid
+                selection
+                options={[
+                  { key: 'choose...', text: 'Choose...', value: 'choose...' },
+                  { key: 'before', text: 'Before', value: 'Before' },
+                  { key: 'after', text: 'After', value: 'After' }
+                ]}
+              />
             </div>
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <DatePicker
@@ -892,57 +417,52 @@ export default class Segments extends React.Component {
           <div className="row form-group col-md-12">
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <label htmlFor="chartSty">Make a Selection</label>
-              <select
+              <Dropdown
+                placeholder='Range...'
                 value={operatorType}
-                onChange={(e) =>
-                  this.setState({ operatorType: e.target.value })
-                }
-                id="chartSty"
-                className="form-control"
-              >
-                <option value="Choose...">Choose...</option>
-                <option value="More Than">More Than</option>
-                <option value="Less Than">Less Than</option>
-                {/* TODO: Add this later <option value="Between">Between</option>*/}
-              </select>
-            </div>
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-              <label htmlFor="tileName">Enter Amount</label>
-              <input
-                value={amount}
-                onChange={(e) => this.setState({ amount: e.target.value })}
-                type="number"
-                className="form-control"
-                id="tileName"
-                placeholder="Wallet Balance Amount"
+                onChange={(e, {value}) => this.setState({ operatorType: value })}
+                openOnFocus={false}
+                fluid
+                selection
+                options={[
+                  { key: 'choose...', text: 'Choose...', value: 'choose...' },
+                  { key: 'more than', text: 'More Than', value: 'More Than' },
+                  { key: 'less than', text: 'Less Than', value: 'Less Than' }
+                ]}
               />
             </div>
             <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+              <label htmlFor="tileName">Enter Amount</label>
+              <Input placeholder="Wallet Balance Amount">
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => this.setState({ amount: e.target.value })}
+                />
+              </Input>
+            </div>
+            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
               <label htmlFor="tileName">Choose Token</label>
-              <select
+              <Dropdown
+                placeholder='Token'
                 value={tokenType}
-                onChange={(e) => this.setState({ tokenType: e.target.value })}
-                id="chartSty"
-                className="form-control"
-              >
-                <option value="Choose...">Choose...</option>
-                <option value="Ether">Ether</option>
-                <option value="ERC-20">Other ERC-20 Token</option>
-              </select>
+                onChange={(e, {value}) => this.setState({ tokenType: value })}
+                openOnFocus={false}
+                fluid
+                selection
+                options={[
+                  { key: 'choose...', text: 'Choose...', value: 'choose...' },
+                  { key: 'ether', text: 'Ether', value: 'Ether' },
+                  { key: 'erc-20', text: 'ERC-20', value: 'ERC-20' }
+                ]}
+              />
             </div>
             {tokenType === "ERC-20" ? (
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
                 <label htmlFor="erc20Address">Enter ERC-20 Token Address</label>
-                <input
-                  value={tokenAddress}
-                  onChange={(e) =>
-                    this.setState({ tokenAddress: e.target.value })
-                  }
-                  type="text"
-                  className="form-control"
-                  id="erc20Address"
-                  placeholder="Enter Token Address"
-                />
+                <Input placeholder="Enter Token Address" fluid>
+                  <input id="erc20Address" type="text" value={tokenAddress} onChange={(e) => this.setState({ tokenAddress: e.target.value })}/>
+                </Input>
               </div>
             ) : (
               <div />
@@ -969,9 +489,9 @@ export default class Segments extends React.Component {
         filterToUse.type !== "Paste" &&
         filterToUse.type !== "web2" ? (
           <div className="form-group col-md-12">
-            <button onClick={this.addFilter} className="btn btn-secondary">
+            <Button onClick={() => addFilter(this)} positive>
               Add Another Filter
-            </button>
+            </Button>
           </div>
         ) : (
           <div />
@@ -979,44 +499,48 @@ export default class Segments extends React.Component {
 
         <div className="form-group col-md-12">
           <label htmlFor="dashboardShow">Show on Dashboard</label>
-          <select
+          <Dropdown
             value={dashboardShow}
-            onChange={(e) => this.setState({ dashboardShow: e.target.value })}
-            id="chartSty"
-            className="form-control"
-          >
-            <option value="Choose...">Choose...</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-          </select>
+            placeholder='Show on dashboard...'
+            onChange={(e, { value }) => {
+              this.setState({ dashboardShow: value })
+            }}
+            openOnFocus={false}
+            fluid
+            selection
+            options={[
+              { key: 'yes', text: 'Yes', value: 'Yes' },
+              { key: 'no', text: 'No', value: 'No' }
+            ]}
+          />
         </div>
         {editSegment && !condition ? (
           <div>
             <div className="form-group col-md-12">
               <label htmlFor="tileName">Update Segment Name</label>
-              <input
-                onChange={(e) => this.setState({ newSegName: e.target.value })}
-                value={newSegName}
-                type="text"
-                className="form-control"
-                id="tileName"
-                placeholder="Give it a name"
-              />
+              <Input placeholder="Give it a name" fluid>
+                <input
+                  onChange={(e) => this.setState({ newSegName: e.target.value })}
+                  value={newSegName}
+                  type="text"
+                  id="tileName"
+                />
+              </Input>
             </div>
             <div className="form-group col-md-12">
               <label htmlFor="chartSty">Update The Segment</label>
               <br />
               {createCriteria ? (
-                <button
-                  onClick={this.updateSegment}
-                  className="btn btn-primary"
+                <Button
+                  onClick={() => updateSegment(this)}
+                  primary
                 >
                   Update Segment
-                </button>
+                </Button>
               ) : (
-                <button disabled className="btn">
+                <Button disabled>
                   Update Segment
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -1026,16 +550,16 @@ export default class Segments extends React.Component {
               <label htmlFor="chartSty">Update The Filter Condition</label>
               <br />
               {createCriteria ? (
-                <button
-                  onClick={() => this.addFilter(condition)}
-                  className="btn btn-primary"
+                <Button
+                  onClick={() => addFilter(this, condition)}
+                  primary
                 >
                   Update Filter
-                </button>
+                </Button>
               ) : (
-                <button disabled className="btn">
+                <Button disabled>
                   Update Filter
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -1043,29 +567,29 @@ export default class Segments extends React.Component {
           <div>
             <div className="form-group col-md-12">
               <label htmlFor="tileName">Then, Give It A Name</label>
-              <input
-                onChange={(e) => this.setState({ newSegName: e.target.value })}
-                value={newSegName}
-                type="text"
-                className="form-control"
-                id="tileName"
-                placeholder="Give it a name"
-              />
+              <Input placeholder="Give it a name" fluid>
+                <input type="text" value={newSegName} onChange={(e) => this.setState({ newSegName: e.target.value })}/>
+              </Input>
             </div>
             <div className="form-group col-md-12">
               <label htmlFor="chartSty">Finally, Create The Segment</label>
               <br />
               {createCriteria ? (
-                <button
-                  onClick={this.createSegment}
-                  className="btn btn-primary"
+                <Button
+                  onClick={() => createSegment(this)}
+                  primary
                 >
                   Create Segment
-                </button>
+                </Button>
               ) : (
-                <button className="btn" disabled>
-                  Create Segment
-                </button>
+                <div>
+                  <Button primary disabled>
+                    Create Segment
+                  </Button>
+                  <Button secondary onClick={() => this.toggleBlocky()}>
+                    Create Block Diagram
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -1078,9 +602,9 @@ export default class Segments extends React.Component {
     const {
       sessionData,
       processing,
-      currentAppId,
       experimentalFeatures,
       plan,
+      aBlockId
     } = this.global;
     const { currentSegments } = sessionData;
 
@@ -1097,9 +621,10 @@ export default class Segments extends React.Component {
       existingSeg,
       newSegName,
       existingSegmentToFilter,
+      showBlockDiagram
     } = this.state;
     const segments = currentSegments ? currentSegments : [];
-
+    const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
     return (
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
@@ -1120,88 +645,80 @@ export default class Segments extends React.Component {
             </div>
 
             <br />
-            {plan === "enterprise" || plan === "premium" ? (
+            {plan === "enterprise" || plan === "premium"  || plan === undefined ? (
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
                 <span className="text-uppercase page-subtitle">
                   Import Users
                 </span>
-                <button
-                  onClick={() => this.setState({ importModalOpen: true })}
-                  style={{ fontSize: "16px", margin: "5px" }}
-                  className="btn btn-success"
-                >
-                  Import By Smart Contract
-                </button>
+                <div>
+                  <Button
+                    onClick={() => this.setState({ importModalOpen: true })}
+                    positive
+                  >
+                    Import By Smart Contract
+                  </Button>
+                </div>
               </div>
             ) : (
               <div />
             )}
           </div>
-          <div className="row">
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+          <Grid stackable columns={2}>
+            <Grid.Column>
               <h5>Current Segments</h5>
               {segments.length > 0 ? (
-                <Card>
-                  <Card.Body>
-                    <Table responsive>
-                      <thead>
-                        <tr>
-                          <th>Name</th>
-                          <th>User Count</th>
-                          <th></th>
-                          <th></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {segments.map((seg) => {
-                          return (
-                            <tr key={seg.id}>
-                              <td
-                                className="clickable link-color"
-                                onClick={() => this.handleSegmentModal(seg)}
-                              >
-                                {seg.name}
-                              </td>
-                              <td>{seg.userCount}</td>
-                              {seg.id === `1-${currentAppId}` ? (
-                                <td
-                                  className="clickable"
-                                  onClick={() =>
-                                    this.setState({ importModalOpen: true })
-                                  }
-                                >
-                                  <strong>Import Users</strong>
-                                </td>
-                              ) : seg.id === `2-${currentAppId}` ||
-                                seg.id === `3-${currentAppId}` ? (
-                                <td></td>
-                              ) : (
-                                <td
-                                  className="clickable"
-                                  onClick={() => this.handleEditSegment(seg)}
-                                >
-                                  Edit
-                                </td>
-                              )}
-                              {seg.id === `1-${currentAppId}` ||
-                              seg.id === `2-${currentAppId}` ||
-                              seg.id === `3-${currentAppId}` ? (
-                                <td disabled></td>
-                              ) : (
-                                <td
-                                  className="clickable text-danger"
-                                  onClick={() => this.deleteSegment(seg, false)}
-                                >
-                                  Delete
-                                </td>
-                              )}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </Table>
-                  </Card.Body>
-                </Card>
+                <Grid columns={2}>
+                {
+                  segments.map(segment => {
+                    const disableButton = defaultSegments.indexOf(segment.name) < 0
+                    const disableWallets = segment.userCount < 1
+                    return (
+                      <Grid.Column>
+                        <Segment raised padded>
+                          {!disableWallets ? (
+                            <Label as='a' color='red' attached='top right'>
+                              {aBlockId}
+                            </Label>
+                            ) : null
+                          }
+                          <Header as='h3'>{segment.name}</Header>
+                          <Button
+                            disabled={disableWallets}
+                            onClick={() => this.handleSegmentModal(segment)}
+                            content='Wallets'
+                            icon='id card outline'
+                            label={{
+                              as: 'a',
+                              basic: true,
+                              color: 'grey',
+                              pointing: 'left',
+                              content: segment.userCount
+                            }}
+                          />
+                          <Button.Group>
+                            {/*<Button disabled={disableWallets} onClick={() => this.handleSegmentModal(segment)} icon basic>
+                              <Icon name='users' size='small' color='blue' />
+                              <p className='name'>Wallets</p>
+                            </Button>*/}
+                            <Button disabled={!disableButton} onClick={() => this.handleEditSegment(segment)} icon basic>
+                              <Icon name='edit' size='large' color='blue' />
+                              <p className='name'>Edit</p>
+                            </Button>
+                            <Button icon basic>
+                              <Icon name='fork' size='large' color='green' />
+                              <p className='name'>Connect</p>
+                            </Button>
+                            <Button disabled={!disableButton} onClick={() => deleteSegment(this, segment, false)} icon basic>
+                              <Icon color='red' name='trash alternate outline' size='large' />
+                              <p className='name'>Delete</p>
+                            </Button>
+                          </Button.Group>
+                        </Segment>
+                      </Grid.Column>
+                    )
+                  })
+                }
+                </Grid>
               ) : (
                 <ul className="tile-list">
                   <li className="card">
@@ -1211,155 +728,85 @@ export default class Segments extends React.Component {
                   </li>
                 </ul>
               )}
-
-              <Modal
-                className="custom-modal"
-                show={show}
-                onHide={this.closeModal}
+              <Dialog
+                isShown={showBlockDiagram}
+                title="Create Logic Block"
+                onConfirm={() => this.toggleBlocky()}
+                onCancel={() => this.toggleBlocky()}
+                onCloseComplete={() => this.toggleBlocky()}
+                confirmLabel='Save'
+                width={640}
               >
-                <Modal.Header closeButton>
-                  <Modal.Title>Are you sure?</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                  You're about to delete the segment{" "}
-                  <strong>
-                    <u>{seg.name}</u>
-                  </strong>
-                  . Are you sure you want to do this? It can't be undone.
-                </Modal.Body>
-                <Modal.Footer>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={this.closeModal}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => this.deleteSegment(seg, true)}
-                  >
-                    Delete
-                  </button>
-                </Modal.Footer>
-              </Modal>
-
-              <Modal
-                className="custom-modal"
-                show={showSegmentModal}
-                onHide={() =>
-                  this.setState({ showSegmentModal: false, segmentToShow: {} })
-                }
+                {/*<BlockDiagram />*/}
+              </Dialog>
+              <Dialog
+                isShown={show}
+                title="Delete Segment?"
+                onConfirm={() => deleteSegment(this, seg, true)}
+                onCancel={() => this.closeModal()}
+                onCloseComplete={() => this.closeModal()}
+                confirmLabel='Delete'
+                intent="danger"
+                width={640}
               >
-                <Modal.Header closeButton>
-                  <Modal.Title>{segmentToShow.name}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                  <SegmentTable seg={segmentToShow} />
-                </Modal.Body>
-                <Modal.Footer>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() =>
-                      this.setState({
-                        showSegmentModal: false,
-                        segmentToShow: {},
-                      })
-                    }
-                  >
-                    Close
-                  </button>
-                </Modal.Footer>
-              </Modal>
-
-              <Modal
-                className="custom-modal"
-                show={editSegment}
-                onHide={this.handleCloseSegmentModal}
+                You're about to delete the segment{" "}
+                <strong>
+                  <u>{seg.name}</u>
+                </strong>
+                . Are you sure you want to do this? It can't be undone.
+              </Dialog>
+              <Dialog
+                isShown={showSegmentModal}
+                title={segmentToShow.name}
+                onCloseComplete={() => this.setState({ showSegmentModal: false, segmentToShow: {} })}
+                confirmLabel='Close'
+                hasCancel={false}
+                width={640}
               >
-                <Modal.Header closeButton>
-                  <Modal.Title>{newSegName}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>{this.renderCreateSegment(condition)}</Modal.Body>
-                <Modal.Footer>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={this.handleCloseSegmentModal}
-                  >
-                    Close
-                  </button>
-                </Modal.Footer>
-              </Modal>
-
-              <Modal
-                className="custom-modal"
-                show={importModalOpen}
-                onHide={() => this.setState({ importModalOpen: false })}
+                <SegmentTable seg={segmentToShow} />
+              </Dialog>
+              <Dialog
+                isShown={editSegment}
+                title={newSegName}
+                onCloseComplete={() => this.handleCloseSegmentModal()}
+                hasFooter={false}
+                width={640}
               >
-                <Modal.Header closeButton>
-                  <Modal.Title>Import Users</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                  You can import your users based on your smart contracts.
-                  Simply enter a smart contract address and we will import all
-                  of the addresses that have interacted with that address.
-                </Modal.Body>
-                <Modal.Body>
-                  <div className="form-group col-md-12">
-                    {experimentalFeatures ? this.renderNetworksDrop() : <div />}
-                    <div className="top-15">
-                      <label>Enter Contract Address</label>
-                      <InputGroup className="mb-3 form-group">
-                        <FormControl
-                          type="text"
-                          className="form-control"
-                          value={importAddress}
-                          onChange={(e) =>
-                            this.setState({ importAddress: e.target.value })
-                          }
-                          placeholder="0x..."
-                        />
-                      </InputGroup>
-                    </div>
+                {this.renderCreateSegment(condition)}
+              </Dialog>
+              <Dialog
+                isShown={importModalOpen}
+                title="Import Wallets via Smart Contract"
+                onConfirm={() => this.importUsers()}
+                onCancel={() => this.setState({ importModalOpen: false })}
+                onCloseComplete={() => this.setState({ importModalOpen: false })}
+                confirmLabel='Import'
+                width={640}
+              >
+                You can import your users based on your smart contracts.
+                Simply enter a smart contract address and we will import all
+                of the addresses that have interacted with that address.
+                <div className="form-group col-md-12">
+                  {experimentalFeatures ? this.renderNetworksDrop() : <div />}
+                  <div className="top-15">
+                    <label>Enter Contract Address</label>
+                    <InputGroup className="mb-3 form-group">
+                      <FormControl
+                        type="text"
+                        className="form-control"
+                        value={importAddress}
+                        onChange={(e) =>
+                          this.setState({ importAddress: e.target.value })
+                        }
+                        placeholder="0x..."
+                      />
+                    </InputGroup>
                   </div>
-                </Modal.Body>
-                <Modal.Footer>
-                  {importAddress.length > 10 && importAddress.length < 50 ? (
-                    <button
-                      className="btn btn-primary"
-                      onClick={this.importUsers}
-                    >
-                      Import
-                    </button>
-                  ) : (
-                    <button className="btn btn-primary" disabled>
-                      Import
-                    </button>
-                  )}
-
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => this.setState({ importModalOpen: false })}
-                  >
-                    Cancel
-                  </button>
-                </Modal.Footer>
-              </Modal>
-            </div>
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                </div>
+              </Dialog>
+            </Grid.Column>
+            <Grid.Column>
               <h5>Create a Segment</h5>
-              {/*<div className="form-group col-md-12">
-                  <label htmlFor="inputSeg">First, Start With Existing Segment or Start With All Users</label>
-                  <fieldset>
-                    <div className="custom-control custom-radio mb-1">
-                      <input onChange={() => this.setState({ allUsers: !allUsers, existingSeg: !existingSeg })} type="radio" id="formsRadioDefault" name="formsRadioDefault" className="custom-control-input" checked={existingSeg} />
-                      <label className="custom-control-label" for="formsRadioDefault">Use Existing Segment</label>
-                    </div>
-                    <div className="custom-control custom-radio mb-1">
-                      <input onChange={() => this.setState({ allUsers: !allUsers, existingSeg: !existingSeg })} type="radio" id="formsRadioChecked" name="formsRadioChecked" className="custom-control-input" checked={allUsers} />
-                      <label className="custom-control-label" for="formsRadioChecked">Start With All Users</label>
-                    </div>
-                  </fieldset>
-                </div>*/}
               {existingSeg ? (
                 <div className="form-group col-md-12">
                   <label htmlFor="inputSeg">Now, Choose a Segment</label>
@@ -1386,6 +833,7 @@ export default class Segments extends React.Component {
               )}
               {plan === "enterprise" ||
               plan === "premium" ||
+              plan === undefined ||
               segments.length < 4 ? (
                 this.renderCreateSegment()
               ) : (
@@ -1399,14 +847,11 @@ export default class Segments extends React.Component {
                   </a>
                 </div>
               )}
-            </div>
-          </div>
-
-          <Modal className="custom-modal" show={processing}>
-            <Modal.Body>
-              <LoadingModal messageToDisplay={`${loadingMessage}...`} />
-            </Modal.Body>
-          </Modal>
+          </Grid.Column>
+          <Dimmer active={processing}>
+            <Loader inline='centered' indeterminate>{`${loadingMessage}...`}</Loader>
+          </Dimmer>
+        </Grid>
         </div>
       </main>
     );

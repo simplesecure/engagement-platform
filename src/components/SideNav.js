@@ -1,92 +1,164 @@
-import React from 'reactn';
-import { Link } from 'react-router-dom';
+import React, { setGlobal } from 'reactn'
+import { Link } from 'react-router-dom'
+import {
+  Header,
+  Icon,
+  Segment,
+  Label
+} from 'semantic-ui-react'
+import { getCloudUser } from "./../utils/cloudUser.js";
 
 export default class SideNav extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       pathname: '/'
     }
   }
 
   componentDidMount() {
-    const pathname = window.location.pathname;
-    this.setState({ pathname });
+    const pathname = window.location.pathname
+    this.setState({ pathname })
   }
+
+  handleNotificationClick () {
+    const {
+      apps,
+      sessionData,
+      showSegmentNotification,
+      segmentProcessingDone,
+      notifications,
+    } = this.global
+    const notificationsProcessed = notifications.filter(
+      notification => notification.processingDone === true
+    )
+    notificationsProcessed.map(notification => {
+      const updatedNotifications = notifications.filter(n => n.id !== notification.id)
+      if(updatedNotifications.length < 1) {
+        setGlobal({ showSegmentNotification: false, segmentProcessingDone: false })
+      }
+      setGlobal({ notifications: updatedNotifications })
+      setGlobal({
+        sessionData: apps[notification.appId],
+        currentAppId: notification.appId
+      })
+      getCloudUser().fetchUsersCount()
+    })
+    this.setState({ pathname: '/console' })
+  }
+
   render() {
-    const { pathname } = this.state;
-    const { currentAppId } = this.global;
+    const {
+      currentAppId,
+      notifications,
+      showSegmentNotification,
+      segmentProcessingDone
+    } = this.global
+    const notificationsProcessed = notifications.filter(
+      notification => notification.processingDone === true
+    )
+    const { pathname } = this.state
     return(
       <aside className="main-sidebar col-12 col-md-3 col-lg-2 px-0">
         <div className="main-navbar">
           <nav className="navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0">
-            <Link className="navbar-brand w-100 mr-0" to="#" style={{lineHeight: "25px"}}>
+            <Link className="navbar-brand w-150 mr-0" to="#" style={{lineHeight: "25px"}}>
               <div className="d-table m-auto">
-                <img id="main-logo" className="d-inline-block align-top mr-1" style={{maxWidth: "25px"}} src={require('../assets/img/logo.png')} alt="SimpleID Dashboard" /> <br/>                
+                <img id="main-logo" className="d-inline-block align-top mr-1" style={{maxWidth: "25px"}} src={require('../assets/img/logo.png')} alt="SimpleID Dashboard" /> <br/>
               </div>
             </Link>
             <button className="a-el-fix toggle-sidebar d-sm-inline d-md-none d-lg-none">
-              <i className="material-icons">&#xE5C4;</i>
+              <i className="material-icons">&#xE5C4</i>
             </button>
           </nav>
         </div>
-        <form action="#" className="main-sidebar__search w-100 border-right d-sm-flex d-md-none d-lg-none">
-          <div className="input-group input-group-seamless ml-3">
-            <div className="input-group-prepend">
-              <div className="input-group-text">
-                <i className="fas fa-search"></i>
-              </div>
-            </div>
-            <input className="navbar-search form-control" type="text" placeholder="Search for something..." aria-label="Search" /> </div>
-        </form>
         <div className="nav-wrapper">
           <ul className="nav flex-column">
             <li className="nav-item Dashboard">
               <Link onClick={() => this.setState({ pathname: '/' })} className={`nav-link ${pathname ==='/' && currentAppId !== undefined ? "active" : ""}`} to="/">
-                <i className="material-icons">equalizer</i>
-                <span>Dashboard</span>
+                <Segment basic>
+                  <Header as='h3'>
+                    <Icon name='dashboard' />
+                    <Header.Content>
+                      Dashboard
+                    </Header.Content>
+                  </Header>
+                </Segment>
               </Link>
             </li>
-            <li className="nav-item Jobs">
-              <Link onClick={() => this.setState({ pathname: '/jobs' })} className={`nav-link ${pathname.includes('/jobs') && currentAppId !== undefined ? "active" : ""}`} to="/jobs">
-                <i className="material-icons">build</i>
-                <span>Job Queue</span>
-              </Link>
+            <li className="nav-item Console">
+            <Link onClick={() => this.handleNotificationClick()} className={`nav-link ${pathname.includes('/console') && currentAppId !== undefined ? "active" : ""}`} to="/console">
+              <Segment basic>
+                <Header as='h3'>
+                  <Icon name='computer' />
+                  <Header.Content>
+                    Console
+                  </Header.Content>
+                  {showSegmentNotification && segmentProcessingDone && notificationsProcessed.length > 0 ? (
+                    <Label size="small" attached="top right" color='red'>{notificationsProcessed.length}</Label>
+                  ) : (null)}
+                </Header>
+              </Segment>
+            </Link>
             </li>
             <li className="nav-item Segments">
               <Link onClick={() => this.setState({ pathname: '/segments' })} className={`nav-link ${pathname.includes('/segments') && currentAppId !== undefined ? "active" : ""}`} to="/segments">
-                <i className="material-icons">view_module</i>
-                <span>Segments</span>
+                <Segment basic>
+                  <Header as='h3'>
+                    <Icon name='cubes' />
+                    <Header.Content>
+                      Segments
+                    </Header.Content>
+                  </Header>
+                </Segment>
               </Link>
             </li>
             <li className="nav-item Notifications">
               <Link onClick={() => this.setState({ pathname: '/notifications' })} className={`nav-link ${pathname.includes('/notifications') && currentAppId !== undefined ? "active" : ""}`} to="/notifications">
-                <i className="material-icons">notifications</i>
-                <span>Notifications</span>
+                <Segment basic>
+                  <Header as='h3'>
+                    <Icon name='bell' />
+                    <Header.Content>
+                      Notifications
+                    </Header.Content>
+                  </Header>
+                </Segment>
               </Link>
             </li>
             <li className="nav-item Email">
               <Link onClick={() => this.setState({ pathname: '/communications' })} className={`nav-link ${pathname.includes('/communications') && currentAppId !== undefined ? "active" : ""}`} to="/communications">
-                <i className="material-icons">email</i>
-                <span>Email</span>
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link onClick={() => this.setState({ pathname: '/support' })} className={`nav-link ${pathname.includes('/support') && currentAppId !== undefined ? "active" : ""}`} to="/support">
-                <i className="material-icons">help_outline</i>
-                <span>Support</span>
+                <Segment basic>
+                  <Header as='h3'>
+                    <Icon name='mail' />
+                    <Header.Content>
+                      Email
+                    </Header.Content>
+                  </Header>
+                </Segment>
               </Link>
             </li>
             <li className="nav-item Projects">
               <Link onClick={() => this.setState({ pathname: '/projects' })} className={`nav-link ${pathname.includes('/projects') && currentAppId !== undefined ? "active" : ""}`} to="/projects">
-                <i className="material-icons">web</i>
-                <span>Projects</span>
+                <Segment basic>
+                  <Header as='h3'>
+                    <Icon name='folder' />
+                    <Header.Content>
+                      Projects
+                    </Header.Content>
+                  </Header>
+                </Segment>
               </Link>
             </li>
             <li className="nav-item Account">
               <Link onClick={() => this.setState({ pathname: '/account' })} className={`nav-link ${pathname.includes('/account') && currentAppId !== undefined ? "active" : ""}`} to="/account">
-                <i className="material-icons">person</i>
-                <span>Account</span>
+                <Segment basic>
+                  <Header as='h3'>
+                    <Icon name='settings' />
+                    <Header.Content>
+                      Account
+                    </Header.Content>
+                  </Header>
+                </Segment>
               </Link>
             </li>
           </ul>

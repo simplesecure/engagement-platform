@@ -118,9 +118,10 @@ socket.on("update job id", async (result) => {
 // TODO: common repo for constants etc.
 const BLOCK_ID_EVENT_NAME = "block id"
 socket.on(BLOCK_ID_EVENT_NAME, (aBlockId) => {
-  console.log(`---------------------------------------------------------------------\n` +
-              `Processing Ethereum Block ID: ${aBlockId}\n` +
-              `---------------------------------------------------------------------`  )
+  console.log(`------------------------------------------------------------------\n` +
+              `\t\tProcessing Ethereum Block ID: ${aBlockId}\n` +
+              `------------------------------------------------------------------`  )
+  setGlobal({ aBlockId });
 })
 
 const SESSION_FROM_LOCAL = "sessionData";
@@ -322,7 +323,7 @@ async function handleEmails(data, url) {
 async function handleSegmentUpdate(result) {
   const { currentSegments, saveToDb } = result;
   const { sessionData, orgData, org_id, weekly, monthly } = await getGlobal();
-  console.log({weekly, monthly});
+  // console.log({weekly, monthly});
   const weeklySegmentIndex = currentSegments.map(a => a.id).indexOf(`2-${sessionData.id}`)
   const monthlySegmentIndex = currentSegments.map(a => a.id).indexOf(`3-${sessionData.id}`)
   let weeklySegment;

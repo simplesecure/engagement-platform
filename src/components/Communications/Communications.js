@@ -1,7 +1,7 @@
 import React, { setGlobal, getGlobal } from "reactn";
 import StickyNav from "../StickyNav";
-import Modal from "react-bootstrap/Modal";
 import uuid from "uuid/v4";
+import Modal from "react-bootstrap/Modal";
 import LoadingModal from "../LoadingModal";
 import EmailEditor from "./EmailEditor";
 import Charts from "./Charts";
@@ -17,8 +17,19 @@ import { getEmailData } from "../../utils/emailData.js";
 import { importEmailArray } from "../../utils/emailImport.js";
 import InputGroup from "react-bootstrap/InputGroup";
 import copy from "copy-to-clipboard";
-const csv = require("csvtojson");
+import {
+  Button,
+  Message,
+  Dimmer,
+  Loading,
+  Segment,
+  Icon,
+  Grid,
+  Header
+} from 'semantic-ui-react'
+import { Dialog } from 'evergreen-ui'
 
+const csv = require("csvtojson");
 const CAMPAIGN_SPEC_CHANGE_V2 = true;
 
 export default class Communications extends React.Component {
@@ -461,16 +472,16 @@ export default class Communications extends React.Component {
     const { org_id, currentAppId } = this.global;
     const id = uuid();
     const dataObject = `{
-      "command": "sendEmails", 
+      "command": "sendEmails",
       "data": {
-        "appId": "${currentAppId}", 
-        "template_id": "${temp.id}", 
-        "subject": "", 
-        "from": "", 
-        "org_id": "${org_id}", 
-        "campaign_id": "${id}", 
+        "appId": "${currentAppId}",
+        "template_id": "${temp.id}",
+        "subject": "",
+        "from": "",
+        "org_id": "${org_id}",
+        "campaign_id": "${id}",
         "uuidList": []
-      }  
+      }
     }`;
 
     const copied = copy(dataObject);
@@ -662,39 +673,24 @@ export default class Communications extends React.Component {
 
           {/* CONFIRM MODAL */}
 
-          <Modal
-            className="custom-modal"
-            show={confirmModal}
-            onHide={() => this.setState({ confirmModal: false })}
+          <Dialog
+            isShown={confirmModal}
+            title="You're About To Send An Email"
+            onConfirm={() => this.sendCampaign(true)}
+            onCancel={() => this.setState({ confirmModal: false })}
+            onCloseComplete={() => this.setState({ confirmModal: false })}
+            confirmLabel='Send Email'
+            width={640}
           >
-            <Modal.Header closeButton>
-              <Modal.Title>You're About To Send An Email</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              Are you sure you want to send this email to up to{" "}
-              {this.getCampaignPossibleEmailCount()} people?* It can't be
-              undone. <br />
-              <br />
-              <span className="text-muted">
-                * It's possible that not all of your users made their email
-                address available.
-              </span>
-            </Modal.Body>
-            <Modal.Footer>
-              <button
-                className="btn btn-secondary"
-                onClick={() => this.setState({ confirmModal: false })}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={() => this.sendCampaign(true)}
-              >
-                Send Email
-              </button>
-            </Modal.Footer>
-          </Modal>
+            Are you sure you want to send this email to up to{" "}
+            {this.getCampaignPossibleEmailCount()} people?* It can't be
+            undone. <br />
+            <br />
+            <span className="text-muted">
+              * It's possible that not all of your users made their email
+              address available.
+            </span>
+          </Dialog>
 
           {/* END CONFIRM MODAL */}
         </div>
@@ -760,15 +756,17 @@ export default class Communications extends React.Component {
               <Charts allEmailsGroup={this.state.allEmailsGroup} />
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4 margin-top">
                 <h5>
-                  Campaigns{" "}
-                  {plan === "enterprise" ? (
+                  Campaigns{"   "}
+                  <br />
+                  <br />
+                  {plan === "enterprise" || !plan ? (
                     <span>
-                      <button
+                      <Button
                         onClick={() => this.setState({ createCampaign: true })}
-                        className="btn btn-primary margin-left"
+                        primary
                       >
                         New Campaign
-                      </button>
+                      </Button>
                     </span>
                   ) : (
                     <span>
@@ -782,8 +780,7 @@ export default class Communications extends React.Component {
                   )}
                 </h5>
                 {campaigns && campaigns.length > 0 ? (
-                  <Card>
-                    <Card.Body>
+                  <Segment padded raised>
                       <Table responsive>
                         <thead>
                           <tr>
@@ -802,30 +799,29 @@ export default class Communications extends React.Component {
                           })}
                         </tbody>
                       </Table>
-                    </Card.Body>
-                  </Card>
+                  </Segment>
                 ) : (
                   <ul className="tile-list">
-                    <li className="card">
-                      <span className="card-body">
+                      <Message>
                         You haven't sent any campaigns yet, let's do that now!
-                      </span>
-                    </li>
+                      </Message>
                   </ul>
                 )}
               </div>
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4 margin-top">
                 <div>
                   <h5>
-                    Templates{" "}
-                    {plan === "enterprise" ? (
+                    Templates{"   "}
+                    <br />
+                    <br />
+                    {plan === "enterprise" || !plan ? (
                       <span>
-                        <button
+                        <Button
                           onClick={() => setGlobal({ emailEditor: true })}
-                          className="btn btn-success margin-left"
+                          positive
                         >
                           New Template
-                        </button>
+                        </Button>
                       </span>
                     ) : (
                       <span>
@@ -835,56 +831,45 @@ export default class Communications extends React.Component {
                         >
                           Contact Us To Upgrade
                         </a>
-                      </span> 
+                      </span>
                     )}
                   </h5>
                   {currentTemplates && currentTemplates.length > 0 ? (
-                    <Card>
-                      <Card.Body>
-                        <Table responsive>
-                          <thead>
-                            <tr>
-                              <th>Name</th>
-                              <th></th>
-                              <th></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {currentTemplates.map((temp) => {
-                              return (
-                                <tr key={temp.id}>
-                                  <td
-                                    className="clickable text-primary"
-                                    onClick={() => this.loadTemplate(temp)}
-                                  >
-                                    {temp.name}
-                                  </td>
-                                  <td
-                                    className="clickable"
-                                    onClick={() => this.copyTemplateData(temp)}
-                                  >
-                                    Get Template Data
-                                  </td>
-                                  <td
-                                    className="clickable text-danger"
-                                    onClick={() => this.deleteTemplate(temp)}
-                                  >
-                                    Delete
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </Table>
-                      </Card.Body>
-                    </Card>
+                    currentTemplates.map(temp => {
+                    return (
+                      <Segment key={temp.id} padded raised>
+                        <Grid columns={2}>
+                          <Grid.Row>
+                            <Grid.Column width={8}>
+                              <Header as='h3'>{temp.name}</Header>
+                            </Grid.Column>
+                            <Grid.Column width={8} verticalAlign="middle">
+                              <Button.Group>
+                                <Button onClick={() => this.loadTemplate(temp)} icon basic>
+                                  <Icon name='options' size='large' color='blue' />
+                                  <p className='name'>Edit</p>
+                                </Button>
+                                  <Button onClick={() => this.copyTemplateData(temp)} icon basic>
+                                    <Icon name='copy' size='large' color='green' />
+                                    <p className='name'>Copy</p>
+                                  </Button>
+                                <Button onClick={() => this.deleteTemplate(temp)} icon basic>
+                                  <Icon color='red' name='trash alternate outline' size='large' />
+                                  <p className='name'>Delete</p>
+                                </Button>
+                              </Button.Group>
+                            </Grid.Column>
+                          </Grid.Row>
+                        </Grid>
+                      </Segment>
+                    )})
                   ) : (
                     <ul className="tile-list">
-                      <li className="card">
-                        <span className="card-body">
+                        <Message>
+                          <p>
                           You haven't created any email templates yet.
-                        </span>
-                      </li>
+                          </p>
+                        </Message>
                     </ul>
                   )}
                 </div>
@@ -992,110 +977,99 @@ export default class Communications extends React.Component {
             </Modal.Footer>
           </Modal>
 
-          <Modal className="custom-modal" show={processing}>
-            <Modal.Body>
-              <LoadingModal
-                messageToDisplay={
-                  loadingMessage ? loadingMessage : "Sending emails..."
-                }
-              />
-            </Modal.Body>
-          </Modal>
+          <Dimmer active={processing}>
+            <Loader inline='centered' indeterminate>{
+              loadingMessage ? loadingMessage : "Sending emails..."
+            }</Loader>
+          </Dimmer>
 
-          <Modal
-            className="custom-modal"
-            show={deleteTempModal}
-            onHide={() => this.setState({ deleteTempModal: false })}
+          <Dialog
+            isShown={deleteTempModal}
+            title="You're About To Delete A Template"
+            onConfirm={() => this.confirmDelete()}
+            onCancel={() => this.setState({ deleteTempModal: false })}
+            onCloseComplete={() => this.setState({ deleteTempModal: false })}
+            confirmLabel='Delete'
+            intent="danger"
+            width={640}
           >
-            <Modal.Header closeButton>
-              <Modal.Title>Are you sure?</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              You're about to delete the segment{" "}
-              <strong>
-                <u>{templateToDelete.name}</u>
-              </strong>
-              . Are you sure you want to do this? It can't be undone.
-            </Modal.Body>
-            <Modal.Footer>
-              <button
-                className="btn btn-secondary"
-                onClick={() => this.setState({ deleteTempModal: false })}
-              >
-                Cancel
-              </button>
-              <button className="btn btn-danger" onClick={this.confirmDelete}>
-                Delete
-              </button>
-            </Modal.Footer>
-          </Modal>
+            You're about to delete the template{" "}
+            <strong>
+              <u>{templateToDelete.name}</u>
+            </strong>
+            . Are you sure you want to do this? It can't be undone.
+          </Dialog>
         </div>
       );
     }
   }
+  renderEmailImport () {
+    const { importModalOpen, csvUploaded, fileName } = this.state;
+    return (
+      <Modal
+        className="custom-modal"
+        show={importModalOpen}
+        onHide={() => this.setState({ importModalOpen: false })}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Import Emails</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div>
+            You can import a list of email addresses and use SimpleID to send
+            all of your email communications to these people.{" "}
+          </div>{" "}
+          <br />
+          <div>
+            <span className="text-muted text-small">
+              You will not be able to segment these people based on blockchain
+              data unless you have wallet addresses associated with the email
+              addresses.
+            </span>
+          </div>
+        </Modal.Body>
+        <Modal.Body>
+          <InputGroup className="mb-3">
+            <button onClick={this.triggerUpload} className="btn btn-primary">
+              Upload CSV
+            </button>
+            <p className="text-muted">{fileName}</p>
+            <input
+              style={{ display: "none" }}
+              type="file"
+              accept=".csv"
+              id="csv-file"
+            />
+          </InputGroup>
+        </Modal.Body>
+        <Modal.Footer>
+          {csvUploaded ? (
+            <button className="btn btn-primary" onClick={this.importEmails}>
+              Import
+            </button>
+          ) : (
+            <button className="btn btn-primary" disabled>
+              Import
+            </button>
+          )}
+
+          <button
+            className="btn btn-secondary"
+            onClick={() => this.setState({ importModalOpen: false })}
+          >
+            Cancel
+          </button>
+        </Modal.Footer>
+      </Modal>
+    )
+  }
 
   render() {
-    const { importModalOpen, csvUploaded, fileName } = this.state;
-
     return (
       <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
         <StickyNav />
         {this.renderEmailComms()}
-        <Modal
-          className="custom-modal"
-          show={importModalOpen}
-          onHide={() => this.setState({ importModalOpen: false })}
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Import Emails</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <div>
-              You can import a list of email addresses and use SimpleID to send
-              all of your email communications to these people.{" "}
-            </div>{" "}
-            <br />
-            <div>
-              <span className="text-muted text-small">
-                You will not be able to segment these people based on blockchain
-                data unless you have wallet addresses associated with the email
-                addresses.
-              </span>
-            </div>
-          </Modal.Body>
-          <Modal.Body>
-            <InputGroup className="mb-3">
-              <button onClick={this.triggerUpload} className="btn btn-primary">
-                Upload CSV
-              </button>
-              <p className="text-muted">{fileName}</p>
-              <input
-                style={{ display: "none" }}
-                type="file"
-                accept=".csv"
-                id="csv-file"
-              />
-            </InputGroup>
-          </Modal.Body>
-          <Modal.Footer>
-            {csvUploaded ? (
-              <button className="btn btn-primary" onClick={this.importEmails}>
-                Import
-              </button>
-            ) : (
-              <button className="btn btn-primary" disabled>
-                Import
-              </button>
-            )}
-
-            <button
-              className="btn btn-secondary"
-              onClick={() => this.setState({ importModalOpen: false })}
-            >
-              Cancel
-            </button>
-          </Modal.Footer>
-        </Modal>
+        {this.renderEmailImport()}
       </main>
     );
   }

@@ -1,69 +1,131 @@
-import React from 'reactn';
-import Table from 'react-bootstrap/Table';
+import React from 'reactn'
+import { filter } from 'fuzzaldrin-plus'
+import {
+  Avatar,
+  Dialog,
+  Table,
+  Text,
+  Popover,
+  Position,
+  Menu,
+  IconButton,
+} from 'evergreen-ui'
+import {
+  Button,
+  Icon,
+  Card,
+  Image
+} from 'semantic-ui-react'
+import UserWallet from "./UserWallet";
 
 export default class SegmentTable extends React.Component {
   constructor() {
     super()
     this.keyIdx=0
+    this.state = {
+      searchQuery: '',
+      showDialog: false,
+      walletAddr: ''
+    }
   }
 
   getUniqueKey() {
     return `DemoTable${this.keyIdx++}`
   }
 
+  // Filter the users based on the name property.
+  filter = users => {
+    const searchQuery = this.state.searchQuery.trim()
+
+    // If the searchQuery is empty, return the users as is.
+    if (searchQuery.length === 0) return users
+
+    return users.filter(user => {
+      // Use the filter from fuzzaldrin-plus to filter by name.
+      const result = filter([user], searchQuery)
+      return result.length === 1
+    })
+  }
+
+  handleFilterChange = value => {
+    this.setState({ searchQuery: value })
+  }
+
+  renderRowMenu = (user) => {
+    let link = `https://etherscan.io/address/` + user
+    return (
+      <Menu>
+        <Menu.Group>
+          <Menu.Item>Insights...</Menu.Item>
+          <Menu.Item><a href={link} target="_blank" rel="noopener noreferrer">Etherscan...</a></Menu.Item>
+        </Menu.Group>
+        <Menu.Divider />
+        <Menu.Group>
+          <Menu.Item intent="danger">Delete...</Menu.Item>
+        </Menu.Group>
+      </Menu>
+    )
+  }
+
+  renderRow = ({ user }) => {
+    let name = user.substring(2)
+    const wallets = ['MetaMask', 'Authereum', 'Gnosis', 'Argent', 'Unknown']
+    var wallet = wallets[Math.floor(Math.random() * wallets.length)]
+    return (
+      <Table.Row key={user} isSelectable onSelect={() => this.setState({ showDialog: true, walletAddr: user, walletType: wallet })}>
+        <Table.Cell display="flex" alignItems="center" flexBasis={360} flexShrink={0} flexGrow={0}>
+          <Avatar name={name} />
+          <Text marginLeft={8} size={300} fontWeight={500}>
+            {user}
+          </Text>
+        </Table.Cell>
+        <Table.TextCell>{wallet}</Table.TextCell>
+        {/*<Table.TextCell isNumber>Pending...</Table.TextCell>
+        <Table.Cell width={48} flex="none">
+          <Popover
+            content={this.renderRowMenu(user)}
+            position={Position.BOTTOM_RIGHT}
+          >
+            <IconButton icon="more" height={24} appearance="minimal" />
+          </Popover>
+        </Table.Cell>*/}
+      </Table.Row>
+    )
+  }
+
+  toggleDialog = () => {
+    this.setState({showDialog: !this.state.showDialog})
+  }
+
   render() {
-    const { seg } = this.props;
+    const { seg } = this.props
+    const { showDialog, walletAddr, walletType } = this.state
     let users = seg.users ? seg.users : []
-    let count = users.length
-    let heading = 'Wallet Addresses'
-    if (count > 100) {
-      users = users.slice(0, 99)
-      heading = `Wallet Address (100 of ` + count + `)`
-    }
+    const items = this.filter(users)
     return (
       <div>
-        <Table responsive>
-          <thead>
-            <tr>
-              <th>{heading}</th>
-              {/*<th>Provider</th>*/}
-              <th>Last Sign In</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {
-              //TODO: the users returned here are just addresses right now. Need more info to be included
-              users.map(user =>
-              {
-                let link = `https://etherscan.io/address/` + user
-                return (
-                  <tr key={this.getUniqueKey()}>
-                    <td title={user}><a href={link} target="_blank" rel="noopener noreferrer">{user}</a></td>
-                    {/*<td>Coming Soon...</td>*/}
-                    <td>Coming Soon...</td>
-                  </tr>
-                )
-              })
-            }
-          </tbody>
+        <Table border>
+          <Table.Head>
+            <Table.SearchHeaderCell
+              onChange={this.handleFilterChange}
+              value={this.state.searchQuery}
+              placeholder='Search by wallet...'
+              flexBasis={360} flexShrink={0} flexGrow={0}
+            />
+            <Table.TextCell>Wallet Provider</Table.TextCell>
+            {/*<Table.TextCell>Proxy Wallet</Table.TextCell>
+            <Table.HeaderCell width={48} flex="none" />*/}
+          </Table.Head>
+          <Table.VirtualBody height={400}>
+            {items.map(item => this.renderRow({ user: item }))}
+          </Table.VirtualBody>
         </Table>
-       {/* //Need to implement pagination at some point
-        <Nav className="justify-content-center" activeKey="link-0">
-          <Nav.Item>
-            <Nav.Link eventKey="link-0">1</Nav.Link>
-          </Nav.Item>
-          <Nav.Item>
-            <Nav.Link eventKey="link-1">2</Nav.Link>
-          </Nav.Item>
-          <Nav.Item>
-            <Nav.Link eventKey="link-2">3</Nav.Link>
-          </Nav.Item>
-          <Nav.Item>
-            <Nav.Link eventKey="link-3">4</Nav.Link>
-          </Nav.Item>
-        </Nav>
-        */}
+        <UserWallet
+          showDialog={showDialog}
+          walletAddr={walletAddr}
+          walletType={walletType}
+          toggleDialog={() => this.toggleDialog()}
+        />
       </div>
     )
   }

@@ -1,15 +1,19 @@
 import React, { useGlobal, useState, useEffect } from "reactn";
 import Card from "react-bootstrap/Card";
 import { Line } from "react-chartjs-2";
-
+import {
+  Message,
+  Segment,
+  Statistic
+} from 'semantic-ui-react'
 const Charts = () => {
   const [emailData] = useGlobal("emailData");
   const [sessionData] = useGlobal("sessionData");
   const [lineChartData, setLineChartData] = useState({});
   const [basicStats, setBasicStats] = useState({
-    totalEmailsSent: 0, 
-    totalOpens: 0, 
-    totalLinkClicks: 0, 
+    totalEmailsSent: 0,
+    totalOpens: 0,
+    totalLinkClicks: 0,
     totalBounces: 0
   });
 
@@ -100,9 +104,9 @@ const Charts = () => {
     } else {
       setLineChartData({})
       setBasicStats({
-        totalEmailsSent: 0, 
-        totalOpens: 0, 
-        totalLinkClicks: 0, 
+        totalEmailsSent: 0,
+        totalOpens: 0,
+        totalLinkClicks: 0,
         totalBounces: 0
       })
     }
@@ -114,52 +118,73 @@ const Charts = () => {
       <div>
         <div className="row">
           <div className="col-lg-6 col-sm-12">
-            <Card>
-              <Card.Body>
-                {
-                  Object.keys(lineChartData).length > 0 ?
-                  <Line data={lineChartData} />
-                  :
-                  <div className="text-center">
-                    <h6>No data to show yet</h6>
-                  </div>
-                }
-                
-              </Card.Body>
-            </Card>
+              {
+                Object.keys(lineChartData).length > 0 ? (
+                <Card>
+                  <Card.Body>
+                    <Line data={lineChartData} />
+                  </Card.Body>
+                </Card> )
+                :
+                  <Message>
+                    No data to show yet
+                  </Message>
+              }
           </div>
 
           <div className="col-lg-6 col-sm-12">
-            <Card>
-              <Card.Body>
+            <Segment padded raised>
                 <div className="row">
                   <div className="col-md-6 col-sm-6 col-lg-6 text-center">
-                    <h6>Total Emails Imported</h6>
-                    <h3>{sessionData.imports && sessionData.imports.email.count ? sessionData.imports.email.count : 0}</h3>
+                    <Statistic
+                      size='tiny'
+                      value={sessionData.imports && sessionData.imports.email.count ? sessionData.imports.email.count : 0}
+                      label='Total Emails Imported'
+                    />
+                    <br />
                   </div>
                   <div className="col-md-6 col-sm-6 col-lg-6 text-center">
-                    <h6>Total Emails Sent</h6>
-                    <h3>{basicStats.totalEmailsSent}</h3>
+                    <Statistic
+                      size='tiny'
+                      value={basicStats.totalEmailsSent}
+                      label='Total Emails Sent'
+                    />
+                    <br />
                   </div>
                   <div className="col-md-6 col-sm-6 col-lg-6 text-center">
-                    <h6>Total Emails Opened</h6>
-                    <h3>{basicStats.totalOpens}</h3>
+                    <Statistic
+                      size='tiny'
+                      value={basicStats.totalOpens}
+                      label='Total Emails Opened'
+                    />
+                    <br />
                   </div>
                   <div className="col-md-6 col-sm-6 col-lg-6 text-center">
-                    <h6>Total Link Clicks</h6>
-                    <h3>{basicStats.totalLinkClicks}</h3>
+                    <Statistic
+                      size='tiny'
+                      value={basicStats.totalLinkClicks}
+                      label='Total Link Clicks'
+                    />
+                    <br />
                   </div>
                   <div className="col-md-6 col-sm-6 col-lg-6 text-center">
-                    <h6>Total Bounces</h6>
-                    <h3>{basicStats.totalBounces}</h3>
+                    <Statistic
+                      size='tiny'
+                      value={basicStats.totalBounces}
+                      label='Total Bounces'
+                    />
+                    <br />
                   </div>
                   <div className="col-md-6 col-sm-6 col-lg-6 text-center">
-                    <h6>Total Unsubscribes</h6>
-                    <h3>0</h3>
+                    <Statistic
+                      size='tiny'
+                      value={0}
+                      label='Total Unsubscribes'
+                    />
+                    <br />
                   </div>
                 </div>
-              </Card.Body>
-            </Card>
+            </Segment>
           </div>
         </div>
       </div>

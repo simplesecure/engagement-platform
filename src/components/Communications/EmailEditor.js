@@ -6,6 +6,10 @@ import { toast } from "react-toastify";
 import Loader from "../Loader";
 import grapesJS from "grapesjs";
 import newsletter from "grapesjs-preset-newsletter";
+import {
+  Button,
+  Input
+} from 'semantic-ui-react'
 const uuid = require("uuid/v4");
 
 const EmailEditor = (props) => {
@@ -134,45 +138,34 @@ const EmailEditor = (props) => {
                 Communications
               </span>
               <h3 className="page-title">Create or Edit an Email Template</h3>
-              <div>
-                <div>
-                  <div style={{ marginTop: "15px" }}>
-                    <label htmlFor="inputSeg" style={{ fontSize: "16px" }}>
-                      Template Name
-                    </label>{" "}
-                    <br />
-                    <input
-                      value={templateName}
-                      style={{ width: "45%" }}
-                      onChange={(e) => setTemplateName(e.target.value)}
-                      type="text"
-                      className="form-control"
-                      id="templateName"
-                      placeholder="Give it a name"
-                    />
-                  </div>
-
-                  <div style={{ marginTop: "15px" }}>
-                    <button
-                      onClick={() => handleSave()}
-                      style={{ marginRight: "8px" }}
-                      className="btn btn-primary"
-                    >
-                      Save
-                    </button>
-                    <button onClick={handleClose} className="btn btn-secondary">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+              <label htmlFor="inputSeg" style={{ fontSize: "16px", marginTop: "15px"  }}>
+                Template Name
+              </label>{" "}
+              <br />
+              <Input
+                value={templateName}
+                style={{ width: "45%" }}
+                onChange={(e) => setTemplateName(e.target.value)}
+                type="text"
+                placeholder="Give it a name"
+              />
+              <div style={{ marginTop: "15px" }}>
+                <Button
+                  onClick={() => handleSave()}
+                  style={{ marginRight: "8px" }}
+                  primary
+                >
+                  Save
+                </Button>
+                <Button onClick={handleClose}>
+                  Cancel
+                </Button>
               </div>
             </div>
           </div>
           <div className="row">
-            <div className="col-lg-12 col-md-12 col-sm-12 mb-4">              
-              <div id="grape-container">
-                
-              </div>
+            <div className="col-lg-12 col-md-12 col-sm-12 mb-4">
+              <div id="grape-container" />
             </div>
           </div>
         </div>

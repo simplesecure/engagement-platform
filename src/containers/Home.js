@@ -61,7 +61,7 @@ export default class Home extends React.Component {
           <Route path='/communications' component={Communications} />
           <Route path='/support' component={Support} />
           <Route path='/projects' component={Projects} />
-          <Route path='/jobs' component={Jobs} />
+          <Route path='/console' component={Jobs} />
 
           <Modal show={initialLoading} >
             <Modal.Body>

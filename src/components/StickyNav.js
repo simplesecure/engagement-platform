@@ -3,7 +3,12 @@ import { Link } from "react-router-dom";
 import { getCloudUser } from "./../utils/cloudUser.js";
 import { getEmailData } from './../utils/emailData.js';
 import { getWeb2Analytics } from './../utils/web2Analytics';
+import {
+  Button,
+  Header,
+} from 'semantic-ui-react'
 const filter = require('../utils/filterOptions.json');
+const Spinner = require('react-spinkit');
 
 export default class StickyNav extends React.Component {
 
@@ -14,24 +19,24 @@ export default class StickyNav extends React.Component {
   setProject = async app => {
     const { apps } = this.global;
 
-    await setGlobal({ sessionData: apps[app.id], currentAppId: app.id, allFilters: [] });    
+    await setGlobal({ sessionData: apps[app.id], currentAppId: app.id, allFilters: [] });
     getCloudUser().fetchUsersCount();
     //  Fetch web2 analytics eventNames - we will fetch the actual event results in Segment handling
     const web2AnalyticsCmdObj = {
       command: 'getWeb2Analytics',
           data: {
-           appId: app.id   
-        }     
+           appId: app.id
+        }
     }
 
     const web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
     const { allFilters } = await this.global;
     if(web2Analytics.data) {
       const events = web2Analytics.data;
-      
+
       for(const event of events) {
         const data = {
-          type: 'web2', 
+          type: 'web2',
           filter: `Web2: ${event}`
         }
         allFilters.push(data);
@@ -50,29 +55,13 @@ export default class StickyNav extends React.Component {
     setGlobal({ emailData: emailData.data });
   };
 
-  handleNotificationClick = notification => {
-    const { notifications, apps } = this.global;
-   
-    const updatedNotifications = notifications.filter(n => n.id !== notification.id);
-    if(updatedNotifications.length < 1) {
-      setGlobal({ showSegmentNotification: false, segmentProcessingDone: false });
-    }
-
-    setGlobal({ notifications: updatedNotifications });
-    setGlobal({
-      sessionData: apps[notification.appId],
-      currentAppId: notification.appId
-    });
-    getCloudUser().fetchUsersCount();
-  };
-
   render() {
     const {
       apps,
       sessionData,
       showSegmentNotification,
       segmentProcessingDone,
-      notifications, 
+      notifications,
     } = this.global;
     const notificationsProcessed = notifications.filter(
       notification => notification.processingDone === true
@@ -87,7 +76,6 @@ export default class StickyNav extends React.Component {
         projects.push(thisApp);
       }
     }
-    
     return (
       <div className="main-navbar sticky-top bg-white">
         <nav className="navbar align-items-stretch navbar-light flex-md-nowrap p-0">
@@ -102,73 +90,20 @@ export default class StickyNav extends React.Component {
             </div>
           </form>
           <ul className="navbar-nav border-left flex-row ">
-              <li className="nav-item border-right dropdown walkthrough">
-                <button onClick={this.startOnboarding} className="a-el-fix nav-link nav-link-icon text-center">
-                  <div className="nav-link-icon__wrapper">
-                    <i className="material-icons text-warning">new_releases</i>
-                  </div>
-                </button>
-              </li>
-            {
-              showSegmentNotification && segmentProcessingDone && notificationsProcessed.length > 0 ?
-              (<li className="nav-item border-right dropdown notifications">
-                <button                  
-                  className="a-el-fix nav-link nav-link-icon text-center"
-                  id="dropdownMenuLink"
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="false"
-                >
-                  <div className="nav-link-icon__wrapper">
-                    <i className="material-icons">&#xE7F4;</i>
-                    <span className="badge badge-pill badge-danger">
-                      {notificationsProcessed.length}
-                    </span>
-                  </div>
-                </button>
-                <div
-                  className="dropdown-menu dropdown-menu-small"
-                  aria-labelledby="dropdownMenuLink"
-                >
-                  {
-                    notificationsProcessed.map(notification => {
-                    return (
-                      <button
-                        key={notification.id}
-                        className="a-el-fix dropdown-item"
-                      >
-                        <div className="notification__icon-wrapper">
-                          <div className="notification__icon">
-                            <i className="material-icons">&#xE6E1;</i>
-                          </div>
-                        </div>
-
-                        <div className="notification__content">
-                          <span className="notification__category">
-                            Segmentation Updates
-                          </span>
-                          <p>
-                            Your segment update is done processing. See it{" "}
-                            <Link
-                              onClick={() =>
-                                this.handleNotificationClick(notification)
-                              }
-                              to={"/segments"}
-                            >
-                              here.
-                            </Link>
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })
-                  }
+            {/*<li className="nav-item border-right dropdown walkthrough">
+              <button className="a-el-fix nav-link nav-link-icon text-center">
+                <div className="nav-link-icon__wrapper">
+                  <Spinner name="line-scale" />
                 </div>
-              </li>
-            ) : (
-              <li style={{ dispay: "none" }} />
-            )
-            }       
+              </button>
+            </li>*/}
+            <li className="nav-item border-right dropdown walkthrough">
+              <button onClick={this.startOnboarding} className="a-el-fix nav-link nav-link-icon text-center">
+                <div className="nav-link-icon__wrapper">
+                  <i className="material-icons text-warning">new_releases</i>
+                </div>
+              </button>
+            </li>
             {projects.length > 0 ? (
               <li className="nav-item dropdown border-right">
                 <button
@@ -178,7 +113,7 @@ export default class StickyNav extends React.Component {
                   aria-expanded="false"
                 >
                   <span className="d-md-inline-block">
-                    Current Project: {sessionData.project_name}
+                    <Header as='h4'>Current Project: {sessionData.project_name}</Header>
                   </span>
                 </button>
                 <div className="dropdown-menu dropdown-menu-small">
@@ -192,15 +127,14 @@ export default class StickyNav extends React.Component {
                             className="a-el-fix dropdown-item"
                           >
                             <i className="material-icons">web</i>{" "}
-                            {app.project_name}
+                            <Header as='h4'>{app.project_name}</Header>
                           </button>
                         );
                       })}
                       <div className="dropdown-divider"></div>
                       <Link to="/projects">
                         <button className="a-el-fix dropdown-item">
-                          <i className="material-icons">web</i> Add or View
-                          Projects
+                          <Header as='h4'><i className="material-icons">web</i> Add or View Projects</Header>
                         </button>
                       </Link>
                     </div>
@@ -208,8 +142,7 @@ export default class StickyNav extends React.Component {
                     <div>
                       <Link to="/projects">
                         <button className="a-el-fix dropdown-item">
-                          <i className="material-icons">web</i> Add or View
-                          Projects
+                          <Header as='h4'><i className="material-icons">web</i> Add or View Projects</Header>
                         </button>
                       </Link>
                     </div>
@@ -224,7 +157,7 @@ export default class StickyNav extends React.Component {
                     aria-haspopup="true"
                     aria-expanded="false"
                   >
-                    <span className="d-md-inline-block">Create a Project</span>
+                    <span className="d-md-inline-block"><Header as='h4'>Create a Project</Header></span>
                   </button>
                 </Link>
               </li>
@@ -238,16 +171,16 @@ export default class StickyNav extends React.Component {
                 aria-expanded="false"
               >
                 <span className="d-none d-md-inline-block">
-                  <i className="material-icons">settings</i>
+                  <Header as='h4'>{/*<i className="material-icons">dehaze</i> */}Options</Header>
                 </span>
               </button>
               <div className="dropdown-menu dropdown-menu-right dropdown-menu-small">
-                <Link to="/account"><button className="a-el-fix dropdown-item">
-                  <i className="material-icons">&#xE7FD;</i> Account</button></Link>
-
+                {/*<Link to="/account"><button className="a-el-fix dropdown-item">
+                  <Header as='h4'><i className="material-icons">&#xE7FD;</i> Account</Header></button>
+                </Link>*/}
                 <a href="mailto:support@simpleid.xyz">
                   <button className="a-el-fix dropdown-item">
-                    <i className="material-icons">help</i>Help
+                    <Header as='h4'><i className="material-icons">help</i>Help</Header>
                   </button>
                 </a>
                 <div className="dropdown-divider"></div>
@@ -255,7 +188,7 @@ export default class StickyNav extends React.Component {
                   onClick={() => getCloudUser().signOut()}
                   className="a-el-fix dropdown-item text-danger"
                 >
-                  <i className="material-icons text-danger">&#xE879;</i> Logout{" "}
+                  <Header as='h4'><i className="material-icons text-danger">&#xE879;</i> Logout{" "}</Header>
                 </button>
               </div>
             </li>
