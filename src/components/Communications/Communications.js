@@ -28,6 +28,7 @@ import {
   Header
 } from 'semantic-ui-react'
 import { Dialog } from 'evergreen-ui'
+import SideNav from '../SideNav';
 
 const csv = require("csvtojson");
 const CAMPAIGN_SPEC_CHANGE_V2 = true;
@@ -801,11 +802,9 @@ export default class Communications extends React.Component {
                       </Table>
                   </Segment>
                 ) : (
-                  <ul className="tile-list">
-                      <Message>
-                        You haven't sent any campaigns yet, let's do that now!
-                      </Message>
-                  </ul>
+                  <Message>
+                    You haven't sent any campaigns yet, let's do that now!
+                  </Message>
                 )}
               </div>
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4 margin-top">
@@ -864,13 +863,9 @@ export default class Communications extends React.Component {
                       </Segment>
                     )})
                   ) : (
-                    <ul className="tile-list">
-                        <Message>
-                          <p>
-                          You haven't created any email templates yet.
-                          </p>
-                        </Message>
-                    </ul>
+                    <Message>
+                      You haven't created any email templates yet.
+                    </Message>
                   )}
                 </div>
               </div>
@@ -1066,11 +1061,13 @@ export default class Communications extends React.Component {
 
   render() {
     return (
-      <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
-        <StickyNav />
-        {this.renderEmailComms()}
-        {this.renderEmailImport()}
-      </main>
+      <div>
+        <SideNav />
+        <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
+          {this.renderEmailComms()}
+          {this.renderEmailImport()}
+        </main>
+      </div>
     );
   }
 }

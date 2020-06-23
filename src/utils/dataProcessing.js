@@ -118,9 +118,9 @@ socket.on("update job id", async (result) => {
 // TODO: common repo for constants etc.
 const BLOCK_ID_EVENT_NAME = "block id"
 socket.on(BLOCK_ID_EVENT_NAME, (aBlockId) => {
-  console.log(`------------------------------------------------------------------\n` +
-              `\t\tProcessing Ethereum Block ID: ${aBlockId}\n` +
-              `------------------------------------------------------------------`  )
+  console.info(`------------------------------------------------------------\n` +
+              `\tProcessing Ethereum Block ID: ${aBlockId}\n` +
+              `------------------------------------------------------------`  )
   setGlobal({ aBlockId });
 })
 

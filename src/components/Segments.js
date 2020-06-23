@@ -2,6 +2,7 @@ import React, { setGlobal } from "reactn";
 import StickyNav from "./StickyNav";
 import {
   Dialog,
+  SideSheet
 } from 'evergreen-ui'
 import {
   Button,
@@ -13,14 +14,15 @@ import {
   Label,
   Icon,
   Dimmer,
-  Loader
+  Loader,
+  Modal
 } from 'semantic-ui-react'
-// import BlockDiagram from './BlockDiagram'
+import BlockDiagram from './BlockDiagram'
+import SideNav from '../components/SideNav';
 import InputGroup from "react-bootstrap/InputGroup";
 import FormControl from "react-bootstrap/FormControl";
 import SegmentTable from "./SegmentTable";
 import * as dc from "./../utils/dynamoConveniences.js";
-// import filters from '../utils/filterOptions.json'
 import DatePicker from "react-date-picker";
 import uuid from "uuid/v4";
 import { setLocalStorage } from "../utils/misc";
@@ -84,7 +86,9 @@ export default class Segments extends React.Component {
     this.setState({ segmentToShow: seg, showSegmentModal: true });
   };
 
-  toggleBlocky = () => this.setState({ showBlockDiagram: !this.state.showBlockDiagram })
+  toggleBlocky = () => {
+    this.setState({ showBlockDiagram: !this.state.showBlockDiagram })
+  }
 
   handleEditSegment = async (seg, singleCondition) => {
     //  This function is re-used across both the edit segment functionality and the edit signle criteria functionality
@@ -625,235 +629,269 @@ export default class Segments extends React.Component {
     } = this.state;
     const segments = currentSegments ? currentSegments : [];
     const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
-    return (
-      <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
-        <StickyNav />
-
-        <div className="main-content-container container-fluid px-4">
-          <div className="page-header row no-gutters py-4">
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-              <span className="text-uppercase page-subtitle">Segments</span>
-              <h3 className="page-title">
-                Group People Using Your App{" "}
-                <span
-                  onClick={this.handleRefreshData}
-                  className="clickable refresh"
-                >
-                  <i className="fas fa-sync-alt"></i>
-                </span>
-              </h3>
-            </div>
-
-            <br />
-            {plan === "enterprise" || plan === "premium"  || plan === undefined ? (
-              <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
-                <span className="text-uppercase page-subtitle">
-                  Import Users
-                </span>
-                <div>
-                  <Button
-                    onClick={() => this.setState({ importModalOpen: true })}
-                    positive
-                  >
-                    Import By Smart Contract
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div />
-            )}
-          </div>
-          <Grid stackable columns={2}>
-            <Grid.Column>
-              <h5>Current Segments</h5>
-              {segments.length > 0 ? (
-                <Grid columns={2}>
-                {
-                  segments.map(segment => {
-                    const disableButton = defaultSegments.indexOf(segment.name) < 0
-                    const disableWallets = segment.userCount < 1
-                    return (
-                      <Grid.Column>
-                        <Segment raised padded>
-                          {!disableWallets ? (
-                            <Label as='a' color='red' attached='top right'>
-                              {aBlockId}
-                            </Label>
-                            ) : null
-                          }
-                          <Header as='h3'>{segment.name}</Header>
-                          <Button
-                            disabled={disableWallets}
-                            onClick={() => this.handleSegmentModal(segment)}
-                            content='Wallets'
-                            icon='id card outline'
-                            label={{
-                              as: 'a',
-                              basic: true,
-                              color: 'grey',
-                              pointing: 'left',
-                              content: segment.userCount
-                            }}
-                          />
-                          <Button.Group>
-                            {/*<Button disabled={disableWallets} onClick={() => this.handleSegmentModal(segment)} icon basic>
-                              <Icon name='users' size='small' color='blue' />
-                              <p className='name'>Wallets</p>
-                            </Button>*/}
-                            <Button disabled={!disableButton} onClick={() => this.handleEditSegment(segment)} icon basic>
-                              <Icon name='edit' size='large' color='blue' />
-                              <p className='name'>Edit</p>
-                            </Button>
-                            <Button icon basic>
-                              <Icon name='fork' size='large' color='green' />
-                              <p className='name'>Connect</p>
-                            </Button>
-                            <Button disabled={!disableButton} onClick={() => deleteSegment(this, segment, false)} icon basic>
-                              <Icon color='red' name='trash alternate outline' size='large' />
-                              <p className='name'>Delete</p>
-                            </Button>
-                          </Button.Group>
-                        </Segment>
-                      </Grid.Column>
-                    )
-                  })
-                }
-                </Grid>
-              ) : (
-                <ul className="tile-list">
-                  <li className="card">
-                    <span className="card-body">
-                      You haven't created any segments yet, let's do that now!.
+    if (showBlockDiagram) {
+      return (
+        <Modal
+          basic
+          dimmer
+          closeOnDimmerClick={false}
+          open={showBlockDiagram}
+          onClose={() => this.toggleBlocky()}
+        >
+          <Modal.Actions textAlign="left">
+            <Button
+              onClick={() => this.toggleBlocky()}
+              icon='close'
+              labelPosition='right'
+              content='Close'
+            />
+            <Button
+              onClick={() => this.toggleBlocky()}
+              primary
+              icon='checkmark'
+              labelPosition='right'
+              content='Save'
+            />
+          </Modal.Actions>
+          <Modal.Content>
+            <BlockDiagram />
+          </Modal.Content>
+        </Modal>
+      )
+    }
+    else {
+      return (
+        <div>
+          <SideNav />
+          <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
+            <div className="main-content-container container-fluid px-4">
+              <div className="page-header row no-gutters py-4">
+                <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                  <span className="text-uppercase page-subtitle">Segments</span>
+                  <h3 className="page-title">
+                    Group People Using Your App{" "}
+                    <span
+                      onClick={this.handleRefreshData}
+                      className="clickable refresh"
+                    >
+                      <i className="fas fa-sync-alt"></i>
                     </span>
-                  </li>
-                </ul>
-              )}
-              <Dialog
-                isShown={showBlockDiagram}
-                title="Create Logic Block"
-                onConfirm={() => this.toggleBlocky()}
-                onCancel={() => this.toggleBlocky()}
-                onCloseComplete={() => this.toggleBlocky()}
-                confirmLabel='Save'
-                width={640}
-              >
-                {/*<BlockDiagram />*/}
-              </Dialog>
-              <Dialog
-                isShown={show}
-                title="Delete Segment?"
-                onConfirm={() => deleteSegment(this, seg, true)}
-                onCancel={() => this.closeModal()}
-                onCloseComplete={() => this.closeModal()}
-                confirmLabel='Delete'
-                intent="danger"
-                width={640}
-              >
-                You're about to delete the segment{" "}
-                <strong>
-                  <u>{seg.name}</u>
-                </strong>
-                . Are you sure you want to do this? It can't be undone.
-              </Dialog>
-              <Dialog
-                isShown={showSegmentModal}
-                title={segmentToShow.name}
-                onCloseComplete={() => this.setState({ showSegmentModal: false, segmentToShow: {} })}
-                confirmLabel='Close'
-                hasCancel={false}
-                width={640}
-              >
-                <SegmentTable seg={segmentToShow} />
-              </Dialog>
-              <Dialog
-                isShown={editSegment}
-                title={newSegName}
-                onCloseComplete={() => this.handleCloseSegmentModal()}
-                hasFooter={false}
-                width={640}
-              >
-                {this.renderCreateSegment(condition)}
-              </Dialog>
-              <Dialog
-                isShown={importModalOpen}
-                title="Import Wallets via Smart Contract"
-                onConfirm={() => this.importUsers()}
-                onCancel={() => this.setState({ importModalOpen: false })}
-                onCloseComplete={() => this.setState({ importModalOpen: false })}
-                confirmLabel='Import'
-                width={640}
-              >
-                You can import your users based on your smart contracts.
-                Simply enter a smart contract address and we will import all
-                of the addresses that have interacted with that address.
-                <div className="form-group col-md-12">
-                  {experimentalFeatures ? this.renderNetworksDrop() : <div />}
-                  <div className="top-15">
-                    <label>Enter Contract Address</label>
-                    <InputGroup className="mb-3 form-group">
-                      <FormControl
-                        type="text"
-                        className="form-control"
-                        value={importAddress}
-                        onChange={(e) =>
-                          this.setState({ importAddress: e.target.value })
-                        }
-                        placeholder="0x..."
-                      />
-                    </InputGroup>
+                  </h3>
+                </div>
+
+                <br />
+                {plan === "enterprise" || plan === "premium"  || plan === undefined ? (
+                  <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
+                    <span className="text-uppercase page-subtitle">
+                      Import Users
+                    </span>
+                    <div>
+                      <Button
+                        onClick={() => this.setState({ importModalOpen: true })}
+                        positive
+                      >
+                        Import By Smart Contract
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </Dialog>
-            </Grid.Column>
-            <Grid.Column>
-              <h5>Create a Segment</h5>
-              {existingSeg ? (
-                <div className="form-group col-md-12">
-                  <label htmlFor="inputSeg">Now, Choose a Segment</label>
-                  <select
-                    value={existingSegmentToFilter}
-                    onChange={(e) =>
-                      this.setState({ existingSegmentToFilter: e.target.value })
+                ) : (
+                  <div />
+                )}
+              </div>
+              {/*<SideSheet
+                isShown={showBlockDiagram}
+                onCloseComplete={() => this.toggleBlocky()}
+                containerProps={{
+                  marginTop: 60,
+                  display: 'flex',
+                  flex: '1',
+                  flexDirection: 'column'
+                }}
+              >
+                <BlockDiagram />
+              </SideSheet>*/}
+              <Grid stackable columns={2}>
+                <Grid.Column key='currsegs'>
+                  <h5>Current Segments</h5>
+                  {segments.length > 0 ? (
+                    <Grid columns={2}>
+                    {
+                      segments.map(segment => {
+                        const disableButton = defaultSegments.indexOf(segment.name) < 0
+                        const disableWallets = segment.userCount < 1
+                        return (
+                          <Grid.Column key={segment.id}>
+                            <Segment raised padded>
+                              {!disableWallets ? (
+                                <Label as='a' color='red' attached='top right'>
+                                  {aBlockId}
+                                </Label>
+                                ) : null
+                              }
+                              <Header as='h3'>{segment.name}</Header>
+                              <Button
+                                disabled={disableWallets}
+                                onClick={() => this.handleSegmentModal(segment)}
+                                content='Wallets'
+                                icon='id card outline'
+                                label={{
+                                  as: 'a',
+                                  basic: true,
+                                  color: 'grey',
+                                  pointing: 'left',
+                                  content: segment.userCount
+                                }}
+                              />
+                              <Button.Group>
+                                {/*<Button disabled={disableWallets} onClick={() => this.handleSegmentModal(segment)} icon basic>
+                                  <Icon name='users' size='small' color='blue' />
+                                  <p className='name'>Wallets</p>
+                                </Button>*/}
+                                <Button disabled={!disableButton} onClick={() => this.handleEditSegment(segment)} icon basic>
+                                  <Icon name='edit' size='large' color='blue' />
+                                  <p className='name'>Edit</p>
+                                </Button>
+                                <Button icon basic>
+                                  <Icon name='fork' size='large' color='green' />
+                                  <p className='name'>Connect</p>
+                                </Button>
+                                <Button disabled={!disableButton} onClick={() => deleteSegment(this, segment, false)} icon basic>
+                                  <Icon color='red' name='trash alternate outline' size='large' />
+                                  <p className='name'>Delete</p>
+                                </Button>
+                              </Button.Group>
+                            </Segment>
+                          </Grid.Column>
+                        )
+                      })
                     }
-                    id="inputSeg"
-                    className="form-control"
+                    </Grid>
+                  ) : (
+                    <ul className="tile-list">
+                      <li className="card">
+                        <span className="card-body">
+                          You haven't created any segments yet, let's do that now!.
+                        </span>
+                      </li>
+                    </ul>
+                  )}
+                  <Dialog
+                    isShown={show}
+                    title="Delete Segment?"
+                    onConfirm={() => deleteSegment(this, seg, true)}
+                    onCancel={() => this.closeModal()}
+                    onCloseComplete={() => this.closeModal()}
+                    confirmLabel='Delete'
+                    intent="danger"
+                    width={640}
                   >
-                    <option value="Choose...">Choose...</option>
-                    {segments.map((seg) => {
-                      return (
-                        <option value={seg.name} key={seg.id}>
-                          {seg.name}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              ) : (
-                <div />
-              )}
-              {plan === "enterprise" ||
-              plan === "premium" ||
-              plan === undefined ||
-              segments.length < 4 ? (
-                this.renderCreateSegment()
-              ) : (
-                <div>
-                  <h5>Upgrade to create more segments</h5>
-                  <a
-                    className="btn btn-primary"
-                    href="mailto:support@simpleid.xyz"
+                    You're about to delete the segment{" "}
+                    <strong>
+                      <u>{seg.name}</u>
+                    </strong>
+                    . Are you sure you want to do this? It can't be undone.
+                  </Dialog>
+                  <Dialog
+                    isShown={showSegmentModal}
+                    title={segmentToShow.name}
+                    onCloseComplete={() => this.setState({ showSegmentModal: false, segmentToShow: {} })}
+                    confirmLabel='Close'
+                    hasCancel={false}
+                    width={640}
                   >
-                    Contact Us To Upgrade
-                  </a>
-                </div>
-              )}
-          </Grid.Column>
-          <Dimmer active={processing}>
-            <Loader inline='centered' indeterminate>{`${loadingMessage}...`}</Loader>
-          </Dimmer>
-        </Grid>
+                    <SegmentTable seg={segmentToShow} />
+                  </Dialog>
+                  <Dialog
+                    isShown={editSegment}
+                    title={newSegName}
+                    onCloseComplete={() => this.handleCloseSegmentModal()}
+                    hasFooter={false}
+                    width={640}
+                  >
+                    {this.renderCreateSegment(condition)}
+                  </Dialog>
+                  <Dialog
+                    isShown={importModalOpen}
+                    title="Import Wallets via Smart Contract"
+                    onConfirm={() => this.importUsers()}
+                    onCancel={() => this.setState({ importModalOpen: false })}
+                    onCloseComplete={() => this.setState({ importModalOpen: false })}
+                    confirmLabel='Import'
+                    width={640}
+                  >
+                    You can import your users based on your smart contracts.
+                    Simply enter a smart contract address and we will import all
+                    of the addresses that have interacted with that address.
+                    <div className="form-group col-md-12">
+                      {experimentalFeatures ? this.renderNetworksDrop() : <div />}
+                      <div className="top-15">
+                        <label>Enter Contract Address</label>
+                        <InputGroup className="mb-3 form-group">
+                          <FormControl
+                            type="text"
+                            className="form-control"
+                            value={importAddress}
+                            onChange={(e) =>
+                              this.setState({ importAddress: e.target.value })
+                            }
+                            placeholder="0x..."
+                          />
+                        </InputGroup>
+                      </div>
+                    </div>
+                  </Dialog>
+                </Grid.Column>
+                <Grid.Column key='datainput'>
+                  <h5>Create a Segment</h5>
+                  {existingSeg ? (
+                    <div className="form-group col-md-12">
+                      <label htmlFor="inputSeg">Now, Choose a Segment</label>
+                      <select
+                        value={existingSegmentToFilter}
+                        onChange={(e) =>
+                          this.setState({ existingSegmentToFilter: e.target.value })
+                        }
+                        id="inputSeg"
+                        className="form-control"
+                      >
+                        <option value="Choose...">Choose...</option>
+                        {segments.map((seg) => {
+                          return (
+                            <option value={seg.name} key={seg.id}>
+                              {seg.name}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  ) : (
+                    <div />
+                  )}
+                  {plan === "enterprise" ||
+                  plan === "premium" ||
+                  plan === undefined ||
+                  segments.length < 4 ? (
+                    this.renderCreateSegment()
+                  ) : (
+                    <div>
+                      <h5>Upgrade to create more segments</h5>
+                      <a
+                        className="btn btn-primary"
+                        href="mailto:support@simpleid.xyz"
+                      >
+                        Contact Us To Upgrade
+                      </a>
+                    </div>
+                  )}
+              </Grid.Column>
+              <Dimmer active={processing}>
+                <Loader inline='centered' indeterminate>{`${loadingMessage}...`}</Loader>
+              </Dimmer>
+            </Grid>
+            </div>
+          </main>
         </div>
-      </main>
-    );
+      )
+    }
   }
 }

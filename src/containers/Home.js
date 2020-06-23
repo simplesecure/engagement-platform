@@ -12,30 +12,17 @@ import Segments from '../components/Segments';
 import Projects from '../components/Projects';
 import Jobs from '../components/Jobs';
 import Support from '../components/Support';
-import LoadingModal from '../components/LoadingModal';
-import Modal from 'react-bootstrap/Modal'
+import {
+  Dimmer,
+  Loader,
+} from 'semantic-ui-react'
 
 export default class Home extends React.Component {
-  renderRoute(route) {
-    switch(route.split()[0]) {
-      case '/':
-        return <Dashboard />
-      case '/new-search':
-        return <Search />
-      case '/new-tile':
-        return <AddTile />
-      case '/notifications':
-        return <Notifications />
-      default:
-        return <Home />
-    }
-  }
-
   renderWhenLoading() {
     return (
       <div>
         <div className="container-fluid">
-          <LoadingModal messageToDisplay={"Loading..."} />
+          <Loader inline='centered' indeterminate>{"Loading..."}</Loader>
         </div>
       </div>
     )
@@ -45,44 +32,28 @@ export default class Home extends React.Component {
     const { initialLoading } = this.global;
     return (
       <BrowserRouter>
-      <div className="container-fluid">
-        <div className="row">
-          {
-            !window.location.href.includes('notifications/appId') ?
-            <SideNav /> :
-            <div/>
-          }
-          <Route exact path='/' component={Dashboard} />
-          <Route path='/new-search' component={Search} />
-          <Route path='/segments' component={Segments} />
-          <Route path='/new-tile' component={AddTile} />
-          <Route exact path='/notifications' component={Notifications} />
-          <Route path='/account' component={Account} />
-          <Route path='/communications' component={Communications} />
-          <Route path='/support' component={Support} />
-          <Route path='/projects' component={Projects} />
-          <Route path='/console' component={Jobs} />
-
-          <Modal show={initialLoading} >
-            <Modal.Body>
-                <LoadingModal messageToDisplay={"Updating your user segment data..."} />
-            </Modal.Body>
-          </Modal>
-        </div>
-      </div>
-    </BrowserRouter>
+        <Route exact path='/' component={Dashboard} />
+        <Route path='/new-search' component={Search} />
+        <Route path='/segments' component={Segments} />
+        <Route path='/new-tile' component={AddTile} />
+        <Route exact path='/notifications' component={Notifications} />
+        <Route path='/account' component={Account} />
+        <Route path='/communications' component={Communications} />
+        <Route path='/support' component={Support} />
+        <Route path='/projects' component={Projects} />
+        <Route path='/console' component={Jobs} />
+        <Dimmer active={initialLoading}>
+          <Loader inline='centered' indeterminate>{"Updating your user segment data..."}</Loader>
+        </Dimmer>
+      </BrowserRouter>
     )
   }
 
   renderNoProjectsView() {
     return (
       <BrowserRouter>
-        <div className="container-fluid">
-          <div className="row">
-            <SideNav />
-            <Projects />
-          </div>
-        </div>
+        <SideNav />
+        <Projects />
       </BrowserRouter>
     )
   }
