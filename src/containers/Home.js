@@ -12,12 +12,19 @@ import Segments from '../components/Segments';
 import Projects from '../components/Projects';
 import Jobs from '../components/Jobs';
 import Support from '../components/Support';
+import BlockDiagram from '../components/BlockDiagram'
 import {
   Dimmer,
   Loader,
 } from 'semantic-ui-react'
+import FlowyWorker from './FlowyWorker'
 
 export default class Home extends React.Component {
+  constructor (props) {
+    super(props)
+    this.flowy = new FlowyWorker()
+    console.log("#######SIGNED IN")
+  }
   renderWhenLoading() {
     return (
       <div>
@@ -27,7 +34,6 @@ export default class Home extends React.Component {
       </div>
     )
   }
-
   renderSignedIn() {
     const { initialLoading } = this.global;
     return (
@@ -42,6 +48,10 @@ export default class Home extends React.Component {
         <Route path='/support' component={Support} />
         <Route path='/projects' component={Projects} />
         <Route path='/console' component={Jobs} />
+        <Route path='/block' render={(props) => (
+            <BlockDiagram {...props} flowy={this.flowy} />
+          )}
+        />
         <Dimmer active={initialLoading}>
           <Loader inline='centered' indeterminate>{"Updating your user segment data..."}</Loader>
         </Dimmer>
