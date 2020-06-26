@@ -39,12 +39,16 @@ export function dbRequestDebugLog(anOperation, params, error) {
 }
 
 
-export async function tableGet(aTable, aKeyName, aKeyValue) {
+export async function tableGet(aTable, aKeyName, aKeyValue, aProjectionExpression=undefined) {
   const params = {
     TableName: aTable,
     Key: {
       [ aKeyName ] : aKeyValue
     }
+  }
+
+  if (aProjectionExpression) {
+    params['ProjectionExpression'] = aProjectionExpression
   }
 
   return await new Promise((resolve, reject) => {

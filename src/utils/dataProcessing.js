@@ -12,6 +12,23 @@ const MAX_JOBS_TO_STORE = 10;
 const log = getLog("dataProcessing");
 const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST);
 
+const registerOrg = async () => {
+  // TODO: the notion of a currently selected app may make this problematic.
+  const { org_id } = await getGlobal()
+  if (org_id) {
+    socket.emit('org_id', org_id)
+  } else {
+    log.warn(`Unable to register organization.`)
+  }
+}
+socket.on('connect', async () => {
+  await registerOrg()
+})
+socket.on('reconnect', async () => {
+  await registerOrg()
+})
+
+
 //  The websocket listener needs to be instantiated outside of the
 //  handle data function or the results will be returned multiple times.
 //  See here: https://stackoverflow.com/questions/46819575/node-js-socket-io-returning-multiple-values-for-a-single-event
@@ -116,12 +133,68 @@ socket.on("update job id", async (result) => {
 });
 
 // TODO: common repo for constants etc.
-const BLOCK_ID_EVENT_NAME = "block id"
-socket.on(BLOCK_ID_EVENT_NAME, (aBlockId) => {
+const BLOCK_ID_EVENT= "block id"
+socket.on(BLOCK_ID_EVENT, (aBlockId) => {
   console.info(`------------------------------------------------------------\n` +
               `\tProcessing Ethereum Block ID: ${aBlockId}\n` +
               `------------------------------------------------------------`  )
   setGlobal({ aBlockId });
+})
+
+const segmentUpdateQueue = []
+let segUpdaterBusy = false
+
+const RT_SEGMENT_UPDATE_EVENT = "real time segment update"
+socket.on(RT_SEGMENT_UPDATE_EVENT, async (segmentUpdate) => {
+  const method = 'SegmentUpdateListener'
+  const startTimeMs = Date.now()
+  log.debug(`${method}(${Date.now() - startTimeMs}) ms: starting.`)
+  let blockRangeStr = ''
+  if (segmentUpdate) {
+    const { appId, blockRange } = segmentUpdate
+    const { currentAppId } = await getGlobal()
+    log.debug(`${method}(${Date.now() - startTimeMs}) ms: got current app id.`)
+
+    if (appId === currentAppId) {
+      blockRangeStr = (blockRange.maxBlockId === blockRange.minBlockId) ?
+        `Segment updates for Ethereum block id ${blockRange.maxBlockId}.` :
+        `Segment updates for Ethereum block ids ${blockRange.maxBlockId} - ${blockRange.minBlockId}.`
+    }
+  }
+
+  if (blockRangeStr !== '') {
+    const msg = `\n` +
+                `Real-Time Segment Updates\n` +
+                `============================================================\n`+
+                `${blockRangeStr}` +
+                `============================================================\n`
+    console.info(msg)
+
+    log.debug(`${method}(${Date.now() - startTimeMs}) ms: queuing segment updates.`)
+    segmentUpdateQueue.push(segmentUpdate)
+    if (segUpdaterBusy) {
+      log.debug(`${method}(${Date.now() - startTimeMs}) ms: returning - segment updater busy.`)
+      return
+    }
+
+    segUpdaterBusy = true
+
+
+    while (segmentUpdateQueue.length > 0) {
+      try {
+        log.debug(`${method}(${Date.now() - startTimeMs}) ms: processing new segment update.`)
+        const segUpdateData = segmentUpdateQueue.shift()
+        // force never save:
+        segUpdateData.result.saveToDb = false
+        await handleSegmentUpdate(segUpdateData.result.data)
+        log.debug(`${method}(${Date.now() - startTimeMs}) ms: finished processing new segment update.`)
+      } catch (error) {
+        log.debug(`${method}(${Date.now() - startTimeMs}) ms: failed processing new segment update.\n${error}`)
+      }
+    }
+    segUpdaterBusy = false
+    log.debug(`${method}(${Date.now() - startTimeMs}) ms: finished processing all queued segment updates.`)
+  }
 })
 
 const SESSION_FROM_LOCAL = "sessionData";
@@ -344,6 +417,12 @@ async function handleSegmentUpdate(result) {
   currentSegments[weeklySegmentIndex] = weeklySegment;
   currentSegments[monthlySegmentIndex] = monthlySegment;
 
+  log.debug(`handleSegmentUpdate:\n` +
+             `-----------------------------------------------------------------------\n` +
+             `weeklySegment users ${(weeklySegmentIndex > -1) ? weeklySegment.userCount : 'unknown'}\n` +
+             `monthlySegment users ${(monthlySegmentIndex > -1) ? monthlySegment.userCount : 'unknown'}\n` +
+             `number of segments: ${currentSegments.length}\n`
+             )
   const segs = currentSegments;
   sessionData.currentSegments = segs;
   setGlobal({

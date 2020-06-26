@@ -9,6 +9,26 @@ const S3_ANALYTICS_BLOB = true
 const S3_ORG_DATA_USERS_BLOBS = true
 
 
+export async function walletAnalyticsDataTableGetImported(anAppId) {
+  const method = 'walletAnalyticsDataTableGetImported'
+
+  if (!anAppId) {
+    throw new Error(`DB access method ${method} requires a value for anAppId.  anAppId="${anAppId}".`)
+  }
+
+  try {
+    const tableData = await tableGet(
+      process.env.REACT_APP_AD_TABLE,
+      process.env.REACT_APP_AD_TABLE_PK,
+      anAppId,
+      'imported'
+    )
+
+    return tableData.Item.imported
+  } catch (error) {
+    throw new Error(`${method} failed to get imported data for ${anAppId}.\n${error}`)
+  }
+}
 
 export async function walletAnalyticsDataTableGet(anAppId) {
   const method = 'walletAnalyticsDataTableGet'

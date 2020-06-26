@@ -126,14 +126,14 @@ class CloudUser {
       setGlobal({weekly, monthly})
       //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to
       //Get the correct results
-      //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the fetchSegmentData function
+      //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the updateSegments function
       //Will update state as necessary
 
 
       if(data.currentSegments) {
         //  Find the weekly and monthly segments and update them with the correct data
 
-        this.fetchSegmentData(appData);
+        this.updateSegments(appData);
       } else {
         this.fetchUsersCount(appData)
       }
@@ -248,29 +248,7 @@ class CloudUser {
     }
   }
 
-  async handleUpdateSegments() {
-    const { currentAppId } = getGlobal()
-    let userData
-    let sid
-    let org_id
-    try {
-      userData = this.getUserData()
-      sid = userData.sid
-      org_id = sid.org_id
-    } catch(e) {
-      log.debug("org id error: ", e)
-    }
-
-    const appData = await dc.organizationDataTableGet(org_id)
-    const thisApp = appData.Item.apps[currentAppId]
-    if(thisApp.currentSegments) {
-      this.fetchSegmentData(appData)
-    } else {
-      setGlobal({ processing: false })
-    }
-  }
-
-  async fetchSegmentData(appData) {
+  async updateSegments(appData) {
     const { org_id, currentAppId } = await getGlobal();
     const payload = {
       app_id: currentAppId,
