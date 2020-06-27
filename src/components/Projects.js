@@ -1,19 +1,17 @@
 import React, { setGlobal } from "reactn"
 import { Link } from "react-router-dom"
-import StickyNav from "./StickyNav"
 import SideNav from './SideNav'
-import Card from "react-bootstrap/Card"
 import {
   Button,
   Grid,
   Segment,
-  Header,
   Input,
   Icon,
   Message,
   Dimmer,
-  Loader,
-  Label
+  Header,
+  Divider,
+  Loader
 } from 'semantic-ui-react'
 import { Dialog } from 'evergreen-ui'
 import * as dc from './../utils/dynamoConveniences.js'
@@ -25,7 +23,7 @@ import { getCloudUser } from "./../utils/cloudUser.js"
 import { getEmailData } from './../utils/emailData.js'
 import { getWeb2Analytics } from './../utils/web2Analytics'
 import { getSidSvcs } from "../utils/sidServices"
-const SID_EXPERIMENTAL_FEATURES = process.env.REACT_APP_SID_EXPERIMENTAL_FEATURES === 'true' ? true : false
+// const SID_EXPERIMENTAL_FEATURES = process.env.REACT_APP_SID_EXPERIMENTAL_FEATURES === 'true' ? true : false
 const moment = require('moment')
 const ERROR_MSG =
   "Failed to create project, please try again. If this continues, please contact support@simpleid.xyz"

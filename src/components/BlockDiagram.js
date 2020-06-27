@@ -57,22 +57,22 @@ export default class BlockDiagramHTMLComponent extends React.Component {
         <div id="propwrap">
           <div id="properties">
             <div id="close">
-              <img src={require("../assets/img/close.svg")} />
+              <img alt="close" src={require("../assets/img/close.svg")} />
             </div>
             <p id="header2">Block Properties</p>
             <div id="proplist">
               <p class="inputlabel">Select database</p>
-              <div class="dropme">Database 1 <img src={require("../assets/img/dropdown.svg")} /></div>
+              <div class="dropme">Database 1 <img alt="dropdown" src={require("../assets/img/dropdown.svg")} /></div>
               <p class="inputlabel">Check properties</p>
-              <div class="dropme">All<img src={require("../assets/img/dropdown.svg")} /></div>
+              <div class="dropme">All<img alt="dropdown" src={require("../assets/img/dropdown.svg")} /></div>
               <p class="inputlabel">More properties</p>
-              <div class="dropme">All<img src={require("../assets/img/dropdown.svg")} /></div>
+              <div class="dropme">All<img alt="dropdown" src={require("../assets/img/dropdown.svg")} /></div>
               <div class="checkus">
-                <img src={require("../assets/img/checkon.svg")} />
+                <img alt="checkon" src={require("../assets/img/checkon.svg")} />
                 <p>Log on successful performance</p>
               </div>
               <div class="checkus">
-                <img src={require("../assets/img/checkoff.svg")} />
+                <img alt="checkoff" src={require("../assets/img/checkoff.svg")} />
                 <p>Give priority to this block</p>
               </div>
             </div>

@@ -24,9 +24,6 @@ export default class SideNav extends React.Component {
   handleNotificationClick () {
     const {
       apps,
-      sessionData,
-      showSegmentNotification,
-      segmentProcessingDone,
       notifications,
     } = this.global
     const notificationsProcessed = notifications.filter(

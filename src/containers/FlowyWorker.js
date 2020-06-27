@@ -66,29 +66,29 @@ export default class FlowyWorker {
     grab.parentNode.removeChild(grab);
     var blockin = drag.querySelector(".blockin");
     blockin.parentNode.removeChild(blockin);
-    if (drag.querySelector(".blockelemtype").value == "1") {
+    if (drag.querySelector(".blockelemtype").value === "1") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/eyeblue.svg'><p class='blockyname'>Web2 Event</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Last time <span>wallet interacted</span> with <span>app</span></div>";
-    } else if (drag.querySelector(".blockelemtype").value == "2") {
+    } else if (drag.querySelector(".blockelemtype").value === "2") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/actionblue.svg'><p class='blockyname'>Smart Contract Event</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>When <span>ABI</span> event occurs</div>";
-    } else if (drag.querySelector(".blockelemtype").value == "3") {
+    } else if (drag.querySelector(".blockelemtype").value === "3") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/timeblue.svg'><p class='blockyname'>Timed Event</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>When <span>10 seconds</span> have passed</div>";
-    } else if (drag.querySelector(".blockelemtype").value == "4") {
+    } else if (drag.querySelector(".blockelemtype").value === "4") {
       drag.innerHTML += "<div class='blockyleft'><img width='24px' src='assets/walletblue.png'><p class='blockyname'>Wallet Balance</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>User's wallet <span>balance</span> is <span> higher </span> than <span> amount</span>.</div>";
-    } else if (drag.querySelector(".blockelemtype").value == "5") {
+    } else if (drag.querySelector(".blockelemtype").value === "5") {
       drag.innerHTML += "<div class='blockyleft'><img width='24px' src='assets/ethereumblue.svg'><p class='blockyname'>Asset Price</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'><span>Asset</span> price is <span> higher </span> than <span> amount</span>.</div>";
-    } else if (drag.querySelector(".blockelemtype").value == "6") {
+    } else if (drag.querySelector(".blockelemtype").value === "6") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/databaseorange.svg'><p class='blockyname'>Database Entry</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Add <span>Data object</span> to <span>Database 1</span></div>";
-    } else if (drag.querySelector(".blockelemtype").value == "7") {
+    } else if (drag.querySelector(".blockelemtype").value === "7") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/internetorange.png' width='24px'><p class='blockyname'>Connect Endpoint</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Specify <span> webhook </span> endpoint</div>";
-    } else if (drag.querySelector(".blockelemtype").value == "8") {
+    } else if (drag.querySelector(".blockelemtype").value === "8") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/notificationorange.png' width='24px'><p class='blockyname'>Send Notification</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Notify for <span>Action 1</span></div>";
-    } else if (drag.querySelector(".blockelemtype").value == "9") {
+    } else if (drag.querySelector(".blockelemtype").value === "9") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/mailorange.png' width='24px'><p class='blockyname'>Send Email</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Email <span>Query 1</span> with the account <span>email</span></div>";
-    } else if (drag.querySelector(".blockelemtype").value == "10") {
+    } else if (drag.querySelector(".blockelemtype").value === "10") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/logred.svg'><p class='blockyname'>And Block</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Add <span>and</span> logic block</div>";
-    } else if (drag.querySelector(".blockelemtype").value == "11") {
+    } else if (drag.querySelector(".blockelemtype").value === "11") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/logred.svg'><p class='blockyname'>Or Block</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Add <span>or</span> logic block</div>";
-    } else if (drag.querySelector(".blockelemtype").value == "12") {
+    } else if (drag.querySelector(".blockelemtype").value === "12") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/errorred.svg'><p class='blockyname'>Priority Block</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Add <span>priority</span> block</div>";
     }
     return true;

@@ -51,8 +51,8 @@
     "uuid": "^3.4.0"
   },
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired --max_old_space_size=4096 build",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
     "test": "jest",
     "deploy-prod": "aws s3 sync build/ s3://app.simpleid.xyz --acl public-read",
     "deploy-stage": "aws s3 sync build/ s3://stage-app.simpleid-xyz --acl public-read",
@@ -73,12 +73,5 @@
       "last 1 safari version"
     ]
   },
-  "devDependencies": {
-    "@babel/core": "^7.10.2",
-    "@babel/preset-env": "^7.10.2",
-    "babel-loader": "^8.1.0",
-    "html-loader": "^1.1.0",
-    "react-app-rewired": "^2.1.6",
-    "webpack": "^4.43.0"
-  }
+  "devDependencies": {}
 }

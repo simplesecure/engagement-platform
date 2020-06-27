@@ -1,9 +1,7 @@
-import React, { setGlobal } from "reactn";
+import React from "reactn";
 import { Link } from "react-router-dom";
 import {
   Dialog,
-  SideSheet,
-  TextInput
 } from 'evergreen-ui'
 import {
   Button,
@@ -16,17 +14,10 @@ import {
   Icon,
   Dimmer,
   Loader,
-  Modal
 } from 'semantic-ui-react'
-import BlockDiagram from './BlockDiagram'
 import SideNav from '../components/SideNav';
-import InputGroup from "react-bootstrap/InputGroup";
-import FormControl from "react-bootstrap/FormControl";
 import SegmentTable from "./SegmentTable";
-import * as dc from "./../utils/dynamoConveniences.js";
 import DatePicker from "react-date-picker";
-import uuid from "uuid/v4";
-import { setLocalStorage } from "../utils/misc";
 import { getCloudUser } from "./../utils/cloudUser.js";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -38,7 +29,7 @@ import {
   clearState
 } from './SegmentHelpers'
 
-const listToArray = require("list-to-array");
+// const listToArray = require("list-to-array");
 const NETWORK_OPTIONS = ["mainnet", "ropsten", "rinkeby", "goerli", "kovan"];
 
 export default class Segments extends React.Component {
@@ -208,10 +199,6 @@ export default class Segments extends React.Component {
       this.setState({ importModalOpen: false, importAddress: "" });
     }
     else {
-      console.log(
-        "Calling import addresses from wallets:\n",
-        JSON.stringify(importWalletsCmdObj, 0, 2)
-      );
       const importWalletsCmdObj = {
         command: "importWallets",
         data: {
@@ -224,6 +211,10 @@ export default class Segments extends React.Component {
           },
         },
       };
+      console.log(
+        "Calling import addresses from wallets:\n",
+        JSON.stringify(importWalletsCmdObj, 0, 2)
+      );
       toast.success(
         <div>
           Importing users. You'll get a notification when it's complete. View
@@ -353,7 +344,7 @@ export default class Segments extends React.Component {
       amount,
       contractAddress,
     } = this.state;
-    const showOnDashboard = dashboardShow === "Yes" ? true : false;
+    // const showOnDashboard = dashboardShow === "Yes" ? true : false;
     const filterToUse = allFilters.filter((a) => a.filter === filterType)[0];
     const erc20Balance = tokenType === "ERC-20";
     const createCriteria =
@@ -648,13 +639,7 @@ export default class Segments extends React.Component {
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
                 <span className="text-uppercase page-subtitle">Segments</span>
                 <h3 className="page-title">
-                  Group People Using Your App{" "}
-                  <span
-                    onClick={this.handleRefreshData}
-                    className="clickable refresh"
-                  >
-                    <i className="fas fa-sync-alt"></i>
-                  </span>
+                  Group Wallets Using Your App{" "}
                 </h3>
               </div>
 

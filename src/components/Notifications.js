@@ -1,5 +1,4 @@
 import React, { setGlobal } from 'reactn';
-import StickyNav from './StickyNav';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import uuid from 'uuid/v4'

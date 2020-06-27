@@ -59,7 +59,15 @@ class CloudUser {
       const data = allApps[appKeys[0]];
       data['id'] = currentAppId
 
-      await setGlobal({ signedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data, loading: false });
+      let importedContracts
+      try {
+         importedContracts = await dc.walletAnalyticsDataTableGetImported(currentAppId)
+      }
+      catch (e) {
+        log.error('Imported Smart Contracts', e);
+      }
+
+      await setGlobal({ importedContracts, ignedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data, loading: false });
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
       //Check if app has been verified
       const verificationData = await dc.walletAnalyticsDataTableGet(currentAppId)

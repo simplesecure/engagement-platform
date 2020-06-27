@@ -112,6 +112,7 @@ socket.on("queued job id", async (result) => {
 
 socket.on("update job id", async (result) => {
   log.info(`Update to job id = ${JSON.stringify(result, 0, 2)}`);
+  console.info(`Update to job id = ${JSON.stringify(result, 0, 2)}`);
 
   //  Update job queue in local storage and in state
   //  TODO - We need to decide how many jobs to keep stored (initially set at 10)

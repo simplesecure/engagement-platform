@@ -1,22 +1,18 @@
 import React from 'reactn'
 import SideNav from './SideNav';
-import StickyNav from './StickyNav'
 import {
   Button,
   Divider,
   Grid,
   Header,
   Icon,
-  Search,
-  Segment,
-  Message
+  Segment
 } from 'semantic-ui-react'
 import { getCloudUser } from "./../utils/cloudUser.js";
 
 export default class Account extends React.Component {
   render() {
     const { plan, sessionData } = this.global
-    console.log("SessionDATA", sessionData)
     return(
       <div>
         <SideNav />
