@@ -166,7 +166,7 @@ socket.on(RT_SEGMENT_UPDATE_EVENT, async (segmentUpdate) => {
     const msg = `\n` +
                 `Real-Time Segment Updates\n` +
                 `============================================================\n`+
-                `${blockRangeStr}` +
+                `\t${blockRangeStr}\n` +
                 `============================================================\n`
     console.info(msg)
 
