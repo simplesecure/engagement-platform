@@ -1,5 +1,4 @@
 import React from "reactn";
-import StickyNav from "./StickyNav";
 import Card from 'react-bootstrap/Card';
 import {
   Table

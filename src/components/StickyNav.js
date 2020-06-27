@@ -4,11 +4,9 @@ import { getCloudUser } from "./../utils/cloudUser.js";
 import { getEmailData } from './../utils/emailData.js';
 import { getWeb2Analytics } from './../utils/web2Analytics';
 import {
-  Button,
-  Header,
+  Header
 } from 'semantic-ui-react'
 const filter = require('../utils/filterOptions.json');
-const Spinner = require('react-spinkit');
 
 export default class StickyNav extends React.Component {
 
@@ -59,14 +57,7 @@ export default class StickyNav extends React.Component {
     const {
       apps,
       sessionData,
-      showSegmentNotification,
-      segmentProcessingDone,
-      notifications,
     } = this.global;
-    const notificationsProcessed = notifications.filter(
-      notification => notification.processingDone === true
-    );
-
     const appKeys = Object.keys(apps);
     let projects = [];
     if(appKeys.length > 0) {

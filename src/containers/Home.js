@@ -23,7 +23,6 @@ export default class Home extends React.Component {
   constructor (props) {
     super(props)
     this.flowy = new FlowyWorker()
-    console.log("#######SIGNED IN")
   }
   renderWhenLoading() {
     return (

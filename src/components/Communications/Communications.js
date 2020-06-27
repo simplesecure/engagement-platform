@@ -1,12 +1,9 @@
 import React, { setGlobal, getGlobal } from "reactn";
-import StickyNav from "../StickyNav";
 import uuid from "uuid/v4";
 import Modal from "react-bootstrap/Modal";
-import LoadingModal from "../LoadingModal";
 import EmailEditor from "./EmailEditor";
 import Charts from "./Charts";
 import Table from "react-bootstrap/Table";
-import Card from "react-bootstrap/Card";
 import Form from "react-bootstrap/Form";
 import Loader from "../Loader";
 import * as dc from "../../utils/dynamoConveniences.js";
@@ -21,7 +18,6 @@ import {
   Button,
   Message,
   Dimmer,
-  Loading,
   Segment,
   Icon,
   Grid,

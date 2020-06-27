@@ -2,21 +2,12 @@ import React from 'reactn'
 import { filter } from 'fuzzaldrin-plus'
 import {
   Avatar,
-  Dialog,
   Table,
   Text,
-  Popover,
-  Position,
-  Menu,
-  IconButton,
+  Menu
 } from 'evergreen-ui'
-import {
-  Button,
-  Icon,
-  Card,
-  Image
-} from 'semantic-ui-react'
 import UserWallet from "./UserWallet";
+const fs = require('fs');
 
 export default class SegmentTable extends React.Component {
   constructor() {
@@ -27,30 +18,33 @@ export default class SegmentTable extends React.Component {
       showDialog: false,
       walletAddr: ''
     }
+    this.makerWallets = {}
+    this.instadappWallets = {}
+    this.setupUserWallets()
   }
-
   getUniqueKey() {
     return `DemoTable${this.keyIdx++}`
   }
-
+  setupUserWallets() {
+    // let makerData = require('../assets/wallets/maker.js')
+    let instadappData = require('../assets/wallets/instadapp.js')
+    // makerData.wallets.map(wallet => this.makerWallets[wallet.external_wallet] = wallet.proxy_wallet)
+    instadappData.wallets.map(wallet => this.instadappWallets[wallet.external_wallet] = wallet.proxy_wallet)
+  }
   // Filter the users based on the name property.
   filter = users => {
     const searchQuery = this.state.searchQuery.trim()
-
     // If the searchQuery is empty, return the users as is.
     if (searchQuery.length === 0) return users
-
     return users.filter(user => {
       // Use the filter from fuzzaldrin-plus to filter by name.
       const result = filter([user], searchQuery)
       return result.length === 1
     })
   }
-
   handleFilterChange = value => {
     this.setState({ searchQuery: value })
   }
-
   renderRowMenu = (user) => {
     let link = `https://etherscan.io/address/` + user
     return (
@@ -66,11 +60,16 @@ export default class SegmentTable extends React.Component {
       </Menu>
     )
   }
-
   renderRow = ({ user }) => {
     let name = user.substring(2)
-    const wallets = ['MetaMask', 'Authereum', 'Gnosis', 'Argent', 'Unknown']
-    var wallet = wallets[Math.floor(Math.random() * wallets.length)]
+    let wallet = 'Unknown'
+    if (this.makerWallets.hasOwnProperty(user)) {
+      console.log("Found Proxy: ", user)
+      wallet = "Maker Proxy"
+    }
+    else if (this.instadappWallets.hasOwnProperty(user)) {
+      wallet = "InstaDapp Proxy"
+    }
     return (
       <Table.Row key={user} isSelectable onSelect={() => this.setState({ showDialog: true, walletAddr: user, walletType: wallet })}>
         <Table.Cell display="flex" alignItems="center" flexBasis={360} flexShrink={0} flexGrow={0}>
@@ -92,11 +91,9 @@ export default class SegmentTable extends React.Component {
       </Table.Row>
     )
   }
-
   toggleDialog = () => {
     this.setState({showDialog: !this.state.showDialog})
   }
-
   render() {
     const { seg } = this.props
     const { showDialog, walletAddr, walletType } = this.state
@@ -112,7 +109,7 @@ export default class SegmentTable extends React.Component {
               placeholder='Search by wallet...'
               flexBasis={360} flexShrink={0} flexGrow={0}
             />
-            <Table.TextCell>Wallet Provider</Table.TextCell>
+            <Table.TextCell>Wallet Proxy</Table.TextCell>
             {/*<Table.TextCell>Proxy Wallet</Table.TextCell>
             <Table.HeaderCell width={48} flex="none" />*/}
           </Table.Head>

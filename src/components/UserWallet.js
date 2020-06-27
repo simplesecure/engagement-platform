@@ -6,8 +6,6 @@ import {
   Paragraph,
   Tab,
   Tablist,
-  Card,
-  Button,
   Avatar
 } from 'evergreen-ui'
 import {
@@ -25,7 +23,8 @@ export default class UserWallet extends React.Component {
     }
   }
   renderFeed() {
-    const { selectedIndex, walletAddr, walletType } = this.state
+    // const { selectedIndex, walletAddr, walletType } = this.state
+    const { selectedIndex } = this.state
     let icons = []
     let dates = []
     let summaries = []
@@ -103,7 +102,7 @@ export default class UserWallet extends React.Component {
             <Pane padding={16} borderBottom="muted">
               <Pane display="flex" alignItems="center">
                 <Heading size={600}>
-                  <a href={link} target="_blank">{shortWalletAddr}</a>
+                  <a href={link} target="_blank" rel="noopener noreferrer">{shortWalletAddr}</a>
                 </Heading>
                 <Avatar name={name} size={40} marginLeft={16} />
               </Pane>
