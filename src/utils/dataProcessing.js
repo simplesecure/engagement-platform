@@ -426,6 +426,14 @@ async function handleSegmentUpdate(result) {
              )
   const segs = currentSegments;
   sessionData.currentSegments = segs;
+  // Begin: Remove Me PBJ <-- TODO
+  for (const seg of segs) {
+    if (seg.hasOwnProperty('blockId')) {
+      console.info(`Segment ${seg.name} updated in block id ${seg.blockId}.`)
+    }
+  }
+  // End:   Remove Me PBJ <-- TODO
+
   setGlobal({
     sessionData,
     initialLoading: false,
