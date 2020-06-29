@@ -28,6 +28,7 @@ import {
   addFilter,
   clearState
 } from './SegmentHelpers'
+import { getBlockLabel } from '../utils/realtimeShowoff'
 
 // const listToArray = require("list-to-array");
 const NETWORK_OPTIONS = ["mainnet", "ropsten", "rinkeby", "goerli", "kovan"];
@@ -63,7 +64,9 @@ export default class Segments extends React.Component {
       selectedNetwork: "mainnet",
       webhookOpen: false,
       webhook: ""
-    };
+    }
+    this.localBlockId = 0
+    this.blockLabel = null
   }
 
   closeModal = () => {
@@ -633,7 +636,10 @@ export default class Segments extends React.Component {
     } = this.state;
     const segments = currentSegments ? currentSegments : [];
     const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
-    const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16)
+    if (this.localBlockId !== aBlockId) {
+      this.localBlockId = aBlockId
+      this.blockLabel = getBlockLabel(aBlockId)
+    }
     return (
       <div>
         <SideNav />
@@ -647,7 +653,7 @@ export default class Segments extends React.Component {
                 </h3>
                 {aBlockId ? (
                   <h3>
-                    Processing: <a style={{color: `${randomColor}`}} href={"https://etherscan.io/block/" + aBlockId} target="_blank">Eth Block {aBlockId}</a>
+                    Processing: {this.blockLabel}
                   </h3>
                 ) : null }
               </div>
@@ -683,11 +689,11 @@ export default class Segments extends React.Component {
                         <Grid.Column key={segment.id}>
                           <Segment raised padded>
                             {!disableWallets && segment.hasOwnProperty('blockId')? (
-                              <Label as='a' color='red' attached='top right' href={url} target="_blank">
+                              <Label as='a' basic color='red' attached='top right' href={url} target="_blank">
                                 {segment.blockId.toString().substring(4)}
                               </Label>
                             ) : (
-                              <Label as='a' color='grey' attached='top right'>
+                              <Label as='a' basic color='grey' attached='top right'>
                                 N/A
                               </Label>
                             )

@@ -170,7 +170,6 @@ socket.on(RT_SEGMENT_UPDATE_EVENT, async (segmentUpdate) => {
                 `\t${blockRangeStr}\n` +
                 `============================================================\n`
     console.info(msg)
-
     log.debug(`${method}(${Date.now() - startTimeMs}) ms: queuing segment updates.`)
     segmentUpdateQueue.push(segmentUpdate)
     if (segUpdaterBusy) {

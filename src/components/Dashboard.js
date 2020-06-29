@@ -10,7 +10,7 @@ import {
   Dimmer,
   Loader,
   Header,
-  Icon,
+  Icon
 } from 'semantic-ui-react'
 import {
   get7DayChart,
@@ -20,6 +20,8 @@ import {
   getCandleStickChart,
   getChartCard
 } from './Charts'
+
+import { getBlockLabel } from '../utils/realtimeShowoff'
 
 export default class Dashboard extends React.Component {
   constructor(props) {
@@ -32,6 +34,8 @@ export default class Dashboard extends React.Component {
       active: true
     }
     this.uniqueEleKey = Date.now()
+    this.localBlockId = 0
+    this.blockLabel = null
   }
   getUniqueKey() {
     return this.uniqueEleKey++
@@ -49,6 +53,10 @@ export default class Dashboard extends React.Component {
       aBlockId,
       importedContracts
     } = this.global
+    if (this.localBlockId !== aBlockId) {
+      this.localBlockId = aBlockId
+      this.blockLabel = getBlockLabel(aBlockId)
+    }
     const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal } = this.state
     const { currentSegments } = sessionData
     const allTiles = currentSegments ? currentSegments : []
@@ -58,7 +66,6 @@ export default class Dashboard extends React.Component {
     const makerData = require('../assets/wallets/maker.js')
     const instaData = require('../assets/wallets/instadapp.js')
     const proxyWallets = makerData.wallets.length + instaData.wallets.length
-    const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16)
     if (showDemo) {
       return <DemoDash />
     } else {
@@ -77,7 +84,7 @@ export default class Dashboard extends React.Component {
               {aBlockId ? (<div className="row">
                 <div className="col-lg-6 col-md-6 col-sm-6 text-center text-sm-left mb-0">
                   <h3 className="page-title">
-                    Real-Time Monitoring: &nbsp;<a style={{color: `${randomColor}`}} href={"https://etherscan.io/block/" + aBlockId} target="_blank">Eth Block {aBlockId}</a>
+                    Real-Time Monitoring: &nbsp; {this.blockLabel}
                   </h3>
                   <br />
                 </div>
@@ -105,7 +112,7 @@ export default class Dashboard extends React.Component {
                     </div>
                   </div>
                 ) : null}
-                <div
+                {/*<div
                   key={this.getUniqueKey()}
                   className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
                 >
@@ -123,7 +130,7 @@ export default class Dashboard extends React.Component {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div>*/}
                 {tiles.map((tile) => {
                   return (
                     <div
