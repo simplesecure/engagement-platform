@@ -93,7 +93,6 @@ export var flowy = function(canvas, grab, release, snapping, rearrange, spacing_
             }
         }
         flowy.deleteBlocks = function() {
-            console.log('BLOCK DELETION!')
             blocks = [];
             canvas_div.innerHTML = "<div class='indicator invisible'></div>";
         }

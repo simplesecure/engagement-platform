@@ -312,9 +312,9 @@
     overflow: auto;
 }
 #proplist {
-    height: calc(100% - 300px);
+    height: calc(100% - 100px);
     overflow: auto;
-    margin-top: -30px;
+    margin-top: -10px;
     padding-top: 30px;
 }
 .blockin {
@@ -548,7 +548,6 @@
     text-align: center;
     width: 287px;
     height: 38px;
-    margin-bottom: 100px;
     line-height: 38px;
     color: #253134;
     transition: all .3s cubic-bezier(.05,.03,.35,1);

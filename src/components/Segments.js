@@ -60,7 +60,9 @@ export default class Segments extends React.Component {
       condition: {},
       importModalOpen: false,
       importAddress: "",
-      selectedNetwork: "mainnet"
+      selectedNetwork: "mainnet",
+      webhookOpen: false,
+      webhook: ""
     };
   }
 
@@ -613,7 +615,6 @@ export default class Segments extends React.Component {
       aBlockId
     } = this.global;
     const { currentSegments } = sessionData;
-
     const {
       importAddress,
       importModalOpen,
@@ -626,10 +627,13 @@ export default class Segments extends React.Component {
       seg,
       existingSeg,
       newSegName,
-      existingSegmentToFilter
+      existingSegmentToFilter,
+      webhookOpen,
+      webhook
     } = this.state;
     const segments = currentSegments ? currentSegments : [];
     const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
+    const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16)
     return (
       <div>
         <SideNav />
@@ -641,9 +645,12 @@ export default class Segments extends React.Component {
                 <h3 className="page-title">
                   Group Wallets Using Your App{" "}
                 </h3>
+                {aBlockId ? (
+                  <h3>
+                    Processing: <a style={{color: `${randomColor}`}} href={"https://etherscan.io/block/" + aBlockId} target="_blank">Eth Block {aBlockId}</a>
+                  </h3>
+                ) : null }
               </div>
-
-              <br />
               {plan === "enterprise" || plan === "premium"  || plan === undefined ? (
                 <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
                   <span className="text-uppercase page-subtitle">
@@ -671,14 +678,19 @@ export default class Segments extends React.Component {
                     segments.map(segment => {
                       const disableButton = defaultSegments.indexOf(segment.name) < 0
                       const disableWallets = segment.userCount < 1
+                      const url = "https://etherscan.io/block/" + segment.blockId
                       return (
                         <Grid.Column key={segment.id}>
                           <Segment raised padded>
-                            {!disableWallets ? (
-                              <Label as='a' color='red' attached='top right'>
-                                {aBlockId}
+                            {!disableWallets && segment.hasOwnProperty('blockId')? (
+                              <Label as='a' color='red' attached='top right' href={url} target="_blank">
+                                {segment.blockId.toString().substring(4)}
                               </Label>
-                              ) : null
+                            ) : (
+                              <Label as='a' color='grey' attached='top right'>
+                                N/A
+                              </Label>
+                            )
                             }
                             <Header as='h3'>{segment.name}</Header>
                             <Button
@@ -703,8 +715,8 @@ export default class Segments extends React.Component {
                                 <Icon name='edit' size='large' color='blue' />
                                 <p className='name'>Edit</p>
                               </Button>
-                              <Button icon basic>
-                                <Icon name='fork' size='large' color='green' />
+                              <Button disabled={disableWallets} icon basic>
+                                <Icon name='fork' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
                                 <p className='name'>Connect</p>
                               </Button>
                               <Button disabled={!disableButton} onClick={() => deleteSegment(this, segment, false)} icon basic>
@@ -784,6 +796,28 @@ export default class Segments extends React.Component {
                           this.setState({ importAddress: e.target.value })
                         }
                         placeholder="Enter smart contract to import: 0x..."
+                      />
+                    </div>
+                  </div>
+                </Dialog>
+                <Dialog
+                  isShown={webhookOpen}
+                  title="Setup a webhook URL for your segment"
+                  onCancel={() => this.setState({ webhookOpen: false })}
+                  onCloseComplete={() => this.setState({ webhookOpen: false })}
+                  confirmLabel='Save'
+                  width={640}
+                >
+                  You can add a webhook url where we will send segment updates to.
+                  <div>
+                    <div className="top-15">
+                      <Input
+                        fluid
+                        value={webhook}
+                        onChange={(e) =>
+                          this.setState({ webhook: e.target.value })
+                        }
+                        placeholder="Enter webhook url..."
                       />
                     </div>
                   </div>

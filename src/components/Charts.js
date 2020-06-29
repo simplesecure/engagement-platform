@@ -12,12 +12,11 @@ export const getDonutChart = () => {
         height="100%"
         data={[
           ["Frontend", "Wallet Percentage"],
-          ["Oasis", 37],
-          ["InstaDapp", 23],
-          ["Kyber", 10],
-          ["UniSwap", 12],
-          ["Aave", 8],
-          ["Other", 10]
+          ["Other", 27],
+          ["Maker", 33],
+          ["Oasis", 20],
+          ["InstaDapp", 12],
+          ["Aave", 18]
         ]}
         options={{
           is3D: false,
@@ -173,16 +172,16 @@ export const getChartCard = (aTitle, theChart, minHeight=420) => {
   return (
     <div
       key={aTitle}
-      className="col-lg-4 col-md-6 col-sm-6 mb-4"
+      className="col-lg-6 col-md-6 col-sm-6 mb-4"
     >
       <div className="stats-small stats-small--1 card card-small">
         <div className="card-body p-0 d-flex" style={{width:'100%', justifyContent:'center', minHeight:420}}>
           <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
-              <span
-                className="stats-small__label text-uppercase"
-                style={{marginTop:32, textAlign:'center'}} >
-                {aTitle}
-              </span>
+            <span
+              className="text-uppercase"
+              style={{marginTop:32, textAlign:'center'}} >
+              {aTitle}
+            </span>
             {theChart}
           </div>
         </div>

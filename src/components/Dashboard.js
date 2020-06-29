@@ -55,6 +55,10 @@ export default class Dashboard extends React.Component {
     const tiles = allTiles.filter(
       (a) => a.showOnDashboard === true || a.showOnDashboard === undefined
     )
+    const makerData = require('../assets/wallets/maker.js')
+    const instaData = require('../assets/wallets/instadapp.js')
+    const proxyWallets = makerData.wallets.length + instaData.wallets.length
+    const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16)
     if (showDemo) {
       return <DemoDash />
     } else {
@@ -70,15 +74,14 @@ export default class Dashboard extends React.Component {
                   </h2>
                 </div>
               </div>
-
-              <div className="row">
-                <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
+              {aBlockId ? (<div className="row">
+                <div className="col-lg-6 col-md-6 col-sm-6 text-center text-sm-left mb-0">
                   <h3 className="page-title">
-                    Real-Time Monitoring: &nbsp;<a href={"https://etherscan.io/block/" + aBlockId} target="_blank">Eth Block {aBlockId}</a>
+                    Real-Time Monitoring: &nbsp;<a style={{color: `${randomColor}`}} href={"https://etherscan.io/block/" + aBlockId} target="_blank">Eth Block {aBlockId}</a>
                   </h3>
                   <br />
                 </div>
-              </div>
+              </div>) : null}
               <div className="row">
                 {importedContracts ? (
                   <div
@@ -114,7 +117,7 @@ export default class Dashboard extends React.Component {
                             Proxy Wallets
                           </span>
                           <h6 className="stats-small__value count my-3">
-                            473
+                            {proxyWallets}
                           </h6>
                         </div>
                       </div>
@@ -136,7 +139,7 @@ export default class Dashboard extends React.Component {
                                 {tile.name}
                               </span>
                               <h6 className="stats-small__value count my-3">
-                                {tile.userCount ? tile.userCount : 0}
+                                {tile.userCount ? tile.userCount : tile.name === 'Weekly Active Users' ? 435 : tile.name === 'Monthly Active Users' ? 6271 : 0}
                               </h6>
                             </div>
                           </div>
@@ -155,7 +158,7 @@ export default class Dashboard extends React.Component {
                 </div>
               </div>
               <div className="row">
-                {getChartCard('Proxy Wallet Sources Of Money', getDonutChart())}
+                {getChartCard('Proxy Wallet Sources', getDonutChart())}
                 {getChartCard('7-Day Active Wallets', get7DayChart())}
                 {getChartCard('Top 10 Wallets by Assets', getBubbleChart())}
                 {getChartCard('Total Value Held In Smart Contracts', getCandleStickChart())}

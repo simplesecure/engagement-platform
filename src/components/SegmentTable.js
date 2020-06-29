@@ -26,10 +26,10 @@ export default class SegmentTable extends React.Component {
     return `DemoTable${this.keyIdx++}`
   }
   setupUserWallets() {
-    // let makerData = require('../assets/wallets/maker.js')
-    let instadappData = require('../assets/wallets/instadapp.js')
-    // makerData.wallets.map(wallet => this.makerWallets[wallet.external_wallet] = wallet.proxy_wallet)
-    instadappData.wallets.map(wallet => this.instadappWallets[wallet.external_wallet] = wallet.proxy_wallet)
+    let makerData = require('../assets/wallets/maker.js')
+    // let instadappData = require('../assets/wallets/instadapp.js')
+    makerData.wallets.map(wallet => this.makerWallets[wallet.external_wallet] = wallet.proxy_wallet)
+    // instadappData.wallets.map(wallet => this.instadappWallets[wallet.external_wallet] = wallet.proxy_wallet)
   }
   // Filter the users based on the name property.
   filter = users => {
@@ -64,10 +64,11 @@ export default class SegmentTable extends React.Component {
     let name = user.substring(2)
     let wallet = 'Unknown'
     if (this.makerWallets.hasOwnProperty(user)) {
-      console.log("Found Proxy: ", user)
+      console.log("Found Maker Proxy: ", user)
       wallet = "Maker Proxy"
     }
     else if (this.instadappWallets.hasOwnProperty(user)) {
+      console.log("Found Proxy: ", user)
       wallet = "InstaDapp Proxy"
     }
     return (

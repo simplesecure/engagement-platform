@@ -36,28 +36,28 @@ export default class UserWallet extends React.Component {
       summaries = [id, 'Yes', 'No']
     }
     else if (selectedIndex === 1) {
-      //Smart Contract
+      //ERC 20 Tokens
       icons = ['ethereum', 'cube', 'cube', 'cube']
       dates = ['480.232', '322', '78', '597']
-      summaries = ['ETH', 'MKR', 'REP', 'DAI']
+      summaries = ['ETH', 'MKR - Maker', 'LEND: Aave', 'DAI: Maker']
     }
     else if (selectedIndex === 2) {
+      //Smart Contract
+      icons = ['computer', 'computer', 'computer', 'computer', 'computer']
+      dates = ['10m', '45m', '10h', '17h', '3d']
+      summaries = ['Oasis DEX', 'Aave: Lending Pool', 'Idle DAI', 'Atomic Loan', 'Maker Governance']
+    }
+    else if (selectedIndex === 3) {
+      //Proxy Contract
+      icons = ['fork', 'fork', 'fork']
+      dates = ['10m', '45m', '10h']
+      summaries = ['InstaDapp DSA', 'Maker Proxy', 'Other']
+    }
+    else if (selectedIndex === 4) {
       //Communications
       icons = ['mail outline', 'bell outline', 'star outline', 'mobile alternate']
       dates = ['E-Mails Opened', 'Push Notifications Opened', 'In-App Notifications Opened', 'SMS Notifications Opened']
       summaries = ['30%', '72%', '40%', '10%']
-    }
-    else if (selectedIndex === 3) {
-      //Smart Contract
-      icons = ['computer', 'computer', 'computer', 'computer', 'computer']
-      dates = ['10m', '45m', '10h', '17h', '3d']
-      summaries = ['Oasis CDP', 'Aave Flash Loan', 'Uniswap Dex', 'Atomic Loan', 'Maker Governance']
-    }
-    else if (selectedIndex === 4) {
-      //Proxy Contract
-      icons = ['fork', 'fork', 'fork']
-      dates = ['10m', '45m', '10h']
-      summaries = ['InstaDapp DSA', 'Augur Proxy', 'Balancer Labs']
     }
     return (
       <Feed size="large">
@@ -112,7 +112,7 @@ export default class UserWallet extends React.Component {
             </Pane>
             <Pane display="flex" padding={8}>
               <Tablist>
-                 {['Identities', 'Tokens', 'Communications', 'Smart Contracts', 'Proxy Contracts'].map(
+                 {['Identities', 'Tokens', 'Smart Contracts', 'Proxy Contracts', 'Communications'].map(
                     (tab, index) => (
                       <Tab
                         key={tab}

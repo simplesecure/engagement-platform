@@ -170,7 +170,7 @@ export const createSegment = async (that) => {
         const thisApp = apps[sessionData.id]
         thisApp.currentSegments = segments
         apps[sessionData.id] = thisApp
-        clearState()
+        clearState(that)
         setGlobal({ sessionData, apps })
         updateOrgData(apps)
       } catch (error) {
@@ -183,13 +183,13 @@ export const createSegment = async (that) => {
     } else {
       try {
         getCloudUser().processData("segment", segmentCriteria)
-        clearState()
+        clearState(that)
       } catch (e) {
         console.log(e)
       }
     }
   } else {
-    clearState()
+    clearState(that)
     segmentCriteria.userCount = addrArray.length
     segmentCriteria.users = addrArray
     segmentCriteria.userCount = addrArray.length
@@ -200,7 +200,7 @@ export const createSegment = async (that) => {
     const thisApp = apps[sessionData.id]
     thisApp.currentSegments = segments
     apps[sessionData.id] = thisApp
-    clearState()
+    clearState(that)
     setGlobal({ sessionData, apps })
     updateOrgData(apps)
   }
@@ -323,7 +323,7 @@ export const updateSegment = async (that) => {
         const thisApp = apps[sessionData.id]
         thisApp.currentSegments = segments
         apps[sessionData.id] = thisApp
-        clearState()
+        clearState(that)
         setGlobal({ sessionData, apps })
         updateOrgData(apps)
       } catch (error) {
@@ -336,13 +336,13 @@ export const updateSegment = async (that) => {
     } else {
       try {
         getCloudUser().processData("segment", segmentCriteria)
-        clearState()
+        clearState(that)
       } catch (e) {
         console.log(e)
       }
     }
   } else {
-    clearState()
+    clearState(that)
     segmentCriteria.userCount = addrArray.length
     segmentCriteria.users = addrArray
     segmentCriteria.userCount = addrArray.length
@@ -366,7 +366,7 @@ export const updateSegment = async (that) => {
     const thisApp = apps[sessionData.id]
     thisApp.currentSegments = segments
     apps[sessionData.id] = thisApp
-    clearState()
+    clearState(that)
     setGlobal({ sessionData, apps })
     // Put the new segment in the analytics data for the user signed in to this
     // id:
@@ -511,5 +511,5 @@ export const addFilter = (that, condition) => {
   }
 
   conditions["filterConditions"] = filterConditions
-  clearState(true)
+  clearState(that, true)
 }

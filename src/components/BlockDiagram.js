@@ -5,6 +5,7 @@ import {
   Tab
 } from 'semantic-ui-react'
 import { TriggerBlocks, ActionBlocks, LogicBlocks } from './StandardBlocks'
+import { setupBlockOptions } from '../components/BlockOptions'
 
 const panes = [
   {
@@ -21,7 +22,13 @@ const panes = [
   },
 ]
 
-export default class BlockDiagramHTMLComponent extends React.Component {
+export default class BlockDiagram extends React.Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      options: false
+    }
+  }
   componentDidMount() {
     this.props.flowy.setupFlowy()
   }
@@ -48,7 +55,7 @@ export default class BlockDiagramHTMLComponent extends React.Component {
           </div>
           <div id="buttonsright">
             <Link to="/segments"><Button color='red' onClick={() => this.props.flowy.deleteBlocks()}>Discard</Button></Link>
-            <Link to="/segments"><Button primary>Save Logic</Button></Link>
+            <Button primary onClick={() => this.props.flowy.saveBlocks()}>Save Logic</Button>
           </div>
         </div>
         <div id="leftcard">
@@ -61,22 +68,16 @@ export default class BlockDiagramHTMLComponent extends React.Component {
             </div>
             <p id="header2">Block Properties</p>
             <div id="proplist">
-              <p class="inputlabel">Select database</p>
-              <div class="dropme">Database 1 <img alt="dropdown" src={require("../assets/img/dropdown.svg")} /></div>
-              <p class="inputlabel">Check properties</p>
-              <div class="dropme">All<img alt="dropdown" src={require("../assets/img/dropdown.svg")} /></div>
-              <p class="inputlabel">More properties</p>
-              <div class="dropme">All<img alt="dropdown" src={require("../assets/img/dropdown.svg")} /></div>
+              {setupBlockOptions(this.props.flowy.getCurrentBlocks())}
               <div class="checkus">
                 <img alt="checkon" src={require("../assets/img/checkon.svg")} />
-                <p>Log on successful performance</p>
+                <p>Log successful performance</p>
               </div>
-              <div class="checkus">
+              {/*<div class="checkus">
                 <img alt="checkoff" src={require("../assets/img/checkoff.svg")} />
                 <p>Give priority to this block</p>
-              </div>
+              </div>*/}
             </div>
-            <div id="divisionthing" />
             <div id="removeblock">
               <Button color='red'>Delete blocks</Button>
             </div>
