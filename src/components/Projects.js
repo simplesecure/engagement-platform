@@ -9,8 +9,6 @@ import {
   Icon,
   Message,
   Dimmer,
-  Header,
-  Divider,
   Loader
 } from 'semantic-ui-react'
 import { Dialog } from 'evergreen-ui'
@@ -237,25 +235,23 @@ export default class Projects extends React.Component {
       <div>
         <SideNav />
         <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
-          <Link style={{ display: "none" }} id="hidden-redirect" to="/projects" />
+          <Link style={{ display: "none" }} id="hidden-redirect" to="/account" />
           <div className="main-content-container container-fluid px-4">
-            {
-              applications.length > 0 ? (
-                <div className="page-header row no-gutters py-4">
-                  <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
-                    <span className="text-uppercase page-subtitle">Projects</span>
-                    <h3 className="page-title">Review Your Projects</h3>
-                  </div>
+              <div className="page-header row no-gutters py-4">
+                <div className="col-lg-8 col-md-8 col-sm-8 text-left text-sm-left mb-0">
+                  <span className="text-uppercase page-subtitle">Projects</span>
+                  <h3 className="page-title">Review Your Projects</h3>
                 </div>
-              ) : (
-                <div className="page-header row no-gutters py-4">
-                  <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
-                    <span className="text-uppercase page-subtitle">Get Started</span>
-                    <h3 className="page-title">Add a Project to Begin</h3>
-                  </div>
+                <div className="col-lg-4 col-md-4 col-sm-4 text-right text-sm-right mb-0">
+                  <Button
+                    color='red'
+                    onClick={() => getCloudUser().signOut()}
+                    icon='logout'
+                    size='large'
+                    content='Logout'
+                  />
                 </div>
-              )
-            }
+              </div>
               <div className="row">
                 <div className="col-lg-8 col-md-8 col-sm-12 mb-4">
                   {applications.length > 0 ? (
@@ -315,7 +311,7 @@ export default class Projects extends React.Component {
               </div>
               <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
                 {
-                  (applications.length === 0 || plan === "enterprise") ?
+                  (applications.length === 0 || plan === undefined) ?
                   <div>
                     <h5>Add a Project</h5>
                     <div className="form-group col-md-12">
@@ -341,6 +337,7 @@ export default class Projects extends React.Component {
                 :
                 <div>
                   <h5>Upgrade your plan to create additional projects</h5>
+                  {plan ? <p>Your current plan is: <strong><u>{plan}</u></strong></p> : null}
                   <Button primary as='a' href="mailto:hello@simpleid.xyz">
                     Contact Us To Upgrade
                   </Button>

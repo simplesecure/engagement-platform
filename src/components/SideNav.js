@@ -29,7 +29,7 @@ export default class SideNav extends React.Component {
     const notificationsProcessed = notifications.filter(
       notification => notification.processingDone === true
     )
-    notificationsProcessed.map(notification => {
+    notificationsProcessed.forEach(notification => {
       const updatedNotifications = notifications.filter(n => n.id !== notification.id)
       if(updatedNotifications.length < 1) {
         setGlobal({ showSegmentNotification: false, segmentProcessingDone: false })
@@ -134,7 +134,7 @@ export default class SideNav extends React.Component {
                 </Segment>
               </Link>
             </li>
-            <li className="nav-item Projects">
+            {/*<li className="nav-item Projects">
               <Link onClick={() => this.setState({ pathname: '/projects' })} className={`nav-link ${pathname.includes('/projects') && currentAppId !== undefined ? "active" : ""}`} to="/projects">
                 <Segment basic>
                   <Header as='h3'>
@@ -145,7 +145,7 @@ export default class SideNav extends React.Component {
                   </Header>
                 </Segment>
               </Link>
-            </li>
+            </li>*/}
             <li className="nav-item Account">
               <Link onClick={() => this.setState({ pathname: '/account' })} className={`nav-link ${pathname.includes('/account') && currentAppId !== undefined ? "active" : ""}`} to="/account">
                 <Segment basic>

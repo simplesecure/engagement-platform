@@ -1,13 +1,9 @@
 import React from 'reactn'
-import { filter } from 'fuzzaldrin-plus'
 import {
   Avatar,
   Table,
-  Text,
-  Menu
+  Text
 } from 'evergreen-ui'
-import UserWallet from "./UserWallet";
-const fs = require('fs');
 
 export default class SmartContractTable extends React.Component {
   renderRow = ({ contract, data }) => {

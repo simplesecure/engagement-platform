@@ -7,7 +7,6 @@ import {
   Menu
 } from 'evergreen-ui'
 import UserWallet from "./UserWallet";
-const fs = require('fs');
 
 export default class SegmentTable extends React.Component {
   constructor() {

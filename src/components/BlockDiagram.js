@@ -35,7 +35,7 @@ export default class BlockDiagram extends React.Component {
   componentWillUnmount() {
     this.props.flowy.cleanFlowy()
     //ugly hack until flowy fix is found
-    window.location.reload(false)
+    // window.location.reload(false)
   }
   render() {
     return (

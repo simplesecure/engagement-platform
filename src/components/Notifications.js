@@ -17,7 +17,8 @@ import {
   Loader
 } from 'semantic-ui-react'
 import { Dialog } from 'evergreen-ui'
-import SideNav from '../components/SideNav';
+import SideNav from '../components/SideNav'
+import ProcessingBlock from './ProcessingBlock'
 
 export default class Notifications extends React.Component {
   constructor(props) {
@@ -32,6 +33,8 @@ export default class Notifications extends React.Component {
       show: false,
       notificationToDelete: {}
     }
+    this.localBlockId = 0
+    this.blockLabel = null
   }
 
   handleChange = (value) => {
@@ -282,7 +285,7 @@ export default class Notifications extends React.Component {
   renderNotificationEditOrCreate(currentSegments) {
     const { message, notificationName, selected_segment, editNotification } = this.state;
     let segments = currentSegments ? currentSegments : []
-    segments.map(seg => {
+    segments.forEach(seg => {
       seg.key = seg.id
       seg.text = seg.name
       seg.value = seg.id
@@ -349,7 +352,6 @@ export default class Notifications extends React.Component {
     const noti = notifications ? notifications : [];
     const inactiveNotifications = noti.filter(a => a.active === false);
     const activeNotifications = noti.filter(a => a.active === true);
-
     return(
       <div>
         <SideNav />
@@ -364,9 +366,12 @@ export default class Notifications extends React.Component {
           }
           <div className="main-content-container container-fluid px-4">
             <div className="page-header row no-gutters py-4">
-              <div className="col-12 col-sm-4 text-center text-sm-left mb-0">
+              <div className="col-lg-6 col-md-6 col-sm-12 text-left text-sm-left mb-0">
                 <span className="text-uppercase page-subtitle">Notifications</span>
                 <h3 className="page-title">Keep People Up To Date</h3>
+              </div>
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
+                <ProcessingBlock />
               </div>
             </div>
             <div className="row">

@@ -7,7 +7,7 @@ import Search from '../components/Search';
 import AddTile from '../components/AddTile';
 import Notifications from '../components/Notifications';
 import Communications from '../components/Communications/Communications';
-import Account from '../components/Account';
+// import Account from '../components/Account';
 import Segments from '../components/Segments';
 import Projects from '../components/Projects';
 import Jobs from '../components/Jobs';
@@ -42,10 +42,10 @@ export default class Home extends React.Component {
         <Route path='/segments' component={Segments} />
         <Route path='/new-tile' component={AddTile} />
         <Route exact path='/notifications' component={Notifications} />
-        <Route path='/account' component={Account} />
+        {/*<Route path='/account' component={Account} />*/}
         <Route path='/communications' component={Communications} />
         <Route path='/support' component={Support} />
-        <Route path='/projects' component={Projects} />
+        <Route path='/account' component={Projects} />
         <Route path='/console' component={Jobs} />
         <Route path='/block' render={(props) => (
             <BlockDiagram {...props} flowy={this.flowy} />

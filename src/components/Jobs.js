@@ -5,6 +5,7 @@ import {
 } from 'evergreen-ui'
 import Terminal from 'terminal-in-react';
 import SideNav from '../components/SideNav';
+import ProcessingBlock from './ProcessingBlock'
 
 export default class Jobs extends React.Component {
   render() {
@@ -15,9 +16,12 @@ export default class Jobs extends React.Component {
         <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
           <div className="main-content-container container-fluid px-4">
             <div className="page-header row no-gutters py-4">
-              <div className="col-12 col-sm-12 text-center text-sm-left mb-0">
+              <div className="col-lg-6 col-md-6 col-sm-12 text-left text-sm-left mb-0">
                 <span className="text-uppercase page-subtitle">Console</span>
                 <h3 className="page-title">Job Queue For Long Running Processes</h3>
+              </div>
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
+                <ProcessingBlock />
               </div>
             </div>
             <div className="row">

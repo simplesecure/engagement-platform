@@ -1,23 +1,24 @@
 import React from "reactn"
 import Chart from "react-google-charts"
-import uuid from 'uuid/v4'
-var Spinner = require('react-spinkit');
+var Spinner = require('react-spinkit')
 
-export const getDonutChart = () => {
+export const getDonutChart = (contracts, proxies) => {
+  let data = [["Frontend", "Wallet Percentage"]]
+  if (contracts) {
+    for (const [key, value] of Object.entries(contracts)) {
+      data.push([key.substring(0, 10), value.wallets])
+    }
+  }
+  if (proxies) {
+    data.push(['hasProxy', proxies])
+  }
   return (
     <div style={{flex:1, width:'100%'}}>
       <Chart
         loader={<Spinner name="circle" color="blue"/>}
         chartType="PieChart"
         height="100%"
-        data={[
-          ["Frontend", "Wallet Percentage"],
-          ["Other", 27],
-          ["Maker", 33],
-          ["Oasis", 20],
-          ["InstaDapp", 12],
-          ["Aave", 18]
-        ]}
+        data={data}
         options={{
           is3D: false,
           pieHole: 0.5,
@@ -30,11 +31,11 @@ export const getDonutChart = () => {
         }}
       />
     </div>
-  );
+  )
 }
 export const getBubbleChart = () => {
   const data = [
-    ["ID", "Eth in Oasis", "Wallet Interactions", "Address", "Wallet Size"],
+    ["ID", "Eth in Contract", "Wallet Interactions", "Address", "Wallet Size"],
     ["0x192", 8180.66, 300, "0x1929a0454cdd4d925e8fc9b6c366ecd7844866f2", 8180.66],
     ["0xbbb", 7092.84, 833, "0xbbbfc46566e5f0302cef913af8c8f423070ce6a1", 7092.84],
     ["0x011", 5478.60, 223, "0x011ebe45c131e87e187d185b842facad9e8e9dd9", 5478.60],
@@ -45,10 +46,10 @@ export const getBubbleChart = () => {
     ["0x28e", 981.55, 813, "0x28e7a475ad492d5f5130c73cf8aeeae85fd79e4c", 981.55],
     ["0x34a", 668.60, 90, "0x34aaa3d5a73d6f9594326d0422ce69748f09b14f", 668.60],
     ["0x3e1", 578.09, 321, "0x3e10048efed71c56bae0c2e8dea106f53fae6422", 578.09]
-  ];
+  ]
   const options = {
   //   title: "Wallet Interactions vs Total Value Locked in Oasis - Top 20",
-    hAxis: { title: "Assets in Oasis ($)" },
+    hAxis: { title: "Assets in Contract ($)" },
     vAxis: { title: "Wallet Interacations" },
     bubble: { textStyle: { fontSize: 11, color: 'none' } },
     legend: {
@@ -60,7 +61,7 @@ export const getBubbleChart = () => {
       width: '70%',
       height: '70%'
     }
-  };
+  }
   return (
     <div style={{flex:1, width:'100%'}}>
       <Chart
@@ -155,6 +156,41 @@ export const get7DayChart = () => {
       width: '80%',
       height: '70%'
     }
+  }
+  return (
+    <Chart
+      loader={<Spinner name="circle" color="blue"/>}
+      width="100%"
+      height="100%"
+      chartType="BarChart"
+      data={data}
+      options={options}
+    />
+  )
+}
+
+export const getMonthChart = () => {
+  const data = [
+    [
+      'Weeks',
+      'Wallets',
+      { role: 'style' },
+    ],
+    ['Week 1', 1039, '#4aaa50'],
+    ['Week 2', 860, '#e1634d'],
+    ['Week 3', 2230, '#983b98'],
+    ['Week 4', 3000, '#feae52']
+  ]
+  const options = {
+    legend: { position: 'none' },
+    hAxis: { title: "Unique wallets found in Smart Contracts" },
+    chartArea: {
+      top: '10%',
+      left: '10%',
+      width: '80%',
+      height: '70%'
+    },
+    style: { color: 'green'}
   }
   return (
     <Chart

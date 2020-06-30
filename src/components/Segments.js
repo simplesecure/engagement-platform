@@ -14,6 +14,7 @@ import {
   Icon,
   Dimmer,
   Loader,
+  Message
 } from 'semantic-ui-react'
 import SideNav from '../components/SideNav';
 import SegmentTable from "./SegmentTable";
@@ -28,7 +29,7 @@ import {
   addFilter,
   clearState
 } from './SegmentHelpers'
-import { getBlockLabel } from '../utils/realtimeShowoff'
+import ProcessingBlock from './ProcessingBlock'
 
 // const listToArray = require("list-to-array");
 const NETWORK_OPTIONS = ["mainnet", "ropsten", "rinkeby", "goerli", "kovan"];
@@ -63,10 +64,9 @@ export default class Segments extends React.Component {
       importAddress: "",
       selectedNetwork: "mainnet",
       webhookOpen: false,
-      webhook: ""
+      webhook: "",
+      isCreateSegment: false
     }
-    this.localBlockId = 0
-    this.blockLabel = null
   }
 
   closeModal = () => {
@@ -156,6 +156,7 @@ export default class Segments extends React.Component {
     this.setState({
       showSegmentModal: false,
       editSegment: false,
+      isCreateSegment: false
     });
     clearState(this);
   };
@@ -349,7 +350,6 @@ export default class Segments extends React.Component {
       amount,
       contractAddress,
     } = this.state;
-    // const showOnDashboard = dashboardShow === "Yes" ? true : false;
     const filterToUse = allFilters.filter((a) => a.filter === filterType)[0];
     const erc20Balance = tokenType === "ERC-20";
     const createCriteria =
@@ -362,7 +362,7 @@ export default class Segments extends React.Component {
         tokenAddress) ||
       (condition && condition.id);
     let options = allFilters
-    options.map(filter => {
+    options.forEach(filter => {
       filter.text = filter.filter
       filter.key = filter.filter
       filter.value = filter.filter
@@ -580,29 +580,6 @@ export default class Segments extends React.Component {
                 <input type="text" value={newSegName} onChange={(e) => this.setState({ newSegName: e.target.value })}/>
               </Input>
             </div>
-            <div className="form-group col-md-12">
-              <label htmlFor="chartSty">Finally, Create The Segment</label>
-              <br />
-              {createCriteria ? (
-                <Button
-                  onClick={() => createSegment(this)}
-                  primary
-                >
-                  Create Segment
-                </Button>
-              ) : (
-                <div>
-                  <Button primary disabled>
-                    Create Segment
-                  </Button>
-                  <Link to="/block">
-                    <Button secondary>
-                      Create Block Diagram
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </div>
           </div>
         )}
       </div>
@@ -614,8 +591,6 @@ export default class Segments extends React.Component {
       sessionData,
       processing,
       experimentalFeatures,
-      plan,
-      aBlockId
     } = this.global;
     const { currentSegments } = sessionData;
     const {
@@ -628,18 +603,13 @@ export default class Segments extends React.Component {
       segmentToShow,
       show,
       seg,
-      existingSeg,
       newSegName,
-      existingSegmentToFilter,
       webhookOpen,
-      webhook
+      webhook,
+      isCreateSegment
     } = this.state;
     const segments = currentSegments ? currentSegments : [];
     const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
-    if (this.localBlockId !== aBlockId) {
-      this.localBlockId = aBlockId
-      this.blockLabel = getBlockLabel(aBlockId)
-    }
     return (
       <div>
         <SideNav />
@@ -651,231 +621,199 @@ export default class Segments extends React.Component {
                 <h3 className="page-title">
                   Group Wallets Using Your App{" "}
                 </h3>
-                {aBlockId ? (
-                  <h3>
-                    Processing: {this.blockLabel}
-                  </h3>
-                ) : null }
               </div>
-              {plan === "enterprise" || plan === "premium"  || plan === undefined ? (
-                <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
-                  <span className="text-uppercase page-subtitle">
-                    Import Users
-                  </span>
-                  <div>
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
+                <ProcessingBlock />
+              </div>
+            </div>
+            <Grid stackable columns={1}>
+              <Grid.Column key='datainput'>
+                <Grid stackable>
+                  <Grid.Column width={12} key='segment creation'>
+                    <Header as='h3'>Create a Segment</Header>
+                    <Button
+                      content='Create Simple Segment'
+                      icon='write'
+                      labelPosition='left'
+                      onClick={() => this.setState({isCreateSegment: true})}
+                      primary
+                    />
+                    <Link to="/block">
+                      <Button
+                        color='orange'
+                        icon='sitemap'
+                        labelPosition='left'
+                        content='Create Advanced Segment'
+                      />
+                    </Link>
+                  </Grid.Column>
+                  <Grid.Column width={4} key='import users'>
+                    <Header as='h3'>Import Users</Header>
                     <Button
                       onClick={() => this.setState({ importModalOpen: true })}
                       positive
-                    >
-                      Import By Smart Contract
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div />
-              )}
-            </div>
-            <Grid stackable columns={2}>
+                      icon='download'
+                      labelPosition='left'
+                      content='Import By Smart Contract'
+                    />
+                  </Grid.Column>
+                </Grid>
+              </Grid.Column>
               <Grid.Column key='currsegs'>
-                <h5>Current Segments</h5>
+                <Header as='h3'>Current Segments</Header>
                 {segments.length > 0 ? (
-                  <Grid columns={2}>
-                  {
-                    segments.map(segment => {
-                      const disableButton = defaultSegments.indexOf(segment.name) < 0
-                      const disableWallets = segment.userCount < 1
-                      const url = "https://etherscan.io/block/" + segment.blockId
-                      return (
-                        <Grid.Column key={segment.id}>
-                          <Segment raised padded>
-                            {!disableWallets && segment.hasOwnProperty('blockId')? (
-                              <Label as='a' basic color='red' attached='top right' href={url} target="_blank">
-                                {segment.blockId.toString().substring(4)}
+                <Grid columns={2}>
+                {
+                  segments.map(segment => {
+                    const disableButton = defaultSegments.indexOf(segment.name) < 0
+                    const disableWallets = segment.userCount < 1
+                    return (
+                      <Grid.Column key={segment.id}>
+                        <Segment raised padded>
+                          <Header as='h3' divided>
+                            <Header.Content>{segment.name}</Header.Content>
+                            <Header.Subheader color='grey' style={{marginTop: 5}}>
+                               Updated at block: <a href={`https://etherscan.io/block/${segment.blockId}`} target="_blank">{segment.blockId}</a>
+                            </Header.Subheader>
+                            {!disableWallets && segment.hasOwnProperty('userCount')? (
+                              <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal(segment)}>
+                                {segment.userCount}
                               </Label>
                             ) : (
-                              <Label as='a' basic color='grey' attached='top right'>
+                              <Label as='a' color='grey' attached='top right'>
                                 N/A
                               </Label>
                             )
                             }
-                            <Header as='h3'>{segment.name}</Header>
-                            <Button
-                              disabled={disableWallets}
-                              onClick={() => this.handleSegmentModal(segment)}
-                              content='Wallets'
-                              icon='id card outline'
-                              label={{
-                                as: 'a',
-                                basic: true,
-                                color: 'grey',
-                                pointing: 'left',
-                                content: segment.userCount
-                              }}
-                            />
-                            <Button.Group>
-                              {/*<Button disabled={disableWallets} onClick={() => this.handleSegmentModal(segment)} icon basic>
-                                <Icon name='users' size='small' color='blue' />
-                                <p className='name'>Wallets</p>
-                              </Button>*/}
-                              <Button disabled={!disableButton} onClick={() => this.handleEditSegment(segment)} icon basic>
-                                <Icon name='edit' size='large' color='blue' />
-                                <p className='name'>Edit</p>
-                              </Button>
-                              <Button disabled={disableWallets} icon basic>
-                                <Icon name='fork' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
-                                <p className='name'>Connect</p>
-                              </Button>
-                              <Button disabled={!disableButton} onClick={() => deleteSegment(this, segment, false)} icon basic>
-                                <Icon color='red' name='trash alternate outline' size='large' />
-                                <p className='name'>Delete</p>
-                              </Button>
-                            </Button.Group>
-                          </Segment>
-                        </Grid.Column>
-                      )
-                    })
-                  }
-                  </Grid>
-                ) : (
-                  <ul className="tile-list">
-                    <li className="card">
-                      <span className="card-body">
-                        You haven't created any segments yet, let's do that now!.
-                      </span>
-                    </li>
-                  </ul>
-                )}
-                <Dialog
-                  isShown={show}
-                  title="Delete Segment?"
-                  onConfirm={() => deleteSegment(this, seg, true)}
-                  onCancel={() => this.closeModal()}
-                  onCloseComplete={() => this.closeModal()}
-                  confirmLabel='Delete'
-                  intent="danger"
-                  width={640}
-                >
-                  You're about to delete the segment{" "}
-                  <strong>
-                    <u>{seg.name}</u>
-                  </strong>
-                  . Are you sure you want to do this? It can't be undone.
-                </Dialog>
-                <Dialog
-                  isShown={showSegmentModal}
-                  title={segmentToShow.name}
-                  onCloseComplete={() => this.setState({ showSegmentModal: false, segmentToShow: {} })}
-                  confirmLabel='Close'
-                  hasCancel={false}
-                  width={640}
-                >
-                  <SegmentTable seg={segmentToShow} />
-                </Dialog>
-                <Dialog
-                  isShown={editSegment}
-                  title={newSegName}
-                  onCloseComplete={() => this.handleCloseSegmentModal()}
-                  hasFooter={false}
-                  width={640}
-                >
-                  {this.renderCreateSegment(condition)}
-                </Dialog>
-                <Dialog
-                  isShown={importModalOpen}
-                  title="Import Wallets via Smart Contract"
-                  onConfirm={() => this.importUsers()}
-                  onCancel={() => this.setState({ importModalOpen: false })}
-                  onCloseComplete={() => this.setState({ importModalOpen: false })}
-                  confirmLabel='Import'
-                  width={640}
-                >
-                  You can import your users based on your smart contracts.
-                  Simply enter a smart contract address and we will import all
-                  of the addresses that have interacted with that address.
-                  <div>
-                    {experimentalFeatures ? this.renderNetworksDrop() : <div />}
-                    <div className="top-15">
-                      <Input
-                        fluid
-                        value={importAddress}
-                        onChange={(e) =>
-                          this.setState({ importAddress: e.target.value })
-                        }
-                        placeholder="Enter smart contract to import: 0x..."
-                      />
-                    </div>
-                  </div>
-                </Dialog>
-                <Dialog
-                  isShown={webhookOpen}
-                  title="Setup a webhook URL for your segment"
-                  onCancel={() => this.setState({ webhookOpen: false })}
-                  onCloseComplete={() => this.setState({ webhookOpen: false })}
-                  confirmLabel='Save'
-                  width={640}
-                >
-                  You can add a webhook url where we will send segment updates to.
-                  <div>
-                    <div className="top-15">
-                      <Input
-                        fluid
-                        value={webhook}
-                        onChange={(e) =>
-                          this.setState({ webhook: e.target.value })
-                        }
-                        placeholder="Enter webhook url..."
-                      />
-                    </div>
-                  </div>
-                </Dialog>
-              </Grid.Column>
-              <Grid.Column key='datainput'>
-                <h5>Create a Segment</h5>
-                {existingSeg ? (
-                  <div className="form-group col-md-12">
-                    <label htmlFor="inputSeg">Now, Choose a Segment</label>
-                    <select
-                      value={existingSegmentToFilter}
+                          </Header>
+                          <Button.Group>
+                            <Button disabled={disableWallets} onClick={() => this.handleSegmentModal(segment)} icon basic>
+                              <Icon name='users' size='large' color='black' />
+                              <p className='name'>Wallets</p>
+                            </Button>
+                            <Button disabled={!disableButton} onClick={() => this.handleEditSegment(segment)} icon basic>
+                              <Icon name='edit' size='large' color='blue' />
+                              <p className='name'>Edit</p>
+                            </Button>
+                            <Button disabled={disableWallets} icon basic>
+                              <Icon name='globe' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
+                              <p className='name'>Connect</p>
+                            </Button>
+                            <Button disabled={!disableButton} onClick={() => deleteSegment(this, segment, false)} icon basic>
+                              <Icon color='red' name='trash alternate outline' size='large' />
+                              <p className='name'>Delete</p>
+                            </Button>
+                          </Button.Group>
+                        </Segment>
+                      </Grid.Column>
+                    )
+                  })
+                }
+                </Grid>
+              ) : (
+                <Message>
+                  You haven't created any segments yet, let's do that now!
+                </Message>
+              )}
+              <Dialog
+                isShown={show}
+                title="Delete Segment?"
+                onConfirm={() => deleteSegment(this, seg, true)}
+                onCancel={() => this.closeModal()}
+                onCloseComplete={() => this.closeModal()}
+                confirmLabel='Delete'
+                intent="danger"
+                width={640}
+              >
+                You're about to delete the segment{" "}
+                <strong>
+                  <u>{seg.name}</u>
+                </strong>
+                . Are you sure you want to do this? It can't be undone.
+              </Dialog>
+              <Dialog
+                isShown={showSegmentModal}
+                title={segmentToShow.name}
+                onCloseComplete={() => this.setState({ showSegmentModal: false, segmentToShow: {} })}
+                confirmLabel='Close'
+                hasCancel={false}
+                width={640}
+              >
+                <SegmentTable seg={segmentToShow} />
+              </Dialog>
+              <Dialog
+                isShown={editSegment}
+                title={newSegName}
+                onCloseComplete={() => this.handleCloseSegmentModal()}
+                hasFooter={false}
+                width={640}
+              >
+                {this.renderCreateSegment(condition)}
+              </Dialog>
+              <Dialog
+                isShown={isCreateSegment}
+                title='New Segment'
+                onCloseComplete={() => {
+                  this.handleCloseSegmentModal()
+                }}
+                onConfirm={() => createSegment(this)}
+                confirmLabel="Create Segment"
+                width={640}
+              >
+                {this.renderCreateSegment()}
+              </Dialog>
+              <Dialog
+                isShown={importModalOpen}
+                title="Import Wallets via Smart Contract"
+                onConfirm={() => this.importUsers()}
+                onCancel={() => this.setState({ importModalOpen: false })}
+                onCloseComplete={() => this.setState({ importModalOpen: false })}
+                confirmLabel='Import'
+                width={640}
+              >
+                You can import your users based on your smart contracts.
+                Simply enter a smart contract address and we will import all
+                of the addresses that have interacted with that address.
+                <div>
+                  {experimentalFeatures ? this.renderNetworksDrop() : <div />}
+                  <div className="top-15">
+                    <Input
+                      fluid
+                      value={importAddress}
                       onChange={(e) =>
-                        this.setState({ existingSegmentToFilter: e.target.value })
+                        this.setState({ importAddress: e.target.value })
                       }
-                      id="inputSeg"
-                      className="form-control"
-                    >
-                      <option value="Choose...">Choose...</option>
-                      {segments.map((seg) => {
-                        return (
-                          <option value={seg.name} key={seg.id}>
-                            {seg.name}
-                          </option>
-                        );
-                      })}
-                    </select>
+                      placeholder="Enter smart contract to import: 0x..."
+                    />
                   </div>
-                ) : (
-                  <div />
-                )}
-                {plan === "enterprise" ||
-                plan === "premium" ||
-                plan === undefined ||
-                segments.length < 4 ? (
-                  this.renderCreateSegment()
-                ) : (
-                  <div>
-                    <h5>Upgrade to create more segments</h5>
-                    <a
-                      className="btn btn-primary"
-                      href="mailto:support@simpleid.xyz"
-                    >
-                      Contact Us To Upgrade
-                    </a>
+                </div>
+              </Dialog>
+              <Dialog
+                isShown={webhookOpen}
+                title="Setup a webhook URL for your segment"
+                onCancel={() => this.setState({ webhookOpen: false })}
+                confirmLabel='Save'
+                width={640}
+              >
+                You can add a webhook url where we will send segment updates to.
+                <div>
+                  <div className="top-15">
+                    <Input
+                      fluid
+                      value={webhook}
+                      onChange={(e) =>
+                        this.setState({ webhook: e.target.value })
+                      }
+                      placeholder="Enter webhook url..."
+                    />
                   </div>
-                )}
+                </div>
+              </Dialog>
             </Grid.Column>
-            <Dimmer active={processing}>
-              <Loader inline='centered' indeterminate>{`${loadingMessage}...`}</Loader>
-            </Dimmer>
           </Grid>
+          <Dimmer active={processing}>
+            <Loader inline='centered' indeterminate>{`${loadingMessage}...`}</Loader>
+          </Dimmer>
           </div>
         </main>
       </div>
