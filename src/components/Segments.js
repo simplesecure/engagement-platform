@@ -673,7 +673,7 @@ export default class Segments extends React.Component {
                           <Header as='h3' divided>
                             <Header.Content>{segment.name}</Header.Content>
                             <Header.Subheader color='grey' style={{marginTop: 5}}>
-                               Updated at block: <a href={`https://etherscan.io/block/${segment.blockId}`} target="_blank">{segment.blockId}</a>
+                               Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${segment.blockId}`} target="_blank">{segment.blockId}</a>
                             </Header.Subheader>
                             {!disableWallets && segment.hasOwnProperty('userCount')? (
                               <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal(segment)}>

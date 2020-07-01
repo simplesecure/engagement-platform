@@ -16,6 +16,7 @@ import {
   getCandleStickChart,
   getChartCard
 } from './Charts'
+import DashboardTiles from './DashboardTiles'
 import ProcessingBlock from './ProcessingBlock'
 
 export default class Dashboard extends React.Component {
@@ -26,18 +27,18 @@ export default class Dashboard extends React.Component {
       showSegmentModal: false,
       showContractsModal: false,
       segmentToShow: {},
-      active: true
     }
     this.uniqueEleKey = Date.now()
   }
   getUniqueKey() {
     return this.uniqueEleKey++
   }
-  handleShowSeg = (seg) => {
-    this.setState({ segmentToShow: seg, showSegmentModal: true })
+  handleShowSegment = (segment, flag) => {
+    this.setState({ segmentToShow: segment, showSegmentModal: flag })
   }
-  handleShow = () => this.setState({ active: true })
-  handleHide = () => this.setState({ active: false })
+  toggleShowContracts = () => {
+    this.setState({ showContractsModal: true })
+  }
   render() {
     const {
       sessionData,
@@ -46,13 +47,6 @@ export default class Dashboard extends React.Component {
     } = this.global
     const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal } = this.state
     const { currentSegments } = sessionData
-    const allTiles = currentSegments ? currentSegments : []
-    const tiles = allTiles.filter(
-      (a) => a.showOnDashboard === true
-    )
-    const makerData = require('../assets/wallets/maker.js')
-    const instaData = require('../assets/wallets/instadapp.js')
-    const proxyWallets = makerData.wallets.length + instaData.wallets.length
     return (
       <div>
         <SideNav />
@@ -69,75 +63,14 @@ export default class Dashboard extends React.Component {
                 <ProcessingBlock />
               </div>
             </div>
+            <DashboardTiles
+              currentSegments={currentSegments}
+              importedContracts={importedContracts}
+              handleShowSegment={this.handleShowSegment}
+              toggleShowContracts={this.toggleShowContracts}
+            />
             <Grid>
-              {importedContracts ? (
-                <div
-                  onClick={() => this.setState({showContractsModal: true})}
-                  key={this.getUniqueKey()}
-                  className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
-                >
-                  <div className="stats-small stats-small--1 card card-small">
-                    <div className="card-body p-0 d-flex">
-                      <div className="d-flex flex-column m-auto">
-                        <div className="stats-small__data text-center">
-                          <span className="stats-small__label text-uppercase">
-                            Contracts
-                          </span>
-                          <h6 className="stats-small__value count my-3">
-                            {Object.keys(importedContracts).length}
-                          </h6>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-              <div
-                key={this.getUniqueKey()}
-                className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
-              >
-                <div className="stats-small stats-small--1 card card-small">
-                  <div className="card-body p-0 d-flex">
-                    <div className="d-flex flex-column m-auto">
-                      <div className="stats-small__data text-center">
-                        <span className="stats-small__label text-uppercase">
-                          Proxy Wallets
-                        </span>
-                        <h6 className="stats-small__value count my-3">
-                          {proxyWallets}
-                        </h6>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {tiles.map((tile) => {
-                return (
-                  <div
-                    onClick={() => this.handleShowSeg(tile)}
-                    key={tile.id}
-                    className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
-                  >
-                    <div className="stats-small stats-small--1 card card-small">
-                      <div className="card-body p-0 d-flex">
-                        <div className="d-flex flex-column m-auto">
-                          <div className="stats-small__data text-center">
-                            <span className="stats-small__label text-uppercase">
-                              {tile.name}
-                            </span>
-                            <h6 className="stats-small__value count my-3">
-                              {tile.userCount ? tile.userCount : 0}
-                            </h6>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </Grid>
-            <Grid>
-              {getChartCard('Wallets by Smart Contracts', getDonutChart(importedContracts, proxyWallets))}
+              {getChartCard('Wallets by Smart Contracts', getDonutChart(importedContracts))}
               {getChartCard('Weekly Active Wallets', get7DayChart())}
               {getChartCard('Monthly Active Wallets', getMonthChart())}
               {getChartCard('Top 10 Wallets by Assets', getBubbleChart())}
@@ -147,7 +80,7 @@ export default class Dashboard extends React.Component {
           <Dialog
             isShown={showContractsModal}
             title="Imported Smart Contracts"
-            onCloseComplete={() => this.setState({ showContractsModal: false })}
+            onCloseComplete={() => this.toggleShowContracts()}
             hasCancel={false}
             confirmLabel='Close'
             width={640}
@@ -157,12 +90,12 @@ export default class Dashboard extends React.Component {
           <Dialog
             isShown={showSegmentModal}
             title={segmentToShow.name}
-            onCloseComplete={() => this.setState({ showSegmentModal: false, segmentToShow: {} })}
+            onCloseComplete={() => this.handleShowSegment({}, false)}
             hasCancel={false}
             confirmLabel='Close'
             width={640}
           >
-            <SegmentTable seg={segmentToShow} />
+            <SegmentTable segment={segmentToShow} />
           </Dialog>
           <Dimmer active={processing}>
             <Loader inline='centered' indeterminate>{`${loadingMessage}...`}</Loader>

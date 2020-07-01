@@ -2,15 +2,12 @@ import React from "reactn"
 import Chart from "react-google-charts"
 var Spinner = require('react-spinkit')
 
-export const getDonutChart = (contracts, proxies) => {
+export const getDonutChart = (contracts) => {
   let data = [["Frontend", "Wallet Percentage"]]
   if (contracts) {
     for (const [key, value] of Object.entries(contracts)) {
       data.push([key.substring(0, 10), value.wallets])
     }
-  }
-  if (proxies) {
-    data.push(['hasProxy', proxies])
   }
   return (
     <div style={{flex:1, width:'100%'}}>

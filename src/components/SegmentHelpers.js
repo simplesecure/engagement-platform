@@ -52,7 +52,10 @@ export const clearState = (that, filter=false) => {
     operatorType: "",
     date: new Date(),
     amount: 0,
-    listOfAddresses: ""
+    listOfAddresses: "",
+    showSegmentModal: false,
+    editSegment: false,
+    isCreateSegment: false
   });
 }
 

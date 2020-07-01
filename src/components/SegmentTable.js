@@ -95,9 +95,9 @@ export default class SegmentTable extends React.Component {
     this.setState({showDialog: !this.state.showDialog})
   }
   render() {
-    const { seg } = this.props
+    const { segment } = this.props
     const { showDialog, walletAddr, walletType } = this.state
-    let users = seg.users ? seg.users : []
+    let users = segment.users ? segment.users : []
     const items = this.filter(users)
     return (
       <div>
