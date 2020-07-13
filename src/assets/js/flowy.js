@@ -602,7 +602,6 @@ export var flowy = function(canvas, grab, release, snapping, rearrange, spacing_
             }
         }
     }
-    flowy.load();
 
     function blockGrabbed(block) {
         grab(block);

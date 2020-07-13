@@ -25,7 +25,7 @@ class CloudUser {
   }
 
   async fetchOrgDataAndUpdate() {
-    await setGlobal({ allFilters: [] });
+    await setGlobal({ allFilters: [...filter] });
     let userData
     let sid
     let org_id
@@ -87,22 +87,22 @@ class CloudUser {
 
       setGlobal({ web2Events: web2Analytics.data ? web2Analytics.data : [] });
       const { allFilters } = await getGlobal();
-      if(web2Analytics.data) {
-
-        const events = web2Analytics.data;
-
-        for(const event of events) {
-          const data = {
-            type: 'web2',
-            filter: `Web2: ${event}`
-          }
-          allFilters.push(data);
-        }
-        allFilters.push(...filter);
-        setGlobal({ allFilters });
-      }  else {
-        allFilters.push(...filter);
-      }
+      // if(web2Analytics.data) {
+      //
+      //   const events = web2Analytics.data;
+      //
+      //   for(const event of events) {
+      //     const data = {
+      //       type: 'web2',
+      //       filter: `Web2: ${event}`
+      //     }
+      //     allFilters.push(data);
+      //   }
+      //   allFilters.push(...filter);
+      //   setGlobal({ allFilters });
+      // }  else {
+      //   allFilters.push(...filter);
+      // }
 
       //  Fetch weekly users
       web2AnalyticsCmdObj = {

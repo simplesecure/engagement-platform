@@ -85,7 +85,7 @@ export default class Dashboard extends React.Component {
             confirmLabel='Close'
             width={640}
           >
-            <SmartContractTable contracts={importedContracts} />
+            {showContractsModal ? <SmartContractTable contracts={importedContracts} /> : null}
           </Dialog>
           <Dialog
             isShown={showSegmentModal}
@@ -95,7 +95,7 @@ export default class Dashboard extends React.Component {
             confirmLabel='Close'
             width={640}
           >
-            <SegmentTable segment={segmentToShow} />
+            {showSegmentModal ? <SegmentTable segment={segmentToShow} /> : null}
           </Dialog>
           <Dimmer active={processing}>
             <Loader inline='centered' indeterminate>{`${loadingMessage}...`}</Loader>

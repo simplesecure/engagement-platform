@@ -463,7 +463,7 @@ export default class Notifications extends React.Component {
                 width={640}
                 hasFooter={false}
               >
-                {this.renderNotificationEditOrCreate(currentSegments)}
+                {editNotification ? this.renderNotificationEditOrCreate(currentSegments) : null}
               </Dialog>
 
               <Dimmer active={processing}>

@@ -4,7 +4,8 @@ import {
   Button,
   Tab
 } from 'semantic-ui-react'
-import { TriggerBlocks, ActionBlocks, LogicBlocks } from './StandardBlocks'
+import { Dialog } from 'evergreen-ui'
+import { TriggerBlocks, ActionBlocks, LogicBlocks } from './BlockStandard'
 import { setupBlockOptions } from '../components/BlockOptions'
 
 const panes = [
@@ -26,18 +27,33 @@ export default class BlockDiagram extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      options: false
+      options: false,
+      currentBlock: null
     }
   }
   componentDidMount() {
     this.props.flowy.setupFlowy()
+    this.props.flowy.loadFlowy()
+    document.addEventListener("mouseup", this.doneTouch, false)
   }
   componentWillUnmount() {
     this.props.flowy.cleanFlowy()
+    document.removeEventListener("mouseup", this.doneTouch)
     //ugly hack until flowy fix is found
     window.location.reload(false)
   }
+  doneTouch = (event) => {
+    this.props.flowy.doneTouch(event)
+    this.setState({ currentBlock: this.props.flowy.getCurrentBlock()})
+  }
+  closeProperties = () => {
+    this.setState({ currentBlock: null})
+    this.props.flowy.deselectBlocks(true)
+  }
   render() {
+    const { flowy } = this.props
+    const { currentBlock } = this.state
+    const isShown = currentBlock !== null
     return (
       <div id="body" style={{height: "100vh"}}>
         <div id="navigation">
@@ -54,35 +70,48 @@ export default class BlockDiagram extends React.Component {
             {/*<div id="rightswitch">Code editor</div>*/}
           </div>
           <div id="buttonsright">
-            <Link to="/segments"><Button color='red' onClick={() => this.props.flowy.deleteBlocks()}>Discard</Button></Link>
-            <Button primary onClick={() => this.props.flowy.saveBlocks()}>Save Logic</Button>
+            <Link to="/segments"><Button>Cancel</Button></Link>
+            <Button color='red' onClick={() => flowy.deleteBlocks()}>Delete Logic</Button>
+            <Button primary onClick={() => flowy.saveBlocks()}>Save Logic</Button>
           </div>
         </div>
         <div id="leftcard">
           <Tab menu={{ attached: true, borderless: true, pointing: true, secondary: true }} panes={panes} />
         </div>
-        <div id="propwrap">
+        <Dialog
+          isShown={isShown}
+          title={`${currentBlock} Properties`}
+          onConfirm={() => console.log("Block Confirmed")}
+          onCloseComplete={() => this.closeProperties()}
+          onCancel={() => this.closeProperties()}
+          hasClose={false}
+          confirmLabel='Save'
+          width={640}
+        >
+          {setupBlockOptions(currentBlock)}
+        </Dialog>
+        {/*<div id="propwrap">
           <div id="properties">
             <div id="close">
               <img alt="close" src={require("../assets/img/close.svg")} />
             </div>
             <p id="header2">Block Properties</p>
             <div id="proplist">
-              {setupBlockOptions(this.props.flowy.getCurrentBlocks())}
+              {setupBlockOptions(this.props.flowy.getCurrentBlock())}
               <div class="checkus">
                 <img alt="checkon" src={require("../assets/img/checkon.svg")} />
                 <p>Log successful performance</p>
               </div>
-              {/*<div class="checkus">
+              <div class="checkus">
                 <img alt="checkoff" src={require("../assets/img/checkoff.svg")} />
                 <p>Give priority to this block</p>
-              </div>*/}
+              </div>
             </div>
             <div id="removeblock">
               <Button color='red'>Delete blocks</Button>
             </div>
           </div>
-        </div>
+        </div>*/}
         <div id="canvas" />
       </div>
     )
