@@ -864,7 +864,7 @@ export default class Segments extends React.Component {
                 hasCancel={false}
                 width={640}
               >
-                <SegmentTable seg={segmentToShow} />
+                <SegmentTable segment={segmentToShow} />
               </Dialog>
               <Dialog
                 isShown={editSegment}
