@@ -25,7 +25,6 @@ class BlockyMain {
     this.addEventListenerMulti("touchstart", this.beginTouch, false, ".block");
     document.getElementById("close").addEventListener("click", function(){
       console.log("CLOSE CLICKED")
-      debugger
       if (this.rightcard) {
         this.rightcard = false;
         document.getElementById("properties").classList.remove("expanded");

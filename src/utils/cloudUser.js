@@ -1,5 +1,5 @@
 import { setGlobal, getGlobal } from 'reactn'
-import { handleData } from './dataProcessing.js'
+import { handleData, runClientCommand, runClientOperation } from './dataProcessing.js'
 import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
 import * as dc from './dynamoConveniences.js'
@@ -39,10 +39,13 @@ class CloudUser {
 
     //regardless of whether there is data in local storage, we need to fetch from db
     let appData;
-    if(org_id) {
+    if (org_id) {
+      // Replacing: appData = await dc.organizationDataTableGet(org_id)
+      // With:
+      appData = {
+        Item: await runClientOperation('getOrg', org_id)
+      }
 
-      appData = await dc.organizationDataTableGet(org_id);
-      // console.log(appData);
       const experimentalFeatures = appData.Item.experimentalFeatures ? true : false;
       setGlobal({experimentalFeatures: SID_EXPERIMENTAL_FEATURES === true ? SID_EXPERIMENTAL_FEATURES : experimentalFeatures, plan: appData.Item.plan ? appData.Item.plan : process.env.REACT_APP_SID_ALL_FEATURES });
     } else {
@@ -61,22 +64,16 @@ class CloudUser {
 
       let importedContracts
       try {
-         importedContracts = await dc.walletAnalyticsDataTableGetImported(currentAppId)
+        // Replacing: importedContracts = await dc.walletAnalyticsDataTableGetImported(currentAppId)
+        importedContracts = await runClientOperation('getImported', undefined, currentAppId)
       }
       catch (e) {
         log.error('Imported Smart Contracts', e);
       }
 
-      await setGlobal({ importedContracts, ignedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data, loading: false });
+      await setGlobal({ importedContracts, signedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data, loading: false });
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
-      //Check if app has been verified
-      const verificationData = await dc.walletAnalyticsDataTableGet(currentAppId)
-      try {
-        const verified = Object.keys(verificationData.Item.analytics).length > 0
-        setGlobal({ verified })
-      } catch(e) {
-        setGlobal({ verified: false })
-      }
+
 
       //  Fetch web2 analytics eventNames - we will fetch the actual event results in Segment handling
       let web2AnalyticsCmdObj = {

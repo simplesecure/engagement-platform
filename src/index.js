@@ -22,7 +22,6 @@ const userData = getCloudUser().getUserData()
 setGlobal({
   loading: true,
   SESSION_FROM_LOCAL,
-  verified: false,
   signedIn: userData ? true : false,
   sessionData: {},
   user_id: "",
