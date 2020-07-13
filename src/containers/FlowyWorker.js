@@ -10,6 +10,7 @@ export default class FlowyWorker {
     this.rightcard = false
     this.tempblock = null
     this.tempblock2 = null
+    this.tempblocks = {}
     this.beginTouch = this.beginTouch.bind(this)
     this.checkTouch = this.checkTouch.bind(this)
     this.doneTouch = this.doneTouch.bind(this)
@@ -19,8 +20,6 @@ export default class FlowyWorker {
     this.release = this.release.bind(this)
     this.snapping = this.snapping.bind(this)
     this.constructFlowy = false
-    this.flowyBlocks = []
-    this.blockOptions = null
   }
   setupFlowy = () => {
     if (!this.constructFlowy) {
@@ -29,16 +28,17 @@ export default class FlowyWorker {
     }
     document.addEventListener("mousedown", this.beginTouch, false)
     document.addEventListener("mousemove", this.checkTouch, false)
-    document.addEventListener("mouseup", this.doneTouch, false)
-    document.getElementById("removeblock").addEventListener("click", this.deleteBlocks, false)
-    document.getElementById("close").addEventListener("click", this.closeProps)
+    // document.getElementById("removeblock").addEventListener("click", this.deleteBlocks, false)
+    // document.getElementById("close").addEventListener("click", this.closeProps)
     this.addEventListenerMulti("touchstart", this.beginTouch, false, ".block")
+  }
+  loadFlowy = () => {
+    flowy.load()
   }
   cleanFlowy = () => {
     document.removeEventListener("mousedown", this.beginTouch)
     document.removeEventListener("mousemove", this.checkTouch)
-    document.removeEventListener("mouseup", this.doneTouch)
-    document.getElementById("removeblock").removeEventListener("click", this.deleteBlocks)
+    // document.getElementById("removeblock").removeEventListener("click", this.deleteBlocks)
     this.remEventListenerMulti("touchstart", this.beginTouch, false, ".block")
   }
   addEventListenerMulti = (type, listener, capture, selector) => {
@@ -55,7 +55,6 @@ export default class FlowyWorker {
   }
   deleteBlocks = () => {
     flowy.deleteBlocks()
-    this.flowyBlocks = []
     this.closeProps()
   }
   closeProps = () => {
@@ -68,10 +67,7 @@ export default class FlowyWorker {
       this.tempblock.classList.remove("selectedblock")
     }
   }
-  getCurrentBlocks = () => { return this.flowyBlocks }
-  getBlockOptions = () => { return this.blockOptions }
   saveBlocks = () => {
-    console.log("LOGIC", this.flowyBlocks)
     console.log("Flowy Output", flowy.output())
   }
   snapping = (drag, first) => {
@@ -81,40 +77,30 @@ export default class FlowyWorker {
     blockin.parentNode.removeChild(blockin)
     if (drag.querySelector(".blockelemtype").value === "1") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/eyeblue.svg'><p class='blockyname'>Web2 Event</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Last time <span>wallet interacted</span> with <span>app</span></div>";
-      this.flowyBlocks.push('Web2Event')
     } else if (drag.querySelector(".blockelemtype").value === "2") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/actionblue.svg'><p class='blockyname'>Smart Contract Event</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>When <span>ABI</span> event occurs</div>";
-      this.flowyBlocks.push('SmartContractEvent')
     } else if (drag.querySelector(".blockelemtype").value === "3") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/timeblue.svg'><p class='blockyname'>Timed Event</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>When <span>10 blocks</span> have passed</div>";
-      this.flowyBlocks.push('TimeEvent')
     } else if (drag.querySelector(".blockelemtype").value === "4") {
-      drag.innerHTML += "<div class='blockyleft'><img width='24px' src='assets/walletblue.png'><p class='blockyname'>Wallet Balance</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>User's wallet <span>balance</span> is <span> higher </span> than <span> amount</span>.</div>";
-      this.flowyBlocks.push('WalletBalanceEvent')
+      drag.innerHTML += "<div class='blockyleft'><img width='24px' src='assets/walletblue.png'><p class='blockyname'>Wallet Type</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>User's wallet <span>type</span> is <span> metamask </span>.</div>";
     } else if (drag.querySelector(".blockelemtype").value === "5") {
-      drag.innerHTML += "<div class='blockyleft'><img width='24px' src='assets/ethereumblue.svg'><p class='blockyname'>Asset Price</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'><span>Asset</span> price is <span> higher </span> than <span> amount</span>.</div>";
-      this.flowyBlocks.push('AssetPriceEvent')
+      drag.innerHTML += "<div class='blockyleft'><img width='28px' src='assets/receiptblue.png'><p class='blockyname'>Asset Balance</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>User's asset <span>balance</span> is <span> higher </span> than <span> amount</span>.</div>";
     } else if (drag.querySelector(".blockelemtype").value === "6") {
-      drag.innerHTML += "<div class='blockyleft'><img src='assets/databaseorange.svg'><p class='blockyname'>Database Entry</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Add <span>Data object</span> to <span>Database 1</span></div>";
-      this.flowyBlocks.push('DatabaseAction')
+      drag.innerHTML += "<div class='blockyleft'><img width='24px' src='assets/ethereumblue.svg'><p class='blockyname'>Asset Price</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'><span>Eth</span> price is <span> lower </span> than <span> amount</span>.</div>";
     } else if (drag.querySelector(".blockelemtype").value === "7") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/internetorange.png' width='24px'><p class='blockyname'>Connect Endpoint</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Specify <span> webhook </span> endpoint</div>";
-      this.flowyBlocks.push('EndpointAction')
     } else if (drag.querySelector(".blockelemtype").value === "8") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/notificationorange.png' width='24px'><p class='blockyname'>Send Notification</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Notify for <span>Action 1</span></div>";
-      this.flowyBlocks.push('NotificationAction')
     } else if (drag.querySelector(".blockelemtype").value === "9") {
-      drag.innerHTML += "<div class='blockyleft'><img src='assets/mailorange.png' width='24px'><p class='blockyname'>Send Email</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Email <span>Query 1</span> with the account <span>email</span></div>";
-      this.flowyBlocks.push('EmailAction')
+      drag.innerHTML += "<div class='blockyleft'><img src='assets/mailorange.png' width='24px'><p class='blockyname'>Send Email</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Email <span>Template 1</span> to the <span>wallet</span></div>";
     } else if (drag.querySelector(".blockelemtype").value === "10") {
-      drag.innerHTML += "<div class='blockyleft'><img src='assets/logred.svg'><p class='blockyname'>And Block</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Add <span>and</span> logic block</div>";
-      // this.flowyBlocks.push('AndLogic')
+      drag.innerHTML += "<div class='blockyleft'><img src='assets/databaseorange.svg'><p class='blockyname'>Database Entry</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Add <span>Data object</span> to <span>Database 1</span></div>";
     } else if (drag.querySelector(".blockelemtype").value === "11") {
-      drag.innerHTML += "<div class='blockyleft'><img src='assets/logred.svg'><p class='blockyname'>Or Block</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Add <span>or</span> logic block</div>";
-      // this.flowyBlocks.push('OrLogic')
+      drag.innerHTML += "<div class='blockyleft'><img src='assets/logred.svg'><p class='blockyname'>And Block</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Add <span>and</span> logic block</div>";
     } else if (drag.querySelector(".blockelemtype").value === "12") {
+      drag.innerHTML += "<div class='blockyleft'><img src='assets/logred.svg'><p class='blockyname'>Or Block</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Add <span>or</span> logic block</div>";
+    } else if (drag.querySelector(".blockelemtype").value === "13") {
       drag.innerHTML += "<div class='blockyleft'><img src='assets/errorred.svg'><p class='blockyname'>Priority Block</p></div><div class='blockyright'><img src='assets/more.svg'></div><div class='blockydiv'></div><div class='blockyinfo'>Add <span>priority</span> block</div>";
-      // this.flowyBlocks.push('PriorityLogic')
     }
     return true
   }
@@ -128,15 +114,30 @@ export default class FlowyWorker {
   checkTouch = (event) => {
     this.aclick = false
   }
+  getCurrentBlock = () => {
+    if (this.tempblock) {
+      return this.tempblock.id
+    }
+    return null
+  }
+  deselectBlocks = (flag) => {
+    for (const [key, value] of Object.entries(this.tempblocks)) {
+      value.classList.remove("selectedblock")
+    }
+    if (flag)
+      this.tempblock = null
+  }
   doneTouch = (event) => {
     if (event.type === "mouseup" && this.aclick && !this.noinfo) {
-      setupBlockOptions(this.flowyBlocks)
-      if (!this.rightcard && event.target.closest(".block") && !event.target.closest(".block").classList.contains("dragging")) {
+      if (event.target.closest(".block") && !event.target.closest(".block").classList.contains("dragging")) {
         this.tempblock = event.target.closest(".block")
-        this.rightcard = true
-        document.getElementById("properties").classList.add("expanded")
-        document.getElementById("propwrap").classList.add("itson")
+        // this.rightcard = true
+        // document.getElementById("properties").classList.add("expanded")
+        // document.getElementById("propwrap").classList.add("itson")
+        // this.tempblock.classList.add("selectedblock")
+        this.deselectBlocks(false)
         this.tempblock.classList.add("selectedblock")
+        this.tempblocks[this.tempblock.id] = this.tempblock
       }
     }
   }

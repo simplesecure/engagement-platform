@@ -3,7 +3,7 @@ import React from 'react';
 export const TriggerBlocks = () => {
   return (
     <div>
-      <div className="blockelem create-flowy noselect">
+      <div className="blockelem create-flowy noselect" id="Web2Event">
         <input type="hidden" name="blockelemtype" className="blockelemtype" value="1" />
         <div className="grabme">
           <img alt="" src={require("../assets/img/grabme.svg")} />
@@ -23,7 +23,7 @@ export const TriggerBlocks = () => {
           </div>
         </div>
       </div>
-      <div className="blockelem create-flowy noselect">
+      <div className="blockelem create-flowy noselect" id="SmartContractEvent">
         <input type="hidden" name="blockelemtype" className="blockelemtype" value="2" />
         <div className="grabme">
           <img alt="" src={require("../assets/img/grabme.svg")} />
@@ -43,7 +43,7 @@ export const TriggerBlocks = () => {
           </div>
         </div>
       </div>
-      <div className="blockelem create-flowy noselect">
+      <div className="blockelem create-flowy noselect" id="TimeEvent">
         <input type="hidden" name="blockelemtype" className="blockelemtype" value="3" />
         <div className="grabme">
           <img alt="" src={require("../assets/img/grabme.svg")} />
@@ -63,7 +63,7 @@ export const TriggerBlocks = () => {
           </div>
         </div>
       </div>
-      <div className="blockelem create-flowy noselect">
+      <div className="blockelem create-flowy noselect" id="WalletTypeEvent">
         <input type="hidden" name="blockelemtype" className="blockelemtype" value="4" />
         <div className="grabme">
           <img alt="" src={require("../assets/img/grabme.svg")} />
@@ -75,7 +75,27 @@ export const TriggerBlocks = () => {
           </div>
           <div className="blocktext">
             <p className="blocktitle">
-              Wallet Balance
+              Wallet Type
+            </p>
+            <p className="blockdesc">
+              Triggers if wallet type is specfied wallet provider
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="blockelem create-flowy noselect" id="AssetBalanceEvent">
+        <input type="hidden" name="blockelemtype" className="blockelemtype" value="5" />
+        <div className="grabme">
+          <img alt="" src={require("../assets/img/grabme.svg")} />
+        </div>
+        <div className="blockin">
+          <div className="blockico">
+            <span></span>
+            <img alt="" width="24px" src={require("../assets/img/receipt.png")} />
+          </div>
+          <div className="blocktext">
+            <p className="blocktitle">
+              Asset Balance
             </p>
             <p className="blockdesc">
               Triggers if wallet balance is in specified range
@@ -83,8 +103,8 @@ export const TriggerBlocks = () => {
           </div>
         </div>
       </div>
-      <div className="blockelem create-flowy noselect">
-        <input type="hidden" name="blockelemtype" className="blockelemtype" value="5" />
+      <div className="blockelem create-flowy noselect" id="AssetPriceEvent">
+        <input type="hidden" name="blockelemtype" className="blockelemtype" value="6" />
         <div className="grabme">
           <img alt="" src={require("../assets/img/grabme.svg")} />
         </div>
@@ -110,7 +130,7 @@ export const TriggerBlocks = () => {
 export const ActionBlocks = () => {
   return (
     <div>
-      <div className="blockelem create-flowy noselect">
+      <div className="blockelem create-flowy noselect" id="EndpointAction">
         <input type="hidden" name="blockelemtype" className="blockelemtype" value="7" />
         <div className="grabme">
           <img alt="" src={require("../assets/img/grabme.svg")} />
@@ -130,7 +150,7 @@ export const ActionBlocks = () => {
           </div>
         </div>
       </div>
-      <div className="blockelem create-flowy noselect">
+      <div className="blockelem create-flowy noselect" id="NotificationAction">
         <input type="hidden" name="blockelemtype" className="blockelemtype" value="8" />
         <div className="grabme">
           <img alt="" src={require("../assets/img/grabme.svg")} />
@@ -150,7 +170,7 @@ export const ActionBlocks = () => {
           </div>
         </div>
       </div>
-      <div className="blockelem create-flowy noselect">
+      <div className="blockelem create-flowy noselect" id="EmailAction">
         <input type="hidden" name="blockelemtype" className="blockelemtype" value="9" />
         <div className="grabme">
           <img alt="" src={require("../assets/img/grabme.svg")} />
@@ -170,8 +190,8 @@ export const ActionBlocks = () => {
           </div>
         </div>
       </div>
-      <div className="blockelem create-flowy noselect">
-        <input type="hidden" name="blockelemtype" className="blockelemtype" value="6" />
+      <div className="blockelem create-flowy noselect" id="DatabaseAction">
+        <input type="hidden" name="blockelemtype" className="blockelemtype" value="10" />
         <div className="grabme">
           <img alt="" src={require("../assets/img/grabme.svg")} />
         </div>
@@ -198,7 +218,7 @@ export const LogicBlocks = () => {
   return (
     <div>
       <div className="blockelem create-flowy noselect">
-        <input type="hidden" name="blockelemtype" className="blockelemtype" value="10" />
+        <input type="hidden" name="blockelemtype" className="blockelemtype" value="11" />
         <div className="grabme">
           <img alt="" src={require("../assets/img/grabme.svg")} />
         </div>
@@ -218,7 +238,7 @@ export const LogicBlocks = () => {
         </div>
       </div>
       <div className="blockelem create-flowy noselect">
-        <input type="hidden" name="blockelemtype" className="blockelemtype" value="11" />
+        <input type="hidden" name="blockelemtype" className="blockelemtype" value="12" />
         <div className="grabme">
           <img alt="" src={require("../assets/img/grabme.svg")} />
         </div>
@@ -238,7 +258,7 @@ export const LogicBlocks = () => {
         </div>
       </div>
       <div className="blockelem create-flowy noselect">
-        <input type="hidden" name="blockelemtype" className="blockelemtype" value="12" />
+        <input type="hidden" name="blockelemtype" className="blockelemtype" value="13" />
         <div className="grabme">
           <img alt="" src={require("../assets/img/grabme.svg")} />
         </div>

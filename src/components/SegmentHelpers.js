@@ -132,7 +132,7 @@ export const createSegment = async (that) => {
     }
   )
   if (filterConditions && filterConditions.length > 0) {
-    addFilter()
+    addFilter(that)
     conditions = that.state.conditions
     that.setState({ conditions })
     segmentCriteria.conditions = conditions
@@ -282,7 +282,7 @@ export const updateSegment = async (that) => {
   const { filterConditions } = conditions
   let updatedConditions
   if (filterConditions && filterConditions.length > 0) {
-    addFilter()
+    addFilter(that)
     updatedConditions = that.state.conditions
     that.setState({ conditions: updatedConditions })
     segmentCriteria.conditions = conditions
@@ -514,5 +514,5 @@ export const addFilter = (that, condition) => {
   }
 
   conditions["filterConditions"] = filterConditions
-  clearState(that, true)
+  // clearState(that, true)
 }

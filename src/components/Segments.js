@@ -1,8 +1,6 @@
-import React from "reactn";
+import React, { getGlobal } from "reactn";
 import { Link } from "react-router-dom";
-import {
-  Dialog,
-} from 'evergreen-ui'
+import { Dialog } from 'evergreen-ui'
 import {
   Button,
   Grid,
@@ -19,7 +17,7 @@ import {
 import SideNav from '../components/SideNav';
 import SegmentTable from "./SegmentTable";
 import DatePicker from "react-date-picker";
-import { getCloudUser } from "./../utils/cloudUser.js";
+import { getCloudUser } from "../utils/cloudUser";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -30,6 +28,7 @@ import {
   clearState
 } from './SegmentHelpers'
 import ProcessingBlock from './ProcessingBlock'
+import { getAbiInformation } from './../utils/moveToServer'
 
 // const listToArray = require("list-to-array");
 const NETWORK_OPTIONS = ["mainnet", "ropsten", "rinkeby", "goerli", "kovan"];
@@ -231,6 +230,7 @@ export default class Segments extends React.Component {
           autoClose: 10000,
         }
       );
+      getAbiInformation(importAddress)
       getCloudUser().processData("import", importWalletsCmdObj);
       this.setState({ importModalOpen: false, importAddress: "" });
     }
@@ -255,17 +255,17 @@ export default class Segments extends React.Component {
   renderMultipleConditions() {
     const { conditions, editSegment } = this.state;
     const { filterConditions } = conditions;
-
     if (filterConditions && filterConditions.length > 0) {
       return (
         <div>
           {filterConditions.map((condition) => {
             return (
               <div key={condition.id} className="form-group col-md-12">
-                <p>
-                  {
-                    filterConditions.map((a) => a.id).indexOf(condition.id) ===
-                      0 && filterConditions.length === 1 ? (
+                {
+                  filterConditions
+                  .map((a) => a.id)
+                  .indexOf(condition.id) === 0 && filterConditions.length === 1 ? (
+                    <div>
                       <Dropdown
                         placeholder='Operator...'
                         compact
@@ -277,9 +277,13 @@ export default class Segments extends React.Component {
                           { key: 'or', text: 'Or', value: 'Or' }
                         ]}
                       />
-                    ) : filterConditions
-                        .map((a) => a.id)
-                        .indexOf(condition.id) === 0 ? (
+                      <br />
+                      <br />
+                    </div>
+                  ) : filterConditions
+                      .map((a) => a.id)
+                      .indexOf(condition.id) === 0 ? (
+                    <div>
                       <Dropdown
                         placeholder='Operator...'
                         compact
@@ -291,52 +295,275 @@ export default class Segments extends React.Component {
                           { key: 'or', text: 'Or', value: 'Or' }
                         ]}
                       />
-                    ) : (
-                      <Dropdown
-                        placeholder='Operator...'
-                        compact
-                        onChange={this.handleOperatorChange}
-                        openOnFocus={false}
-                        disabled
-                        selection
-                        options={[
-                          { key: 'and', text: 'And', value: 'And' },
-                          { key: 'or', text: 'Or', value: 'Or' }
-                        ]}
-                      />
-                    )
-                    // <button onClick={() => this.setState({ operator: operator === "And" ? "Or" : "And"})} className="btn btn-flat">{operator}</button> :
-                    // <button className="btn btn-flat" disabled>{operator}</button>
-                  }
-                  <br />
-                  <br />
-                  <span>
-                    {editSegment ? <div /> : (
-                      <Button.Group>
-                        <Button onClick={() => this.handleEditSegment(condition, true)} animated>
-                          <Button.Content visible>{condition.filter.filter}</Button.Content>
-                          <Button.Content hidden>
-                            <Icon name='wrench' />
-                          </Button.Content>
-                        </Button>
-                        <Button.Or />
-                        <Button onClick={() => this.deleteCondition(condition)} color='red'>Delete</Button>
-                      </Button.Group>
-                    )}
-                  </span>
-                </p>
+                      <br />
+                      <br />
+                    </div>
+                  ) : null
+                }
+                <span>
+                  {editSegment ? <div /> : (
+                    <Button.Group>
+                      <Button primary disabled>
+                        <Button.Content visible>{condition.filter.filter}</Button.Content>
+                      </Button>
+                      <Button onClick={() => this.deleteCondition(condition)} color='red'>Delete</Button>
+                    </Button.Group>
+                  )}
+                </span>
               </div>
-            );
+            )
           })}
         </div>
-      );
+      )
     } else {
       return <div />;
     }
   }
 
+  renderFilterConditions(filterToUse) {
+    const {
+      contractAddress,
+      rangeType,
+      operatorType,
+      amount,
+      listOfAddresses,
+      tokenType,
+      tokenAddress,
+      filterType,
+      delayBlocks,
+      contractEvent,
+      contractName,
+      web2Event
+    } = this.state
+    const { abiInformation, web2Analytics } = this.global
+    const { type } = filterToUse
+    if (type === "Contract") {
+      return (
+        <div className="form-group col-md-12">
+          <label htmlFor="contractAddress">Enter The Contract Address</label>
+          <Input
+            placeholder="Contract Address"
+            fluid
+            type="text"
+            value={contractAddress}
+            onChange={(e, {value}) => this.setState({ contractAddress: value })}
+          />
+        </div>
+      )
+    } else if (type === "Date Range") {
+      return (
+        <div className="row form-group col-md-12">
+          <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+            <label htmlFor="chartSty">Make a Selection</label>
+            <Dropdown
+              placeholder='Range...'
+              onChange={(e, {value}) => this.setState({ rangeType: value })}
+              value={rangeType}
+              openOnFocus={false}
+              fluid
+              selection
+              options={[
+                { key: 'choose...', text: 'Choose...', value: 'choose...' },
+                { key: 'before', text: 'Before', value: 'Before' },
+                { key: 'after', text: 'After', value: 'After' }
+              ]}
+            />
+          </div>
+          <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+            <DatePicker
+              className="date-picker"
+              onChange={this.handleDateChange}
+              value={this.state.date}
+            />
+          </div>
+        </div>
+      )
+    } else if (type === "Number Range") {
+      return (
+        <div className="row form-group col-md-12">
+          <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+            <label htmlFor="chartSty">Make a Selection</label>
+            <Dropdown
+              placeholder='Range...'
+              value={operatorType}
+              onChange={(e, {value}) => this.setState({ operatorType: value })}
+              openOnFocus={false}
+              fluid
+              selection
+              options={[
+                { key: 'choose...', text: 'Choose...', value: 'choose...' },
+                { key: 'more than', text: 'More Than', value: 'More Than' },
+                { key: 'less than', text: 'Less Than', value: 'Less Than' }
+              ]}
+            />
+          </div>
+          <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+            <label htmlFor="tileName">Enter Amount</label>
+            <Input
+              placeholder="Wallet Balance Amount"
+              type="number"
+              value={amount}
+              onChange={(e, {value}) => this.setState({ amount: value })}
+            />
+          </div>
+          <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+            <label htmlFor="tileName">Choose Token</label>
+            <Dropdown
+              placeholder='Token'
+              value={tokenType}
+              onChange={(e, {value}) => this.setState({ tokenType: value })}
+              openOnFocus={false}
+              fluid
+              selection
+              options={[
+                { key: 'choose...', text: 'Choose...', value: 'choose...' },
+                { key: 'ether', text: 'Ether', value: 'Ether' },
+                { key: 'erc-20', text: 'ERC-20', value: 'ERC-20' }
+              ]}
+            />
+          </div>
+          {tokenType === "ERC-20" ? (
+            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+              <label htmlFor="erc20Address">Enter ERC-20 Token Address</label>
+              <Input
+                placeholder="Enter Token Address"
+                fluid
+                id="erc20Address"
+                type="text"
+                value={tokenAddress}
+                onChange={(e) => this.setState({ tokenAddress: e.target.value })}
+              />
+            </div>
+          ) : (
+            <div />
+          )}
+        </div>
+      )
+    } else if (type === "Paste") {
+      return (
+        <div className="col-lg-12 col-md-12 col-sm-12 mb-4">
+          <label htmlFor="pastedAddress">
+            Paste comma delimited list of wallet addresses
+          </label>
+          <Input
+            type="text"
+            placeholder="Enter addresses..."
+            fluid
+            value={listOfAddresses}
+            onChange={(e, {value}) => this.setState({ listOfAddresses: value })}
+          />
+        </div>
+      )
+    } else if (type === "Delay Range") {
+      return (
+        <div className="form-group col-md-12">
+          <label htmlFor="contractAddress">Enter The Number of Blocks</label>
+          <Input
+            placeholder="Number of Eth Blocks"
+            fluid
+            type="number"
+            value={delayBlocks}
+            onChange={(e, {value}) => this.setState({ delayBlocks: value })}
+          />
+        </div>
+      )
+    } else if (type === "Smart Contract Selection") {
+      let contractOptions = []
+      let contracts = []
+      if (abiInformation && abiInformation.length > -1) {
+        Object.keys(abiInformation).forEach(item => {
+          contracts.push({
+            key: item,
+            text: item,
+            value: item
+          })
+        })
+      }
+      if (contractName) {
+        for (const [key, value] of Object.entries(abiInformation)) {
+          if (key === contractName) {
+            value.events.forEach((item) => {
+              contractOptions.push({
+                key: item,
+                text: item,
+                value: item
+              })
+            })
+          }
+        }
+      }
+      if (!contracts.length) {
+        return (
+          <Message>
+            You haven't imported any smart contracts to trigger on.
+          </Message>
+        )
+      }
+      else {
+        return (
+          <div className="form-group col-md-12">
+            <label htmlFor="contractAddress">Pick Smart Contract</label>
+            <Dropdown
+              placeholder='Choose Contract...'
+              value={contractName}
+              onChange={(e, {value}) => this.setState({ contractName: value })}
+              openOnFocus={false}
+              fluid
+              selection
+              options={contracts}
+            />
+            <br />
+            <label htmlFor="contractAddress">Pick Event or Function</label>
+            <Dropdown
+              placeholder='Choose Event or Function...'
+              value={contractEvent}
+              onChange={(e, {value}) => this.setState({ contractEvent: value })}
+              openOnFocus={false}
+              disabled={!contractName}
+              fluid
+              selection
+              options={contractOptions}
+            />
+          </div>
+        )
+      }
+    } else if (type === "Web2 Selection") {
+      let web2Events = []
+      if (web2Analytics && web2Analytics.data) {
+        const events = web2Analytics.data
+        events.forEach(it => {
+          web2Events.push({
+            key: it,
+            value: it,
+            text: it
+          })
+        })
+        return (
+          <div className="form-group col-md-12">
+            <label htmlFor="contractAddress">Pick Smart Contract</label>
+            <Dropdown
+              placeholder='Choose Contract...'
+              value={web2Event}
+              onChange={(e, {value}) => this.setState({ web2Event: value })}
+              openOnFocus={false}
+              fluid
+              selection
+              options={web2Events}
+            />
+          </div>
+        )
+      } else {
+        return (
+          <Message>
+            You haven't imported stored any Web2 events yet.
+          </Message>
+        )
+      }
+    }
+  }
+
   renderCreateSegment(condition) {
-    const { allFilters, experimentalFeatures } = this.global;
+    const { allFilters, experimentalFeatures } = this.global
     const {
       listOfAddresses,
       tokenAddress,
@@ -370,9 +597,9 @@ export default class Segments extends React.Component {
     return (
       <div>
         {this.renderMultipleConditions()}
-        <div className="form-group col-md-12">
+        {/*<div className="form-group col-md-12">
           {experimentalFeatures ? this.renderNetworksDrop() : <div />}
-        </div>
+        </div>*/}
         <div className="form-group col-md-12">
           <label htmlFor="chartSty">Choose a Filter</label>
           <Dropdown
@@ -385,120 +612,15 @@ export default class Segments extends React.Component {
             options={options}
           />
         </div>
-        {filterToUse && filterToUse.type === "Contract" ? (
-          <div className="form-group col-md-12">
-            <label htmlFor="contractAddress">Enter The Contract Address</label>
-            <Input placeholder="Contract Address" fluid>
-              <input
-                type="text"
-                value={contractAddress}
-                onChange={(e) => this.setState({ contractAddress: e.target.value })}
-              />
-            </Input>
-          </div>
-        ) : filterToUse && filterToUse.type === "Date Range" ? (
-          <div className="row form-group col-md-12">
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-              <label htmlFor="chartSty">Make a Selection</label>
-              <Dropdown
-                placeholder='Range...'
-                onChange={(e, {value}) => this.setState({ rangeType: value })}
-                value={rangeType}
-                openOnFocus={false}
-                fluid
-                selection
-                options={[
-                  { key: 'choose...', text: 'Choose...', value: 'choose...' },
-                  { key: 'before', text: 'Before', value: 'Before' },
-                  { key: 'after', text: 'After', value: 'After' }
-                ]}
-              />
-            </div>
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-              <DatePicker
-                className="date-picker"
-                onChange={this.handleDateChange}
-                value={this.state.date}
-              />
-            </div>
-          </div>
-        ) : filterToUse && filterToUse.type === "Number Range" ? (
-          <div className="row form-group col-md-12">
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-              <label htmlFor="chartSty">Make a Selection</label>
-              <Dropdown
-                placeholder='Range...'
-                value={operatorType}
-                onChange={(e, {value}) => this.setState({ operatorType: value })}
-                openOnFocus={false}
-                fluid
-                selection
-                options={[
-                  { key: 'choose...', text: 'Choose...', value: 'choose...' },
-                  { key: 'more than', text: 'More Than', value: 'More Than' },
-                  { key: 'less than', text: 'Less Than', value: 'Less Than' }
-                ]}
-              />
-            </div>
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-              <label htmlFor="tileName">Enter Amount</label>
-              <Input placeholder="Wallet Balance Amount">
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => this.setState({ amount: e.target.value })}
-                />
-              </Input>
-            </div>
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-              <label htmlFor="tileName">Choose Token</label>
-              <Dropdown
-                placeholder='Token'
-                value={tokenType}
-                onChange={(e, {value}) => this.setState({ tokenType: value })}
-                openOnFocus={false}
-                fluid
-                selection
-                options={[
-                  { key: 'choose...', text: 'Choose...', value: 'choose...' },
-                  { key: 'ether', text: 'Ether', value: 'Ether' },
-                  { key: 'erc-20', text: 'ERC-20', value: 'ERC-20' }
-                ]}
-              />
-            </div>
-            {tokenType === "ERC-20" ? (
-              <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-                <label htmlFor="erc20Address">Enter ERC-20 Token Address</label>
-                <Input placeholder="Enter Token Address" fluid>
-                  <input id="erc20Address" type="text" value={tokenAddress} onChange={(e) => this.setState({ tokenAddress: e.target.value })}/>
-                </Input>
-              </div>
-            ) : (
-              <div />
-            )}
-          </div>
-        ) : filterToUse && filterToUse.type === "Paste" ? (
-          <div className="col-lg-12 col-md-12 col-sm-12 mb-4">
-            <label htmlFor="pastedAddress">
-              Paste comma delimited list of wallet addresses
-            </label>
-            <textarea
-              value={listOfAddresses}
-              className="form-control"
-              onChange={(e) =>
-                this.setState({ listOfAddresses: e.target.value })
-              }
-            ></textarea>
-          </div>
-        ) : (
-          <div />
-        )}
-
+        {filterToUse ? this.renderFilterConditions(filterToUse) : null}
         {filterToUse &&
         filterToUse.type !== "Paste" &&
         filterToUse.type !== "web2" ? (
           <div className="form-group col-md-12">
-            <Button onClick={() => addFilter(this)} positive>
+            <Button onClick={() => {
+              this.setState({filterType: null})
+              addFilter(this)}
+            } positive>
               Add Another Filter
             </Button>
           </div>
@@ -527,14 +649,14 @@ export default class Segments extends React.Component {
           <div>
             <div className="form-group col-md-12">
               <label htmlFor="tileName">Update Segment Name</label>
-              <Input placeholder="Give it a name" fluid>
-                <input
-                  onChange={(e) => this.setState({ newSegName: e.target.value })}
-                  value={newSegName}
-                  type="text"
-                  id="tileName"
-                />
-              </Input>
+              <Input
+                placeholder="Give it a name"
+                fluid
+                onChange={(e, {value}) => this.setState({ newSegName: value })}
+                value={newSegName}
+                type="text"
+                id="tileName"
+              />
             </div>
             <div className="form-group col-md-12">
               <label htmlFor="chartSty">Update The Segment</label>
@@ -559,10 +681,9 @@ export default class Segments extends React.Component {
               <label htmlFor="chartSty">Update The Filter Condition</label>
               <br />
               {createCriteria ? (
-                <Button
-                  onClick={() => addFilter(this, condition)}
-                  primary
-                >
+                <Button onClick={() => {
+                  addFilter(this, condition)}
+                } positive>
                   Update Filter
                 </Button>
               ) : (
@@ -576,9 +697,13 @@ export default class Segments extends React.Component {
           <div>
             <div className="form-group col-md-12">
               <label htmlFor="tileName">Then, Give It A Name</label>
-              <Input placeholder="Give it a name" fluid>
-                <input type="text" value={newSegName} onChange={(e) => this.setState({ newSegName: e.target.value })}/>
-              </Input>
+              <Input
+                placeholder="Give it a name"
+                fluid
+                type="text"
+                value={newSegName}
+                onChange={(e, {value}) => this.setState({ newSegName: value })}
+              />
             </div>
           </div>
         )}
@@ -748,7 +873,7 @@ export default class Segments extends React.Component {
                 hasFooter={false}
                 width={640}
               >
-                {this.renderCreateSegment(condition)}
+                {editSegment ? this.renderCreateSegment(condition) : null}
               </Dialog>
               <Dialog
                 isShown={isCreateSegment}
@@ -759,8 +884,9 @@ export default class Segments extends React.Component {
                 onConfirm={() => createSegment(this)}
                 confirmLabel="Create Segment"
                 width={640}
+                minHeightContent='40vh'
               >
-                {this.renderCreateSegment()}
+                {isCreateSegment ? this.renderCreateSegment(): null}
               </Dialog>
               <Dialog
                 isShown={importModalOpen}
@@ -780,9 +906,7 @@ export default class Segments extends React.Component {
                     <Input
                       fluid
                       value={importAddress}
-                      onChange={(e) =>
-                        this.setState({ importAddress: e.target.value })
-                      }
+                      onChange={(e, {value}) => this.setState({ importAddress: value })}
                       placeholder="Enter smart contract to import: 0x..."
                     />
                   </div>
@@ -801,9 +925,7 @@ export default class Segments extends React.Component {
                     <Input
                       fluid
                       value={webhook}
-                      onChange={(e) =>
-                        this.setState({ webhook: e.target.value })
-                      }
+                      onChange={(e, {value}) => this.setState({ webhook: value })}
                       placeholder="Enter webhook url..."
                     />
                   </div>
