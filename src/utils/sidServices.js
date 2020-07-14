@@ -4,7 +4,7 @@ import { walletAnalyticsDataTablePut,
          organizationDataTableGet,
          organizationDataTablePut,
          walletToUuidMapTableGetUuids } from './dynamoConveniences.js'
-import { jsonParseToBuffer } from './misc.js'
+import { jsonParseToBuffer, decryptWrapper } from './misc.js'
 import { getLog } from './debugScopes.js'
 import { runClientOperation } from './dataProcessing.js';
 const log = getLog('sidServices')
@@ -648,7 +648,7 @@ export class SidServices
       try {
         //console.log(orgEcPriKey, encryptedUuidCipherText)
         if(encryptedUuidCipherText) {
-          const uuid = await eccrypto.decrypt(orgEcPriKey, encryptedUuidCipherText)
+          const uuid = await decryptWrapper(orgEcPriKey, encryptedUuidCipherText)
           uuids.push(uuid.toString())
         }
       } catch (suppressedError) {
@@ -693,7 +693,7 @@ export class SidServices
     if (TEST_ASYMMETRIC_DECRYPT) {
       try {
         const recoveredPriKey =
-          await eccrypto.decrypt(aUserPriKey, priKeyCipherText)
+          await decryptWrapper(aUserPriKey, priKeyCipherText)
 
         if (recoveredPriKey.toString('hex') !== orgPriKey.toString('hex')) {
           throw new Error(`Recovered private key does not match private key:\nrecovered:${recoveredPriKey[0].toString('hex')}\noriginal:${orgPriKey.toString('hex')}\n`);
@@ -883,7 +883,7 @@ export class SidServices
       // 2. c) Now decrypt this apps chat support wallet with the org EC private key:
       //
       try {
-        const chatSupportWalletStr = await eccrypto.decrypt(orgEcPriKey, chatSupportWalletCipherText)
+        const chatSupportWalletStr = await decryptWrapper(orgEcPriKey, chatSupportWalletCipherText)
         chatSupportWallet = jsonParseToBuffer(chatSupportWalletStr)
       } catch (error) {
         throw new Error(`${method} Failed to decrypt the organization chat support wallet locally.\n${error}`)
@@ -937,10 +937,9 @@ export class SidServices
       throw new Error(`${method} failed to decrypt user's private key.\n${error}`)
     }
 
-    debugger
     try {
       const cipherObj = anOrgDataObj.cryptography.pri_key_ciphertexts[this.persist.userUuid]
-      orgEcPriKey = await eccrypto.decrypt(userEcPriKey, cipherObj)
+      orgEcPriKey = await decryptWrapper(userEcPriKey, cipherObj)
     } catch (error) {
       throw new Error(`${method} failed to decrypt organization private key.\n${error}`)
     }

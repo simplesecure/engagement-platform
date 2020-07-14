@@ -1,5 +1,59 @@
-//const Buffer = require('buffer/').Buffer  // note: the trailing slash is important!
-                                          // (See: https://github.com/feross/buffer)
+const eccrypto = require('eccrypto')
+
+// !!! WARNING !!! Specifically for Browser--not Node.js
+//
+// Converts any array type to a Buffer if required.
+//
+function toBuffer(anArray) {
+  const method = 'misc.js::toBuffer'
+
+  if (typeof anArray !== 'object') {
+    throw new Error(`${method}: Argument 'anArray' must be an object.`)
+  }
+
+  switch (anArray.constructor) {
+    case Buffer:
+      return anArray
+      break
+    
+    case Array:
+    case Uint8Array:
+    case Uint16Array:
+    case Uint32Array:
+    case Int8Array:
+    case Int16Array:
+    case Int32Array:
+    case ArrayBuffer:
+      return Buffer.from(anArray)
+      break
+
+    default:
+      throw new Error(`${method} Unable to convert 'anArray' to Uint8Array--unsupported type.`)
+  }
+}
+
+/**
+ * Wrapping eccrypto.decrypt here to ensure correct types.
+ * 
+ * The library checks the arguments with an isBuffer call. This fails for the cipher object when 
+ * it is restored from Dynamo etc. as an ArrayBuffer.
+ * 
+ * @param {*} aPrivateKey 
+ * @param {*} aCipherObj 
+ */
+export async function decryptWrapper(aPrivateKey, aCipherObj) {
+  if (!aPrivateKey || !aCipherObj) {
+    throw new Error('misc.js::decrypt: Method arguments must be defined.')
+  }
+
+  let privateKeyBuf = toBuffer(aPrivateKey)
+  let cipherBufObj = {}
+  for (const key in aCipherObj) {
+    cipherBufObj[key] = toBuffer(aCipherObj[key])
+  }
+
+  return await eccrypto.decrypt(privateKeyBuf, cipherBufObj)
+}
 
 /**
  * jsonParseToBuffer:
