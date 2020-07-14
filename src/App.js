@@ -46,7 +46,6 @@ export default class App extends React.Component {
       //Need to check if the user is part of an organization from the org table
       getCloudUser().fetchOrgDataAndUpdate()
 
-      
     } else {
       setGlobal({ loading: false });
     }
@@ -67,7 +66,7 @@ export default class App extends React.Component {
         <BrowserRouter>
           <ToastContainer />
         </BrowserRouter>
-        
+
         <CookieConsent
           location="bottom"
           buttonText="I accept"

@@ -518,7 +518,11 @@ export default class Communications extends React.Component {
       campaignName
 
     if (processing) {
-      return <Loader />
+      return (
+        <Dimmer active>
+          <Loader />
+        </Dimmer>
+      )
     } else {
       return (
         <div className="main-content-container container-fluid px-4">

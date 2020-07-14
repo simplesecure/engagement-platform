@@ -26,11 +26,9 @@ export default class Home extends React.Component {
   }
   renderWhenLoading() {
     return (
-      <div>
-        <div className="container-fluid">
-          <Loader inline='centered' indeterminate>{"Loading..."}</Loader>
-        </div>
-      </div>
+      <Dimmer active>
+        <Loader inline='centered' indeterminate>{"Loading..."}</Loader>
+      </Dimmer>
     )
   }
   renderSignedIn() {
