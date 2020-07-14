@@ -3,12 +3,13 @@ import "grapesjs/dist/css/grapes.min.css";
 import * as dc from "../../utils/dynamoConveniences.js";
 import { setLocalStorage } from "../../utils/misc";
 import { toast } from "react-toastify";
-import Loader from "../Loader";
 import grapesJS from "grapesjs";
 import newsletter from "grapesjs-preset-newsletter";
 import {
   Button,
-  Input
+  Input,
+  Dimmer,
+  Loader
 } from 'semantic-ui-react'
 const uuid = require("uuid/v4");
 
@@ -127,7 +128,11 @@ const EmailEditor = (props) => {
   };
 
   if (loading) {
-    return <Loader />;
+    return (
+      <Dimmer active>
+        <Loader />
+      </Dimmer>
+    )
   } else {
     return (
       <div>
