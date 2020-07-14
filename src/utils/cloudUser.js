@@ -2,7 +2,6 @@ import { setGlobal, getGlobal } from 'reactn'
 import { handleData, runClientCommand, runClientOperation } from './dataProcessing.js'
 import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
-import * as dc from './dynamoConveniences.js'
 import { setLocalStorage } from './misc';
 import { getWeb2Analytics } from './web2Analytics';
 const filter = require('./filterOptions.json');

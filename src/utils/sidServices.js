@@ -6,6 +6,7 @@ import { walletAnalyticsDataTablePut,
          walletToUuidMapTableGetUuids } from './dynamoConveniences.js'
 import { jsonParseToBuffer } from './misc.js'
 import { getLog } from './debugScopes.js'
+import { runClientOperation } from './dataProcessing.js';
 const log = getLog('sidServices')
 const AWS = require('aws-sdk')
 const ethers = require('ethers')
@@ -629,12 +630,14 @@ export class SidServices
 
     // 2. Fetch the private key required to decrypt the uuids:
     //
-    // TODO:
-    //      - Make this efficient (this is awful)
     let orgEcPriKey = undefined
     try {
-      const orgData = await organizationDataTableGet(this.persist.sid.org_id)
-      orgEcPriKey = await this.getOrgEcPriKey(orgData.Item)
+      // Replacing: const orgData = await organizationDataTableGet(this.persist.sid.org_id)
+      //            orgEcPriKey = await this.getOrgEcPriKey(orgData.Item)
+      const orgData = {
+        cryptography: await runClientOperation('getCryptography', this.persist.sid.org_id)
+      }
+      orgEcPriKey = await this.getOrgEcPriKey(orgData)
     } catch (error) {
       throw new Error(`Failed to restore organization private key.\n${error}`)
     }
@@ -934,6 +937,7 @@ export class SidServices
       throw new Error(`${method} failed to decrypt user's private key.\n${error}`)
     }
 
+    debugger
     try {
       const cipherObj = anOrgDataObj.cryptography.pri_key_ciphertexts[this.persist.userUuid]
       orgEcPriKey = await eccrypto.decrypt(userEcPriKey, cipherObj)

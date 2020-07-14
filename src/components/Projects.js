@@ -13,6 +13,7 @@ import {
 } from 'semantic-ui-react'
 import { Dialog } from 'evergreen-ui'
 import * as dc from './../utils/dynamoConveniences.js'
+import { runClientOperation } from './../utils/dataProcessing.js';
 import { setLocalStorage } from "../utils/misc"
 import copy from "copy-to-clipboard"
 import { toast } from "react-toastify"
@@ -155,8 +156,17 @@ export default class Projects extends React.Component {
 
   getExportableKey = async () => {
     const { org_id } = this.global
-    const orgData = await dc.organizationDataTableGet(org_id)
-    const key = await getSidSvcs().getExportableOrgEcKey(orgData.Item)
+    // Replacing: const orgData = await dc.organizationDataTableGet(org_id)
+    //            const key = await getSidSvcs().getExportableOrgEcKey(orgData.Item)
+    const orgData = {
+      cryptography: await runClientOperation('getCryptography', org_id)
+    }
+    const key = await getSidSvcs().getExportableOrgEcKey(orgData)
+    
+    // const orgData = await dc.organizationDataTableGet(org_id)
+    // const key = await getSidSvcs().getExportableOrgEcKey(orgData.Item)
+
+
     this.setState({ keyReveal: true, key})
   }
 
