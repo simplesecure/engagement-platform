@@ -22,7 +22,6 @@ import { getCloudUser } from "./../utils/cloudUser.js"
 import { getEmailData } from './../utils/emailData.js'
 import { getWeb2Analytics } from './../utils/web2Analytics'
 import { getSidSvcs } from "../utils/sidServices"
-// const SID_EXPERIMENTAL_FEATURES = process.env.REACT_APP_SID_EXPERIMENTAL_FEATURES === 'true' ? true : false
 const moment = require('moment')
 const ERROR_MSG =
   "Failed to create project, please try again. If this continues, please contact support@simpleid.xyz"
@@ -55,16 +54,24 @@ export default class Projects extends React.Component {
 
   createProject = async () => {
     const { apps, org_id, SESSION_FROM_LOCAL } = this.global
-
     const { projectName } = this.state
-    this.setGlobal({ processing: true })
+
     const newProject = {
       date_created: Date.now(),
       project_name: projectName
     }
 
+    // History:  setGlobal( {..., notificationId: data.appId }) was at the
+    //           start of dataProcessing::handleData.  When called with create
+    //           project as the type, appId is undefined, so we preserve that
+    //           behavior here with notificationId --> undefined in case
+    //           it's required for side effects:
+    // Recently refactored / merged from cloud user
+    this.setGlobal({ processing: true, orgData: newProject, notificationId: undefined })
+
     try {
-      const projectId = await getCloudUser().createProject(org_id, newProject)
+      const projectId = await getSidSvcs().createAppId(org_id, newProject)
+
       let data
       if (projectId) {
         apps[projectId] = newProject
@@ -80,6 +87,9 @@ export default class Projects extends React.Component {
         })
         this.setState({ projectName: "" })
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
+
+        // TODO: the next call should really be removed and the model above should be updated
+        //       with the appId returned (i.e. no need to call the server twice)
         getCloudUser().fetchOrgDataAndUpdate()
       } else {
         setGlobal({ processing: false, error: "No app id returned" })
@@ -112,14 +122,18 @@ export default class Projects extends React.Component {
       }
 
       this.setState({ show: false })
-      //Now we update in the DB
-      const orgData = await dc.organizationDataTableGet(org_id)
 
+      //Now we update in the DB
+      // const orgData = await dc.organizationDataTableGet(org_id)
       try {
-        const anObject = orgData.Item
-        anObject.apps = updatedApps
-        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-        await dc.organizationDataTablePut(anObject)
+        // const anObject = orgData.Item
+        // anObject.apps = updatedApps
+        // anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+        // await dc.organizationDataTablePut(anObject)
+
+        // Replacing commented above with:
+        await runClientOperation('deleteApp', undefined, key)
+        
         const appKeys = Object.keys(updatedApps)
         const currentAppId = updatedApps[appKeys[0]]
           ? updatedApps[appKeys[0]]
@@ -162,11 +176,6 @@ export default class Projects extends React.Component {
       cryptography: await runClientOperation('getCryptography', org_id)
     }
     const key = await getSidSvcs().getExportableOrgEcKey(orgData)
-    
-    // const orgData = await dc.organizationDataTableGet(org_id)
-    // const key = await getSidSvcs().getExportableOrgEcKey(orgData.Item)
-
-
     this.setState({ keyReveal: true, key})
   }
 
@@ -178,13 +187,20 @@ export default class Projects extends React.Component {
     const { org_id } = this.global
     const { updatedProjectName } = this.state
 
-    const orgData = await dc.organizationDataTableGet(org_id)
-
+    // const orgData = await dc.organizationDataTableGet(org_id)
     try {
-      const anObject = orgData.Item
-      anObject.apps[proj.id].project_name = updatedProjectName
-      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      await dc.organizationDataTablePut(anObject)
+      // const anObject = orgData.Item
+      // anObject.apps[proj.id].project_name = updatedProjectName
+      // anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+      // await dc.organizationDataTablePut(anObject)
+
+      // Replacing commented above with:
+      const operationData = {
+        newName: updatedProjectName
+      }
+      await runClientOperation('renameApp', org_id, undefined, operationData)
+
+      // TODO: below is costly--is it needed, can AC & PBJ rework it into model from above?
       getCloudUser().fetchOrgDataAndUpdate()
       this.setState({ editName: false })
     } catch (suppressedError) {

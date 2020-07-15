@@ -219,14 +219,14 @@ function setJobQueue(jobs) {
 //
 //        - try-catch, timeout, unique request id tracking
 //
-export async function runClientOperation(anOperation, anOrgId=undefined, anAppId=undefined, theOperands={}) {
+export async function runClientOperation(anOperation, anOrgId=undefined, anAppId=undefined, theOperationData={}) {
   const cmdObj = {
     command: 'clientOperation',
     data: {
       orgId: anOrgId,
       appId: anAppId,
       operation: anOperation,
-      operands: theOperands
+      operationData: theOperationData
     }
   }
 
@@ -240,6 +240,8 @@ export async function runClientOperation(anOperation, anOrgId=undefined, anAppId
       resolve(aResult)
     })
   })
+
+  // TODO: check for result status / errors & throw ....
 
   return result.data.obj
 }
