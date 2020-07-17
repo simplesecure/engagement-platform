@@ -56,6 +56,25 @@ export async function decryptWrapper(aPrivateKey, aCipherObj) {
 }
 
 /**
+ * Wrapping eccrypt.encrypt here to ensure correct types.
+ * 
+ * Same issue as for decryptWrapper above... see note. This code only checks
+ * and modifies the public key.
+ * 
+ * @param {*} aPublicKey
+ * @param {*} aBufferToEncrypt
+ */
+export async function encryptWrapper(aPublicKey, aPlainTextBuffer) {
+  if (!aPublicKey|| !aPlainTextBuffer) {
+    throw new Error('misc.js::encrypt: Method arguments must be defined.')
+  }
+
+  let publicKeyBuf = toBuffer(aPublicKey)
+
+  return await eccrypto.encrypt(publicKeyBuf, aPlainTextBuffer)
+}
+
+/**
  * jsonParseToBuffer:
  *
  * Notes:

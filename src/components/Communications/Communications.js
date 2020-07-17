@@ -26,6 +26,7 @@ import {
 import { Dialog } from 'evergreen-ui'
 import SideNav from '../SideNav'
 import ProcessingBlock from '../ProcessingBlock'
+import { runClientOperation } from "../../utils/dataProcessing"
 
 const csv = require("csvtojson")
 const CAMPAIGN_SPEC_CHANGE_V2 = true
@@ -77,7 +78,11 @@ export default class Communications extends React.Component {
     const { currentTemplates } = sessionData
     const { templateName } = this.state
     const templates = currentTemplates ? currentTemplates : []
-    if (temp) {
+
+    // If temp is not defined (i.e. null), then it is being 'created', otherwise
+    // it's being updated.
+    //
+    if (temp) {   // update existing template
       this.editor.exportHtml(async (data) => {
         const { design, html } = data
         const thisTemplate = templates.filter((a) => a.id === temp.id)[0]
@@ -90,26 +95,32 @@ export default class Communications extends React.Component {
 
         setGlobal({ sessionData, apps })
         this.setState({ showExisting: false })
-        //Now we save to the DB
 
+        // Replace this db update:
         //
-        // TODO: probably want to wait on this to finish and throw a status/activity
-        //       bar in the app:
-        const orgData = await dc.organizationDataTableGet(org_id)
-
-        try {
-          const anObject = orgData.Item
-          anObject.apps = apps
-          anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-
-          await dc.organizationDataTablePut(anObject)
-          setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
-          setGlobal({ templateName: "" })
-        } catch (suppressedError) {
-          console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-        }
+        // const orgData = await dc.organizationDataTableGet(org_id)
+        // try {
+        //   const anObject = orgData.Item
+        //   anObject.apps = apps
+        //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+        //   await dc.organizationDataTablePut(anObject)
+        //   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        //   setGlobal({ templateName: "" })
+        // } catch (suppressedError) {
+        //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+        // }
+        // With this server call:
+        //
+        const operationData = { templateObj: thisTemplate }
+        await runClientOperation('updateTemplate', undefined, sessionData.id, operationData)
+        //
+        // and the state update from above:
+        //
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        setGlobal({ templateName: "" })
+        // End Replace
       })
-    } else {
+    } else {    // create new template
       this.editor.exportHtml(async (data) => {
         const { design, html } = data
         const newTemplate = {
@@ -125,23 +136,29 @@ export default class Communications extends React.Component {
 
         await setGlobal({ sessionData, apps, templateName: "" })
         this.setState({ show: false, selectedTemplate: newTemplate.id })
-        //Now we save to the DB
 
+        // Replace this db update:
         //
-        // TODO: probably want to wait on this to finish and throw a status/activity
-        //       bar in the app:
-        const orgData = await dc.organizationDataTableGet(org_id)
+        // const orgData = await dc.organizationDataTableGet(org_id)
+        // try {
+        //   const anObject = orgData.Item
+        //   anObject.apps = apps
+        //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
 
-        try {
-          const anObject = orgData.Item
-          anObject.apps = apps
-          anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-
-          await dc.organizationDataTablePut(anObject)
-          setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
-        } catch (suppressedError) {
-          console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-        }
+        //   await dc.organizationDataTablePut(anObject)
+        //   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        // } catch (suppressedError) {
+        //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+        // }
+        // With this server call:
+        //
+        const operationData = { templateObj: newTemplate }
+        await runClientOperation('createTemplate', undefined, sessionData.id, operationData)
+        //
+        // and the state update from above:
+        //
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        // End Replace
       })
     }
   }
@@ -162,18 +179,27 @@ export default class Communications extends React.Component {
       thisApp.currentTemplates = currentTemplates
       this.setState({ deleteTempModal: false, templateToDelete: {} })
       setGlobal({ sessionData, apps })
-      //Update in DB
-      const orgData = await dc.organizationDataTableGet(org_id)
 
-      try {
-        const anObject = orgData.Item
-        anObject.apps = apps
-        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-        await dc.organizationDataTablePut(anObject)
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
-      } catch (suppressedError) {
-        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-      }
+      // Replace this db update
+      //
+      // const orgData = await dc.organizationDataTableGet(org_id)
+      // try {
+      //   const anObject = orgData.Item
+      //   anObject.apps = apps
+      //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+      //   await dc.organizationDataTablePut(anObject)
+      //   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+      // } catch (suppressedError) {
+      //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      // }
+      // With this server call:
+      //
+      const operationData = { templateId: temp.id }
+      await runClientOperation('deleteTemplate', undefined, sessionData.id, operationData)
+      // and this state / session update from above:
+      //
+       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+      // End Replace
     } else {
       console.log("Error with index")
     }
@@ -261,24 +287,45 @@ export default class Communications extends React.Component {
         thisApp.campaigns = camps
 
         setGlobal({ sessionData, apps })
-        // On a successful send, we can then update the db to reflect the sent campaigns and set this.state.
-        const orgData = await dc.organizationDataTableGet(org_id)
 
+        // Replace this db update:
+        // 
+        // On a successful send, we can then update the db to reflect the sent campaigns and set this.state.
+        // const orgData = await dc.organizationDataTableGet(org_id)
+        // try {
+        //   const anObject = orgData.Item
+        //   anObject.apps = apps
+        //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+        //   await dc.organizationDataTablePut(anObject)
+        //   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        //   this.setState({
+        //     selectedSegment: "Choose...",
+        //     message: "",
+        //     notificationName: "",
+        //   })
+        // } catch (suppressedError) {
+        //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+        //   toast.error("Email sent but data update failed")
+        // }
+        // With this server call:
+        //
         try {
-          const anObject = orgData.Item
-          anObject.apps = apps
-          anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-          await dc.organizationDataTablePut(anObject)
+          const operationData = { campaignObj: newCampaign }
+          await runClientOperation('addCampaign', undefined, sessionData.id, operationData)
+          //
+          // and state / session update from above:
+          //
           setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
           this.setState({
             selectedSegment: "Choose...",
             message: "",
             notificationName: "",
           })
-        } catch (suppressedError) {
-          console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+        } catch (loggedError) {
+          console.log(`ERROR: problem writing to DB.\n${loggedError}`)
           toast.error("Email sent but data update failed")
         }
+        // End Replace
 
         setGlobal({
           sessionData,
@@ -309,133 +356,133 @@ export default class Communications extends React.Component {
     }
   }
 
-  importEmails = () => {
-    const { sessionData, org_id, SESSION_FROM_LOCAL } = this.global
-    let { apps } = this.global
-    const csvFile = document.getElementById("csv-file").files[0]
-    setGlobal({ processing: true, loadingMessage: "Importing emails..." })
-    const reader = new FileReader()
-    let emailData = []
-    reader.onabort = () => console.log("file reading was aborted")
-    reader.onerror = () => console.log("file reading has failed")
-    reader.onload = async () => {
-      // Do whatever you want with the file contents
-      const binaryStr = reader.result
-      csv({
-        noheader: false,
-        output: "csv",
-      })
-        .fromString(binaryStr)
-        .then(async (csvRow) => {
-          for (const item of csvRow) {
-            for (const innerItem of item) {
-              //  Taken from here: https://stackoverflow.com/a/16424756
-              //eslint-disable-next-line
-              var re = /(([^<>()[\]\\.,:\s@\"]+(\.[^<>()[\]\\.,:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/
-              const isEmail = re.test(innerItem)
-              if (isEmail) {
-                emailData.push(innerItem)
-              }
-            }
-          }
-          try {
-            const cmdObj = {
-              command: "importEmails",
-              data: {
-                appId: sessionData.id,
-                emails: emailData,
-              },
-            }
+  // importEmails = () => {
+  //   const { sessionData, org_id, SESSION_FROM_LOCAL } = this.global
+  //   let { apps } = this.global
+  //   const csvFile = document.getElementById("csv-file").files[0]
+  //   setGlobal({ processing: true, loadingMessage: "Importing emails..." })
+  //   const reader = new FileReader()
+  //   let emailData = []
+  //   reader.onabort = () => console.log("file reading was aborted")
+  //   reader.onerror = () => console.log("file reading has failed")
+  //   reader.onload = async () => {
+  //     // Do whatever you want with the file contents
+  //     const binaryStr = reader.result
+  //     csv({
+  //       noheader: false,
+  //       output: "csv",
+  //     })
+  //       .fromString(binaryStr)
+  //       .then(async (csvRow) => {
+  //         for (const item of csvRow) {
+  //           for (const innerItem of item) {
+  //             //  Taken from here: https://stackoverflow.com/a/16424756
+  //             //eslint-disable-next-line
+  //             var re = /(([^<>()[\]\\.,:\s@\"]+(\.[^<>()[\]\\.,:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/
+  //             const isEmail = re.test(innerItem)
+  //             if (isEmail) {
+  //               emailData.push(innerItem)
+  //             }
+  //           }
+  //         }
+  //         try {
+  //           const cmdObj = {
+  //             command: "importEmails",
+  //             data: {
+  //               appId: sessionData.id,
+  //               emails: emailData,
+  //             },
+  //           }
 
-            const emailsImported = await importEmailArray(cmdObj)
-            if (emailsImported.data) {
-              const { data } = emailsImported
-              const { message, previouslyImported, imported } = data
+  //           const emailsImported = await importEmailArray(cmdObj)
+  //           if (emailsImported.data) {
+  //             const { data } = emailsImported
+  //             const { message, previouslyImported, imported } = data
 
-              const allEmailsGroup = {
-                id: `4-${sessionData.id}`,
-                name: "All Emails",
-                users: [],
-                userCount: previouslyImported + imported,
-              }
+  //             const allEmailsGroup = {
+  //               id: `4-${sessionData.id}`,
+  //               name: "All Emails",
+  //               users: [],
+  //               userCount: previouslyImported + imported,
+  //             }
 
-              const thisApp = apps[sessionData.id]
-              if (thisApp.imports) {
-                thisApp.imports["email"] = {
-                  count: previouslyImported + imported,
-                  updated: Date.now(),
-                }
-              } else {
-                thisApp["imports"] = {
-                  email: {
-                    count: previouslyImported + imported,
-                    updated: Date.now(),
-                  },
-                }
-              }
+  //             const thisApp = apps[sessionData.id]
+  //             if (thisApp.imports) {
+  //               thisApp.imports["email"] = {
+  //                 count: previouslyImported + imported,
+  //                 updated: Date.now(),
+  //               }
+  //             } else {
+  //               thisApp["imports"] = {
+  //                 email: {
+  //                   count: previouslyImported + imported,
+  //                   updated: Date.now(),
+  //                 },
+  //               }
+  //             }
 
-              apps[sessionData.id] = thisApp
+  //             apps[sessionData.id] = thisApp
 
-              setGlobal({ sessionData: thisApp })
+  //             setGlobal({ sessionData: thisApp })
 
-              const orgData = await dc.organizationDataTableGet(org_id)
+  //             const orgData = await dc.organizationDataTableGet(org_id)
 
-              try {
-                const anObject = orgData.Item
-                anObject.apps = apps
-                anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-                await dc.organizationDataTablePut(anObject)
-                setLocalStorage(
-                  SESSION_FROM_LOCAL,
-                  JSON.stringify(sessionData)
-                )
-                this.setState({
-                  selectedSegment: "Choose...",
-                  message: "",
-                  notificationName: "",
-                })
-              } catch (suppressedError) {
-                console.log(
-                  `ERROR: problem writing to DB.\n${suppressedError}`
-                )
-                toast.error("Email sent but data update failed")
-              }
-              this.setState({ allEmailsGroup })
-              this.setState({
-                csvUploaded: false,
-                importModalOpen: false,
-                importing: false,
-                fileName: "",
-              })
-              setGlobal({ processing: false })
-              toast.success(message)
-            } else {
-              setGlobal({ processing: false })
-              toast.error("Toruble importing emails")
-            }
-          } catch (error) {
-            console.log(error)
-            setGlobal({ processing: false })
-            toast.error(error.message)
-          }
-        })
-    }
-    reader.readAsText(csvFile)
-  }
+  //             try {
+  //               const anObject = orgData.Item
+  //               anObject.apps = apps
+  //               anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+  //               await dc.organizationDataTablePut(anObject)
+  //               setLocalStorage(
+  //                 SESSION_FROM_LOCAL,
+  //                 JSON.stringify(sessionData)
+  //               )
+  //               this.setState({
+  //                 selectedSegment: "Choose...",
+  //                 message: "",
+  //                 notificationName: "",
+  //               })
+  //             } catch (suppressedError) {
+  //               console.log(
+  //                 `ERROR: problem writing to DB.\n${suppressedError}`
+  //               )
+  //               toast.error("Email sent but data update failed")
+  //             }
+  //             this.setState({ allEmailsGroup })
+  //             this.setState({
+  //               csvUploaded: false,
+  //               importModalOpen: false,
+  //               importing: false,
+  //               fileName: "",
+  //             })
+  //             setGlobal({ processing: false })
+  //             toast.success(message)
+  //           } else {
+  //             setGlobal({ processing: false })
+  //             toast.error("Toruble importing emails")
+  //           }
+  //         } catch (error) {
+  //           console.log(error)
+  //           setGlobal({ processing: false })
+  //           toast.error(error.message)
+  //         }
+  //       })
+  //   }
+  //   reader.readAsText(csvFile)
+  // }
 
-  triggerUpload = () => {
-    const upload = document.getElementById("csv-file")
-    upload.click()
-    document.getElementById("csv-file").addEventListener(
-      "change",
-      () => {
-        if (upload.files) {
-          this.setState({ fileName: upload.files[0].name, csvUploaded: true })
-        }
-      },
-      false
-    )
-  }
+  // triggerUpload = () => {
+  //   const upload = document.getElementById("csv-file")
+  //   upload.click()
+  //   document.getElementById("csv-file").addEventListener(
+  //     "change",
+  //     () => {
+  //       if (upload.files) {
+  //         this.setState({ fileName: upload.files[0].name, csvUploaded: true })
+  //       }
+  //     },
+  //     false
+  //   )
+  // }
 
   getImportEmailsCheckbox(numImportedEmails = 0) {
     if (numImportedEmails >= 0) {
@@ -1003,66 +1050,66 @@ export default class Communications extends React.Component {
       )
     }
   }
-  renderEmailImport () {
-    const { importModalOpen, csvUploaded, fileName } = this.state
-    return (
-      <Modal
-        className="custom-modal"
-        show={importModalOpen}
-        onHide={() => this.setState({ importModalOpen: false })}
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Import Emails</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div>
-            You can import a list of email addresses and use SimpleID to send
-            all of your email communications to these people.{" "}
-          </div>{" "}
-          <br />
-          <div>
-            <span className="text-muted text-small">
-              You will not be able to segment these people based on blockchain
-              data unless you have wallet addresses associated with the email
-              addresses.
-            </span>
-          </div>
-        </Modal.Body>
-        <Modal.Body>
-          <InputGroup className="mb-3">
-            <button onClick={this.triggerUpload} className="btn btn-primary">
-              Upload CSV
-            </button>
-            <p className="text-muted">{fileName}</p>
-            <input
-              style={{ display: "none" }}
-              type="file"
-              accept=".csv"
-              id="csv-file"
-            />
-          </InputGroup>
-        </Modal.Body>
-        <Modal.Footer>
-          {csvUploaded ? (
-            <button className="btn btn-primary" onClick={this.importEmails}>
-              Import
-            </button>
-          ) : (
-            <button className="btn btn-primary" disabled>
-              Import
-            </button>
-          )}
+  // renderEmailImport () {
+  //   const { importModalOpen, csvUploaded, fileName } = this.state
+  //   return (
+  //     <Modal
+  //       className="custom-modal"
+  //       show={importModalOpen}
+  //       onHide={() => this.setState({ importModalOpen: false })}
+  //     >
+  //       <Modal.Header closeButton>
+  //         <Modal.Title>Import Emails</Modal.Title>
+  //       </Modal.Header>
+  //       <Modal.Body>
+  //         <div>
+  //           You can import a list of email addresses and use SimpleID to send
+  //           all of your email communications to these people.{" "}
+  //         </div>{" "}
+  //         <br />
+  //         <div>
+  //           <span className="text-muted text-small">
+  //             You will not be able to segment these people based on blockchain
+  //             data unless you have wallet addresses associated with the email
+  //             addresses.
+  //           </span>
+  //         </div>
+  //       </Modal.Body>
+  //       <Modal.Body>
+  //         <InputGroup className="mb-3">
+  //           <button onClick={this.triggerUpload} className="btn btn-primary">
+  //             Upload CSV
+  //           </button>
+  //           <p className="text-muted">{fileName}</p>
+  //           <input
+  //             style={{ display: "none" }}
+  //             type="file"
+  //             accept=".csv"
+  //             id="csv-file"
+  //           />
+  //         </InputGroup>
+  //       </Modal.Body>
+  //       <Modal.Footer>
+  //         {csvUploaded ? (
+  //           <button className="btn btn-primary" onClick={this.importEmails}>
+  //             Import
+  //           </button>
+  //         ) : (
+  //           <button className="btn btn-primary" disabled>
+  //             Import
+  //           </button>
+  //         )}
 
-          <button
-            className="btn btn-secondary"
-            onClick={() => this.setState({ importModalOpen: false })}
-          >
-            Cancel
-          </button>
-        </Modal.Footer>
-      </Modal>
-    )
-  }
+  //         <button
+  //           className="btn btn-secondary"
+  //           onClick={() => this.setState({ importModalOpen: false })}
+  //         >
+  //           Cancel
+  //         </button>
+  //       </Modal.Footer>
+  //     </Modal>
+  //   )
+  // }
 
   render() {
     return (
@@ -1070,7 +1117,12 @@ export default class Communications extends React.Component {
         <SideNav />
         <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
           {this.renderEmailComms()}
+          {/*   TODO: likely delete the entire email import system and 
+                      associated stored emails--if this needs to be used again
+                      we need to convert the db access methods to use the server
+                      instead of direct db access.
           {this.renderEmailImport()}
+          */}
         </main>
       </div>
     )

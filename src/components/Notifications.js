@@ -19,6 +19,7 @@ import {
 import { Dialog } from 'evergreen-ui'
 import SideNav from '../components/SideNav'
 import ProcessingBlock from './ProcessingBlock'
+import { runClientOperation } from '../utils/dataProcessing.js';
 
 export default class Notifications extends React.Component {
   constructor(props) {
@@ -60,29 +61,33 @@ export default class Notifications extends React.Component {
     thisApp.notifications = allNotifications;
 
     setGlobal({ sessionData, apps })
-    //Now we update the DB
-        // Put the new segment in the analytics data for the user signed in to this
-    // id:
-    //      Each App (SimpleID Customer) will have an app_id
-    //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-    //      A segment will be stored in the DB under the primary key 'app_id' in
-    //      the appropriate user_id's segment storage:
+    
+    // Replace this db update:
     //
+    // const orgData = await dc.organizationDataTableGet(org_id);
+    // try {
+    //   const anObject = orgData.Item
+    //   anObject.apps = apps;
+    //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+    //   await dc.organizationDataTablePut(anObject)
+    //   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    //   this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
+    // } catch (suppressedError) {
+    //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    // }
+    // With this server call:
     //
-    // TODO: probably want to wait on this to finish and throw a status/activity
-    //       bar in the app:
-    const orgData = await dc.organizationDataTableGet(org_id);
-
-    try {
-      const anObject = orgData.Item
-      anObject.apps = apps;
-      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      await dc.organizationDataTablePut(anObject)
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
-    } catch (suppressedError) {
-      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    const operationData = {
+      notificationId: thisNotification.id,
+      activeState: true
     }
+    await runClientOperation('setNotificationActive', undefined, sessionData.id, operationData)
+    //
+    // and this horseshit from above:
+    //
+    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
+    // End Replace
   }
 
   makeInactive = async (not) => {
@@ -97,29 +102,30 @@ export default class Notifications extends React.Component {
 
     setGlobal({ sessionData, apps });
 
-    //Now we update the DB
-        // Put the new segment in the analytics data for the user signed in to this
-    // id:
-    //      Each App (SimpleID Customer) will have an app_id
-    //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-    //      A segment will be stored in the DB under the primary key 'app_id' in
-    //      the appropriate user_id's segment storage:
+    // Replace this db update:
     //
+    // const orgData = await dc.organizationDataTableGet(org_id);
+    // try {
+    //   const anObject = orgData.Item
+    //   anObject.apps = apps;
+    //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+    //   await dc.organizationDataTablePut(anObject)
+    //   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    //   this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
+    // } catch (suppressedError) {
+    //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    // }
+    // With this server call:
     //
-    // TODO: probably want to wait on this to finish and throw a status/activity
-    //       bar in the app:
-    const orgData = await dc.organizationDataTableGet(org_id);
-
-    try {
-      const anObject = orgData.Item
-      anObject.apps = apps;
-      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      await dc.organizationDataTablePut(anObject)
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
-    } catch (suppressedError) {
-      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    const operationData = {
+      notificationId: thisNotification.id,
+      activeState: false
     }
+    await runClientOperation('setNotificationActive', undefined, sessionData.id, operationData)
+    // and this horseshit from above:
+    //
+    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
   }
 
   createMarkup = () => {
@@ -146,30 +152,29 @@ export default class Notifications extends React.Component {
     const thisApp = apps[sessionData.id];
     thisApp.notifications = noti;
     setGlobal({ sessionData, apps });
-
-    //Now we update the DB
-        // Put the new segment in the analytics data for the user signed in to this
-    // id:
-    //      Each App (SimpleID Customer) will have an app_id
-    //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-    //      A segment will be stored in the DB under the primary key 'app_id' in
-    //      the appropriate user_id's segment storage:
+    
+    // Replace this db update:
     //
+    // const orgData = await dc.organizationDataTableGet(org_id);
+    // try {
+    //   const anObject = orgData.Item
+    //   anObject.apps = apps;
+    //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+    //   await dc.organizationDataTablePut(anObject)
+    //   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    //   this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
+    // } catch (suppressedError) {
+    //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    // }
+    // With this server call:
     //
-    // TODO: probably want to wait on this to finish and throw a status/activity
-    //       bar in the app:
-    const orgData = await dc.organizationDataTableGet(org_id);
-
-    try {
-      const anObject = orgData.Item
-      anObject.apps = apps;
-      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      await dc.organizationDataTablePut(anObject)
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
-    } catch (suppressedError) {
-      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-    }
+    const operationData = { notificationObj: newNotification }
+    await runClientOperation('addNotification', undefined, sessionData.id, operationData)
+    //
+    // and of course, the state/session horse shit from above:
+    //
+    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
   }
 
   updateNotification = async () => {
@@ -196,30 +201,31 @@ export default class Notifications extends React.Component {
       thisApp.notifications = notifications
       setGlobal({ sessionData, apps })
 
-      //Now we update the DB
-          // Put the new segment in the analytics data for the user signed in to this
-      // id:
-      //      Each App (SimpleID Customer) will have an app_id
-      //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-      //      A segment will be stored in the DB under the primary key 'app_id' in
-      //      the appropriate user_id's segment storage:
+      // Replace this db update:
       //
+      // const orgData = await dc.organizationDataTableGet(org_id);
+      // try {
+      //   const anObject = orgData.Item
+      //   anObject.apps = apps;
+      //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+      //   await dc.organizationDataTablePut(anObject)
+      //   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+      //   this.setState({ selected_segment: "Choose...", message: "", notificationName: ""})
+      //   setGlobal({ processing: false})
+      // } catch (suppressedError) {
+      //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      // }
+      // With this server call:
       //
-      // TODO: probably want to wait on this to finish and throw a status/activity
-      //       bar in the app:
-      const orgData = await dc.organizationDataTableGet(org_id);
+      const operationData = { notificationObj: updatedNotification }
+      await runClientOperation('updateNotification', undefined, sessionData.id, operationData)
+      //
+      // and state updates from above:
+      //
+      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+      this.setState({ selected_segment: "Choose...", message: "", notificationName: ""})
+      setGlobal({ processing: false})
 
-      try {
-        const anObject = orgData.Item
-        anObject.apps = apps;
-        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-        await dc.organizationDataTablePut(anObject)
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-        this.setState({ selected_segment: "Choose...", message: "", notificationName: ""})
-        setGlobal({ processing: false})
-      } catch (suppressedError) {
-        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-      }
     } else {
       console.log("Error with index on notification")
     }
@@ -263,18 +269,29 @@ export default class Notifications extends React.Component {
       thisApp.notifications = notifications;
       setGlobal({ sessionData, apps, processing: true });
       this.setState({ show: false });
-      const orgData = await dc.organizationDataTableGet(org_id);
 
-      try {
-        const anObject = orgData.Item
-        anObject.apps = apps;
-        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-        await dc.organizationDataTablePut(anObject)
-        setGlobal({ processing: false })
-      } catch (suppressedError) {
-        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-        setGlobal({ processing: false })
-      }
+
+      // Replace this db update:
+      //
+      // const orgData = await dc.organizationDataTableGet(org_id);
+      // try {
+      //   const anObject = orgData.Item
+      //   anObject.apps = apps;
+      //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+      //   await dc.organizationDataTablePut(anObject)
+      //   setGlobal({ processing: false })
+      // } catch (suppressedError) {
+      //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      //   setGlobal({ processing: false })
+      // }
+      // With this server call:
+      //
+      const operationData = { notificationId: notificationToDelete.id}
+      await runClientOperation('deleteNotification', undefined, sessionData.id, operationData)
+      // And the state update from above:
+      //
+      setGlobal({ processing: false })
+
 
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     } else {

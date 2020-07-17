@@ -4,7 +4,6 @@ import SignIn from '../components/SignIn';
 import Dashboard from '../components/Dashboard';
 import SideNav from '../components/SideNav';
 import Search from '../components/Search';
-import AddTile from '../components/AddTile';
 import Notifications from '../components/Notifications';
 import Communications from '../components/Communications/Communications';
 // import Account from '../components/Account';
@@ -37,7 +36,6 @@ export default class Home extends React.Component {
         <Route exact path='/' component={Dashboard} />
         <Route path='/new-search' component={Search} />
         <Route path='/segments' component={Segments} />
-        <Route path='/new-tile' component={AddTile} />
         <Route exact path='/notifications' component={Notifications} />
         {/*<Route path='/account' component={Account} />*/}
         <Route path='/communications' component={Communications} />

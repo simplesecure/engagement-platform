@@ -4,7 +4,7 @@ import { walletAnalyticsDataTablePut,
          organizationDataTableGet,
          organizationDataTablePut,
          walletToUuidMapTableGetUuids } from './dynamoConveniences.js'
-import { jsonParseToBuffer, decryptWrapper } from './misc.js'
+import { jsonParseToBuffer, decryptWrapper, encryptWrapper } from './misc.js'
 import { getLog } from './debugScopes.js'
 import { runClientOperation } from './dataProcessing.js';
 const log = getLog('sidServices')
@@ -685,7 +685,7 @@ export class SidServices
     const orgPubKey = eccrypto.getPublic(orgPriKey)
     let priKeyCipherText = undefined
     try {
-      priKeyCipherText = await eccrypto.encrypt(aUserPubKey, orgPriKey)
+      priKeyCipherText = await encryptWrapper(aUserPubKey, orgPriKey)
     } catch (error) {
       throw new Error(`${method}: Creating organization id. Failed to create private key cipher text.\n${error}`)
     }
@@ -766,6 +766,8 @@ export class SidServices
     // - TODO: very similar to getChatSupportAddress code in 3.a.  (Unify if possible)
     //
     try {
+      // TODO: PBJ/AC, this shouldn't need to be called--it shoulda been stored in local storage on log in
+      //               in our cache model--cryptography doesn't change frequently.
       const cryptography = await runClientOperation('getCryptography', anOrgId)
       const publicKey = cryptography.pub_key
       if (!publicKey) {
@@ -774,7 +776,7 @@ export class SidServices
 
       const chatSupportWallet = ethers.Wallet.createRandom()
       const chatSupportWalletStr = JSON.stringify(chatSupportWallet)
-      let chatSupportWalletCipherText = await eccrypto.encrypt(publicKey, Buffer.from(chatSupportWalletStr))
+      let chatSupportWalletCipherText = await encryptWrapper(publicKey, Buffer.from(chatSupportWalletStr))
 
       operationData.chat_support = {
         wallet: chatSupportWalletCipherText
@@ -840,7 +842,7 @@ export class SidServices
         const publicKey = anOrgDataObj.cryptography.pub_key
         chatSupportWallet = ethers.Wallet.createRandom()
         const chatSupportWalletStr = JSON.stringify(chatSupportWallet)
-        chatSupportWalletCipherText = await eccrypto.encrypt(publicKey, Buffer.from(chatSupportWalletStr))
+        chatSupportWalletCipherText = await encryptWrapper(publicKey, Buffer.from(chatSupportWalletStr))
       } catch (error) {
         throw new Error(`${method} failed creating and encrypting chat support wallet.\n${error}`)
       }

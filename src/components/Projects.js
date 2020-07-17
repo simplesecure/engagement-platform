@@ -198,7 +198,7 @@ export default class Projects extends React.Component {
       const operationData = {
         newName: updatedProjectName
       }
-      await runClientOperation('renameApp', org_id, undefined, operationData)
+      await runClientOperation('renameApp', org_id, proj.id, operationData)
 
       // TODO: below is costly--is it needed, can AC & PBJ rework it into model from above?
       getCloudUser().fetchOrgDataAndUpdate()
@@ -337,7 +337,7 @@ export default class Projects extends React.Component {
               </div>
               <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
                 {
-                  (applications.length === 0 || plan === undefined) ?
+                  (applications.length === 0 || plan === 'enterprise') ?
                   <div>
                     <h5>Add a Project</h5>
                     <div className="form-group col-md-12">

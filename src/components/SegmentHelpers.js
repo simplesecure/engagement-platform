@@ -5,36 +5,37 @@ import { toast } from "react-toastify"
 import * as dc from "./../utils/dynamoConveniences.js"
 import { getWeb2Analytics } from "../utils/web2Analytics"
 import { getCloudUser } from "./../utils/cloudUser.js"
+import { runClientOperation } from "../utils/dataProcessing"
 
 const listToArray = require("list-to-array")
 
-const updateOrgData = async (that, apps) => {
-  const { org_id, SESSION_FROM_LOCAL, sessionData } = that.global
-  // Put the new segment in the analytics data for the user signed in to this
-  // id:
-  //      Each App (SimpleID Customer) will have an app_id
-  //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-  //      A segment will be stored in the DB under the primary key 'app_id' in
-  //      the appropriate user_id's segment storage:
+// const updateOrgData = async (that, apps) => {
+//   const { org_id, SESSION_FROM_LOCAL, sessionData } = that.global
+//   // Put the new segment in the analytics data for the user signed in to this
+//   // id:
+//   //      Each App (SimpleID Customer) will have an app_id
+//   //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
+//   //      A segment will be stored in the DB under the primary key 'app_id' in
+//   //      the appropriate user_id's segment storage:
 
-  // TODO: probably want to wait on this to finish and throw a status/activity
-  //       bar in the app:
-  const orgData = await dc.organizationDataTableGet(org_id)
+//   // TODO: probably want to wait on this to finish and throw a status/activity
+//   //       bar in the app:
+//   const orgData = await dc.organizationDataTableGet(org_id)
 
-  try {
-    const anObject = orgData.Item
-    anObject.apps = apps
-    anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-    await dc.organizationDataTablePut(anObject)
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
-    setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
-  } catch (suppressedError) {
-    const ERROR_MSG =
-      "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
-    setGlobal({ error: ERROR_MSG })
-    console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-  }
-}
+//   try {
+//     const anObject = orgData.Item
+//     anObject.apps = apps
+//     anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+//     await dc.organizationDataTablePut(anObject)
+//     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+//     setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
+//   } catch (suppressedError) {
+//     const ERROR_MSG =
+//       "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
+//     setGlobal({ error: ERROR_MSG })
+//     console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+//   }
+// }
 
 export const clearState = (that, filter=false) => {
   if (!filter) {
@@ -60,7 +61,7 @@ export const clearState = (that, filter=false) => {
 }
 
 export const createSegment = async (that) => {
-  const { sessionData, apps, allFilters } = that.global
+  const { sessionData, apps, allFilters, SESSION_FROM_LOCAL } = that.global
   const { currentSegments, network } = sessionData
   const {
     listOfAddresses,
@@ -175,7 +176,18 @@ export const createSegment = async (that) => {
         apps[sessionData.id] = thisApp
         clearState(that)
         setGlobal({ sessionData, apps })
-        updateOrgData(apps)
+
+        // Replacing this:
+        //   updateOrgData(apps)
+        //
+        // with clientCommand:
+        const operationData = {
+          segmentObj: segmentCriteria
+        }
+        await runClientOperation('createSegment', undefined, sessionData.id, operationData)
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
+        // End Replacing
       } catch (error) {
         console.log(error)
         toast.error(error.message, {
@@ -185,7 +197,22 @@ export const createSegment = async (that) => {
       }
     } else {
       try {
-        getCloudUser().processData("segment", segmentCriteria)
+        // Replacing this:
+        //
+        // getCloudUser().processData("segment", segmentCriteria)
+        //
+        // with clientCommand:
+        //
+        const operationData = {
+          segmentObj: segmentCriteria
+        }
+        await runClientOperation('createSegment', undefined, sessionData.id, operationData)
+        //
+        // TODO: segment command on the server might do more things that we need to look at.
+        // TODO: make the cloud user handling of "segment" and dataProcesing handling of "segment"
+        //       go away.
+        // TODO: make the bizarre queue stuff go away if possible too.
+        //
         clearState(that)
       } catch (e) {
         console.log(e)
@@ -205,7 +232,18 @@ export const createSegment = async (that) => {
     apps[sessionData.id] = thisApp
     clearState(that)
     setGlobal({ sessionData, apps })
-    updateOrgData(apps)
+
+    // Replacing this:
+    //   updateOrgData(apps)
+    //
+    // with clientCommand:
+    const operationData = {
+      segmentObj: segmentCriteria
+    }
+    await runClientOperation('createSegment', undefined, sessionData.id, operationData)
+    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+    setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
+    // End Replacing
   }
 }
 
@@ -328,7 +366,18 @@ export const updateSegment = async (that) => {
         apps[sessionData.id] = thisApp
         clearState(that)
         setGlobal({ sessionData, apps })
-        updateOrgData(apps)
+
+        // Replacing this:
+        //   updateOrgData(apps)
+        //
+        // with clientCommand:
+        const operationData = {
+          segmentObj: segmentCriteria
+        }
+        await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
+        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
+        // End Replacing
       } catch (error) {
         console.log(error)
         toast.error(error.message, {
@@ -338,7 +387,22 @@ export const updateSegment = async (that) => {
       }
     } else {
       try {
-        getCloudUser().processData("segment", segmentCriteria)
+        // Replacing this:
+        //
+        // getCloudUser().processData("segment", segmentCriteria)
+        //
+        // with clientCommand:
+        //
+        const operationData = {
+          segmentObj: segmentCriteria
+        }
+        await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
+        //
+        // TODO: segment command on the server might do more things that we need to look at.
+        // TODO: make the cloud user handling of "segment" and dataProcesing handling of "segment"
+        //       go away.
+        // TODO: make the bizarre queue stuff go away if possible too.
+        //
         clearState(that)
       } catch (e) {
         console.log(e)
@@ -371,22 +435,24 @@ export const updateSegment = async (that) => {
     apps[sessionData.id] = thisApp
     clearState(that)
     setGlobal({ sessionData, apps })
-    // Put the new segment in the analytics data for the user signed in to this
-    // id:
-    //      Each App (SimpleID Customer) will have an app_id
-    //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-    //      A segment will be stored in the DB under the primary key 'app_id' in
-    //      the appropriate user_id's segment storage:
 
-    // TODO: probably want to wait on this to finish and throw a status/activity
-    //       bar in the app:
-    const orgData = await dc.organizationDataTableGet(org_id)
-
+    // Replace this db update:
+    //
+    // const orgData = await dc.organizationDataTableGet(org_id)
     try {
-      const anObject = orgData.Item
-      anObject.apps = apps
-      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      await dc.organizationDataTablePut(anObject)
+      // const anObject = orgData.Item
+      // anObject.apps = apps
+      // anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+      // await dc.organizationDataTablePut(anObject)
+      //
+      // With this server call:
+      //
+      const operationData = {
+        segmentObj: segmentCriteria
+      }
+      await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
+      // End replace
+
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
       setGlobal({
         showSegmentNotification: true,
@@ -411,20 +477,30 @@ export const deleteSegment = async (that, seg, confirm) => {
     if (index > -1) {
       currentSegments.splice(index, 1)
       sessionData.currentSegments = currentSegments
-      //Update in DB
+      //Update in DB  <-- I think he means local storage
       const thisApp = apps[sessionData.id]
       thisApp.currentSegments = currentSegments
       setGlobal({ sessionData, apps })
-      const orgData = await dc.organizationDataTableGet(org_id)
 
-      try {
-        const anObject = orgData.Item
-        anObject.apps = apps
-        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-        await dc.organizationDataTablePut(anObject)
-      } catch (suppressedError) {
-        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-      }
+      // Replacing this db update:
+      //
+      // const orgData = await dc.organizationDataTableGet(org_id)
+      // try {
+      //   const anObject = orgData.Item
+      //   anObject.apps = apps
+      //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
+      //   await dc.organizationDataTablePut(anObject)
+      // } catch (suppressedError) {
+      //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+      // }
+      // With this server call
+      //
+        const operationData = {
+          segmentId: seg.id
+        }
+        await runClientOperation('deleteSegment', undefined, sessionData.id, operationData)
+      //
+      // End replace
 
       setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
       that.setState({ show: false })

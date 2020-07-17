@@ -42,8 +42,11 @@ class CloudUser {
         Item: await runClientOperation('getOrg', org_id)
       }
 
-      const experimentalFeatures = appData.Item.experimentalFeatures ? true : false;
-      setGlobal({experimentalFeatures: SID_EXPERIMENTAL_FEATURES === true ? SID_EXPERIMENTAL_FEATURES : experimentalFeatures, plan: appData.Item.plan ? appData.Item.plan : process.env.REACT_APP_SID_ALL_FEATURES });
+      const experimentalFeatures = (appData.Item && appData.Item.experimentalFeatures) ? true : false;
+      setGlobal({
+        experimentalFeatures: SID_EXPERIMENTAL_FEATURES === true ? SID_EXPERIMENTAL_FEATURES : experimentalFeatures,
+        plan: (appData.Item && appData.Item.plan) ? appData.Item.plan : process.env.REACT_APP_SID_ALL_FEATURES 
+      });
     } else {
       console.log("ERROR: No Org ID")
     }

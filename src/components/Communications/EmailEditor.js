@@ -11,6 +11,7 @@ import {
   Dimmer,
   Loader
 } from 'semantic-ui-react'
+import { runClientOperation } from "../../utils/dataProcessing.js";
 const uuid = require("uuid/v4");
 
 const EmailEditor = (props) => {
@@ -99,13 +100,22 @@ const EmailEditor = (props) => {
       try {
         setLoading(true);
         apps[sessionData.id] = sessionData;
-        const orgData = await dc.organizationDataTableGet(org_id);
 
-        const anObject = orgData.Item;
-        anObject.apps = apps;
-        anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
+        // Replace this db update:
+        //
+        // const orgData = await dc.organizationDataTableGet(org_id);
+        // const anObject = orgData.Item;
+        // anObject.apps = apps;
+        // anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
+        // await dc.organizationDataTablePut(anObject);
+        //
+        // With this server call
+        //
+        const operationData = { templateObj: thisTemplate }
+        const operation = (existingTemplate) ? 'updateTemplate' : 'addTemplate'
+        await runClientOperation(operation, undefined, sessionData.id, operationData)
+        // End Replace
 
-        await dc.organizationDataTablePut(anObject);
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
         setSessionData(sessionData);
         setApps(apps);
