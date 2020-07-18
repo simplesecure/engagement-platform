@@ -229,7 +229,7 @@ export default class Communications extends React.Component {
     } = this.state
     const { currentSegments, campaigns } = sessionData
     const seg = currentSegments.filter((a) => a.id === selectedSegment)[0]
-    this.setState({ userCount: seg.users.length ? seg.users.length : 0 })
+    this.setState({ userCount: (seg.users && seg.users.length) ? seg.users.length : 0 })
     const camps = campaigns ? campaigns : []
     if (confirmed) {
       this.setState({ confirmModal: false })

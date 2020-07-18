@@ -184,7 +184,7 @@ export const createSegment = async (that) => {
         const operationData = {
           segmentObj: segmentCriteria
         }
-        await runClientOperation('createSegment', undefined, sessionData.id, operationData)
+        await runClientOperation('addSegment', undefined, sessionData.id, operationData)
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
         // End Replacing
@@ -206,7 +206,7 @@ export const createSegment = async (that) => {
         const operationData = {
           segmentObj: segmentCriteria
         }
-        await runClientOperation('createSegment', undefined, sessionData.id, operationData)
+        await runClientOperation('addSegment', undefined, sessionData.id, operationData)
         //
         // TODO: segment command on the server might do more things that we need to look at.
         // TODO: make the cloud user handling of "segment" and dataProcesing handling of "segment"
@@ -240,7 +240,7 @@ export const createSegment = async (that) => {
     const operationData = {
       segmentObj: segmentCriteria
     }
-    await runClientOperation('createSegment', undefined, sessionData.id, operationData)
+    await runClientOperation('addSegment', undefined, sessionData.id, operationData)
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
     setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
     // End Replacing
