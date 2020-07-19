@@ -19,7 +19,6 @@ export default class Home extends React.Component {
     super(props)
     this.flowy = new FlowyWorker()
     const { org } = qs.parse(window.location.search);
-    console.log(org);
     this.org = org
     // "d4d9d63d-939c-4ace-b46b-00dcf1cf08ab"
   }
@@ -27,6 +26,9 @@ export default class Home extends React.Component {
     if (this.org) {
       await setGlobal({ publicDashboard: true })
       await getCloudUser().fetchOrgDataAndUpdate(this.org)
+    }
+    else {
+      await setGlobal({ publicDashboard: false })
     }
   }
   renderSignIn = () => <SignIn />

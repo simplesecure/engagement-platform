@@ -17,7 +17,7 @@ const EmailEditor = (props) => {
   const [data, setData] = useState();
   const [loading, setLoading] = useState(false);
   const [templateToUpdate, setTemplate] = useGlobal("templateToUpdate");
-  const [SESSION_FROM_LOCAL] = useGlobal("SESSION_FROM_LOCAL");
+  // const [SESSION_FROM_LOCAL] = useGlobal("SESSION_FROM_LOCAL");
   const [sessionData, setSessionData] = useGlobal("sessionData");
   const [apps, setApps] = useGlobal("apps");
   const [org_id] = useGlobal("org_id");
@@ -105,7 +105,7 @@ const EmailEditor = (props) => {
         const operation = (existingTemplate) ? 'updateTemplate' : 'addTemplate'
         await runClientOperation(operation, undefined, sessionData.id, operationData)
 
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
         setSessionData(sessionData);
         setApps(apps);
         setLoading(false);

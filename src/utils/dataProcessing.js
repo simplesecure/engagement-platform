@@ -480,7 +480,7 @@ async function handleSegmentUpdate(result) {
     processing: false,
     loading: false,
   });
-  setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+  // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
 }
 
 async function handleCreateSegmentFunc(results) {
@@ -544,7 +544,7 @@ async function handleCreateSegmentFunc(results) {
   setGlobal({ sessionData, apps });
 
   try {
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
 
     //  Now we find the notifications and ensure we show it properly in the notifications dropdown
     const index = notifications

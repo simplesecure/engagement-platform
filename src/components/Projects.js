@@ -86,7 +86,7 @@ export default class Projects extends React.Component {
           processing: false
         })
         this.setState({ projectName: "" })
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
+        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
 
         // TODO: the next call should really be removed and the model above should be updated
         //       with the appId returned (i.e. no need to call the server twice)
@@ -95,7 +95,7 @@ export default class Projects extends React.Component {
         setGlobal({ processing: false, error: "No app id returned" })
         console.log(`ERROR: no app id returned`)
       }
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
+      // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
       setGlobal({ processing: false, error: ERROR_MSG })
@@ -142,7 +142,7 @@ export default class Projects extends React.Component {
         const data = appKeys.length > 0 ? updatedApps[appKeys[0]] : {}
 
         setGlobal({ currentAppId, sessionData: data, processing: false })
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
+        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
       } catch (suppressedError) {
         console.log(`ERROR: problem updating state and/or local store.\n${suppressedError}`)
       }

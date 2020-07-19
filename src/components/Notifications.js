@@ -76,7 +76,7 @@ export default class Notifications extends React.Component {
 
     setGlobal({ sessionData, apps })
 
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
   }
 
@@ -116,7 +116,7 @@ export default class Notifications extends React.Component {
     thisApp.notifications = noti;
     setGlobal({ sessionData, apps });
 
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
   }
 
@@ -160,7 +160,7 @@ export default class Notifications extends React.Component {
     thisApp.notifications = notifications
     setGlobal({ sessionData, apps })
 
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     this.setState({ selected_segment: "Choose...", message: "", notificationName: ""})
     setGlobal({ processing: false})
   }
@@ -202,6 +202,7 @@ export default class Notifications extends React.Component {
                       `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n`)
     }
 
+    setGlobal({ processing: true })
     try {
       const operationData = { notificationId: notificationToDelete.id}
       await runClientOperation('deleteNotification', undefined, sessionData.id, operationData)
@@ -216,12 +217,10 @@ export default class Notifications extends React.Component {
 
     const thisApp = apps[sessionData.id];
     thisApp.notifications = notifications;
-    setGlobal({ sessionData, apps, processing: true });
+    setGlobal({ sessionData, apps });
     this.setState({ show: false });
-
     setGlobal({ processing: false })
-
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
   }
 
   renderNotificationEditOrCreate(currentSegments) {

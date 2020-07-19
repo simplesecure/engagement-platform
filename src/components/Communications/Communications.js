@@ -104,7 +104,7 @@ export default class Communications extends React.Component {
         setGlobal({ sessionData, apps })
         this.setState({ showExisting: false })
 
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ templateName: "" })
       })
     } else {    // create new template
@@ -134,7 +134,7 @@ export default class Communications extends React.Component {
         await setGlobal({ sessionData, apps, templateName: "" })
         this.setState({ show: false, selectedTemplate: newTemplate.id })
 
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
       })
     }
   }
@@ -151,11 +151,11 @@ export default class Communications extends React.Component {
     const { templateToDelete } = this.state
     const temp = templateToDelete
     const index = currentTemplates.map((a) => a.id).indexOf(temp.id)
-    if (index <= -1) { 
+    if (index <= -1) {
       throw new Error(`${method}: could not find template to delete in data model (id=${temp.id}).\n` +
                       `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n`)
     }
-    
+
     try {
       const operationData = { templateId: temp.id }
       await runClientOperation('deleteTemplate', undefined, sessionData.id, operationData)
@@ -171,7 +171,7 @@ export default class Communications extends React.Component {
     this.setState({ deleteTempModal: false, templateToDelete: {} })
     setGlobal({ sessionData, apps })
 
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
   }
 
   loadTemplate = async (temp) => {
@@ -258,7 +258,7 @@ export default class Communications extends React.Component {
           //
           // and state / session update from above:
           //
-          setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+          // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
           this.setState({
             selectedSegment: "Choose...",
             message: "",

@@ -49,7 +49,7 @@ export default class Dashboard extends React.Component {
     const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal } = this.state
     const { currentSegments } = sessionData
     const dynamicClass = !publicDashboard ?
-    "main-content col-lg-12 col-md-12 col-sm-12 p-0 offset-lg-2 offset-md-3" :
+    "main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3" :
     "main-content col-lg-12 col-md-12 col-sm-12 p-0"
     return (
       <div>

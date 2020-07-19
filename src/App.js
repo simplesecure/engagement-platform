@@ -21,11 +21,11 @@ export default class App extends React.Component {
     setGlobal({ loading: true });
     //let currentSegments = [];
     //Check local storage for quick loading first
-    const sessionFromLocal = localStorage.getItem(SESSION_FROM_LOCAL)
-    if (sessionFromLocal &&
-        sessionFromLocal !== 'undefined') {
-      setGlobal({ sessionData: JSON.parse(sessionFromLocal), loading: false });
-    }
+    // const sessionFromLocal = localStorage.getItem(SESSION_FROM_LOCAL)
+    // if (sessionFromLocal &&
+    //     sessionFromLocal !== 'undefined') {
+    //   setGlobal({ sessionData: JSON.parse(sessionFromLocal), loading: false });
+    // }
 
     if(signedIn) {
       const onboardingComplete = localStorage.getItem('onboarding-complete')

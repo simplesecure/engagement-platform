@@ -154,7 +154,7 @@ export const createSegment = async (that) => {
         clearState(that)
         setGlobal({ sessionData, apps })
 
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
       } catch (error) {
         const errorMsg = `Creating segment failed. Please refresh the page and try again.\n` +
@@ -243,7 +243,7 @@ export const createSegment = async (that) => {
     setGlobal({ sessionData, apps })
 
 
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
     setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
   }
 }
@@ -389,7 +389,7 @@ export const updateSegment = async (that) => {
         clearState(that)
         setGlobal({ sessionData, apps })
 
-        setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
       } catch (error) {
         console.log(error)
@@ -480,7 +480,7 @@ export const updateSegment = async (that) => {
     clearState(that)
     setGlobal({ sessionData, apps })
 
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
     setGlobal({
       showSegmentNotification: true,
       segmentProcessingDone: true,
@@ -530,7 +530,7 @@ export const deleteSegment = async (that, seg, confirm) => {
     thisApp.currentSegments = currentSegments
     setGlobal({ sessionData, apps })
 
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
     that.setState({ show: false })
   } else {
     that.setState({ show: true })

@@ -46,7 +46,6 @@ class CloudUser {
     let appData = undefined
     try {
       appData = { Item: await runClientOperation('getOrg', org_id) }
-      debugger
     } catch (fatalError) {
       throw new Error(`Unable to fetch organization information for id ${org_id}.\n` +
                       `Please reload the page. If that does not work, contact support@simpleid.xyz.\n` +
@@ -75,7 +74,7 @@ class CloudUser {
       }
 
       await setGlobal({ importedContracts, signedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data, loading: false });
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
+      // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
 
 
       //  Fetch web2 analytics eventNames - we will fetch the actual event results in Segment handling
