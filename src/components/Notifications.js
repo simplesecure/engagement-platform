@@ -63,7 +63,7 @@ export default class Notifications extends React.Component {
       }
       await runClientOperation('setNotificationActive', undefined, sessionData.id, operationData)
     } catch (error) {
-      throw new Error(`Notifications::makeActive: failed to make notification ` + 
+      throw new Error(`Notifications::makeActive: failed to make notification ` +
                       `(id=${(thisNotification) ? thisNotification.id : 'unknown'}) active.\n` +
                       `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n` +
                       `${error}`)
@@ -93,12 +93,12 @@ export default class Notifications extends React.Component {
       }
       await runClientOperation('setNotificationActive', undefined, sessionData.id, operationData)
     } catch (error) {
-      throw new Error(`Notifications::makeInactive: failed to make notification ` + 
+      throw new Error(`Notifications::makeInactive: failed to make notification ` +
                       `(id=${(thisNotification) ? thisNotification.id : 'unknown'}) inactive.\n` +
                       `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n` +
                       `${error}`)
     }
-    
+
     thisNotification.active = false;
     sessionData.notifications = allNotifications;
     const thisApp = apps[sessionData.id]
@@ -134,7 +134,7 @@ export default class Notifications extends React.Component {
       const operationData = { notificationObj: newNotification }
       await runClientOperation('addNotification', undefined, sessionData.id, operationData)
     } catch (error) {
-      throw new Error(`Notifications::saveNotification: failed to save new notification ` + 
+      throw new Error(`Notifications::saveNotification: failed to save new notification ` +
                       `(name=${newNotification.name}).\n` +
                       `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n` +
                       `${error}`)
@@ -243,7 +243,7 @@ export default class Notifications extends React.Component {
 
     notifications.splice(index, 1);
     sessionData.notifications = notifications;
-    
+
     const thisApp = apps[sessionData.id];
     thisApp.notifications = notifications;
     setGlobal({ sessionData, apps, processing: true });
@@ -289,7 +289,7 @@ export default class Notifications extends React.Component {
           <Dropdown
             placeholder='Select a segment...'
             value={selected_segment}
-            onChange={(e) => this.setState({ selected_segment: e.target.value })}
+            onChange={(e, {value}) => this.setState({ selected_segment: value })}
             fluid selection
             options={segments}
           />
@@ -353,27 +353,23 @@ export default class Notifications extends React.Component {
                   activeNotifications.length > 0 ?
                       activeNotifications.map(not => {
                         return (
-                          <Segment key={not.id} padded raised>
-                            <Grid columns={2}>
-                              <Grid.Row>
-                                <Grid.Column width={10}>
-                                  <Header as='h3'>{not.name}</Header>
-                                  <p>{currentSegments.filter(a => a.id === not.segmentId)[0] ? currentSegments.filter(a => a.id === not.segmentId)[0].name : ""}</p>
-                                </Grid.Column>
-                                <Grid.Column width={6} verticalAlign="bottom">
-                                  <Button.Group>
-                                    <Button onClick={() => this.handleNotificationEdits(not)} icon basic>
-                                      <Icon name='edit' size='large' color='blue' />
-                                      <p className='name'>Edit</p>
-                                    </Button>
-                                    <Button onClick={() => this.makeInactive(not)} icon basic>
-                                      <Icon color='red' name='ban' size='large' />
-                                      <p className='name'>Disable</p>
-                                    </Button>
-                                  </Button.Group>
-                                </Grid.Column>
-                              </Grid.Row>
-                            </Grid>
+                          <Segment key={not.id} raised>
+                            <Header as='h3' divided>
+                              <Header.Content>{not.name}</Header.Content>
+                              <Header.Subheader color='grey' style={{marginTop: 5}}>
+                                 <p>{currentSegments.filter(a => a.id === not.segmentId)[0] ? currentSegments.filter(a => a.id === not.segmentId)[0].name : ""}</p>
+                              </Header.Subheader>
+                            </Header>
+                            <Button.Group>
+                              <Button onClick={() => this.handleNotificationEdits(not)} icon basic>
+                                <Icon name='edit' size='large' color='blue' />
+                                <p className='name'>Edit</p>
+                              </Button>
+                              <Button onClick={() => this.makeInactive(not)} icon basic>
+                                <Icon color='red' name='ban' size='large' />
+                                <p className='name'>Disable</p>
+                              </Button>
+                            </Button.Group>
                           </Segment>
                         )
                       })
@@ -388,38 +384,34 @@ export default class Notifications extends React.Component {
                   <h5>Inactive Notifications</h5>
                   {
                     inactiveNotifications.length > 0 ?
-                          inactiveNotifications.map(not => {
-                            return(
-                              <Segment key={not.id} padded raised>
-                                <Grid columns={2}>
-                                  <Grid.Row>
-                                    <Grid.Column width={10}>
-                                      <Header as='h3'>{not.name}</Header>
-                                      <p className='name'>{currentSegments.filter(a => a.id === not.segmentId)[0] ? currentSegments.filter(a => a.id === not.segmentId)[0].name : ""}</p>
-                                    </Grid.Column>
-                                    <Grid.Column width={6} verticalAlign="bottom">
-                                      <Button.Group>
-                                        <Button onClick={() => this.makeActive(not)} icon basic>
-                                          <Icon name='checkmark' size='large' color='green' />
-                                          <p className='name'>Enable</p>
-                                        </Button>
-                                        <Button onClick={() => this.handleNotificationDelete(not)} icon basic>
-                                          <Icon color='red' name='trash alternate outline' size='large' />
-                                          <p className='name'>Delete</p>
-                                        </Button>
-                                      </Button.Group>
-                                    </Grid.Column>
-                                  </Grid.Row>
-                                </Grid>
-                              </Segment>
-                            )
-                          })
-                  :
-                  <Message>
-                    <p>
-                      No inactive notifications.
-                    </p>
-                  </Message>
+                      inactiveNotifications.map(not => {
+                        return(
+                          <Segment key={not.id} raised>
+                            <Header as='h3' divided>
+                              <Header.Content>{not.name}</Header.Content>
+                              <Header.Subheader color='grey' style={{marginTop: 5}}>
+                                 <p className='name'>{currentSegments.filter(a => a.id === not.segmentId)[0] ? currentSegments.filter(a => a.id === not.segmentId)[0].name : ""}</p>
+                              </Header.Subheader>
+                            </Header>
+                            <Button.Group>
+                              <Button onClick={() => this.makeActive(not)} icon basic>
+                                <Icon name='checkmark' size='large' color='green' />
+                                <p className='name'>Enable</p>
+                              </Button>
+                              <Button onClick={() => this.handleNotificationDelete(not)} icon basic>
+                                <Icon color='red' name='trash alternate outline' size='large' />
+                                <p className='name'>Delete</p>
+                              </Button>
+                            </Button.Group>
+                          </Segment>
+                        )
+                      })
+                    :
+                    <Message>
+                      <p>
+                        No inactive notifications.
+                      </p>
+                    </Message>
                   }
                 </div>
               </div>
