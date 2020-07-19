@@ -214,6 +214,40 @@ function setJobQueue(jobs) {
   setGlobal({ jobs });
 }
 
+//  TODO: think this through better. Right now it issues a client command to the
+//        server, waits for a specific response.
+//
+//        - try-catch, timeout, unique request id tracking
+//
+export async function runClientOperation(anOperation, anOrgId=undefined, anAppId=undefined, theOperationData={}) {
+  const cmdObj = {
+    command: 'clientOperation',
+    data: {
+      orgId: anOrgId,
+      appId: anAppId,
+      operation: anOperation,
+      operationData: theOperationData
+    }
+  }
+
+  const method = 'dataProcessing::runClientCommand'
+  log.debug(`${method}: calling server to run ${cmdObj.command}:${cmdObj.data.operation}`)
+  socket.emit("client command", cmdObj)
+
+  const result = await new Promise((resolve, reject) => {
+    socket.once("client result", (aResult) => {
+      log.debug(`${method}: received result of executing ${cmdObj.command}:${cmdObj.data.operation}`)
+      resolve(aResult)
+    })
+  })
+
+  if (!result.data.success) {
+    throw new Error(result.data.errors.join('\n'))
+  }
+
+  return result.data.obj
+}
+
 export async function handleData(dataToProcess) {
   log.debug("DATA IN HANDLE DATA FUNCTION: ", dataToProcess);
   const { data, type } = dataToProcess;
@@ -222,12 +256,12 @@ export async function handleData(dataToProcess) {
   if (type === "fetch-user-count") {
     log.debug(data.app_id);
     try {
-      const appData = await dc.walletAnalyticsDataTableGet(data.app_id);
-      const users = Object.keys(appData.Item.analytics);
-      log.debug(appData);
-      return users;
-    } catch (e) {
-      log.debug("USER FETCH ERROR: ", e);
+      // Replacing: const appData = await dc.walletAnalyticsDataTableGet(data.app_id);
+      //            const users = Object.keys(appData.Item.analytics);
+      return await runClientOperation('getUserWallets', undefined, data.app_id)
+    } catch (loggedError) {
+      log.error(`dataProcessing::handleData: failed to handle 'fetch-user-count'.\n` +
+                `${loggedError}`)
       return [];
     }
   } else if (type === "updateSegments") {
@@ -440,6 +474,7 @@ async function handleSegmentUpdate(result) {
     }
   })
   sessionData.currentSegments = currentSegments;
+
 
   setGlobal({
     sessionData,

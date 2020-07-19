@@ -1,11 +1,9 @@
 import { Auth } from 'aws-amplify'
 import Amplify from 'aws-amplify';
-import { walletAnalyticsDataTablePut,
-         organizationDataTableGet,
-         organizationDataTablePut,
-         walletToUuidMapTableGetUuids } from './dynamoConveniences.js'
-import { jsonParseToBuffer } from './misc.js'
+import { walletToUuidMapTableGetUuids } from './dynamoConveniences.js'
+import { jsonParseToBuffer, decryptWrapper, encryptWrapper } from './misc.js'
 import { getLog } from './debugScopes.js'
+import { runClientOperation } from './dataProcessing.js';
 const log = getLog('sidServices')
 const AWS = require('aws-sdk')
 const ethers = require('ethers')
@@ -629,14 +627,16 @@ export class SidServices
 
     // 2. Fetch the private key required to decrypt the uuids:
     //
-    // TODO:
-    //      - Make this efficient (this is awful)
     let orgEcPriKey = undefined
     try {
-      const orgData = await organizationDataTableGet(this.persist.sid.org_id)
-      orgEcPriKey = await this.getOrgEcPriKey(orgData.Item)
+      const orgCryptography = {
+        cryptography: await runClientOperation('getCryptography', this.persist.sid.org_id)
+      }
+      orgEcPriKey = await this.getOrgEcPriKey(orgCryptography)
     } catch (error) {
-      throw new Error(`Failed to restore organization private key.\n${error}`)
+      throw new Error(`Failed to restore organization private key.\n` +
+                      `Please retry this operation and if it fails again, contact support@simpleid.xyz.\n` +
+                      `${error}`)
     }
 
     // 3. Decrypt the encrypted uuids and return them:
@@ -645,7 +645,7 @@ export class SidServices
       try {
         //console.log(orgEcPriKey, encryptedUuidCipherText)
         if(encryptedUuidCipherText) {
-          const uuid = await eccrypto.decrypt(orgEcPriKey, encryptedUuidCipherText)
+          const uuid = await decryptWrapper(orgEcPriKey, encryptedUuidCipherText)
           uuids.push(uuid.toString())
         }
       } catch (suppressedError) {
@@ -658,15 +658,15 @@ export class SidServices
   }
 
   /**
-   * createOrganizationId
+   * createOrganization
    *
    * Notes:  This method generates an organization id and then populates the
    *         Organization Data Table with the newly created organization id.
    *
    *         @return orgId, the newly created organization id
    */
-  async createOrganizationId(aUserUuid, aUserPubKey, aUserPriKey) {
-    const orgId = uuidv4()
+  async createOrganization(aUserUuid, aUserPubKey, aUserPriKey) {
+    const method = `sidServices::createOrganization`
 
     let sub = undefined
     try {
@@ -675,54 +675,49 @@ export class SidServices
       await this.requestIdpCredentials()
       sub = AWS.config.credentials.identityId
     } catch (error) {
-      throw Error('ERROR: Failed to get id from Identity Pool.')
+      throw Error(`${method}: Failed to get id from Identity Pool.`)
     }
 
     const orgPriKey = eccrypto.generatePrivate()
     const orgPubKey = eccrypto.getPublic(orgPriKey)
     let priKeyCipherText = undefined
     try {
-      priKeyCipherText = await eccrypto.encrypt(aUserPubKey, orgPriKey)
+      priKeyCipherText = await encryptWrapper(aUserPubKey, orgPriKey)
     } catch (error) {
-      throw new Error(`ERROR: Creating organization id. Failed to create private key cipher text.\n${error}`)
-    }
-
-    if (TEST_ASYMMETRIC_DECRYPT) {
-      try {
-        const recoveredPriKey =
-          await eccrypto.decrypt(aUserPriKey, priKeyCipherText)
-
-        if (recoveredPriKey.toString('hex') !== orgPriKey.toString('hex')) {
-          throw new Error(`Recovered private key does not match private key:\nrecovered:${recoveredPriKey[0].toString('hex')}\noriginal:${orgPriKey.toString('hex')}\n`);
-        }
-      } catch (error) {
-        throw new Error(`ERROR: testing asymmetric decryption.\n${error}`)
-      }
-    }
-
-    const organizationDataRowObj = {
-      org_id: orgId,
-      cryptography: {
-        pub_key: orgPubKey,
-        pri_key_ciphertexts: {
-          [ aUserUuid ] : priKeyCipherText,
-        }
-      },
-      owner: {
-        sub: sub,
-        uuid: aUserUuid,
-      },
-      members: [],
-      apps: {}
+      throw new Error(`${method}: Creating organization id. Failed to create private key cipher text.\n${error}`)
     }
 
     try {
-      await organizationDataTablePut(organizationDataRowObj)
-    } catch(error) {
-      throw Error(`ERROR: Creating organization id.\n${error}`)
+      if (TEST_ASYMMETRIC_DECRYPT) {
+        const recoveredPriKey = await decryptWrapper(aUserPriKey, priKeyCipherText)
+
+        if (recoveredPriKey.toString('hex') !== orgPriKey.toString('hex')) {
+          throw new Error(`${method}: Recovered private key does not match private key:\nrecovered:${recoveredPriKey[0].toString('hex')}\noriginal:${orgPriKey.toString('hex')}\n`);
+        }
+      }
+    } catch (error) {
+      throw new Error(`${method}: testing asymmetric decryption.\n${error}`)
     }
 
-    return orgId
+    const operationData = {
+      cryptography: {
+        pub_key: orgPubKey,
+        pri_key_ciphertexts: { [ aUserUuid ] : priKeyCipherText }
+      },
+      owner: {
+        sub,
+        uuid: aUserUuid
+      }
+    }
+
+    try {
+      let orgId = await runClientOperation('addOrg', undefined, undefined, operationData)
+      return orgId
+    } catch (error) {
+      throw new Error(`${method}: failed to create organization.\n` +
+                      `Please reload the page and if the error occurs again, contact support@simpleid.xyz.\n` +
+                      `${error}`)
+    }
   }
 
   async createSidObject() {
@@ -735,7 +730,7 @@ export class SidServices
     const priKeyCipherText =
       await this.encryptWithKmsUsingIdpCredentials(this.keyId1, priKey)
 
-    const orgId = await this.createOrganizationId(this.persist.userUuid, pubKey, priKey)
+    const orgId = await this.createOrganization(this.persist.userUuid, pubKey, priKey)
 
     let sidObj = {
       org_id: orgId,
@@ -759,166 +754,36 @@ export class SidServices
    */
   async createAppId(anOrgId, anAppObject) {
     const method = 'createAppId'
-
-    // await this.getUuidsForWalletAddresses()
-    // return
-    // TODO: 1. Might want to check if the user has the org_id in their sid
-    //       user data property.
-    //       2. Might want to check if the user is listed as a member in the
-    //       org data table.
-    //       3. Use update to do the assignment (right now we're doing the
-    //       horrible read--modify--clobber-write)
-    //       4. Def check to make sure the same app id doesn't exist / collide
-    //       in the wallet analytics table
-
-    const appId = uuidv4()
-
-    // 1. Fetch the organization data
-    //
-    let orgData = undefined
-    try {
-      // TODO: See TODO.3 above!
-      orgData = await organizationDataTableGet(anOrgId)
-    } catch (error) {
-      throw new Error(`${method} Failed to fetch organization data.\n${error}`)
+    
+    const operationData = {
+      date_created: anAppObject.date_created,
+      project_name: anAppObject.project_name,
     }
 
-    // 2 Get the public key
+    // Create an entry for 3Box in the new app's data. Encrypt the 3Box id for
+    // this app using the same shared public key used for analytics:
     //
-    let publicKey = undefined
     try {
-      publicKey = orgData.Item.cryptography.pub_key
-
+      // TODO: PBJ/AC, this shouldn't need to be called--it shoulda been stored in local storage on log in
+      //               in our cache model--cryptography doesn't change frequently.
+      const cryptography = await runClientOperation('getCryptography', anOrgId)
+      const publicKey = cryptography.pub_key
       if (!publicKey) {
         throw new Error(`publicKey is undefined in organization data.`)
       }
-    } catch (error) {
-      throw new Error(`${method} Failed to fetch public key from organization data.\n${error}`)
-    }
 
-    // 3. Create an entry for 3Box in the new app's data. Encrypt the 3Box id for
-    //    this app using the same shared public key used for analytics:
-    //      - TODO: very similar to getChatSupportAddress code in 3.a.  (Unify if possible)
-    try {
       const chatSupportWallet = ethers.Wallet.createRandom()
       const chatSupportWalletStr = JSON.stringify(chatSupportWallet)
-      let chatSupportWalletCipherText = await eccrypto.encrypt(publicKey, Buffer.from(chatSupportWalletStr))
-      anAppObject.chat_support = {
+      let chatSupportWalletCipherText = await encryptWrapper(publicKey, Buffer.from(chatSupportWalletStr))
+
+      operationData.chat_support = {
         wallet: chatSupportWalletCipherText
       }
     } catch (error) {
       throw new Error(`${method} Failed to create chat support address.\n${error}`)
     }
 
-    // 4. Update the apps entry for the organization with the new app's data:
-    //
-    try {
-      orgData.Item.apps[appId] = anAppObject
-      await organizationDataTablePut(orgData.Item)
-    } catch (error) {
-      throw new Error(`${method} Failed to update organization data.\n${error}`)
-    }
-
-    // 5. Update the Wallet Analytics Data table
-    //
-    try {
-      const walletAnalyticsRowObj = {
-        app_id: appId,
-        org_id: anOrgId,
-        public_key: publicKey,
-        analytics: {}
-      }
-      await walletAnalyticsDataTablePut(walletAnalyticsRowObj)
-    } catch (error) {
-      throw new Error(`${method} Failed to add wallet analytics data table row.\n${error}`)
-    }
-
-    // AC: Not sure if this is needed.
-    // // 6. TODO: Update the user data using Cognito IDP (the 'sid' property)
-    // //
-    // await this.tableUpdateWithIdpCredentials('sid', 'apps', appId, {})
-
-    return appId
-  }
-
-  async getChatSupportAddress(anOrgDataObj, anAppId) {
-    const method = 'getChatSupportAddress'
-    log.debug(`${method} called for app id ${anAppId}`)
-
-    // 0. Basic checks to make sure we can run this function.
-    //
-    if (!anOrgDataObj || !anAppId) {
-      throw new Error(`${method} requires organization data and an app id.`)
-    }
-    if (!anOrgDataObj.apps || !anOrgDataObj.apps[anAppId]) {
-      throw new Error(`${method} no organization data for application id ${anAppId}`)
-    }
-
-    // 1. Try to get the chat support wallet cipher text from the org data
-    //
-    let chatSupportWalletCipherText = undefined
-    try {
-      chatSupportWalletCipherText = anOrgDataObj.apps[anAppId].chat_support.wallet
-    } catch (suppressedError) {
-      log.warn(`${method} Application id ${anAppId} does not have chat support. Creating now...\n${suppressedError}`)
-    }
-
-    let chatSupportWallet = undefined
-    if (chatSupportWalletCipherText) {
-      // 2. a) If we were able to get the chat support wallet cipher text, then
-      //       decrypt and return it to the user. Start by fetching this user's
-      //       pri key to decrypt the org pri key:
-      //    b) Now decrypt the org EC private key with the user's private key:
-      //
-      let orgEcPriKey = undefined
-      try {
-        orgEcPriKey = await this.getOrgEcPriKey(anOrgDataObj)
-      } catch (error) {
-        throw new Error(`${method} failed to restore organization private key.\n${error}`)
-      }
-
-      // 2. c) Now decrypt this apps chat support wallet with the org EC private key:
-      //
-      try {
-        const chatSupportWalletStr = await eccrypto.decrypt(orgEcPriKey, chatSupportWalletCipherText)
-        chatSupportWallet = jsonParseToBuffer(chatSupportWalletStr)
-      } catch (error) {
-        throw new Error(`${method} Failed to decrypt the organization chat support wallet locally.\n${error}`)
-      }
-    } else {
-      // 3. a) If we were not able to get the chat support wallet cipher text, then
-      //       create a chat support wallet (this feature was introduced mid-stream
-      //       and not all users/ors have it) and an encrypted version of it for
-      //       storing in the org data.
-      //
-      try {
-        const publicKey = anOrgDataObj.cryptography.pub_key
-        chatSupportWallet = ethers.Wallet.createRandom()
-        const chatSupportWalletStr = JSON.stringify(chatSupportWallet)
-        chatSupportWalletCipherText = await eccrypto.encrypt(publicKey, Buffer.from(chatSupportWalletStr))
-      } catch (error) {
-        throw new Error(`${method} failed creating and encrypting chat support wallet.\n${error}`)
-      }
-
-      // 3. b) Now store the new encrypted chat support wallet in the org data
-      //       and return the the unencrypted support wallet to the user
-      //
-      try {
-        anOrgDataObj.apps[anAppId].chat_support = {
-          wallet: chatSupportWalletCipherText
-        }
-        // TODO: this could be an update expression for just the app not requireing
-        //       the whole org updated (or refactor apps out)
-        await organizationDataTablePut(anOrgDataObj)
-      } catch (error) {
-        throw new Error(`${method} failed to store newly created encrypted chat support wallet.\n${error}`)
-      }
-    }
-
-    log.debug(`${method} returning a chat support wallet for app id ${anAppId}:\n` +
-              `  address:   ${chatSupportWallet.signingKey.address}\n` +
-              `  publicKey: ${chatSupportWallet.signingKey.publicKey}\n\n`)
-    return chatSupportWallet
+    return await runClientOperation('addApp', anOrgId, undefined, operationData)  // returns app id
   }
 
   async getOrgEcPriKey(anOrgDataObj) {
@@ -936,7 +801,7 @@ export class SidServices
 
     try {
       const cipherObj = anOrgDataObj.cryptography.pri_key_ciphertexts[this.persist.userUuid]
-      orgEcPriKey = await eccrypto.decrypt(userEcPriKey, cipherObj)
+      orgEcPriKey = await decryptWrapper(userEcPriKey, cipherObj)
     } catch (error) {
       throw new Error(`${method} failed to decrypt organization private key.\n${error}`)
     }

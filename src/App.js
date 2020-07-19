@@ -22,7 +22,8 @@ export default class App extends React.Component {
     //let currentSegments = [];
     //Check local storage for quick loading first
     const sessionFromLocal = localStorage.getItem(SESSION_FROM_LOCAL)
-    if(sessionFromLocal) {
+    if (sessionFromLocal &&
+        sessionFromLocal !== 'undefined') {
       setGlobal({ sessionData: JSON.parse(sessionFromLocal), loading: false });
     }
 
