@@ -38,32 +38,6 @@ export function dbRequestDebugLog(anOperation, params, error) {
   } catch(suppressedError) {}
 }
 
-
-export async function tableGet(aTable, aKeyName, aKeyValue, aProjectionExpression=undefined) {
-  const params = {
-    TableName: aTable,
-    Key: {
-      [ aKeyName ] : aKeyValue
-    }
-  }
-
-  if (aProjectionExpression) {
-    params['ProjectionExpression'] = aProjectionExpression
-  }
-
-  return await new Promise((resolve, reject) => {
-    _docClientAK.get(params, (err, data) => {
-      if (err) {
-        dbRequestDebugLog('tableGet', params, err)
-
-        reject(err)
-      } else {
-        resolve(data)
-      }
-    })
-  })
-}
-
 // TODO:
 //    - One day we'll bump up against the limitations of this (see:
 //      https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchGetItem.html).
@@ -123,23 +97,4 @@ export async function tableBatchGet(aTable, anArrOfKeyValuePairs) {
   }
 
   return mergedResult
-}
-
-export async function tablePut(aTable, anObject) {
-  const params = {
-    TableName: aTable,
-    Item: anObject
-  }
-
-  return await new Promise((resolve, reject) => {
-    _docClientAK.put(params, (err, data) => {
-      if (err) {
-        dbRequestDebugLog('tablePut', params, err)
-
-        reject(err)
-      } else {
-        resolve(data)
-      }
-    })
-  })
 }
