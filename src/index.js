@@ -35,14 +35,13 @@ setGlobal({
   action: "",
   threeBoxConnected: false,
   provider: {},
-  threeBoxProfile: {},
   box: {},
   space: {},
   org_id: getCloudUser().getUserData() && getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.org_id : undefined,
   showSegmentNotification: false,
   segmentProcessingDone: false,
   segmentName: "",
-  liveChat: true, 
+  liveChat: true,
   mainThread: {},
   currentThread: {},
   mainThreadPosts: [],
@@ -64,8 +63,8 @@ setGlobal({
   allFilters: [],
   weekly: [],
   monthly: [],
-  loadingMessage: '', 
-  experimentalFeatures: process.env.REACT_APP_SID_EXPERIMENTAL_FEATURES === 'true' ? true : false, 
+  loadingMessage: '',
+  experimentalFeatures: process.env.REACT_APP_SID_EXPERIMENTAL_FEATURES === 'true' ? true : false,
   plan: process.env.REACT_APP_SID_ALL_FEATURES
 })
 

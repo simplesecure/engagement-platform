@@ -5,7 +5,6 @@ export default class DashboardTiles extends React.Component {
   constructor(props) {
     super(props)
     this.uniqueEleKey = Date.now()
-    this.currentSegments = []
   }
   getUniqueKey() {
     return this.uniqueEleKey++
@@ -42,30 +41,7 @@ export default class DashboardTiles extends React.Component {
   }
   getSegmentTiles = () => {
     const { currentSegments } = this.props
-    if (this.currentSegments !== currentSegments) {
-      if (this.currentSegments.length === currentSegments.length) {
-        for (let i = 0; i < currentSegments.length; i++) {
-          if (currentSegments[i].userCount > this.currentSegments[i].userCount) {
-            this.currentSegments[i] = currentSegments[i]
-            this.currentSegments[i].color = '#97d154'
-          }
-          else if (currentSegments[i].userCount < this.currentSegments[i].userCount) {
-            this.currentSegments[i] = currentSegments[i]
-            this.currentSegments[i].color = '#d15a54'
-          }
-          else {
-            this.currentSegments[i] = currentSegments[i]
-          }
-        }
-      }
-      else {
-        this.currentSegments = currentSegments
-      }
-    }
-    else {
-      this.currentSegments = currentSegments
-    }
-    const allTiles = this.currentSegments ? this.currentSegments : []
+    const allTiles = currentSegments ? currentSegments : []
     const tiles = allTiles.filter(
       (a) => a.showOnDashboard === true
     )

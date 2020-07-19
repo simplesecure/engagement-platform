@@ -24,7 +24,7 @@ class CloudUser {
     window.location.reload();
   }
 
-  async fetchOrgDataAndUpdate() {
+  async fetchOrgDataAndUpdate(org) {
     await setGlobal({ allFilters: [...filter] });
     let userData
     let sid
@@ -39,8 +39,10 @@ class CloudUser {
 
     //regardless of whether there is data in local storage, we need to fetch from db
     let appData;
+    if (!org_id) {
+      org_id = org
+    }
     if(org_id) {
-
       appData = await dc.organizationDataTableGet(org_id);
       // console.log(appData);
       const experimentalFeatures = appData.Item.experimentalFeatures ? true : false;

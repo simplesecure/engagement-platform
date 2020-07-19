@@ -423,15 +423,23 @@ async function handleSegmentUpdate(result) {
              `monthlySegment users ${(monthlySegmentIndex > -1) ? monthlySegment.userCount : 'unknown'}\n` +
              `number of segments: ${currentSegments.length}\n`
              )
-  const segs = currentSegments;
-  sessionData.currentSegments = segs;
-  // Begin: Remove Me PBJ <-- TODO
-  for (const seg of segs) {
-    if (seg.hasOwnProperty('blockId')) {
-      console.info(`Segment ${seg.name} updated in block id ${seg.blockId}.`)
+  const oldSegments = sessionData.currentSegments
+  currentSegments.forEach((item, i) => {
+    if (item.hasOwnProperty('blockId')) {
+      console.info(`Segment ${item.name} updated in block id ${item.blockId}.`)
+      item.color = 'white'
     }
-  }
-  // End:   Remove Me PBJ <-- TODO
+    const oldItem = oldSegments[i]
+    if (oldItem && item.name === oldItem.name) {
+      if (item.userCount > oldItem.userCount) {
+        item.color = '#97d154'
+      }
+      else if (item.userCount < oldItem.userCount) {
+        item.color = '#d15a54'
+      }
+    }
+  })
+  sessionData.currentSegments = currentSegments;
 
   setGlobal({
     sessionData,

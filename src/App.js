@@ -36,13 +36,13 @@ export default class App extends React.Component {
       }
 
       //First try to fetch the profile from local storage
-      const profile = localStorage.getItem(PROFILE_STORAGE) ? JSON.parse(localStorage.getItem(PROFILE_STORAGE)) : {}
+      // const profile = localStorage.getItem(PROFILE_STORAGE) ? JSON.parse(localStorage.getItem(PROFILE_STORAGE)) : {}
       //  Fetch job queue
       const jobs = localStorage.getItem(SID_JOB_QUEUE) ? JSON.parse(localStorage.getItem('sid_job_queue')) : undefined
       if(jobs) {
         setGlobal({ jobs })
       }
-      setGlobal({ threeBoxProfile: profile })
+      // setGlobal({ threeBoxProfile: profile })
       //Need to check if the user is part of an organization from the org table
       getCloudUser().fetchOrgDataAndUpdate()
 

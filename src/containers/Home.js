@@ -1,91 +1,84 @@
-import React from 'reactn';
-import { BrowserRouter, Route } from 'react-router-dom';
-import SignIn from '../components/SignIn';
-import Dashboard from '../components/Dashboard';
-import SideNav from '../components/SideNav';
-import Search from '../components/Search';
-import AddTile from '../components/AddTile';
-import Notifications from '../components/Notifications';
-import Communications from '../components/Communications/Communications';
-// import Account from '../components/Account';
-import Segments from '../components/Segments';
-import Projects from '../components/Projects';
-import Jobs from '../components/Jobs';
-import Support from '../components/Support';
+import React, { setGlobal } from 'reactn'
+import { BrowserRouter, Route, useLocation } from 'react-router-dom'
+import SignIn from '../components/SignIn'
+import Dashboard from '../components/Dashboard'
+import SideNav from '../components/SideNav'
+import Notifications from '../components/Notifications'
+import Communications from '../components/Communications/Communications'
+import Segments from '../components/Segments'
+import Projects from '../components/Projects'
+import Jobs from '../components/Jobs'
+import Support from '../components/Support'
 import BlockDiagram from '../components/BlockDiagram'
-import {
-  Dimmer,
-  Loader,
-} from 'semantic-ui-react'
+import { Dimmer, Loader } from 'semantic-ui-react'
 import FlowyWorker from './FlowyWorker'
+import { getCloudUser } from '../utils/cloudUser';
+const qs = require('query-string');
 
 export default class Home extends React.Component {
   constructor (props) {
     super(props)
     this.flowy = new FlowyWorker()
+    const { org } = qs.parse(window.location.search);
+    console.log(org);
+    this.org = org
+    // "d4d9d63d-939c-4ace-b46b-00dcf1cf08ab"
   }
-  renderWhenLoading() {
-    return (
-      <Dimmer active>
-        <Loader inline='centered' indeterminate>{"Loading..."}</Loader>
-      </Dimmer>
-    )
+  async componentDidMount() {
+    if (this.org) {
+      await setGlobal({ publicDashboard: true })
+      await getCloudUser().fetchOrgDataAndUpdate(this.org)
+    }
   }
-  renderSignedIn() {
-    const { initialLoading } = this.global;
-    return (
-      <BrowserRouter>
-        <Route exact path='/' component={Dashboard} />
-        <Route path='/new-search' component={Search} />
-        <Route path='/segments' component={Segments} />
-        <Route path='/new-tile' component={AddTile} />
-        <Route exact path='/notifications' component={Notifications} />
-        {/*<Route path='/account' component={Account} />*/}
-        <Route path='/communications' component={Communications} />
-        <Route path='/support' component={Support} />
-        <Route path='/account' component={Projects} />
-        <Route path='/console' component={Jobs} />
-        <Route path='/block' render={(props) => (
-            <BlockDiagram {...props} flowy={this.flowy} />
-          )}
-        />
-        <Dimmer active={initialLoading}>
-          <Loader inline='centered' indeterminate>{"Updating your user segment data..."}</Loader>
-        </Dimmer>
-      </BrowserRouter>
-    )
-  }
-
-  renderNoProjectsView() {
-    return (
-      <BrowserRouter>
-        <SideNav />
-        <Projects />
-      </BrowserRouter>
-    )
-  }
-
-  renderSignIn() {
-    return (
-      <SignIn />
-    )
-  }
-
+  renderSignIn = () => <SignIn />
+  renderLoading = (message="Loading....") => (
+    <Dimmer active>
+      <Loader inline='centered' indeterminate>{message}</Loader>
+    </Dimmer>
+  )
+  renderPublicDashboard = () => (
+    <BrowserRouter>
+      <Dashboard />
+    </BrowserRouter>
+  )
+  renderNoProjectsView = () => (
+    <BrowserRouter>
+      <SideNav />
+      <Projects />
+    </BrowserRouter>
+  )
+  renderSignedIn = () => (
+    <BrowserRouter>
+      <Route exact path='/' component={Dashboard} />
+      <Route path='/segments' component={Segments} />
+      <Route path='/notifications' component={Notifications} />
+      <Route path='/communications' component={Communications} />
+      <Route path='/support' component={Support} />
+      <Route path='/account' component={Projects} />
+      <Route path='/console' component={Jobs} />
+      <Route path='/block' render={(props) => (
+          <BlockDiagram {...props} flowy={this.flowy} />
+        )}
+      />
+    </BrowserRouter>
+  )
   render() {
-    const { signedIn, sessionData, loading } = this.global;
-    let renderEl;
+    const { signedIn, sessionData, loading } = this.global
+    let element
     if(loading) {
-      renderEl = this.renderWhenLoading()
+      element = this.renderLoading()
     } else if(signedIn && Object.keys(sessionData).length > 0 && loading === false) {
-      renderEl = this.renderSignedIn()
+      element = this.renderSignedIn()
     } else if(signedIn && Object.keys(sessionData).length === 0 && loading === false) {
-      renderEl = this.renderNoProjectsView()
+      element = this.renderNoProjectsView()
+    } else if(this.org) {
+      element = this.renderPublicDashboard()
     } else {
-      renderEl = this.renderSignIn()
+      element = this.renderSignIn()
     }
     return (
       <div>
-        {renderEl}
+        {element}
       </div>
     )
   }

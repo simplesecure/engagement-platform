@@ -79,9 +79,8 @@ export default class Auth extends React.Component {
           const userData = await getCloudUser().getUserData()
           const sid = userData.sid
           const org_id = sid.org_id
-          const profile = localStorage.getItem(PROFILE_STORAGE) ? JSON.parse(localStorage.getItem(PROFILE_STORAGE)) : {}
 
-          setGlobal({ signedIn: true, loading: false, action: "", threeBoxProfile: profile, org_id })
+          setGlobal({ signedIn: true, loading: false, action: "", org_id })
           await getCloudUser().fetchOrgDataAndUpdate()
         }
       } else {

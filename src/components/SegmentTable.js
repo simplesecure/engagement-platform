@@ -63,11 +63,11 @@ export default class SegmentTable extends React.Component {
     let name = user.substring(2)
     let wallet = 'Unknown'
     if (this.makerWallets.hasOwnProperty(user)) {
-      console.log("Found Maker Proxy: ", user)
+      // console.log("Found Maker Proxy: ", user)
       wallet = "Maker Proxy"
     }
     else if (this.instadappWallets.hasOwnProperty(user)) {
-      console.log("Found Proxy: ", user)
+      // console.log("Found Proxy: ", user)
       wallet = "InstaDapp Proxy"
     }
     return (

@@ -43,14 +43,18 @@ export default class Dashboard extends React.Component {
     const {
       sessionData,
       processing,
-      importedContracts
+      importedContracts,
+      publicDashboard
     } = this.global
     const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal } = this.state
     const { currentSegments } = sessionData
+    const dynamicClass = !publicDashboard ?
+    "main-content col-lg-12 col-md-12 col-sm-12 p-0 offset-lg-2 offset-md-3" :
+    "main-content col-lg-12 col-md-12 col-sm-12 p-0"
     return (
       <div>
-        <SideNav />
-        <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
+        {!publicDashboard ? <SideNav /> : null}
+        <main className={dynamicClass}>
           <div className="main-content-container container-fluid px-4">
             <div className="page-header row no-gutters py-4">
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4">

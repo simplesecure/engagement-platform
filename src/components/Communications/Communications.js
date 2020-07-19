@@ -765,7 +765,7 @@ export default class Communications extends React.Component {
                   Campaigns{"   "}
                   <br />
                   <br />
-                  {plan === "enterprise" || !plan ? (
+                  {plan === "enterprise" || plan === "premium" ? (
                     <span>
                       <Button
                         onClick={() => this.setState({ createCampaign: true })}
@@ -818,7 +818,7 @@ export default class Communications extends React.Component {
                     Templates{"   "}
                     <br />
                     <br />
-                    {plan === "enterprise" || !plan ? (
+                    {plan === "enterprise" || plan === "premium" ? (
                       <span>
                         <Button
                           onClick={() => setGlobal({ emailEditor: true })}

@@ -24,52 +24,49 @@ export default class Jobs extends React.Component {
                 <ProcessingBlock />
               </div>
             </div>
-            <div className="row">
-              <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-                <Terminal
-                  style={{
-                    fontWeight: 'bold',
-                    fontSize: '18px'
-                  }}
-                  msg='SimpleID Console: Displays the backend processes running'
-                  hideTopBar={false}
-                  allowTabs={false}
-                  showActions={false}
-                  watchConsoleLogging
-                  color='#007bff'
-                  prompt='#007bff'
-                  backgroundColor='#272727'
-                  barColor='#272727'
-                  descriptions={{ help: false, show: false, clear: false }}
-                  />
-              </div>
-              <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-                <Card>
-                  <Table>
-                    <Table.Head>
-                      <Table.TextHeaderCell>
-                        Command
-                      </Table.TextHeaderCell>
-                      <Table.TextHeaderCell>
-                        Status
-                      </Table.TextHeaderCell>
-                      <Table.TextHeaderCell>
-                        Job ID
-                      </Table.TextHeaderCell>
-                    </Table.Head>
-                    <Table.Body height={600}>
-                      {jobs.map(profile => (
-                        <Table.Row key={profile.job_id}>
-                          <Table.TextCell>{profile.command}</Table.TextCell>
-                          <Table.TextCell>{profile.status}</Table.TextCell>
-                          <Table.TextCell>{profile.job_id}</Table.TextCell>
-                        </Table.Row>
-                      ))}
-                    </Table.Body>
-                  </Table>
-                </Card>
-              </div>
-            </div>
+            <Terminal
+              style={{
+                fontWeight: 'bold',
+                fontSize: '18px',
+                width: '80vw',
+                height: '50vh'
+              }}
+              msg='SimpleID Console: Displays the backend processes running'
+              hideTopBar={false}
+              allowTabs={false}
+              showActions={false}
+              watchConsoleLogging
+              startState='maximised'
+              color='#007bff'
+              prompt='#007bff'
+              backgroundColor='#272727'
+              barColor='#272727'
+              descriptions={{ help: false, show: false, clear: false }}
+              />
+            <Card style={{marginTop: -200}}>
+              <Table>
+                <Table.Head>
+                  <Table.TextHeaderCell>
+                    Command
+                  </Table.TextHeaderCell>
+                  <Table.TextHeaderCell>
+                    Status
+                  </Table.TextHeaderCell>
+                  <Table.TextHeaderCell>
+                    Job ID
+                  </Table.TextHeaderCell>
+                </Table.Head>
+                <Table.Body height={600}>
+                  {jobs.map(profile => (
+                    <Table.Row key={profile.job_id}>
+                      <Table.TextCell>{profile.command}</Table.TextCell>
+                      <Table.TextCell>{profile.status}</Table.TextCell>
+                      <Table.TextCell>{profile.job_id}</Table.TextCell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table>
+            </Card>
           </div>
         </main>
       </div>
