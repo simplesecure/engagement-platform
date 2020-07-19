@@ -50,61 +50,31 @@ export default class Notifications extends React.Component {
     this.setState({ preview: true })
   }
 
-  makeActive = async (not) => {
+  setNotificationActive = async (notification, activeState) => {
     const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
     const { notifications } = sessionData;
     let allNotifications = notifications;
-    let thisNotification = allNotifications.filter(a => a === not)[0];
+    let thisNotification = allNotifications.filter(a => a === notification)[0];
 
     try {
       const operationData = {
         notificationId: thisNotification.id,
-        activeState: true
+        activeState
       }
       await runClientOperation('setNotificationActive', undefined, sessionData.id, operationData)
     } catch (error) {
-      throw new Error(`Notifications::makeActive: failed to make notification ` +
-                      `(id=${(thisNotification) ? thisNotification.id : 'unknown'}) active.\n` +
+      throw new Error(`Notifications::setNotificationActive: failed to set notification active=${activeState}` +
+                      `(id=${(thisNotification) ? thisNotification.id : 'unknown'}).\n` +
                       `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n` +
                       `${error}`)
     }
 
-    thisNotification.active = true;
+    thisNotification.active = activeState;
     sessionData.notifications = allNotifications;
     const thisApp = apps[sessionData.id]
     thisApp.notifications = allNotifications;
 
     setGlobal({ sessionData, apps })
-
-    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-    this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
-  }
-
-  makeInactive = async (not) => {
-    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
-    const { notifications } = sessionData;
-    let allNotifications = notifications;
-    let thisNotification = allNotifications.filter(a => a === not)[0];
-
-    try {
-      const operationData = {
-        notificationId: thisNotification.id,
-        activeState: false
-      }
-      await runClientOperation('setNotificationActive', undefined, sessionData.id, operationData)
-    } catch (error) {
-      throw new Error(`Notifications::makeInactive: failed to make notification ` +
-                      `(id=${(thisNotification) ? thisNotification.id : 'unknown'}) inactive.\n` +
-                      `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n` +
-                      `${error}`)
-    }
-
-    thisNotification.active = false;
-    sessionData.notifications = allNotifications;
-    const thisApp = apps[sessionData.id]
-    thisApp.notifications = allNotifications;
-
-    setGlobal({ sessionData, apps });
 
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
@@ -365,7 +335,7 @@ export default class Notifications extends React.Component {
                                 <Icon name='edit' size='large' color='blue' />
                                 <p className='name'>Edit</p>
                               </Button>
-                              <Button onClick={() => this.makeInactive(not)} icon basic>
+                              <Button onClick={() => this.setNotificationActive(not, false)} icon basic>
                                 <Icon color='red' name='ban' size='large' />
                                 <p className='name'>Disable</p>
                               </Button>
@@ -394,7 +364,7 @@ export default class Notifications extends React.Component {
                               </Header.Subheader>
                             </Header>
                             <Button.Group>
-                              <Button onClick={() => this.makeActive(not)} icon basic>
+                              <Button onClick={() => this.setNotificationActive(not, true)} icon basic>
                                 <Icon name='checkmark' size='large' color='green' />
                                 <p className='name'>Enable</p>
                               </Button>

@@ -46,6 +46,7 @@ class CloudUser {
     let appData = undefined
     try {
       appData = { Item: await runClientOperation('getOrg', org_id) }
+      debugger
     } catch (fatalError) {
       throw new Error(`Unable to fetch organization information for id ${org_id}.\n` +
                       `Please reload the page. If that does not work, contact support@simpleid.xyz.\n` +

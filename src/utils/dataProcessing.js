@@ -2,7 +2,6 @@ import { getGlobal, setGlobal } from "reactn";
 import { getSidSvcs } from "./sidServices.js";
 import { getLog } from "./debugScopes.js";
 import { setLocalStorage } from "./misc";
-import * as dc from "./dynamoConveniences.js";
 import { getCloudUser } from "./cloudUser.js";
 import socketIOClient from "socket.io-client";
 
@@ -256,9 +255,8 @@ export async function handleData(dataToProcess) {
   if (type === "fetch-user-count") {
     log.debug(data.app_id);
     try {
-      // Replacing: const appData = await dc.walletAnalyticsDataTableGet(data.app_id);
-      //            const users = Object.keys(appData.Item.analytics);
-      return await runClientOperation('getUserWallets', undefined, data.app_id)
+      const userAddrs = await runClientOperation('getUserWallets', undefined, data.app_id)
+      return userAddrs
     } catch (loggedError) {
       log.error(`dataProcessing::handleData: failed to handle 'fetch-user-count'.\n` +
                 `${loggedError}`)
@@ -483,36 +481,6 @@ async function handleSegmentUpdate(result) {
     loading: false,
   });
   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-
-  if (saveToDb === true) {
-    try {
-      //  Need to check if orgData exists
-      let orgDataObject;
-      if (orgData) {
-        orgDataObject = orgData;
-      } else {
-        //  Fetch from DB
-        orgDataObject = await dc.organizationDataTableGet(org_id);
-      }
-
-      const anObject = orgDataObject.Item;
-
-      let apps = anObject.apps;
-      let thisApp = apps[sessionData.id];
-      let segments = currentSegments;
-      thisApp.currentSegments = segments;
-      apps[sessionData.id] = thisApp;
-
-      anObject.apps = apps;
-
-      anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-
-      await dc.organizationDataTablePut(anObject);
-    } catch (suppressedError) {
-      log.error(`ERROR: problem writing to DB.\n${suppressedError}`);
-      return undefined;
-    }
-  }
 }
 
 async function handleCreateSegmentFunc(results) {
@@ -574,22 +542,8 @@ async function handleCreateSegmentFunc(results) {
   }
 
   setGlobal({ sessionData, apps });
-  // Put the new segment in the analytics data for the user signed in to this
-  // id:
-  //      Each App (SimpleID Customer) will have an app_id
-  //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-  //      A segment will be stored in the DB under the primary key 'app_id' in
-  //      the appropriate user_id's segment storage:
-
-  // TODO: probably want to wait on this to finish and throw a status/activity
-  //       bar in the app:
-  const orgData = await dc.organizationDataTableGet(org_id);
 
   try {
-    const anObject = orgData.Item;
-    anObject.apps = apps;
-    anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-    await dc.organizationDataTablePut(anObject);
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
 
     //  Now we find the notifications and ensure we show it properly in the notifications dropdown
