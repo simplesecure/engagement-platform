@@ -110,7 +110,18 @@ export default class Projects extends React.Component {
       this.setState({ proj, show: true })
     } else {
       const key = proj.id
+
+      try {
+        await runClientOperation('deleteApp', undefined, key)
+      } catch (error) {
+        throw new Error(`Projects::deleteProject: failed to delete app (id=${key}).\n` +
+                        `Please refresh the page and try again. If that fails, contact support@simpleid.xyz.\n` +
+                        `${error}`)
+      }
+
       delete apps[key]
+
+      // TODO: when time, clean up the mess below.
 
       const appsCheck = Object.keys(apps)
       if (appsCheck.length === 0) {
@@ -123,17 +134,7 @@ export default class Projects extends React.Component {
 
       this.setState({ show: false })
 
-      //Now we update in the DB
-      // const orgData = await dc.organizationDataTableGet(org_id)
       try {
-        // const anObject = orgData.Item
-        // anObject.apps = updatedApps
-        // anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-        // await dc.organizationDataTablePut(anObject)
-
-        // Replacing commented above with:
-        await runClientOperation('deleteApp', undefined, key)
-        
         const appKeys = Object.keys(updatedApps)
         const currentAppId = updatedApps[appKeys[0]]
           ? updatedApps[appKeys[0]]
@@ -143,7 +144,7 @@ export default class Projects extends React.Component {
         setGlobal({ currentAppId, sessionData: data, processing: false })
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
       } catch (suppressedError) {
-        console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+        console.log(`ERROR: problem updating state and/or local store.\n${suppressedError}`)
       }
     }
   }
@@ -170,8 +171,6 @@ export default class Projects extends React.Component {
 
   getExportableKey = async () => {
     const { org_id } = this.global
-    // Replacing: const orgData = await dc.organizationDataTableGet(org_id)
-    //            const key = await getSidSvcs().getExportableOrgEcKey(orgData.Item)
     const orgData = {
       cryptography: await runClientOperation('getCryptography', org_id)
     }
@@ -187,24 +186,21 @@ export default class Projects extends React.Component {
     const { org_id } = this.global
     const { updatedProjectName } = this.state
 
-    // const orgData = await dc.organizationDataTableGet(org_id)
     try {
-      // const anObject = orgData.Item
-      // anObject.apps[proj.id].project_name = updatedProjectName
-      // anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      // await dc.organizationDataTablePut(anObject)
-
-      // Replacing commented above with:
       const operationData = {
         newName: updatedProjectName
       }
       await runClientOperation('renameApp', org_id, proj.id, operationData)
 
       // TODO: below is costly--is it needed, can AC & PBJ rework it into model from above?
+      //        - after looking at the fetchOrg... method it's doing a full update and a bunch
+      //          of state updates.  <-- TODO refactor into what's needed
       getCloudUser().fetchOrgDataAndUpdate()
       this.setState({ editName: false })
-    } catch (suppressedError) {
-      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
+    } catch (error) {
+      throw new Error(`Projects::saveUpdatedProject: failed to save rename of application (${updatedProjectName}).\n` +
+                      `Please refresh the page and try again. If that fails, contact support@simpleid.xyz.\n` +
+                      `${error}`)
     }
   }
 

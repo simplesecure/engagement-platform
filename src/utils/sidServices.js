@@ -1,9 +1,6 @@
 import { Auth } from 'aws-amplify'
 import Amplify from 'aws-amplify';
-import { walletAnalyticsDataTablePut,
-         organizationDataTableGet,
-         organizationDataTablePut,
-         walletToUuidMapTableGetUuids } from './dynamoConveniences.js'
+import { walletToUuidMapTableGetUuids } from './dynamoConveniences.js'
 import { jsonParseToBuffer, decryptWrapper, encryptWrapper } from './misc.js'
 import { getLog } from './debugScopes.js'
 import { runClientOperation } from './dataProcessing.js';
@@ -632,14 +629,14 @@ export class SidServices
     //
     let orgEcPriKey = undefined
     try {
-      // Replacing: const orgData = await organizationDataTableGet(this.persist.sid.org_id)
-      //            orgEcPriKey = await this.getOrgEcPriKey(orgData.Item)
-      const orgData = {
+      const orgCryptography = {
         cryptography: await runClientOperation('getCryptography', this.persist.sid.org_id)
       }
-      orgEcPriKey = await this.getOrgEcPriKey(orgData)
+      orgEcPriKey = await this.getOrgEcPriKey(orgCryptography)
     } catch (error) {
-      throw new Error(`Failed to restore organization private key.\n${error}`)
+      throw new Error(`Failed to restore organization private key.\n` +
+                      `Please retry this operation and if it fails again, contact support@simpleid.xyz.\n` +
+                      `${error}`)
     }
 
     // 3. Decrypt the encrypted uuids and return them:
@@ -714,10 +711,12 @@ export class SidServices
     }
 
     try {
-      // Returns the newly created org id:
-      return await runClientOperation('addOrg', undefined, undefined, operationData)
+      let orgId = await runClientOperation('addOrg', undefined, undefined, operationData)
+      return orgId
     } catch (error) {
-      throw new Error(`${method}: failed to create organization.\n${error}`)
+      throw new Error(`${method}: failed to create organization.\n` +
+                      `Please reload the page and if the error occurs again, contact support@simpleid.xyz.\n` +
+                      `${error}`)
     }
   }
 
@@ -763,7 +762,6 @@ export class SidServices
 
     // Create an entry for 3Box in the new app's data. Encrypt the 3Box id for
     // this app using the same shared public key used for analytics:
-    // - TODO: very similar to getChatSupportAddress code in 3.a.  (Unify if possible)
     //
     try {
       // TODO: PBJ/AC, this shouldn't need to be called--it shoulda been stored in local storage on log in
@@ -786,86 +784,6 @@ export class SidServices
     }
 
     return await runClientOperation('addApp', anOrgId, undefined, operationData)  // returns app id
-  }
-
-  async getChatSupportAddress(anOrgDataObj, anAppId) {
-    const method = 'getChatSupportAddress'
-    log.debug(`${method} called for app id ${anAppId}`)
-
-    // 0. Basic checks to make sure we can run this function.
-    //
-    if (!anOrgDataObj || !anAppId) {
-      throw new Error(`${method} requires organization data and an app id.`)
-    }
-    if (!anOrgDataObj.apps || !anOrgDataObj.apps[anAppId]) {
-      throw new Error(`${method} no organization data for application id ${anAppId}`)
-    }
-
-    // 1. Try to get the chat support wallet cipher text from the org data
-    //
-    let chatSupportWalletCipherText = undefined
-    try {
-      chatSupportWalletCipherText = anOrgDataObj.apps[anAppId].chat_support.wallet
-    } catch (suppressedError) {
-      log.warn(`${method} Application id ${anAppId} does not have chat support. Creating now...\n${suppressedError}`)
-    }
-
-    let chatSupportWallet = undefined
-    if (chatSupportWalletCipherText) {
-      // 2. a) If we were able to get the chat support wallet cipher text, then
-      //       decrypt and return it to the user. Start by fetching this user's
-      //       pri key to decrypt the org pri key:
-      //    b) Now decrypt the org EC private key with the user's private key:
-      //
-      let orgEcPriKey = undefined
-      try {
-        orgEcPriKey = await this.getOrgEcPriKey(anOrgDataObj)
-      } catch (error) {
-        throw new Error(`${method} failed to restore organization private key.\n${error}`)
-      }
-
-      // 2. c) Now decrypt this apps chat support wallet with the org EC private key:
-      //
-      try {
-        const chatSupportWalletStr = await decryptWrapper(orgEcPriKey, chatSupportWalletCipherText)
-        chatSupportWallet = jsonParseToBuffer(chatSupportWalletStr)
-      } catch (error) {
-        throw new Error(`${method} Failed to decrypt the organization chat support wallet locally.\n${error}`)
-      }
-    } else {
-      // 3. a) If we were not able to get the chat support wallet cipher text, then
-      //       create a chat support wallet (this feature was introduced mid-stream
-      //       and not all users/ors have it) and an encrypted version of it for
-      //       storing in the org data.
-      //
-      try {
-        const publicKey = anOrgDataObj.cryptography.pub_key
-        chatSupportWallet = ethers.Wallet.createRandom()
-        const chatSupportWalletStr = JSON.stringify(chatSupportWallet)
-        chatSupportWalletCipherText = await encryptWrapper(publicKey, Buffer.from(chatSupportWalletStr))
-      } catch (error) {
-        throw new Error(`${method} failed creating and encrypting chat support wallet.\n${error}`)
-      }
-
-      // 3. b) Now store the new encrypted chat support wallet in the org data
-      //       and return the the unencrypted support wallet to the user
-      //
-      try {
-        anOrgDataObj.apps[anAppId].chat_support = {
-          wallet: chatSupportWalletCipherText
-        }
-        // TODO: this could be an update expression for just the app not requireing
-        //       the whole org updated (or refactor apps out)
-        await organizationDataTablePut(anOrgDataObj)
-      } catch (error) {
-        throw new Error(`${method} failed to store newly created encrypted chat support wallet.\n${error}`)
-      }
-    }
-
-    log.debug(`${method} returning a chat support wallet for app id ${anAppId}:\n` +
-              `  address:   ${chatSupportWallet.signingKey.address}\n` +
-              `  publicKey: ${chatSupportWallet.signingKey.publicKey}\n\n`)
-    return chatSupportWallet
   }
 
   async getOrgEcPriKey(anOrgDataObj) {

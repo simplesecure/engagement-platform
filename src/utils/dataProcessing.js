@@ -241,7 +241,9 @@ export async function runClientOperation(anOperation, anOrgId=undefined, anAppId
     })
   })
 
-  // TODO: check for result status / errors & throw ....
+  if (!result.data.success) {
+    throw new Error(result.data.errors.join('\n'))
+  }
 
   return result.data.obj
 }
@@ -257,8 +259,9 @@ export async function handleData(dataToProcess) {
       // Replacing: const appData = await dc.walletAnalyticsDataTableGet(data.app_id);
       //            const users = Object.keys(appData.Item.analytics);
       return await runClientOperation('getUserWallets', undefined, data.app_id)
-    } catch (e) {
-      log.debug("USER FETCH ERROR: ", e);
+    } catch (loggedError) {
+      log.error(`dataProcessing::handleData: failed to handle 'fetch-user-count'.\n` +
+                `${loggedError}`)
       return [];
     }
   } else if (type === "updateSegments") {

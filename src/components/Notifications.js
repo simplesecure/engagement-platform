@@ -55,39 +55,29 @@ export default class Notifications extends React.Component {
     const { notifications } = sessionData;
     let allNotifications = notifications;
     let thisNotification = allNotifications.filter(a => a === not)[0];
+
+    try {
+      const operationData = {
+        notificationId: thisNotification.id,
+        activeState: true
+      }
+      await runClientOperation('setNotificationActive', undefined, sessionData.id, operationData)
+    } catch (error) {
+      throw new Error(`Notifications::makeActive: failed to make notification ` + 
+                      `(id=${(thisNotification) ? thisNotification.id : 'unknown'}) active.\n` +
+                      `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n` +
+                      `${error}`)
+    }
+
     thisNotification.active = true;
     sessionData.notifications = allNotifications;
     const thisApp = apps[sessionData.id]
     thisApp.notifications = allNotifications;
 
     setGlobal({ sessionData, apps })
-    
-    // Replace this db update:
-    //
-    // const orgData = await dc.organizationDataTableGet(org_id);
-    // try {
-    //   const anObject = orgData.Item
-    //   anObject.apps = apps;
-    //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-    //   await dc.organizationDataTablePut(anObject)
-    //   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-    //   this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
-    // } catch (suppressedError) {
-    //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-    // }
-    // With this server call:
-    //
-    const operationData = {
-      notificationId: thisNotification.id,
-      activeState: true
-    }
-    await runClientOperation('setNotificationActive', undefined, sessionData.id, operationData)
-    //
-    // and this horseshit from above:
-    //
+
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
-    // End Replace
   }
 
   makeInactive = async (not) => {
@@ -95,6 +85,20 @@ export default class Notifications extends React.Component {
     const { notifications } = sessionData;
     let allNotifications = notifications;
     let thisNotification = allNotifications.filter(a => a === not)[0];
+
+    try {
+      const operationData = {
+        notificationId: thisNotification.id,
+        activeState: false
+      }
+      await runClientOperation('setNotificationActive', undefined, sessionData.id, operationData)
+    } catch (error) {
+      throw new Error(`Notifications::makeInactive: failed to make notification ` + 
+                      `(id=${(thisNotification) ? thisNotification.id : 'unknown'}) inactive.\n` +
+                      `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n` +
+                      `${error}`)
+    }
+    
     thisNotification.active = false;
     sessionData.notifications = allNotifications;
     const thisApp = apps[sessionData.id]
@@ -102,28 +106,6 @@ export default class Notifications extends React.Component {
 
     setGlobal({ sessionData, apps });
 
-    // Replace this db update:
-    //
-    // const orgData = await dc.organizationDataTableGet(org_id);
-    // try {
-    //   const anObject = orgData.Item
-    //   anObject.apps = apps;
-    //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-    //   await dc.organizationDataTablePut(anObject)
-    //   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-    //   this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
-    // } catch (suppressedError) {
-    //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-    // }
-    // With this server call:
-    //
-    const operationData = {
-      notificationId: thisNotification.id,
-      activeState: false
-    }
-    await runClientOperation('setNotificationActive', undefined, sessionData.id, operationData)
-    // and this horseshit from above:
-    //
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
   }
@@ -147,42 +129,36 @@ export default class Notifications extends React.Component {
       segmentId: selected_segment,
       active: false
     }
+
+    try {
+      const operationData = { notificationObj: newNotification }
+      await runClientOperation('addNotification', undefined, sessionData.id, operationData)
+    } catch (error) {
+      throw new Error(`Notifications::saveNotification: failed to save new notification ` + 
+                      `(name=${newNotification.name}).\n` +
+                      `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n` +
+                      `${error}`)
+    }
+
     noti.push(newNotification);
     sessionData.notifications = noti;
     const thisApp = apps[sessionData.id];
     thisApp.notifications = noti;
     setGlobal({ sessionData, apps });
-    
-    // Replace this db update:
-    //
-    // const orgData = await dc.organizationDataTableGet(org_id);
-    // try {
-    //   const anObject = orgData.Item
-    //   anObject.apps = apps;
-    //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-    //   await dc.organizationDataTablePut(anObject)
-    //   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-    //   this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
-    // } catch (suppressedError) {
-    //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-    // }
-    // With this server call:
-    //
-    const operationData = { notificationObj: newNotification }
-    await runClientOperation('addNotification', undefined, sessionData.id, operationData)
-    //
-    // and of course, the state/session horse shit from above:
-    //
+
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
   }
 
   updateNotification = async () => {
+    const method = 'Notifications::updateNotification'
+
     const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global
     let { notifications } = sessionData
     const { notificationName, message, selected_segment, notificationId, isActive } = this.state
     this.setState({ editNotification: false })
     setGlobal({ processing: true })
+
     //First set the updated notification
     const updatedNotification = {
       id: notificationId,
@@ -194,41 +170,29 @@ export default class Notifications extends React.Component {
 
     //Find index
     const index = notifications.map(a => a.id).indexOf(notificationId);
-    if(index > -1) {
-      notifications[index] = updatedNotification
-      sessionData.notifications = notifications
-      const thisApp = apps[sessionData.id]
-      thisApp.notifications = notifications
-      setGlobal({ sessionData, apps })
+    if(index <= -1) {
+      throw new Error(`${method}: could not find notification to update in data model (id=${notificationId}).\n` +
+                      `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n`)
+    }
 
-      // Replace this db update:
-      //
-      // const orgData = await dc.organizationDataTableGet(org_id);
-      // try {
-      //   const anObject = orgData.Item
-      //   anObject.apps = apps;
-      //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      //   await dc.organizationDataTablePut(anObject)
-      //   setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      //   this.setState({ selected_segment: "Choose...", message: "", notificationName: ""})
-      //   setGlobal({ processing: false})
-      // } catch (suppressedError) {
-      //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-      // }
-      // With this server call:
-      //
+    try {
       const operationData = { notificationObj: updatedNotification }
       await runClientOperation('updateNotification', undefined, sessionData.id, operationData)
-      //
-      // and state updates from above:
-      //
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-      this.setState({ selected_segment: "Choose...", message: "", notificationName: ""})
-      setGlobal({ processing: false})
-
-    } else {
-      console.log("Error with index on notification")
+    } catch (error) {
+      throw new Error(`${method}: failed to update notification (id=${notificationId}).\n` +
+                      `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n` +
+                      `${error}`)
     }
+
+    notifications[index] = updatedNotification
+    sessionData.notifications = notifications
+    const thisApp = apps[sessionData.id]
+    thisApp.notifications = notifications
+    setGlobal({ sessionData, apps })
+
+    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
+    this.setState({ selected_segment: "Choose...", message: "", notificationName: ""})
+    setGlobal({ processing: false})
   }
 
   handleNotificationEdits = (notification) => {
@@ -257,46 +221,37 @@ export default class Notifications extends React.Component {
   }
 
   confirmDelete = async () => {
+    const method = 'Notifications::confirmDelete'
+
     const { notificationToDelete } = this.state
     let { sessionData, apps, org_id, SESSION_FROM_LOCAL } = this.global
     let { notifications } = sessionData
     const index = notifications.map(a => a.id).indexOf(notificationToDelete.id);
-    if(index > -1) {
-      notifications.splice(index, 1);
-      sessionData.notifications = notifications;
-      //Update in DB
-      const thisApp = apps[sessionData.id];
-      thisApp.notifications = notifications;
-      setGlobal({ sessionData, apps, processing: true });
-      this.setState({ show: false });
+    if(index <= -1) {
+      throw new Error(`${method}: could not find notification to update in data model.\n` +
+                      `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n`)
+    }
 
-
-      // Replace this db update:
-      //
-      // const orgData = await dc.organizationDataTableGet(org_id);
-      // try {
-      //   const anObject = orgData.Item
-      //   anObject.apps = apps;
-      //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      //   await dc.organizationDataTablePut(anObject)
-      //   setGlobal({ processing: false })
-      // } catch (suppressedError) {
-      //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-      //   setGlobal({ processing: false })
-      // }
-      // With this server call:
-      //
+    try {
       const operationData = { notificationId: notificationToDelete.id}
       await runClientOperation('deleteNotification', undefined, sessionData.id, operationData)
-      // And the state update from above:
-      //
-      setGlobal({ processing: false })
-
-
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-    } else {
-      console.log("Error with index");
+    } catch (error) {
+      throw new Error(`${method}: failed to delete notification (id=${notificationToDelete.id}).\n` +
+                      `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n` +
+                      `${error}`)
     }
+
+    notifications.splice(index, 1);
+    sessionData.notifications = notifications;
+    
+    const thisApp = apps[sessionData.id];
+    thisApp.notifications = notifications;
+    setGlobal({ sessionData, apps, processing: true });
+    this.setState({ show: false });
+
+    setGlobal({ processing: false })
+
+    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
   }
 
   renderNotificationEditOrCreate(currentSegments) {

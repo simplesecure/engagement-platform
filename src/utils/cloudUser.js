@@ -34,22 +34,24 @@ class CloudUser {
     }
 
     //regardless of whether there is data in local storage, we need to fetch from db
-    let appData;
-    if (org_id) {
-      // Replacing: appData = await dc.organizationDataTableGet(org_id)
-      // With:
-      appData = {
-        Item: await runClientOperation('getOrg', org_id)
-      }
-
-      const experimentalFeatures = (appData.Item && appData.Item.experimentalFeatures) ? true : false;
-      setGlobal({
-        experimentalFeatures: SID_EXPERIMENTAL_FEATURES === true ? SID_EXPERIMENTAL_FEATURES : experimentalFeatures,
-        plan: (appData.Item && appData.Item.plan) ? appData.Item.plan : process.env.REACT_APP_SID_ALL_FEATURES 
-      });
-    } else {
-      console.log("ERROR: No Org ID")
+    if (!org_id) {
+      throw new Error(`Organization id is not defined. Please contact support@simpleid.xyz.`)
     }
+
+    let appData = undefined
+    try {
+      appData = { Item: await runClientOperation('getOrg', org_id) }
+    } catch (fatalError) {
+      throw new Error(`Unable to fetch organization information for id ${org_id}.\n` +
+                      `Please reload the page. If that does not work, contact support@simpleid.xyz.\n` +
+                      `${fatalError}`)
+    }
+
+    const experimentalFeatures = (appData.Item && appData.Item.experimentalFeatures) ? true : false;
+    setGlobal({
+      experimentalFeatures: SID_EXPERIMENTAL_FEATURES === true ? SID_EXPERIMENTAL_FEATURES : experimentalFeatures,
+      plan: (appData.Item && appData.Item.plan) ? appData.Item.plan : process.env.REACT_APP_SID_ALL_FEATURES 
+    });
 
     await setGlobal({ org_id });
     if(appData && appData.Item && Object.keys(appData.Item.apps).length > 0) {
@@ -59,13 +61,11 @@ class CloudUser {
       const data = allApps[appKeys[0]];
       data['id'] = currentAppId
 
-      let importedContracts
+      let importedContracts = undefined
       try {
-        // Replacing: importedContracts = await dc.walletAnalyticsDataTableGetImported(currentAppId)
         importedContracts = await runClientOperation('getImported', undefined, currentAppId)
-      }
-      catch (e) {
-        log.error('Imported Smart Contracts', e);
+      } catch (loggedError) {
+        log.error(`Unable to fetch imported contracts.\n${loggedError}`)
       }
 
       await setGlobal({ importedContracts, signedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data, loading: false });
@@ -172,25 +172,6 @@ class CloudUser {
 
       segments.push(monthlySegment)
       segments.push(weeklySegment);
-
-      // //  Post this data to the DB
-      // const { apps } = await getGlobal();
-      // const thisApp = apps[currentAppId];
-      // thisApp.currentSegments = segments;
-      // apps[currentAppId] = thisApp;
-
-      // try {
-      //   const anObject = appData.Item;
-      //   anObject.apps = apps;
-      //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-      //   await dc.organizationDataTablePut(anObject);
-
-      // } catch (suppressedError) {
-      //   const ERROR_MSG =
-      //     "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz.";
-      //   setGlobal({ error: ERROR_MSG });
-      //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`);
-      // }
 
       sessionData['currentSegments'] = segments
       await setGlobal({ sessionData })

@@ -1,6 +1,5 @@
 import React, { useState, useGlobal, useEffect } from "reactn";
 import "grapesjs/dist/css/grapes.min.css";
-import * as dc from "../../utils/dynamoConveniences.js";
 import { setLocalStorage } from "../../utils/misc";
 import { toast } from "react-toastify";
 import grapesJS from "grapesjs";
@@ -66,6 +65,7 @@ const EmailEditor = (props) => {
       setTemplateName(templateToUpdate.name);
     }
   };
+
   const handleSave = async () => {
     if (templateName) {
       //  Check if we're updating an existing template or not
@@ -85,10 +85,10 @@ const EmailEditor = (props) => {
       if (existingTemplate) {
         //  Find the template
         const index = templates.map((a) => a.id).indexOf(templateToUpdate.id);
-        if (index > -1) {
-        } else {
+        if (index <= -1) {
           console.log("Error with index");
-          toast.error("Could not update template");
+          toast.error("Could not update template. Please refresh the page.");
+          return
         }
         templates[index] = thisTemplate;
         sessionData.currentTemplates = templates;
@@ -101,20 +101,9 @@ const EmailEditor = (props) => {
         setLoading(true);
         apps[sessionData.id] = sessionData;
 
-        // Replace this db update:
-        //
-        // const orgData = await dc.organizationDataTableGet(org_id);
-        // const anObject = orgData.Item;
-        // anObject.apps = apps;
-        // anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id;
-        // await dc.organizationDataTablePut(anObject);
-        //
-        // With this server call
-        //
         const operationData = { templateObj: thisTemplate }
         const operation = (existingTemplate) ? 'updateTemplate' : 'addTemplate'
         await runClientOperation(operation, undefined, sessionData.id, operationData)
-        // End Replace
 
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
         setSessionData(sessionData);

@@ -2,40 +2,11 @@ import { setGlobal } from "reactn"
 import { setLocalStorage } from "../utils/misc"
 import uuid from "uuid/v4"
 import { toast } from "react-toastify"
-import * as dc from "./../utils/dynamoConveniences.js"
 import { getWeb2Analytics } from "../utils/web2Analytics"
 import { getCloudUser } from "./../utils/cloudUser.js"
 import { runClientOperation } from "../utils/dataProcessing"
 
 const listToArray = require("list-to-array")
-
-// const updateOrgData = async (that, apps) => {
-//   const { org_id, SESSION_FROM_LOCAL, sessionData } = that.global
-//   // Put the new segment in the analytics data for the user signed in to this
-//   // id:
-//   //      Each App (SimpleID Customer) will have an app_id
-//   //      Each App can have multiple Customer Users (e.g. Cody at Lens and one of his Minions)
-//   //      A segment will be stored in the DB under the primary key 'app_id' in
-//   //      the appropriate user_id's segment storage:
-
-//   // TODO: probably want to wait on this to finish and throw a status/activity
-//   //       bar in the app:
-//   const orgData = await dc.organizationDataTableGet(org_id)
-
-//   try {
-//     const anObject = orgData.Item
-//     anObject.apps = apps
-//     anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-//     await dc.organizationDataTablePut(anObject)
-//     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
-//     setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
-//   } catch (suppressedError) {
-//     const ERROR_MSG =
-//       "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
-//     setGlobal({ error: ERROR_MSG })
-//     console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-//   }
-// }
 
 export const clearState = (that, filter=false) => {
   if (!filter) {
@@ -167,6 +138,12 @@ export const createSegment = async (that) => {
         }
         segmentCriteria.userCount = userCount
         segmentCriteria.users = users
+
+        const operationData = {
+          segmentObj: segmentCriteria
+        }
+        await runClientOperation('addSegment', undefined, sessionData.id, operationData)
+
         const segments = currentSegments ? currentSegments : []
         segments.push(segmentCriteria)
         sessionData.currentSegments = segments
@@ -177,23 +154,21 @@ export const createSegment = async (that) => {
         clearState(that)
         setGlobal({ sessionData, apps })
 
-        // Replacing this:
-        //   updateOrgData(apps)
-        //
-        // with clientCommand:
-        const operationData = {
-          segmentObj: segmentCriteria
-        }
-        await runClientOperation('addSegment', undefined, sessionData.id, operationData)
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
-        // End Replacing
       } catch (error) {
-        console.log(error)
-        toast.error(error.message, {
+        const errorMsg = `Creating segment failed. Please refresh the page and try again.\n` +
+                         `If that fails, contact support@simpleid.xyz.\n`
+        const userErrorMsg = errorMsg +
+                             `More detailed error information appears in the browser's console.\n`
+        const consoleErrorMsg = errorMsg +
+                                error.message
+        console.log(consoleErrorMsg)
+        toast.error(userErrorMsg, {
           position: toast.POSITION.TOP_RIGHT,
           autoClose: 2000,
         })
+        return
       }
     } else {
       try {
@@ -208,14 +183,27 @@ export const createSegment = async (that) => {
         }
         await runClientOperation('addSegment', undefined, sessionData.id, operationData)
         //
+        // Broken <-- TODO: the handleCreateSegmentFunc method does a pile of stuff and expects
+        //                  our method above to return stuff and do addt'l processing.
         // TODO: segment command on the server might do more things that we need to look at.
         // TODO: make the cloud user handling of "segment" and dataProcesing handling of "segment"
         //       go away.
         // TODO: make the bizarre queue stuff go away if possible too.
         //
         clearState(that)
-      } catch (e) {
-        console.log(e)
+      } catch (error) {
+        const errorMsg = `Creating segment failed. Please refresh the page and try again.\n` +
+                         `If that fails, contact support@simpleid.xyz.\n`
+        const userErrorMsg = errorMsg +
+                             `More detailed error information appears in the browser's console.\n`
+        const consoleErrorMsg = errorMsg +
+                                error.message
+        console.log(consoleErrorMsg)
+        toast.error(userErrorMsg, {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 2000,
+        })
+        return
       }
     }
   } else {
@@ -223,6 +211,27 @@ export const createSegment = async (that) => {
     segmentCriteria.userCount = addrArray.length
     segmentCriteria.users = addrArray
     segmentCriteria.userCount = addrArray.length
+
+    try {
+      const operationData = {
+        segmentObj: segmentCriteria
+      }
+      await runClientOperation('addSegment', undefined, sessionData.id, operationData)
+    } catch (error) {
+      const errorMsg = `Creating segment failed. Please refresh the page and try again.\n` +
+                        `If that fails, contact support@simpleid.xyz.\n`
+      const userErrorMsg = errorMsg +
+                            `More detailed error information appears in the browser's console.\n`
+      const consoleErrorMsg = errorMsg +
+                              error.message
+      console.log(consoleErrorMsg)
+      toast.error(userErrorMsg, {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 2000,
+      })
+      return
+    }
+
     const segments = currentSegments ? currentSegments : []
     segments.push(segmentCriteria)
     sessionData.currentSegments = segments
@@ -233,17 +242,9 @@ export const createSegment = async (that) => {
     clearState(that)
     setGlobal({ sessionData, apps })
 
-    // Replacing this:
-    //   updateOrgData(apps)
-    //
-    // with clientCommand:
-    const operationData = {
-      segmentObj: segmentCriteria
-    }
-    await runClientOperation('addSegment', undefined, sessionData.id, operationData)
+
     setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
     setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
-    // End Replacing
   }
 }
 
@@ -357,6 +358,27 @@ export const updateSegment = async (that) => {
         }
         segmentCriteria.userCount = userCount
         segmentCriteria.users = users
+
+        try {
+          const operationData = {
+            segmentObj: segmentCriteria
+          }
+          await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
+        } catch (error) {
+          const errorMsg = `Updating segment failed. Please refresh the page and try again.\n` +
+                           `If that fails, contact support@simpleid.xyz.\n`
+          const userErrorMsg = errorMsg +
+                              `More detailed error information appears in the browser's console.\n`
+          const consoleErrorMsg = errorMsg +
+                                  error.message
+          console.log(consoleErrorMsg)
+          toast.error(userErrorMsg, {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 2000,
+          })
+          return
+        }
+
         const segments = currentSegments ? currentSegments : []
         segments.push(segmentCriteria)
         sessionData.currentSegments = segments
@@ -367,17 +389,8 @@ export const updateSegment = async (that) => {
         clearState(that)
         setGlobal({ sessionData, apps })
 
-        // Replacing this:
-        //   updateOrgData(apps)
-        //
-        // with clientCommand:
-        const operationData = {
-          segmentObj: segmentCriteria
-        }
-        await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
         setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
-        // End Replacing
       } catch (error) {
         console.log(error)
         toast.error(error.message, {
@@ -387,25 +400,32 @@ export const updateSegment = async (that) => {
       }
     } else {
       try {
-        // Replacing this:
-        //
-        // getCloudUser().processData("segment", segmentCriteria)
-        //
-        // with clientCommand:
-        //
         const operationData = {
           segmentObj: segmentCriteria
         }
         await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
         //
+        // Broken <-- TODO: the handleCreateSegmentFunc method does a pile of stuff and expects
+        //                  our method above to return stuff and do addt'l processing.
         // TODO: segment command on the server might do more things that we need to look at.
         // TODO: make the cloud user handling of "segment" and dataProcesing handling of "segment"
         //       go away.
         // TODO: make the bizarre queue stuff go away if possible too.
         //
         clearState(that)
-      } catch (e) {
-        console.log(e)
+      } catch (error) {
+        const errorMsg = `Updating segment failed. Please refresh the page and try again.\n` +
+                          `If that fails, contact support@simpleid.xyz.\n`
+        const userErrorMsg = errorMsg +
+                            `More detailed error information appears in the browser's console.\n`
+        const consoleErrorMsg = errorMsg +
+                                error.message
+        console.log(consoleErrorMsg)
+        toast.error(userErrorMsg, {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 2000,
+        })
+        return
       }
     }
   } else {
@@ -414,6 +434,7 @@ export const updateSegment = async (that) => {
     segmentCriteria.users = addrArray
     segmentCriteria.userCount = addrArray.length
     const segments = currentSegments ? currentSegments : []
+
     let thisSegment = segments.filter((a) => a.id === segmentCriteria.id)[0]
     if (thisSegment) {
       thisSegment = segmentCriteria
@@ -423,11 +444,34 @@ export const updateSegment = async (that) => {
         return x.id
       })
       .indexOf(segmentCriteria.id)
-    if (index > -1) {
-      segments[index] = thisSegment
-    } else {
-      console.log("Error with index, not updating")
+
+    if (index <= -1) {
+      throw new Error(`SegmentHelpers::updateSegment: could not find segment to update in data model (id=${thisSegment.id}).\n` +
+                      `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n`)
     }
+
+    try {
+      const operationData = {
+        segmentObj: segmentCriteria
+      }
+      await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
+      // End replace
+    } catch (error) {
+      const errorMsg = `Updating segment failed. Please refresh the page and try again.\n` +
+                       `If that fails, contact support@simpleid.xyz.\n`
+      const userErrorMsg = errorMsg +
+                          `More detailed error information appears in the browser's console.\n`
+      const consoleErrorMsg = errorMsg +
+                              error.message
+      console.log(consoleErrorMsg)
+      toast.error(userErrorMsg, {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 2000,
+      })
+      return
+    }
+
+    segments[index] = thisSegment
     sessionData.currentSegments = segments
 
     const thisApp = apps[sessionData.id]
@@ -436,77 +480,58 @@ export const updateSegment = async (that) => {
     clearState(that)
     setGlobal({ sessionData, apps })
 
-    // Replace this db update:
-    //
-    // const orgData = await dc.organizationDataTableGet(org_id)
-    try {
-      // const anObject = orgData.Item
-      // anObject.apps = apps
-      // anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      // await dc.organizationDataTablePut(anObject)
-      //
-      // With this server call:
-      //
-      const operationData = {
-        segmentObj: segmentCriteria
-      }
-      await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
-      // End replace
-
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
-      setGlobal({
-        showSegmentNotification: true,
-        segmentProcessingDone: true,
-      })
-    } catch (suppressedError) {
-      const ERROR_MSG =
-        "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz."
-      setGlobal({ error: ERROR_MSG })
-      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-    }
+    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+    setGlobal({
+      showSegmentNotification: true,
+      segmentProcessingDone: true,
+    })
   }
 }
 
 export const deleteSegment = async (that, seg, confirm) => {
+  const method = 'SegmentHelpers::deleteSegment'
   const { sessionData, SESSION_FROM_LOCAL, apps, org_id } = that.global
   const { currentSegments } = sessionData
   // console.log(currentSegments)
   that.setState({ seg })
   if (confirm) {
     const index = currentSegments.map((a) => a.id).indexOf(seg.id)
-    if (index > -1) {
-      currentSegments.splice(index, 1)
-      sessionData.currentSegments = currentSegments
-      //Update in DB  <-- I think he means local storage
-      const thisApp = apps[sessionData.id]
-      thisApp.currentSegments = currentSegments
-      setGlobal({ sessionData, apps })
-
-      // Replacing this db update:
-      //
-      // const orgData = await dc.organizationDataTableGet(org_id)
-      // try {
-      //   const anObject = orgData.Item
-      //   anObject.apps = apps
-      //   anObject[process.env.REACT_APP_ORG_TABLE_PK] = org_id
-      //   await dc.organizationDataTablePut(anObject)
-      // } catch (suppressedError) {
-      //   console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-      // }
-      // With this server call
-      //
-        const operationData = {
-          segmentId: seg.id
-        }
-        await runClientOperation('deleteSegment', undefined, sessionData.id, operationData)
-      //
-      // End replace
-
-      setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
-      that.setState({ show: false })
-    } else {
-      console.log("Error with index")
+    if (index <= -1) {
+      throw new Error(`${method}: could not find segment to delete in data model (id=${seg.id}).\n` +
+                      `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n`)
     }
+
+    try {
+      const operationData = {
+        segmentId: seg.id
+      }
+      await runClientOperation('deleteSegment', undefined, sessionData.id, operationData)
+    } catch (error) {
+      const errorMsg = `Deleting segment failed. Please refresh the page and try again.\n` +
+                       `If that fails, contact support@simpleid.xyz.\n`
+      const userErrorMsg = errorMsg +
+                          `More detailed error information appears in the browser's console.\n`
+      const consoleErrorMsg = errorMsg +
+                              error.message
+      console.log(consoleErrorMsg)
+      toast.error(userErrorMsg, {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 2000,
+      })
+      return
+    }
+
+    currentSegments.splice(index, 1)
+    sessionData.currentSegments = currentSegments
+    //Update in DB  <-- I think he means local storage
+    const thisApp = apps[sessionData.id]
+
+
+    thisApp.currentSegments = currentSegments
+    setGlobal({ sessionData, apps })
+
+    setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
+    that.setState({ show: false })
   } else {
     that.setState({ show: true })
   }
