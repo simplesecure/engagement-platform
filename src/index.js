@@ -63,7 +63,6 @@ setGlobal({
   weekly: [],
   monthly: [],
   loadingMessage: '',
-  experimentalFeatures: process.env.REACT_APP_SID_EXPERIMENTAL_FEATURES === 'true' ? true : false,
   plan: process.env.REACT_APP_SID_ALL_FEATURES
 })
 

@@ -7,7 +7,6 @@ import socketIOClient from "socket.io-client";
 const filter = require('./filterOptions.json');
 
 const SIMPLEID_USER_SESSION = 'SID_SVCS';
-const SESSION_FROM_LOCAL = 'sessionData';
 const SID_JOB_QUEUE = "sid_job_queue";
 const MAX_JOBS_TO_STORE = 10;
 const BLOCK_ID_EVENT= "block id"
@@ -360,7 +359,6 @@ async function handleSegmentUpdate(result) {
     processing: false,
     loading: false,
   });
-  // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
 }
 
 async function handleCreateSegmentFunc(results) {
@@ -424,8 +422,6 @@ async function handleCreateSegmentFunc(results) {
   setGlobal({ sessionData, apps });
 
   try {
-    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
-
     //  Now we find the notifications and ensure we show it properly in the notifications dropdown
     const index = notifications
       .map((notification) => notification.id)
@@ -475,6 +471,8 @@ class CloudServices {
   async signOut() {
     await getSidSvcs().signOut()
 
+    // Legacy / deprecated key--we try and clobber the data anyway:
+    const SESSION_FROM_LOCAL = 'sessionData'
     for (const key of [SIMPLEID_USER_SESSION, SESSION_FROM_LOCAL]) {
       try { localStorage.removeItem(key) } catch (suppressedError) {}
     }
@@ -514,9 +512,7 @@ class CloudServices {
                       `${fatalError}`)
     }
 
-    const experimentalFeatures = (appData.Item && appData.Item.experimentalFeatures) ? true : false;
     setGlobal({
-      experimentalFeatures: SID_EXPERIMENTAL_FEATURES === true ? SID_EXPERIMENTAL_FEATURES : experimentalFeatures,
       plan: (appData.Item && appData.Item.plan) ? appData.Item.plan : process.env.REACT_APP_SID_ALL_FEATURES
     });
 
@@ -536,8 +532,6 @@ class CloudServices {
       }
 
       await setGlobal({ importedContracts, signedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data, loading: false });
-      // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
-
 
       //  Fetch web2 analytics eventNames - we will fetch the actual event results in Segment handling
       let web2AnalyticsCmdObj = {

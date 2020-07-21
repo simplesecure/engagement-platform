@@ -103,16 +103,6 @@ export function jsonParseToBuffer(aStringifiedObj) {
   )
 }
 
-export function setLocalStorage(key, data) {
-  let dataToStore = null;
-  if(typeof data === 'string') {
-    dataToStore = data;
-  } else {
-    dataToStore = JSON.stringify(data);
-  }
-  localStorage.setItem(key, dataToStore);
-}
-
 // TODO: move this to utils & find a better method (this has limitations
 //       for classes etc)
 export function deepCopy(anObjToCopy) {

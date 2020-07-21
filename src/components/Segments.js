@@ -236,22 +236,6 @@ export default class Segments extends React.Component {
     }
   };
 
-  renderNetworksDrop() {
-    return (
-      <div>
-        <label>Choose Ethereum Network</label>
-        <select
-          onChange={(e) => this.setState({ network: e.target.value })}
-          className="form-control"
-        >
-          {NETWORK_OPTIONS.map((network) => {
-            return <option value={network}>{network}</option>;
-          })}
-        </select>
-      </div>
-    );
-  }
-
   renderMultipleConditions() {
     const { conditions, editSegment } = this.state;
     const { filterConditions } = conditions;
@@ -703,11 +687,7 @@ export default class Segments extends React.Component {
   }
 
   render() {
-    const {
-      sessionData,
-      processing,
-      experimentalFeatures,
-    } = this.global;
+    const { sessionData, processing } = this.global;
     const { currentSegments } = sessionData;
     const {
       importAddress,
@@ -892,7 +872,6 @@ export default class Segments extends React.Component {
                 Simply enter a smart contract address and we will import all
                 of the addresses that have interacted with that address.
                 <div>
-                  {experimentalFeatures ? this.renderNetworksDrop() : <div />}
                   <div className="top-15">
                     <Input
                       fluid
