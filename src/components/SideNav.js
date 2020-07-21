@@ -6,7 +6,7 @@ import {
   Segment,
   Label
 } from 'semantic-ui-react'
-import { getCloudUser } from "./../utils/cloudUser.js";
+import { getCloudServices } from "./../utils/cloudUser.js";
 
 export default class SideNav extends React.Component {
   constructor(props) {
@@ -39,7 +39,7 @@ export default class SideNav extends React.Component {
         sessionData: apps[notification.appId],
         currentAppId: notification.appId
       })
-      getCloudUser().fetchUsersCount()
+      getCloudServices().fetchUsersCount()
     })
     this.setState({ pathname: '/console' })
   }

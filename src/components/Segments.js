@@ -17,7 +17,7 @@ import {
 import SideNav from '../components/SideNav';
 import SegmentTable from "./SegmentTable";
 import DatePicker from "react-date-picker";
-import { getCloudUser } from "../utils/cloudUser";
+import { getCloudServices } from "../utils/cloudUser";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -165,7 +165,7 @@ export default class Segments extends React.Component {
       position: toast.POSITION.TOP_RIGHT,
       autoClose: 2000,
     });
-    getCloudUser().fetchOrgDataAndUpdate();
+    getCloudServices().fetchOrgDataAndUpdate();
   };
 
   handleOperatorChange = (e) => {
@@ -231,7 +231,7 @@ export default class Segments extends React.Component {
         }
       );
       getAbiInformation(importAddress)
-      getCloudUser().processData("import", importWalletsCmdObj);
+      getCloudServices().importWallets(importWalletsCmdObj)
       this.setState({ importModalOpen: false, importAddress: "" });
     }
   };

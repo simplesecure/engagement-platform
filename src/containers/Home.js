@@ -11,7 +11,7 @@ import Jobs from '../components/Jobs'
 import BlockDiagram from '../components/BlockDiagram'
 import { Dimmer, Loader } from 'semantic-ui-react'
 import FlowyWorker from './FlowyWorker'
-import { getCloudUser } from '../utils/cloudUser';
+import { getCloudServices } from '../utils/cloudUser';
 const qs = require('query-string');
 
 export default class Home extends React.Component {
@@ -25,7 +25,7 @@ export default class Home extends React.Component {
   async componentDidMount() {
     if (this.org) {
       await setGlobal({ publicDashboard: true })
-      await getCloudUser().fetchOrgDataAndUpdate(this.org)
+      await getCloudServices().fetchOrgDataAndUpdate(this.org)
     }
     else {
       await setGlobal({ publicDashboard: false })

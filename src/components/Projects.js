@@ -13,12 +13,12 @@ import {
 } from 'semantic-ui-react'
 import { Dialog } from 'evergreen-ui'
 import * as dc from './../utils/dynamoConveniences.js'
-import { runClientOperation } from './../utils/dataProcessing.js';
+import { runClientOperation,
+         getCloudServices } from './../utils/cloudUser.js';
 import { setLocalStorage } from "../utils/misc"
 import copy from "copy-to-clipboard"
 import { toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
-import { getCloudUser } from "./../utils/cloudUser.js"
 import { getEmailData } from './../utils/emailData.js'
 import { getWeb2Analytics } from './../utils/web2Analytics'
 import { getSidSvcs } from "../utils/sidServices"
@@ -90,7 +90,7 @@ export default class Projects extends React.Component {
 
         // TODO: the next call should really be removed and the model above should be updated
         //       with the appId returned (i.e. no need to call the server twice)
-        getCloudUser().fetchOrgDataAndUpdate()
+        getCloudServices().fetchOrgDataAndUpdate()
       } else {
         setGlobal({ processing: false, error: "No app id returned" })
         console.log(`ERROR: no app id returned`)
@@ -195,7 +195,7 @@ export default class Projects extends React.Component {
       // TODO: below is costly--is it needed, can AC & PBJ rework it into model from above?
       //        - after looking at the fetchOrg... method it's doing a full update and a bunch
       //          of state updates.  <-- TODO refactor into what's needed
-      getCloudUser().fetchOrgDataAndUpdate()
+      getCloudServices().fetchOrgDataAndUpdate()
       this.setState({ editName: false })
     } catch (error) {
       throw new Error(`Projects::saveUpdatedProject: failed to save rename of application (${updatedProjectName}).\n` +
@@ -208,7 +208,7 @@ export default class Projects extends React.Component {
     const { apps } = this.global
 
     await setGlobal({ sessionData: apps[app.id], currentAppId: app.id, allFilters: [] })
-    getCloudUser().fetchUsersCount()
+    getCloudServices().fetchUsersCount()
     //  Fetch web2 analytics eventNames - we will fetch the actual event results in Segment handling
     const web2AnalyticsCmdObj = {
       command: 'getWeb2Analytics',
@@ -267,7 +267,7 @@ export default class Projects extends React.Component {
                 <div className="col-lg-4 col-md-4 col-sm-4 text-right text-sm-right mb-0">
                   <Button
                     color='red'
-                    onClick={() => getCloudUser().signOut()}
+                    onClick={() => getCloudServices().signOut()}
                     icon='logout'
                     size='large'
                     content='Logout'

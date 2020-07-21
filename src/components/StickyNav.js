@@ -1,6 +1,6 @@
 import React, { setGlobal } from "reactn";
 import { Link } from "react-router-dom";
-import { getCloudUser } from "./../utils/cloudUser.js";
+import { getCloudServices } from "./../utils/cloudUser.js";
 import { getEmailData } from './../utils/emailData.js';
 import { getWeb2Analytics } from './../utils/web2Analytics';
 import {
@@ -18,7 +18,7 @@ export default class StickyNav extends React.Component {
     const { apps } = this.global;
 
     await setGlobal({ sessionData: apps[app.id], currentAppId: app.id, allFilters: [] });
-    getCloudUser().fetchUsersCount();
+    getCloudServices().fetchUsersCount();
     //  Fetch web2 analytics eventNames - we will fetch the actual event results in Segment handling
     const web2AnalyticsCmdObj = {
       command: 'getWeb2Analytics',
@@ -176,7 +176,7 @@ export default class StickyNav extends React.Component {
                 </a>
                 <div className="dropdown-divider"></div>
                 <button
-                  onClick={() => getCloudUser().signOut()}
+                  onClick={() => getCloudServices().signOut()}
                   className="a-el-fix dropdown-item text-danger"
                 >
                   <Header as='h4'><i className="material-icons text-danger">&#xE879;</i> Logout{" "}</Header>

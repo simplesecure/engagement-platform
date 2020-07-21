@@ -10,7 +10,7 @@ import {
   Dimmer,
   Loader
 } from 'semantic-ui-react'
-import { runClientOperation } from "../../utils/dataProcessing.js";
+import { runClientOperation } from "../../utils/cloudUser.js";
 const uuid = require("uuid/v4");
 
 const EmailEditor = (props) => {

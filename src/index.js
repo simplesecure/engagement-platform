@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import { createSidSvcs } from './utils/sidServices.js'
-import { getCloudUser } from './utils/cloudUser.js'
+import { getCloudServices } from './utils/cloudUser.js'
 import * as serviceWorker from './serviceWorker';
 
 import { getLog, setDebugScope, setAllDebugScopes } from './utils/debugScopes.js'
@@ -17,7 +17,7 @@ const SID_APP_ID = "00000000000000000000000000000000"
 
 createSidSvcs({appId: SID_APP_ID})
 
-const userData = getCloudUser().getUserData()
+const userData = getCloudServices().getUserData()
 
 setGlobal({
   loading: true,
@@ -36,7 +36,7 @@ setGlobal({
   provider: {},
   box: {},
   space: {},
-  org_id: getCloudUser().getUserData() && getCloudUser().getUserData().sid ? getCloudUser().getUserData().sid.org_id : undefined,
+  org_id: getCloudServices().getUserData() && getCloudServices().getUserData().sid ? getCloudServices().getUserData().sid.org_id : undefined,
   showSegmentNotification: false,
   segmentProcessingDone: false,
   segmentName: "",

@@ -19,7 +19,7 @@ import {
 import { Dialog } from 'evergreen-ui'
 import SideNav from '../components/SideNav'
 import ProcessingBlock from './ProcessingBlock'
-import { runClientOperation } from '../utils/dataProcessing.js';
+import { runClientOperation } from '../utils/cloudUser.js';
 
 export default class Notifications extends React.Component {
   constructor(props) {

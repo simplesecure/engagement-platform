@@ -8,7 +8,7 @@ import {
   Icon,
   Segment
 } from 'semantic-ui-react'
-import { getCloudUser } from "./../utils/cloudUser.js";
+import { getCloudServices } from "./../utils/cloudUser.js";
 
 export default class Account extends React.Component {
   render() {
@@ -58,7 +58,7 @@ export default class Account extends React.Component {
                       <p>You are currently logged in to <strong><u>{sessionData.project_name}</u></strong>.</p>
                       <Button
                         color='red'
-                        onClick={() => getCloudUser().signOut()}
+                        onClick={() => getCloudServices().signOut()}
                       >
                         Logout
                       </Button>

@@ -16,7 +16,6 @@ const prefix = require('loglevel-plugin-prefix');
 const ROOT_KEY = 'loglevel'
 const ALLOWED_SCOPES = [ ROOT_KEY,
                         `${ROOT_KEY}:cloudUser`,
-                        `${ROOT_KEY}:dataProcessing`,
                         `${ROOT_KEY}:sidServices`,
                         `${ROOT_KEY}:s3Utils`,
                         `${ROOT_KEY}:helpers`,

@@ -3,7 +3,7 @@ import Amplify from 'aws-amplify';
 import { walletToUuidMapTableGetUuids } from './dynamoConveniences.js'
 import { jsonParseToBuffer, decryptWrapper, encryptWrapper } from './misc.js'
 import { getLog } from './debugScopes.js'
-import { runClientOperation } from './dataProcessing.js';
+import { runClientOperation } from './cloudUser.js';
 const log = getLog('sidServices')
 const AWS = require('aws-sdk')
 const ethers = require('ethers')

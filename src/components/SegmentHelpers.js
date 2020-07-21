@@ -3,8 +3,7 @@ import { setLocalStorage } from "../utils/misc"
 import uuid from "uuid/v4"
 import { toast } from "react-toastify"
 import { getWeb2Analytics } from "../utils/web2Analytics"
-import { getCloudUser } from "./../utils/cloudUser.js"
-import { runClientOperation } from "../utils/dataProcessing"
+import { runClientOperation } from "../utils/cloudUser.js"
 
 const listToArray = require("list-to-array")
 
@@ -174,7 +173,7 @@ export const createSegment = async (that) => {
       try {
         // Replacing this:
         //
-        // getCloudUser().processData("segment", segmentCriteria)
+        // getCloudServices().segment(segmentCriteria)
         //
         // with clientCommand:
         //
@@ -332,7 +331,7 @@ export const updateSegment = async (that) => {
   segmentCriteria["update"] = true
   //Now we fetch the actual results
 
-  //If the segment needs to be process via api, use the processData call
+  //If the segment needs to be process via api, use the segments call
   if (addrArray.length === 0) {
     if (segmentCriteria.filter.type === "web2") {
       //  Send request to web2 analytics handler

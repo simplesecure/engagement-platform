@@ -1,7 +1,7 @@
 import React, { setGlobal } from 'reactn';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
-import { getCloudUser } from '../utils/cloudUser';
+import { getCloudServices } from '../utils/cloudUser';
 import { getSidSvcs } from '../utils/sidServices.js'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import Tooltip from 'react-bootstrap/Tooltip'
@@ -49,10 +49,10 @@ export default class Auth extends React.Component {
     // token is rec'vd by the user on first sign up to verify the email
     try {
       setGlobal({ action: 'loading' })
-      const auth = await getCloudUser().approveSignIn(token)
+      const auth = await getCloudServices().approveSignIn(token)
       console.log(`AUTH IS: ${JSON.stringify(auth, 0, 2)}`)
       if(auth) {
-        const userData = await getCloudUser().getUserData()
+        const userData = await getCloudServices().getUserData()
         const sid = userData.sid
         const org_id = sid.org_id
 
@@ -74,14 +74,14 @@ export default class Auth extends React.Component {
       const signIn = await getSidSvcs().signInOrUpWithPassword(email, password)
       if(signIn === 'cognito-user-verified') {
         setGlobal({ loading: true })
-        const userSignedIn = await getCloudUser().approveSignIn()
+        const userSignedIn = await getCloudServices().approveSignIn()
         if(userSignedIn) {
-          const userData = await getCloudUser().getUserData()
+          const userData = await getCloudServices().getUserData()
           const sid = userData.sid
           const org_id = sid.org_id
 
           setGlobal({ signedIn: true, loading: false, action: "", org_id })
-          await getCloudUser().fetchOrgDataAndUpdate()
+          await getCloudServices().fetchOrgDataAndUpdate()
         }
       } else {
         setGlobal({ action: 'sign-in-approval' })

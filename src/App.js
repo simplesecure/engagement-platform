@@ -8,7 +8,7 @@ import './assets/css/style.css';
 import Home from './containers/Home';
 import OnboardingSteps from './components/OnboardingSteps'
 import CookieConsent from "react-cookie-consent";
-import { getCloudUser } from './utils/cloudUser.js'
+import { getCloudServices } from './utils/cloudUser.js'
 import { ToastContainer } from 'react-toastify';
 const PROFILE_STORAGE = 'engagement-app-profile'
 const SESSION_FROM_LOCAL = 'sessionData';
@@ -45,7 +45,7 @@ export default class App extends React.Component {
       }
       // setGlobal({ threeBoxProfile: profile })
       //Need to check if the user is part of an organization from the org table
-      getCloudUser().fetchOrgDataAndUpdate()
+      getCloudServices().fetchOrgDataAndUpdate()
 
     } else {
       setGlobal({ loading: false });

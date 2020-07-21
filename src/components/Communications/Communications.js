@@ -7,7 +7,7 @@ import Table from "react-bootstrap/Table"
 import Form from "react-bootstrap/Form"
 import Loader from "../Loader"
 import { setLocalStorage } from "../../utils/misc"
-import { getCloudUser } from "../../utils/cloudUser.js"
+import { getCloudServices } from "../../utils/cloudUser.js"
 import { toast } from "react-toastify"
 import { getEmailData } from "../../utils/emailData.js"
 import copy from "copy-to-clipboard"
@@ -23,7 +23,7 @@ import {
 import { Dialog } from 'evergreen-ui'
 import SideNav from '../SideNav'
 import ProcessingBlock from '../ProcessingBlock'
-import { runClientOperation } from "../../utils/dataProcessing"
+import { runClientOperation } from "../../utils/cloudUser.js"
 
 const csv = require("csvtojson")
 
@@ -228,10 +228,7 @@ export default class Communications extends React.Component {
 
       setGlobal({ processing: true })
 
-      const sendEmail = await getCloudUser().processData(
-        "email messaging",
-        emailPayload
-      )
+      const sendEmail = await getCloudServices().sendEmailMessaging(emailPayload)
 
       if (sendEmail && sendEmail.success === true) {
         newCampaign["emailsSent"] = sendEmail.emailCount
