@@ -306,8 +306,8 @@ async function handleEmails(data, url) {
 }
 
 async function handleSegmentUpdate(result) {
-  const { currentSegments, saveToDb } = result;
-  const { sessionData, orgData, org_id, weekly, monthly } = await getGlobal();
+  const { currentSegments } = result;
+  const { sessionData, weekly, monthly } = await getGlobal();
   // console.log({weekly, monthly});
   const weeklySegmentIndex = currentSegments.map(a => a.id).indexOf(`2-${sessionData.id}`)
   const monthlySegmentIndex = currentSegments.map(a => a.id).indexOf(`3-${sessionData.id}`)
@@ -364,7 +364,7 @@ async function handleSegmentUpdate(result) {
 }
 
 async function handleCreateSegmentFunc(results) {
-  const { apps, org_id, notifications } = getGlobal();
+  const { apps, notifications } = getGlobal();
   let { sessionData } = getGlobal();
 
   //  First we need to check if the correct project is currently selected in state
@@ -550,7 +550,6 @@ class CloudServices {
       let web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
 
       setGlobal({ web2Events: web2Analytics.data ? web2Analytics.data : [] });
-      const { allFilters } = await getGlobal();
 
       //  Fetch weekly users
       web2AnalyticsCmdObj = {

@@ -5,7 +5,6 @@ import { getCloudServices } from '../utils/cloudUser';
 import { getSidSvcs } from '../utils/sidServices.js'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import Tooltip from 'react-bootstrap/Tooltip'
-const PROFILE_STORAGE = 'engagement-app-profile'
 
 // eslint-disable-next-line
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/g

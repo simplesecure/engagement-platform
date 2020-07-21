@@ -14,6 +14,7 @@ function toBuffer(anArray) {
   switch (anArray.constructor) {
     case Buffer:
       return anArray
+      // eslint-disable-next-line
       break
     
     case Array:
@@ -25,6 +26,7 @@ function toBuffer(anArray) {
     case Int32Array:
     case ArrayBuffer:
       return Buffer.from(anArray)
+      // eslint-disable-next-line
       break
 
     default:

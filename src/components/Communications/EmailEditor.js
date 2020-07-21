@@ -1,6 +1,5 @@
 import React, { useState, useGlobal, useEffect } from "reactn";
 import "grapesjs/dist/css/grapes.min.css";
-import { setLocalStorage } from "../../utils/misc";
 import { toast } from "react-toastify";
 import grapesJS from "grapesjs";
 import newsletter from "grapesjs-preset-newsletter";
@@ -20,7 +19,6 @@ const EmailEditor = (props) => {
   // const [SESSION_FROM_LOCAL] = useGlobal("SESSION_FROM_LOCAL");
   const [sessionData, setSessionData] = useGlobal("sessionData");
   const [apps, setApps] = useGlobal("apps");
-  const [org_id] = useGlobal("org_id");
   const [emailEditor, setEmailEditor] = useGlobal("emailEditor"); //eslint-disable-line
   const [templateName, setTemplateName] = useState("");
 
@@ -105,7 +103,6 @@ const EmailEditor = (props) => {
         const operation = (existingTemplate) ? 'updateTemplate' : 'addTemplate'
         await runClientOperation(operation, undefined, sessionData.id, operationData)
 
-        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
         setSessionData(sessionData);
         setApps(apps);
         setLoading(false);

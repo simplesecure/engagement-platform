@@ -2,15 +2,12 @@ import React, { setGlobal } from 'reactn';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import uuid from 'uuid/v4'
-import * as dc from './../utils/dynamoConveniences.js'
-import { setLocalStorage } from '../utils/misc';
 import {
   Button,
   Dropdown,
   Icon,
   Input,
   Segment,
-  Grid,
   Header,
   Message,
   Dimmer,
@@ -51,7 +48,7 @@ export default class Notifications extends React.Component {
   }
 
   setNotificationActive = async (notification, activeState) => {
-    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
+    const { sessionData, apps } = this.global;
     const { notifications } = sessionData;
     let allNotifications = notifications;
     let thisNotification = allNotifications.filter(a => a === notification)[0];
@@ -76,7 +73,6 @@ export default class Notifications extends React.Component {
 
     setGlobal({ sessionData, apps })
 
-    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
   }
 
@@ -88,7 +84,7 @@ export default class Notifications extends React.Component {
   }
 
   saveNotification = async () => {
-    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global;
+    const { sessionData, apps } = this.global;
     const { notifications } = sessionData;
     const noti = notifications ? notifications : [];
     const { notificationName, message, selected_segment } = this.state;
@@ -116,14 +112,13 @@ export default class Notifications extends React.Component {
     thisApp.notifications = noti;
     setGlobal({ sessionData, apps });
 
-    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
   }
 
   updateNotification = async () => {
     const method = 'Notifications::updateNotification'
 
-    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global
+    const { sessionData, apps } = this.global
     let { notifications } = sessionData
     const { notificationName, message, selected_segment, notificationId, isActive } = this.state
     this.setState({ editNotification: false })
@@ -160,7 +155,6 @@ export default class Notifications extends React.Component {
     thisApp.notifications = notifications
     setGlobal({ sessionData, apps })
 
-    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
     this.setState({ selected_segment: "Choose...", message: "", notificationName: ""})
     setGlobal({ processing: false})
   }
@@ -194,7 +188,7 @@ export default class Notifications extends React.Component {
     const method = 'Notifications::confirmDelete'
 
     const { notificationToDelete } = this.state
-    let { sessionData, apps, org_id, SESSION_FROM_LOCAL } = this.global
+    let { sessionData, apps } = this.global
     let { notifications } = sessionData
     const index = notifications.map(a => a.id).indexOf(notificationToDelete.id);
     if(index <= -1) {
@@ -220,7 +214,6 @@ export default class Notifications extends React.Component {
     setGlobal({ sessionData, apps });
     this.setState({ show: false });
     setGlobal({ processing: false })
-    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData));
   }
 
   renderNotificationEditOrCreate(currentSegments) {

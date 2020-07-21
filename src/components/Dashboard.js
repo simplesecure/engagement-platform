@@ -13,7 +13,6 @@ import {
   getMonthChart,
   getDonutChart,
   getBubbleChart,
-  getCandleStickChart,
   getChartCard
 } from './Charts'
 import DashboardTiles from './DashboardTiles'

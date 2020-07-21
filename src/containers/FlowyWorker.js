@@ -1,7 +1,6 @@
 import '../assets/css/styles.css'
 import '../assets/css/flowy.css'
 import { flowy } from '../assets/js/flowy.js'
-import { setupBlockOptions } from '../components/BlockOptions'
 
 export default class FlowyWorker {
   constructor () {
@@ -121,6 +120,7 @@ export default class FlowyWorker {
     return null
   }
   deselectBlocks = (flag) => {
+    // eslint-disable-next-line
     for (const [key, value] of Object.entries(this.tempblocks)) {
       value.classList.remove("selectedblock")
     }

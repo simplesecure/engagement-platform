@@ -1,5 +1,5 @@
 import React, { setGlobal } from 'reactn'
-import { BrowserRouter, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter, Route } from 'react-router-dom'
 import SignIn from '../components/SignIn'
 import Dashboard from '../components/Dashboard'
 import SideNav from '../components/SideNav'

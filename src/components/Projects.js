@@ -12,10 +12,8 @@ import {
   Loader
 } from 'semantic-ui-react'
 import { Dialog } from 'evergreen-ui'
-import * as dc from './../utils/dynamoConveniences.js'
 import { runClientOperation,
          getCloudServices } from './../utils/cloudUser.js';
-import { setLocalStorage } from "../utils/misc"
 import copy from "copy-to-clipboard"
 import { toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
@@ -53,7 +51,7 @@ export default class Projects extends React.Component {
   }
 
   createProject = async () => {
-    const { apps, org_id, SESSION_FROM_LOCAL } = this.global
+    const { apps, org_id } = this.global
     const { projectName } = this.state
 
     const newProject = {
@@ -86,7 +84,6 @@ export default class Projects extends React.Component {
           processing: false
         })
         this.setState({ projectName: "" })
-        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
 
         // TODO: the next call should really be removed and the model above should be updated
         //       with the appId returned (i.e. no need to call the server twice)
@@ -95,7 +92,6 @@ export default class Projects extends React.Component {
         setGlobal({ processing: false, error: "No app id returned" })
         console.log(`ERROR: no app id returned`)
       }
-      // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
     } catch (suppressedError) {
       console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
       setGlobal({ processing: false, error: ERROR_MSG })
@@ -104,7 +100,7 @@ export default class Projects extends React.Component {
   }
 
   deleteProject = async (proj, confirm) => {
-    const { apps, org_id, SESSION_FROM_LOCAL } = this.global
+    const { apps } = this.global
     let updatedApps
     if (confirm === false) {
       this.setState({ proj, show: true })
@@ -142,7 +138,6 @@ export default class Projects extends React.Component {
         const data = appKeys.length > 0 ? updatedApps[appKeys[0]] : {}
 
         setGlobal({ currentAppId, sessionData: data, processing: false })
-        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(data))
       } catch (suppressedError) {
         console.log(`ERROR: problem updating state and/or local store.\n${suppressedError}`)
       }

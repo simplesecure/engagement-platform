@@ -1,3 +1,4 @@
+/* eslint-disable */
 export var flowy = function(canvas, grab, release, snapping, rearrange, spacing_x, spacing_y) {
     if (!grab) {
         grab = function() {};

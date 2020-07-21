@@ -6,7 +6,6 @@ import Charts from "./Charts"
 import Table from "react-bootstrap/Table"
 import Form from "react-bootstrap/Form"
 import Loader from "../Loader"
-import { setLocalStorage } from "../../utils/misc"
 import { getCloudServices } from "../../utils/cloudUser.js"
 import { toast } from "react-toastify"
 import { getEmailData } from "../../utils/emailData.js"
@@ -24,8 +23,6 @@ import { Dialog } from 'evergreen-ui'
 import SideNav from '../SideNav'
 import ProcessingBlock from '../ProcessingBlock'
 import { runClientOperation } from "../../utils/cloudUser.js"
-
-const csv = require("csvtojson")
 
 export default class Communications extends React.Component {
   constructor(props) {
@@ -46,7 +43,6 @@ export default class Communications extends React.Component {
       emailEditor: false,
       createCampaign: false,
       importModalOpen: false,
-      csvUploaded: false,
       fileName: "",
       allEmailsGroup: {},
       includeImportedEmails: false,
@@ -72,7 +68,7 @@ export default class Communications extends React.Component {
   saveTemplate = (temp) => {
     const method = 'Communications::saveTemplate'
 
-    const { sessionData, SESSION_FROM_LOCAL, org_id, apps } = this.global
+    const { sessionData, apps } = this.global
     const { currentTemplates } = sessionData
     const { templateName } = this.state
     const templates = currentTemplates ? currentTemplates : []
@@ -104,7 +100,6 @@ export default class Communications extends React.Component {
         setGlobal({ sessionData, apps })
         this.setState({ showExisting: false })
 
-        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ templateName: "" })
       })
     } else {    // create new template
@@ -134,7 +129,6 @@ export default class Communications extends React.Component {
         await setGlobal({ sessionData, apps, templateName: "" })
         this.setState({ show: false, selectedTemplate: newTemplate.id })
 
-        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
       })
     }
   }
@@ -146,7 +140,7 @@ export default class Communications extends React.Component {
   confirmDelete = async () => {
     const method = 'Communications::confirmDelete'
 
-    const { sessionData, org_id, apps, SESSION_FROM_LOCAL } = this.global
+    const { sessionData, apps } = this.global
     const { currentTemplates } = sessionData
     const { templateToDelete } = this.state
     const temp = templateToDelete
@@ -171,7 +165,6 @@ export default class Communications extends React.Component {
     this.setState({ deleteTempModal: false, templateToDelete: {} })
     setGlobal({ sessionData, apps })
 
-    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
   }
 
   loadTemplate = async (temp) => {
@@ -183,7 +176,7 @@ export default class Communications extends React.Component {
   }
 
   sendCampaign = async (confirmed) => {
-    const { sessionData, apps, SESSION_FROM_LOCAL, org_id } = this.global
+    const { sessionData, apps, org_id } = this.global
     const {
       selectedSegment,
       selectedTemplate,
@@ -252,10 +245,6 @@ export default class Communications extends React.Component {
         try {
           const operationData = { campaignObj: newCampaign }
           await runClientOperation('addCampaign', undefined, sessionData.id, operationData)
-          //
-          // and state / session update from above:
-          //
-          // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
           this.setState({
             selectedSegment: "Choose...",
             message: "",

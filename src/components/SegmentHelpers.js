@@ -1,5 +1,4 @@
 import { setGlobal } from "reactn"
-import { setLocalStorage } from "../utils/misc"
 import uuid from "uuid/v4"
 import { toast } from "react-toastify"
 import { getWeb2Analytics } from "../utils/web2Analytics"
@@ -31,7 +30,7 @@ export const clearState = (that, filter=false) => {
 }
 
 export const createSegment = async (that) => {
-  const { sessionData, apps, allFilters, SESSION_FROM_LOCAL } = that.global
+  const { sessionData, apps, allFilters } = that.global
   const { currentSegments, network } = sessionData
   const {
     listOfAddresses,
@@ -153,7 +152,6 @@ export const createSegment = async (that) => {
         clearState(that)
         setGlobal({ sessionData, apps })
 
-        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
       } catch (error) {
         const errorMsg = `Creating segment failed. Please refresh the page and try again.\n` +
@@ -242,7 +240,6 @@ export const createSegment = async (that) => {
     setGlobal({ sessionData, apps })
 
 
-    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
     setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
   }
 }
@@ -252,8 +249,6 @@ export const updateSegment = async (that) => {
   const {
     sessionData,
     apps,
-    org_id,
-    SESSION_FROM_LOCAL,
     allFilters,
   } = that.global
   const { currentSegments } = sessionData
@@ -388,7 +383,6 @@ export const updateSegment = async (that) => {
         clearState(that)
         setGlobal({ sessionData, apps })
 
-        // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
         setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
       } catch (error) {
         console.log(error)
@@ -479,7 +473,6 @@ export const updateSegment = async (that) => {
     clearState(that)
     setGlobal({ sessionData, apps })
 
-    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
     setGlobal({
       showSegmentNotification: true,
       segmentProcessingDone: true,
@@ -489,7 +482,7 @@ export const updateSegment = async (that) => {
 
 export const deleteSegment = async (that, seg, confirm) => {
   const method = 'SegmentHelpers::deleteSegment'
-  const { sessionData, SESSION_FROM_LOCAL, apps, org_id } = that.global
+  const { sessionData, apps } = that.global
   const { currentSegments } = sessionData
   // console.log(currentSegments)
   that.setState({ seg })
@@ -529,7 +522,6 @@ export const deleteSegment = async (that, seg, confirm) => {
     thisApp.currentSegments = currentSegments
     setGlobal({ sessionData, apps })
 
-    // setLocalStorage(SESSION_FROM_LOCAL, JSON.stringify(sessionData))
     that.setState({ show: false })
   } else {
     that.setState({ show: true })

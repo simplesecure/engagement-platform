@@ -1,4 +1,4 @@
-import React, { getGlobal } from "reactn";
+import React from "reactn";
 import { Link } from "react-router-dom";
 import { Dialog } from 'evergreen-ui'
 import {
@@ -329,7 +329,6 @@ export default class Segments extends React.Component {
       listOfAddresses,
       tokenType,
       tokenAddress,
-      filterType,
       delayBlocks,
       contractEvent,
       contractName,
@@ -563,19 +562,14 @@ export default class Segments extends React.Component {
   }
 
   renderCreateSegment(condition) {
-    const { allFilters, experimentalFeatures } = this.global
+    const { allFilters } = this.global
     const {
-      listOfAddresses,
       tokenAddress,
       tokenType,
       editSegment,
       dashboardShow,
       filterType,
-      newSegName,
-      rangeType,
-      operatorType,
-      amount,
-      contractAddress,
+      newSegName
     } = this.state;
     const filterToUse = allFilters.filter((a) => a.filter === filterType)[0];
     const erc20Balance = tokenType === "ERC-20";
@@ -597,9 +591,6 @@ export default class Segments extends React.Component {
     return (
       <div>
         {this.renderMultipleConditions()}
-        {/*<div className="form-group col-md-12">
-          {experimentalFeatures ? this.renderNetworksDrop() : <div />}
-        </div>*/}
         <div className="form-group col-md-12">
           <label htmlFor="chartSty">Choose a Filter</label>
           <Dropdown
