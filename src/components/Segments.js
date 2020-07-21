@@ -30,9 +30,6 @@ import {
 import ProcessingBlock from './ProcessingBlock'
 import { getAbiInformation } from './../utils/moveToServer'
 
-// const listToArray = require("list-to-array");
-const NETWORK_OPTIONS = ["mainnet", "ropsten", "rinkeby", "goerli", "kovan"];
-
 export default class Segments extends React.Component {
   constructor(props) {
     super(props);
@@ -766,7 +763,7 @@ export default class Segments extends React.Component {
                     return (
                       <Grid.Column key={segment.id}>
                         <Segment raised padded>
-                          <Header as='h3' divided>
+                          <Header as='h3' dividing>
                             <Header.Content>{segment.name}</Header.Content>
                             <Header.Subheader color='grey' style={{marginTop: 5}}>
                                Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${segment.blockId}`} target="_blank">{segment.blockId}</a>
@@ -844,7 +841,7 @@ export default class Segments extends React.Component {
                 hasFooter={false}
                 width={640}
               >
-                {editSegment ? this.renderCreateSegment(condition) : null}
+                {editSegment ? this.renderCreateSegment(condition) : '({close})'}
               </Dialog>
               <Dialog
                 isShown={isCreateSegment}
@@ -857,7 +854,7 @@ export default class Segments extends React.Component {
                 width={640}
                 minHeightContent='40vh'
               >
-                {isCreateSegment ? this.renderCreateSegment(): null}
+                {isCreateSegment ? this.renderCreateSegment(): '({close})'}
               </Dialog>
               <Dialog
                 isShown={importModalOpen}

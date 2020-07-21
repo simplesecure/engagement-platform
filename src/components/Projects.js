@@ -263,7 +263,7 @@ export default class Projects extends React.Component {
                   <Button
                     color='red'
                     onClick={() => getCloudServices().signOut()}
-                    icon='logout'
+                    icon='sign-out'
                     size='large'
                     content='Logout'
                   />

@@ -25,7 +25,7 @@ export default class Notifications extends React.Component {
       message: "",
       notificationName: "",
       preview: false,
-      selected_segment: 'Select a segment...',
+      selected_segment_id: 'Select a segment...',
       editNotification: false,
       isActive: false,
       show: false,
@@ -73,7 +73,7 @@ export default class Notifications extends React.Component {
 
     setGlobal({ sessionData, apps })
 
-    this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
+    this.setState({ selected_segment_id: "Select a segment...", message: "", notificationName: ""})
   }
 
   createMarkup = () => {
@@ -87,12 +87,12 @@ export default class Notifications extends React.Component {
     const { sessionData, apps } = this.global;
     const { notifications } = sessionData;
     const noti = notifications ? notifications : [];
-    const { notificationName, message, selected_segment } = this.state;
+    const { notificationName, message, selected_segment_id } = this.state;
     const newNotification = {
       id: uuid(),
       name: notificationName,
       content: message,
-      segmentId: selected_segment,
+      segmentId: selected_segment_id,
       active: false
     }
 
@@ -112,7 +112,7 @@ export default class Notifications extends React.Component {
     thisApp.notifications = noti;
     setGlobal({ sessionData, apps });
 
-    this.setState({ selected_segment: "Select a segment...", message: "", notificationName: ""})
+    this.setState({ selected_segment_id: "Select a segment...", message: "", notificationName: ""})
   }
 
   updateNotification = async () => {
@@ -120,7 +120,7 @@ export default class Notifications extends React.Component {
 
     const { sessionData, apps } = this.global
     let { notifications } = sessionData
-    const { notificationName, message, selected_segment, notificationId, isActive } = this.state
+    const { notificationName, message, selected_segment_id, notificationId, isActive } = this.state
     this.setState({ editNotification: false })
     setGlobal({ processing: true })
 
@@ -129,7 +129,7 @@ export default class Notifications extends React.Component {
       id: notificationId,
       name: notificationName,
       content: message,
-      segmentId: selected_segment,
+      segmentId: selected_segment_id,
       active: isActive
     }
 
@@ -155,7 +155,7 @@ export default class Notifications extends React.Component {
     thisApp.notifications = notifications
     setGlobal({ sessionData, apps })
 
-    this.setState({ selected_segment: "Choose...", message: "", notificationName: ""})
+    this.setState({ selected_segment_id: "Choose...", message: "", notificationName: ""})
     setGlobal({ processing: false})
   }
 
@@ -163,7 +163,7 @@ export default class Notifications extends React.Component {
     this.setState({
       notificationId: notification.id,
       message: notification.content,
-      selected_segment: notification.segmentId,
+      selected_segment_id: notification.segmentId,
       notificationName: notification.name,
       editNotification: true,
       isActive: notification.active
@@ -175,7 +175,7 @@ export default class Notifications extends React.Component {
       message: "",
       notificationName: "",
       preview: false,
-      selected_segment: "Select a segment...",
+      selected_segment_id: "Select a segment...",
       editNotification: false
     })
   }
@@ -217,14 +217,9 @@ export default class Notifications extends React.Component {
   }
 
   renderNotificationEditOrCreate(currentSegments) {
-    const { message, notificationName, selected_segment, editNotification } = this.state;
+    const { message, notificationName, selected_segment_id, editNotification } = this.state;
     let segments = currentSegments ? currentSegments : []
-    segments.forEach(seg => {
-      seg.key = seg.id
-      seg.text = seg.name
-      seg.value = seg.id
-    })
-    const disableButton = !message || message === '<p><br></p>' || !notificationName || selected_segment === 'Select a segment...'
+    const disableButton = !message || message === '<p><br></p>' || !notificationName || selected_segment_id === 'Select a segment...'
     const buttonGroup = (
       <div>
         <Button
@@ -243,6 +238,8 @@ export default class Notifications extends React.Component {
         </Button>
       </div>
     )
+    const segmentOptions = segments.map( 
+      (seg, index) => { return { key:index, text:seg.name, value:seg.id } } )
     return (
       <div id="notification-builder">
         <h5>Create a Notification</h5>
@@ -250,10 +247,10 @@ export default class Notifications extends React.Component {
           <label htmlFor="inputSeg">First, Choose a Segment</label>
           <Dropdown
             placeholder='Select a segment...'
-            value={selected_segment}
-            onChange={(e, {value}) => this.setState({ selected_segment: value })}
+            value={selected_segment_id}
+            onChange={(e, {value}) => this.setState({ selected_segment_id: value })}
             fluid selection
-            options={segments}
+            options={segmentOptions}
           />
         </div>
         <div className="form-group col-md-12">
@@ -316,7 +313,7 @@ export default class Notifications extends React.Component {
                       activeNotifications.map(not => {
                         return (
                           <Segment key={not.id} raised>
-                            <Header as='h3' divided>
+                            <Header as='h3' dividing>
                               <Header.Content>{not.name}</Header.Content>
                               <Header.Subheader color='grey' style={{marginTop: 5}}>
                                  <p>{currentSegments.filter(a => a.id === not.segmentId)[0] ? currentSegments.filter(a => a.id === not.segmentId)[0].name : ""}</p>
@@ -349,7 +346,7 @@ export default class Notifications extends React.Component {
                       inactiveNotifications.map(not => {
                         return(
                           <Segment key={not.id} raised>
-                            <Header as='h3' divided>
+                            <Header as='h3' dividing>
                               <Header.Content>{not.name}</Header.Content>
                               <Header.Subheader color='grey' style={{marginTop: 5}}>
                                  <p className='name'>{currentSegments.filter(a => a.id === not.segmentId)[0] ? currentSegments.filter(a => a.id === not.segmentId)[0].name : ""}</p>
@@ -389,7 +386,7 @@ export default class Notifications extends React.Component {
                 width={640}
                 hasFooter={false}
               >
-                {editNotification ? this.renderNotificationEditOrCreate(currentSegments) : null}
+                {editNotification ? this.renderNotificationEditOrCreate(currentSegments) : '({close})'}
               </Dialog>
 
               <Dimmer active={processing}>

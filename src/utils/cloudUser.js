@@ -15,8 +15,6 @@ const QUEUE_IMPORT_WALLETS = true;
 const QUEUE_CREATE_SEGMENT = true;
 const QUEUE_UPDATE_SEGMENT = true;
 
-const SID_EXPERIMENTAL_FEATURES = process.env.REACT_APP_SID_EXPERIMENTAL_FEATURES === 'true' ? true : false;
-
 
 const log = getLog('cloudUser')
 const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST);
@@ -481,6 +479,8 @@ class CloudServices {
   }
 
   async fetchOrgDataAndUpdate(org) {
+    log.debug(`cloudUser::fetchOrgDataAndUpdate: called.\n` + 
+               `********************************************************************************\n`)
     await setGlobal({ allFilters: [...filter] });
     let userData
     let sid
