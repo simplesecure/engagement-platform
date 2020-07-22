@@ -188,8 +188,6 @@ socket.on(RT_SEGMENT_UPDATE_EVENT, async (segmentUpdate) => {
       try {
         log.debug(`${method}(${Date.now() - startTimeMs}) ms: processing new segment update.`)
         const segUpdateData = segmentUpdateQueue.shift()
-        // force never save:
-        segUpdateData.result.saveToDb = false
         await handleSegmentUpdate(segUpdateData.result.data)
         log.debug(`${method}(${Date.now() - startTimeMs}) ms: finished processing new segment update.`)
       } catch (error) {

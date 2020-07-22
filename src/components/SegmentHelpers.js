@@ -58,6 +58,7 @@ export const createSegment = async (that) => {
     addrArray = listToArray(listOfAddresses)
   }
   const segmentCriteria = {
+    firstRun: true,
     appId: sessionData.id,
     network,
     showOnDashboard: showOnDashboard,
@@ -101,12 +102,12 @@ export const createSegment = async (that) => {
       autoClose: 3000,
     }
   )
+
   if (filterConditions && filterConditions.length > 0) {
     addFilter(that)
     conditions = that.state.conditions
     that.setState({ conditions })
     segmentCriteria.conditions = conditions
-
     //  TODO handle multiple conditions that include web2 analytics
   }
 
@@ -121,127 +122,57 @@ export const createSegment = async (that) => {
           event: segmentCriteria.filter.filter.split("Web2: ")[1],
         },
       }
-      try {
-        const web2AnalyticsData = await getWeb2Analytics(web2AnalyticsCmdObj)
-        // console.log(web2AnalyticsData)
-        const data = web2AnalyticsData.data
-        let userCount
-        let users
-        if (data) {
-          userCount = data.length
-          users = data
-        } else {
-          userCount = 0
-          users = []
-        }
-        segmentCriteria.userCount = userCount
-        segmentCriteria.users = users
 
-        const operationData = {
-          segmentObj: segmentCriteria
-        }
-        await runClientOperation('addSegment', undefined, sessionData.id, operationData)
+      const web2AnalyticsData = await getWeb2Analytics(web2AnalyticsCmdObj)
 
-        const segments = currentSegments ? currentSegments : []
-        segments.push(segmentCriteria)
-        sessionData.currentSegments = segments
-
-        const thisApp = apps[sessionData.id]
-        thisApp.currentSegments = segments
-        apps[sessionData.id] = thisApp
-        clearState(that)
-        setGlobal({ sessionData, apps })
-
-        setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
-      } catch (error) {
-        const errorMsg = `Creating segment failed. Please refresh the page and try again.\n` +
-                         `If that fails, contact support@simpleid.xyz.\n`
-        const userErrorMsg = errorMsg +
-                             `More detailed error information appears in the browser's console.\n`
-        const consoleErrorMsg = errorMsg +
-                                error.message
-        console.log(consoleErrorMsg)
-        toast.error(userErrorMsg, {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 2000,
-        })
-        return
+      const data = web2AnalyticsData.data
+      let userCount
+      let users
+      if (data) {
+        userCount = data.length
+        users = data
+      } else {
+        userCount = 0
+        users = []
       }
-    } else {
-      try {
-        // Replacing this:
-        //
-        // getCloudServices().segment(segmentCriteria)
-        //
-        // with clientCommand:
-        //
-        const operationData = {
-          segmentObj: segmentCriteria
-        }
-        await runClientOperation('addSegment', undefined, sessionData.id, operationData)
-        //
-        // Broken <-- TODO: the handleCreateSegmentFunc method does a pile of stuff and expects
-        //                  our method above to return stuff and do addt'l processing.
-        // TODO: segment command on the server might do more things that we need to look at.
-        // TODO: make the cloud user handling of "segment" and dataProcesing handling of "segment"
-        //       go away.
-        // TODO: make the bizarre queue stuff go away if possible too.
-        //
-        clearState(that)
-      } catch (error) {
-        const errorMsg = `Creating segment failed. Please refresh the page and try again.\n` +
-                         `If that fails, contact support@simpleid.xyz.\n`
-        const userErrorMsg = errorMsg +
-                             `More detailed error information appears in the browser's console.\n`
-        const consoleErrorMsg = errorMsg +
-                                error.message
-        console.log(consoleErrorMsg)
-        toast.error(userErrorMsg, {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 2000,
-        })
-        return
-      }
+      segmentCriteria.userCount = userCount
+      segmentCriteria.users = users
     }
   } else {
     clearState(that)
     segmentCriteria.userCount = addrArray.length
     segmentCriteria.users = addrArray
-    segmentCriteria.userCount = addrArray.length
-
-    try {
-      const operationData = {
-        segmentObj: segmentCriteria
-      }
-      await runClientOperation('addSegment', undefined, sessionData.id, operationData)
-    } catch (error) {
-      const errorMsg = `Creating segment failed. Please refresh the page and try again.\n` +
-                        `If that fails, contact support@simpleid.xyz.\n`
-      const userErrorMsg = errorMsg +
-                            `More detailed error information appears in the browser's console.\n`
-      const consoleErrorMsg = errorMsg +
-                              error.message
-      console.log(consoleErrorMsg)
-      toast.error(userErrorMsg, {
-        position: toast.POSITION.TOP_RIGHT,
-        autoClose: 2000,
-      })
-      return
-    }
-
-    const segments = currentSegments ? currentSegments : []
-    segments.push(segmentCriteria)
-    sessionData.currentSegments = segments
-
-    const thisApp = apps[sessionData.id]
-    thisApp.currentSegments = segments
-    apps[sessionData.id] = thisApp
-    clearState(that)
-    setGlobal({ sessionData, apps })
-
-
-    setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
   }
+
+  try {
+    const operationData = {
+      segmentObj: segmentCriteria
+    }
+    await runClientOperation('addSegment', undefined, sessionData.id, operationData)
+  } catch (error) {
+    const errorMsg = `Creating segment failed. Please refresh the page and try again.\n` +
+                      `If that fails, contact support@simpleid.xyz.\n`
+    const userErrorMsg = errorMsg +
+                          `More detailed error information appears in the browser's console.\n`
+    const consoleErrorMsg = errorMsg +
+                            error.message
+    console.log(consoleErrorMsg)
+    toast.error(userErrorMsg, {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 2000,
+    })
+    return
+  }
+
+  const segments = currentSegments ? currentSegments : []
+  segments.push(segmentCriteria)
+  sessionData.currentSegments = segments
+
+  const thisApp = apps[sessionData.id]
+  thisApp.currentSegments = segments
+  apps[sessionData.id] = thisApp
+  clearState(that)
+  setGlobal({ sessionData, apps, showSegmentNotification: true, segmentProcessingDone: true })
 }
 
 
@@ -281,6 +212,7 @@ export const updateSegment = async (that) => {
 
   //First we set the segment criteria to be stored
   const segmentCriteria = {
+    firstRun: true,
     appId: sessionData.id,
     showOnDashboard: showOnDashboard,
     id: segmentToShow.id,
@@ -352,38 +284,6 @@ export const updateSegment = async (that) => {
         }
         segmentCriteria.userCount = userCount
         segmentCriteria.users = users
-
-        try {
-          const operationData = {
-            segmentObj: segmentCriteria
-          }
-          await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
-        } catch (error) {
-          const errorMsg = `Updating segment failed. Please refresh the page and try again.\n` +
-                           `If that fails, contact support@simpleid.xyz.\n`
-          const userErrorMsg = errorMsg +
-                              `More detailed error information appears in the browser's console.\n`
-          const consoleErrorMsg = errorMsg +
-                                  error.message
-          console.log(consoleErrorMsg)
-          toast.error(userErrorMsg, {
-            position: toast.POSITION.TOP_RIGHT,
-            autoClose: 2000,
-          })
-          return
-        }
-
-        const segments = currentSegments ? currentSegments : []
-        segments.push(segmentCriteria)
-        sessionData.currentSegments = segments
-
-        const thisApp = apps[sessionData.id]
-        thisApp.currentSegments = segments
-        apps[sessionData.id] = thisApp
-        clearState(that)
-        setGlobal({ sessionData, apps })
-
-        setGlobal({ showSegmentNotification: true, segmentProcessingDone: true })
       } catch (error) {
         console.log(error)
         toast.error(error.message, {
@@ -391,93 +291,59 @@ export const updateSegment = async (that) => {
           autoClose: 2000,
         })
       }
-    } else {
-      try {
-        const operationData = {
-          segmentObj: segmentCriteria
-        }
-        await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
-        //
-        // Broken <-- TODO: the handleCreateSegmentFunc method does a pile of stuff and expects
-        //                  our method above to return stuff and do addt'l processing.
-        // TODO: segment command on the server might do more things that we need to look at.
-        // TODO: make the cloud user handling of "segment" and dataProcesing handling of "segment"
-        //       go away.
-        // TODO: make the bizarre queue stuff go away if possible too.
-        //
-        clearState(that)
-      } catch (error) {
-        const errorMsg = `Updating segment failed. Please refresh the page and try again.\n` +
-                          `If that fails, contact support@simpleid.xyz.\n`
-        const userErrorMsg = errorMsg +
-                            `More detailed error information appears in the browser's console.\n`
-        const consoleErrorMsg = errorMsg +
-                                error.message
-        console.log(consoleErrorMsg)
-        toast.error(userErrorMsg, {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 2000,
-        })
-        return
-      }
     }
   } else {
     clearState(that)
     segmentCriteria.userCount = addrArray.length
     segmentCriteria.users = addrArray
-    segmentCriteria.userCount = addrArray.length
-    const segments = currentSegments ? currentSegments : []
-
-    let thisSegment = segments.filter((a) => a.id === segmentCriteria.id)[0]
-    if (thisSegment) {
-      thisSegment = segmentCriteria
-    }
-    const index = await segments
-      .map((x) => {
-        return x.id
-      })
-      .indexOf(segmentCriteria.id)
-
-    if (index <= -1) {
-      throw new Error(`SegmentHelpers::updateSegment: could not find segment to update in data model (id=${thisSegment.id}).\n` +
-                      `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n`)
-    }
-
-    try {
-      const operationData = {
-        segmentObj: segmentCriteria
-      }
-      await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
-      // End replace
-    } catch (error) {
-      const errorMsg = `Updating segment failed. Please refresh the page and try again.\n` +
-                       `If that fails, contact support@simpleid.xyz.\n`
-      const userErrorMsg = errorMsg +
-                          `More detailed error information appears in the browser's console.\n`
-      const consoleErrorMsg = errorMsg +
-                              error.message
-      console.log(consoleErrorMsg)
-      toast.error(userErrorMsg, {
-        position: toast.POSITION.TOP_RIGHT,
-        autoClose: 2000,
-      })
-      return
-    }
-
-    segments[index] = thisSegment
-    sessionData.currentSegments = segments
-
-    const thisApp = apps[sessionData.id]
-    thisApp.currentSegments = segments
-    apps[sessionData.id] = thisApp
-    clearState(that)
-    setGlobal({ sessionData, apps })
-
-    setGlobal({
-      showSegmentNotification: true,
-      segmentProcessingDone: true,
-    })
   }
+
+
+  const segments = currentSegments ? currentSegments : []
+
+  let thisSegment = segments.filter((a) => a.id === segmentCriteria.id)[0]
+  if (thisSegment) {
+    thisSegment = segmentCriteria
+  }
+  const index = segments.findIndex((segment) => {return segment.id === segmentCriteria.id})
+  if (index <= -1) {
+    throw new Error(`SegmentHelpers::updateSegment: could not find segment to update in data model (id=${thisSegment.id}).\n` +
+                    `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n`)
+  }
+
+  try {
+    const operationData = {
+      segmentObj: segmentCriteria
+    }
+    await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
+  } catch (error) {
+    const errorMsg = `Updating segment failed. Please refresh the page and try again.\n` +
+                      `If that fails, contact support@simpleid.xyz.\n`
+    const userErrorMsg = errorMsg +
+                        `More detailed error information appears in the browser's console.\n`
+    const consoleErrorMsg = errorMsg +
+                            error.message
+    console.log(consoleErrorMsg)
+    toast.error(userErrorMsg, {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 2000,
+    })
+    return
+  }
+
+  segments[index] = thisSegment
+  sessionData.currentSegments = segments
+
+  const thisApp = apps[sessionData.id]
+  thisApp.currentSegments = segments
+  apps[sessionData.id] = thisApp
+  clearState(that)
+
+  setGlobal({
+    sessionData, apps,
+    showSegmentNotification: true,
+    segmentProcessingDone: true,
+  })
 }
 
 export const deleteSegment = async (that, seg, confirm) => {
