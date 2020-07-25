@@ -40,6 +40,20 @@ socket.on('reconnect', async () => {
   await registerOrg()
 })
 
+const CLIENT_COMMAND_STATUS_EVENT = 'client command status'
+socket.on(CLIENT_COMMAND_STATUS_EVENT, async (anOrgStatusObj) => {
+  log.debug(`Received ${CLIENT_COMMAND_STATUS_EVENT} event:\n` +
+            `${JSON.stringify(anOrgStatusObj, null, 2)}\n`)
+})
+
+const CLIENT_COMMAND_SEGMENT_EVENT = 'client command segment'
+socket.on(CLIENT_COMMAND_SEGMENT_EVENT, async (aSegmentObj) => {
+  log.debug(`Received ${CLIENT_COMMAND_SEGMENT_EVENT} event for ` + 
+            `segment ${(aSegmentObj) ? aSegmentObj.name : 'unknown'}`)
+
+  await handleSegmentInitFinished(aSegmentObj)
+})
+
 //  The websocket listener needs to be instantiated outside of the
 //  handle data function or the results will be returned multiple times.
 //  See here: https://stackoverflow.com/questions/46819575/node-js-socket-io-returning-multiple-values-for-a-single-event
@@ -69,7 +83,7 @@ socket.on("job done", async (result) => {
 
   switch (result.command) {
     case "updateSegments":
-      handleSegmentUpdate(result.data);
+      handleSegmentsUpdate(result.data);
       break;
     case "segment":
       handleCreateSegmentFunc(result);
@@ -188,7 +202,7 @@ socket.on(RT_SEGMENT_UPDATE_EVENT, async (segmentUpdate) => {
       try {
         log.debug(`${method}(${Date.now() - startTimeMs}) ms: processing new segment update.`)
         const segUpdateData = segmentUpdateQueue.shift()
-        await handleSegmentUpdate(segUpdateData.result.data)
+        await handleSegmentsUpdate(segUpdateData.result.data)
         log.debug(`${method}(${Date.now() - startTimeMs}) ms: finished processing new segment update.`)
       } catch (error) {
         log.debug(`${method}(${Date.now() - startTimeMs}) ms: failed processing new segment update.\n${error}`)
@@ -300,7 +314,7 @@ async function handleEmails(data, url) {
   }
 }
 
-async function handleSegmentUpdate(result) {
+async function handleSegmentsUpdate(result) {
   const { currentSegments } = result;
   const { sessionData, weekly, monthly } = await getGlobal();
   // console.log({weekly, monthly});
@@ -324,7 +338,7 @@ async function handleSegmentUpdate(result) {
   currentSegments[weeklySegmentIndex] = weeklySegment;
   currentSegments[monthlySegmentIndex] = monthlySegment;
 
-  log.debug(`handleSegmentUpdate:\n` +
+  log.debug(`handleSegmentsUpdate:\n` +
              `-----------------------------------------------------------------------\n` +
              `weeklySegment users ${(weeklySegmentIndex > -1) ? weeklySegment.userCount : 'unknown'}\n` +
              `monthlySegment users ${(monthlySegmentIndex > -1) ? monthlySegment.userCount : 'unknown'}\n` +
@@ -355,6 +369,49 @@ async function handleSegmentUpdate(result) {
     processing: false,
     loading: false,
   });
+}
+
+/**
+ * handleSegmentInitFinished
+ * 
+ */
+async function handleSegmentInitFinished(aSegmentObj) {
+  const method = 'cloudUser::handleSegmentInitFinished'
+
+  if (!aSegmentObj) {
+    throw new Error(`${method}: undefined segment argument.`)
+  }
+  log.debug(`${method}: Received initialized segment ${aSegmentObj.name}. (id=${aSegmentObj.id}, appId=${aSegmentObj.appId})`)
+
+  const { apps } = getGlobal();
+  let { sessionData } = getGlobal();
+
+  //  First we need to check if the correct project is currently selected in state
+  const app_id = aSegmentObj.appId
+  const updatedSession = (sessionData.id !== app_id) ? apps[app_id] : sessionData
+  const { currentSegments } = updatedSession;
+  const segments = currentSegments ? currentSegments : [];
+
+  // If this segment exists already, clobber it, otherwise append it (segment init 
+  // happens if a segment is created or edited.):
+  let segIdx = segments.findIndex((segment) => {return segment.id === aSegmentObj.id}) 
+  if (segIdx >= 0) {
+    segments[segIdx] = aSegmentObj
+  } else {
+    segments.push(aSegmentObj) 
+  }
+
+  apps[app_id].currentSegments = segments;
+
+  if (sessionData.id === app_id) {
+    const thisApp = apps[sessionData.id];
+    thisApp.currentSegments = segments;
+    sessionData = thisApp;
+  }
+
+  setGlobal({ sessionData, apps });
+
+  // TODO: Prabhaav, show a notification or something.
 }
 
 async function handleCreateSegmentFunc(results) {
@@ -577,11 +634,15 @@ class CloudServices {
       if(data.currentSegments) {
         //  Find the weekly and monthly segments and update them with the correct data
 
-        this.updateSegments(appData);
+        // this.updateSegments(appData);
+        await handleSegmentsUpdate({
+          currentSegments: data.currentSegments
+        })
+        setGlobal({ loading: false, projectFound: false })
       } else {
         this.fetchUsersCount(appData)
+        setGlobal({ loading: false, projectFound: false })
       }
-      setGlobal({ loading: false, projectFound: false })
     }
   }
 
