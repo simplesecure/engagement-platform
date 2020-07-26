@@ -25,7 +25,7 @@ const OnboardingSteps = () => {
         target: ".Jobs",
         placement: "right",
         placementBeacon: "right",
-        content: "The job queue is where you can check on the status of long-running processes like creating segments and importing wallet.",
+        content: "The job queue is where you can check on the status of long-running processes like creating segments and importing wallets.",
       },
       {
         title: "Segments",

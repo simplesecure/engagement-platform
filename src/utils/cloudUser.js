@@ -4,20 +4,14 @@ import { getLog } from './debugScopes.js'
 import { getWeb2Analytics } from './web2Analytics';
 import socketIOClient from "socket.io-client";
 
+const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST);
+const log = getLog('cloudUser')
+
 const filter = require('./filterOptions.json');
 
 const SIMPLEID_USER_SESSION = 'SID_SVCS';
-const SID_JOB_QUEUE = "sid_job_queue";
-const MAX_JOBS_TO_STORE = 10;
 const BLOCK_ID_EVENT= "block id"
 const RT_SEGMENT_UPDATE_EVENT = "real time segment update"
-const QUEUE_IMPORT_WALLETS = true;
-const QUEUE_CREATE_SEGMENT = true;
-const QUEUE_UPDATE_SEGMENT = true;
-
-
-const log = getLog('cloudUser')
-const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST);
 
 
 
@@ -57,111 +51,11 @@ socket.on(CLIENT_COMMAND_SEGMENT_EVENT, async (aSegmentObj) => {
 const CLIENT_COMMAND_IMPORT_EVENT = 'client command import'
 socket.on(CLIENT_COMMAND_IMPORT_EVENT, async (anImportResultObj) => {
   log.debug(`Received ${CLIENT_COMMAND_IMPORT_EVENT} event:\n` + 
-            `${(anImportResultObj) ? JSON.stringify(anImportResultObj.message, null, 2) : 'undefined'}`)
+            `${(anImportResultObj) ? JSON.stringify(anImportResultObj, null, 2) : 'undefined'}`)
 
   await getCloudServices().fetchOrgDataAndUpdate();
   setGlobal({ showSegmentNotification: true, segmentProcessingDone: true });
 })
-
-//  The websocket listener needs to be instantiated outside of the
-//  handle data function or the results will be returned multiple times.
-//  See here: https://stackoverflow.com/questions/46819575/node-js-socket-io-returning-multiple-values-for-a-single-event
-socket.on("job error", (error) => {
-  log.error("JOB ERROR: ", error);
-});
-
-//  The websocket connection returns a message when it's done
-//  We are listening for that message and when it is returned
-//  we check for the command and execute accordingly
-
-socket.on("job done", async (result) => {
-  log.debug(`job done`, result);
-  //  Update job queue in local storage and in state
-  //  TODO - We need to decide how many jobs to keep stored (initially set at 10)
-  const jobs = fetchJobQueue();
-  if (jobs) {
-    //  First find the job that just finished
-    const thisJob = jobs.filter((job) => job.job_id === result.jobId)[0];
-
-    if (thisJob) {
-      thisJob.status = "Done";
-
-      setJobQueue(jobs);
-    }
-  }
-
-  switch (result.command) {
-    case "updateSegments":
-      handleSegmentsUpdate(result.data);
-      break;
-    case "segment":
-      handleCreateSegmentFunc(result);
-      break;
-    case "importWallets":
-      handleImport(result);
-      break;
-    default:
-      log.warn(`No match on command... (${JSON.stringify(result, 0, 2)})`);
-  }
-});
-
-socket.on("queued job id", async (result) => {
-  const { notifications, notificationId } = getGlobal();
-  log.info(`Queued Job: id = ${JSON.stringify(result, 0, 2)}`);
-  // TODO: Justin / PB / AC:
-  //  1. Store the queued job ids passed into here.
-
-  //  Fetch existing job IDs from local storage
-  let jobs = fetchJobQueue();
-
-  //  If there are no stored jobs, create a job queue tracking array.
-  if (!jobs) {
-    jobs = [];
-  } else {
-    //  Check if the stored jobs array is larger than our max setting and
-    //  remove a tracked job.
-    if (jobs.length > MAX_JOBS_TO_STORE - 1) {
-      const index = jobs.length - 1;
-      jobs.splice(index, 1);
-    }
-  }
-
-  // Now add the job that we just received.
-  jobs.unshift({
-    command: result.command,
-    job_id: result.data.job_id,
-    status: "Pending",
-  });
-
-  const newNotification = {
-    id: result.data.job_id,
-    appId: notificationId,
-  };
-
-  notifications.unshift(newNotification);
-  setGlobal({ notifications });
-
-  setJobQueue(jobs);
-});
-
-socket.on("update job id", async (result) => {
-  log.info(`Update to job id = ${JSON.stringify(result, 0, 2)}`);
-  console.info(`Update to job id = ${JSON.stringify(result, 0, 2)}`);
-
-  //  Update job queue in local storage and in state
-  //  TODO - We need to decide how many jobs to keep stored (initially set at 10)
-  const jobs = fetchJobQueue();
-  if (jobs) {
-    //  First find the job that just finished
-    const thisJob = jobs.filter((job) => job.job_id === result.jobId)[0];
-
-    if (thisJob) {
-      thisJob.status = result.status;
-
-      setJobQueue(jobs);
-    }
-  }
-});
 
 socket.on(BLOCK_ID_EVENT, (aBlockId) => {
   console.info(`------------------------------------------------------------\n` +
@@ -223,21 +117,6 @@ socket.on(RT_SEGMENT_UPDATE_EVENT, async (segmentUpdate) => {
 })
 
 //////////////// End Socket Stuff <-- TODO: move / encapsulate /////////
-
-
-
-function fetchJobQueue() {
-  return localStorage.getItem(SID_JOB_QUEUE)
-    ? JSON.parse(localStorage.getItem("sid_job_queue"))
-    : undefined;
-}
-
-function setJobQueue(jobs) {
-  localStorage.setItem(SID_JOB_QUEUE, JSON.stringify(jobs));
-  setGlobal({ jobs });
-}
-
-
 
 
 
@@ -423,110 +302,6 @@ async function handleSegmentInitFinished(aSegmentObj) {
   // TODO: Prabhaav, show a notification or something.
 }
 
-async function handleCreateSegmentFunc(results) {
-  const { apps, notifications } = getGlobal();
-  let { sessionData } = getGlobal();
-
-  //  First we need to check if the correct project is currently selected in state
-  //  To do that, we need to get the project/app_id from the list of notifications
-
-  const matchingNotification = notifications.filter(
-    (n) => n.id === results.jobId
-  )[0];
-  const app_id = matchingNotification.appId;
-  let updatedSession;
-
-  if (sessionData.id !== app_id) {
-    //  This means we need to switch to the right project to update segments
-    updatedSession = apps[app_id];
-  } else {
-    updatedSession = sessionData;
-  }
-
-  const { currentSegments } = updatedSession;
-  const ERROR_MSG =
-    "There was a problem creating the segment, please try again. If the problem continues, contact support@simpleid.xyz.";
-  const segments = currentSegments ? currentSegments : [];
-  const dataFromApi = results && results.data ? results.data : undefined;
-
-  if (dataFromApi.update) {
-    //Filter by this segment
-    let thisSegment = segments.filter((a) => a.id === dataFromApi.id)[0];
-    if (thisSegment) {
-      thisSegment = dataFromApi;
-    }
-    const index = await segments
-      .map((x) => {
-        return x.id;
-      })
-      .indexOf(dataFromApi.id);
-    if (index > -1) {
-      segments[index] = thisSegment;
-    } else {
-      log.warn("Error with index, not updating");
-    }
-  } else {
-    if (dataFromApi) {
-      segments.push(dataFromApi);
-    } else {
-      throw new Error("no data returned from API");
-    }
-  }
-
-  apps[app_id].currentSegments = segments;
-
-  if (sessionData.id === app_id) {
-    const thisApp = apps[sessionData.id];
-    thisApp.currentSegments = segments;
-    sessionData = thisApp;
-  }
-
-  setGlobal({ sessionData, apps });
-
-  try {
-    //  Now we find the notifications and ensure we show it properly in the notifications dropdown
-    const index = notifications
-      .map((notification) => notification.id)
-      .indexOf(results.jobId);
-    const thisNotification = notifications.filter(
-      (notification) => notification.id === results.jobId
-    )[0];
-    thisNotification["processingDone"] = true;
-    notifications[index] = thisNotification;
-
-    setGlobal({
-      notifications,
-      showSegmentNotification: true,
-      segmentProcessingDone: true,
-    });
-  } catch (suppressedError) {
-    setGlobal({ error: ERROR_MSG });
-    log.warn(`Suppressed error during DB write\n${suppressedError}`);
-  }
-}
-
-async function handleImport(results) {
-  const { notifications } = getGlobal();
-  //  Now we find the notifications and ensure we show it properly in the notifications dropdown
-  const index = notifications
-    .map((notification) => notification.id)
-    .indexOf(results.jobId);
-  const thisNotification = notifications.filter(
-    (notification) => notification.id === results.jobId
-  )[0];
-  thisNotification["processingDone"] = true;
-  notifications[index] = thisNotification;
-
-  setGlobal({
-    notifications,
-    showSegmentNotification: true,
-    segmentProcessingDone: true,
-  });
-  await getCloudServices().fetchOrgDataAndUpdate();
-  setGlobal({ showSegmentNotification: true, segmentProcessingDone: true });
-}
-
-
 
 class CloudServices {
 
@@ -639,11 +414,8 @@ class CloudServices {
       //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the updateSegments function
       //Will update state as necessary
 
-
-      if(data.currentSegments) {
+      if (data.currentSegments && data.currentSegments > 0) {
         //  Find the weekly and monthly segments and update them with the correct data
-
-        // this.updateSegments(appData);
         await handleSegmentsUpdate({
           currentSegments: data.currentSegments
         })
@@ -708,30 +480,6 @@ class CloudServices {
     } else {
       setGlobal({ loading: false })
     }
-  }
-
-  // TODO: remove below or use it (not currently used but also broken)
-  async segment(data) {
-    setGlobal({ orgData: data.appData, notificationId: data.appId }); // TODO: PB is this line needed?
-    // Adding the next line b/c w/o it the command to create a segment fails with
-    // destructuring.  There's lots of problems with it though:
-    //  - it's everywhere here for some reason
-    //  - it's in global state so when I set it and another command for another
-    //    app_id is queued, it will cause a failure.  For example:
-    //      - issue command segment 1, app_id=1
-    //      - issue command segment 2, app_id=2
-    //      - command segment 1 finishes and tries to run handle create segment.
-    //        which might fail b/c the notificationId has been set to 2.
-    //  - setting global may cause re-renders
-    setGlobal({ notificationId: data.appId });
-    const cmdObj = {
-      command: "segment",
-      data
-    };
-    if (QUEUE_CREATE_SEGMENT) {
-      cmdObj.data.queue = true;
-    }
-    socket.emit("command", cmdObj);
   }
 
   async importWallets(anAppId, aContractAddress) {
@@ -832,36 +580,6 @@ class CloudServices {
     });
 
     return await resp.json();
-  }
-
-  async updateSegments(appData) {
-    const { org_id, currentAppId } = await getGlobal();
-    const data = {
-      app_id: currentAppId,
-      appData,
-      org_id
-    }
-
-    setGlobal({ orgData: data.appData, notificationId: data.appId }); // TODO: PB is this needed?
-
-    log.debug("ORG DATA PAYLOAD");
-    log.debug(data);
-    const thisApp =
-      data.appData && data.appData.Item
-        ? data.appData.Item.apps[data.app_id]
-        : undefined;
-    const currentSegments = thisApp.currentSegments;
-    setGlobal({ notificationId: data.appId });
-    const cmdObj = {
-      command: "updateSegments",
-      data: {
-        appId: data.app_id,
-        currentSegments,
-        queue: QUEUE_UPDATE_SEGMENT,
-      },
-    };
-
-    socket.emit("command", cmdObj);
   }
 
   // This returns user info for the SimpleID user

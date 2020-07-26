@@ -10,7 +10,6 @@ import OnboardingSteps from './components/OnboardingSteps'
 import CookieConsent from "react-cookie-consent";
 import { getCloudServices } from './utils/cloudUser.js'
 import { ToastContainer } from 'react-toastify';
-const SID_JOB_QUEUE = 'sid_job_queue'
 
 export default class App extends React.Component {
 
@@ -27,11 +26,6 @@ export default class App extends React.Component {
         setGlobal({ onboardingComplete: true });
       }
 
-      //  Fetch job queue
-      const jobs = localStorage.getItem(SID_JOB_QUEUE) ? JSON.parse(localStorage.getItem('sid_job_queue')) : undefined
-      if(jobs) {
-        setGlobal({ jobs })
-      }
       //Need to check if the user is part of an organization from the org table
       getCloudServices().fetchOrgDataAndUpdate()
 
