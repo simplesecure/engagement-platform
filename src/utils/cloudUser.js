@@ -54,6 +54,15 @@ socket.on(CLIENT_COMMAND_SEGMENT_EVENT, async (aSegmentObj) => {
   await handleSegmentInitFinished(aSegmentObj)
 })
 
+const CLIENT_COMMAND_IMPORT_EVENT = 'client command import'
+socket.on(CLIENT_COMMAND_IMPORT_EVENT, async (anImportResultObj) => {
+  log.debug(`Received ${CLIENT_COMMAND_IMPORT_EVENT} event:\n` + 
+            `${(anImportResultObj) ? JSON.stringify(anImportResultObj.message, null, 2) : 'undefined'}`)
+
+  await getCloudServices().fetchOrgDataAndUpdate();
+  setGlobal({ showSegmentNotification: true, segmentProcessingDone: true });
+})
+
 //  The websocket listener needs to be instantiated outside of the
 //  handle data function or the results will be returned multiple times.
 //  See here: https://stackoverflow.com/questions/46819575/node-js-socket-io-returning-multiple-values-for-a-single-event
@@ -725,14 +734,16 @@ class CloudServices {
     socket.emit("command", cmdObj);
   }
 
-  async importWallets(data) {
-    setGlobal({ orgData: data.appData, notificationId: data.data.appId }); // TODO: Pb is this needed?
-    const cmdObj = data;
-    if (QUEUE_IMPORT_WALLETS) {
-      cmdObj.data.queue = true;
-    }
+  async importWallets(anAppId, aContractAddress) {
+    // TODO: Un-Justining. The following line likely needs to go away. When this works,
+    //       remove and test.
+    setGlobal({ orgData: undefined, notificationId: anAppId})
 
-    socket.emit("command", cmdObj);
+    const orgId = undefined
+    const operationData = {
+      contractAddress: aContractAddress
+    }
+    await runClientOperation('importWallets', orgId, anAppId, operationData)
   }
 
   async sendEmailMessaging(data) {

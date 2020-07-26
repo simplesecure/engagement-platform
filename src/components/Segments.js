@@ -201,22 +201,6 @@ export default class Segments extends React.Component {
       this.setState({ importModalOpen: false, importAddress: "" });
     }
     else {
-      const importWalletsCmdObj = {
-        command: "importWallets",
-        data: {
-          appId: sessionData.id,
-          contractAddress: importAddress,
-          network,
-          options: {
-            transactions_per_page: 100,
-            max_transactions: 250000,
-          },
-        },
-      };
-      console.log(
-        "Calling import addresses from wallets:\n",
-        JSON.stringify(importWalletsCmdObj, 0, 2)
-      );
       toast.success(
         <div>
           Importing users. You'll get a notification when it's complete. View
@@ -228,7 +212,7 @@ export default class Segments extends React.Component {
         }
       );
       getAbiInformation(importAddress)
-      getCloudServices().importWallets(importWalletsCmdObj)
+      getCloudServices().importWallets(sessionData.id, importAddress)
       this.setState({ importModalOpen: false, importAddress: "" });
     }
   };
