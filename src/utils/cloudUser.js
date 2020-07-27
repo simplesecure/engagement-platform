@@ -203,37 +203,31 @@ async function handleEmails(data, url) {
 }
 
 async function handleSegmentsUpdate(result) {
-  const { currentSegments } = result;
-  const { sessionData, weekly, monthly } = await getGlobal();
-  // console.log({weekly, monthly});
-  const weeklySegmentIndex = currentSegments.map(a => a.id).indexOf(`2-${sessionData.id}`)
-  const monthlySegmentIndex = currentSegments.map(a => a.id).indexOf(`3-${sessionData.id}`)
-  let weeklySegment;
-  let monthlySegment;
-
-  if(weeklySegmentIndex > -1) {
-    weeklySegment = currentSegments[weeklySegmentIndex];
-    weeklySegment.users = weekly ? weekly : [];
-    weeklySegment.userCount = weekly ? weekly.length : 0;
-  }
-
-  if(monthlySegmentIndex > -1) {
-    monthlySegment = currentSegments[monthlySegmentIndex];
-    monthlySegment.users = monthly ? monthly : [];
-    monthlySegment.userCount = monthly ? monthly.length : 0;
-  }
-
-  currentSegments[weeklySegmentIndex] = weeklySegment;
-  currentSegments[monthlySegmentIndex] = monthlySegment;
-
-  log.debug(`handleSegmentsUpdate:\n` +
-             `-----------------------------------------------------------------------\n` +
-             `weeklySegment users ${(weeklySegmentIndex > -1) ? weeklySegment.userCount : 'unknown'}\n` +
-             `monthlySegment users ${(monthlySegmentIndex > -1) ? monthlySegment.userCount : 'unknown'}\n` +
-             `number of segments: ${currentSegments.length}\n`
-             )
+  const { sessionData } = await getGlobal();
   const oldSegments = sessionData.currentSegments
-  currentSegments.forEach((item, i) => {
+  const newSegments = result.currentSegments
+
+  // If the new segments do not contain all users segment, merge it in below
+  // before updating the UX (otherwise they go away).  (These segments seem to get created in fetchUsersCount)
+  //
+  const appId = sessionData.id
+  const allId = `1-${appId}`
+
+  for (const segId of [allId]) {
+    const newSeg = newSegments.find(seg => seg.id === segId)
+    if (!newSeg) {
+      const oldSeg = oldSegments.find(seg => seg.id === segId)
+      if (oldSeg) {
+        newSegments.push(oldSeg)
+      } else {
+        log.error(`Couldn't find new or old all segment to use (id=${segId})`)
+      }
+    }
+  }
+
+  // Prabhaavia:  make things appear as different colors on updates.
+  //
+  newSegments.forEach((item, i) => {
     if (item.hasOwnProperty('blockId')) {
       console.info(`Segment ${item.name} updated in block id ${item.blockId}.`)
       item.color = 'white'
@@ -248,8 +242,9 @@ async function handleSegmentsUpdate(result) {
       }
     }
   })
-  sessionData.currentSegments = currentSegments;
 
+
+  sessionData.currentSegments = newSegments;
 
   setGlobal({
     sessionData,
@@ -384,51 +379,22 @@ class CloudServices {
 
       setGlobal({ web2Events: web2Analytics.data ? web2Analytics.data : [] });
 
-      //  Fetch weekly users
-      web2AnalyticsCmdObj = {
-        command: 'getWeb2Analytics',
-            data: {
-             appId: currentAppId,
-             type: "weekly"
-          }
-      }
-
-      web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
-      const weekly = web2Analytics.data
-
-      //  Fetch monthly users
-      web2AnalyticsCmdObj = {
-        command: 'getWeb2Analytics',
-            data: {
-             appId: currentAppId,
-             type: "monthly"
-          }
-      }
-
-      web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
-      const monthly = web2Analytics.data
-
-      setGlobal({weekly, monthly})
       //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to
       //Get the correct results
       //Not waiting on a result here because it would clog the thread. Instead, when the results finish, the updateSegments function
       //Will update state as necessary
 
       if (data.currentSegments && data.currentSegments > 0) {
-        //  Find the weekly and monthly segments and update them with the correct data
-        await handleSegmentsUpdate({
-          currentSegments: data.currentSegments
-        })
-        setGlobal({ loading: false, projectFound: false })
+        await handleSegmentsUpdate({ currentSegments: data.currentSegments })
       } else {
         this.fetchUsersCount(appData)
-        setGlobal({ loading: false, projectFound: false })
       }
+      setGlobal({ loading: false, projectFound: false })
     }
   }
 
   async fetchUsersCount(appData) {
-    const { org_id, currentAppId, sessionData, weekly, monthly } = await getGlobal()
+    const { org_id, currentAppId, sessionData } = await getGlobal()
     const payload = {
       app_id: currentAppId,
       appData,
@@ -454,32 +420,10 @@ class CloudServices {
       }
       segments.push(allUsersSegment)
 
-      //  Need to update these segments and post back to DB
-      const weeklySegment = {
-        id: `2-${currentAppId}`,
-        name: 'Weekly Active Users',
-        userCount: weekly && weekly.length ? weekly.length : 0,
-        users: weekly ? weekly : []
-      }
-
-      const monthlySegment = {
-        id: `3-${currentAppId}`,
-        name: 'Monthly Active Users',
-        userCount: monthly && monthly.length ? monthly.length : 0,
-        users: monthly ? monthly : []
-      }
-
-
-      segments.push(monthlySegment)
-      segments.push(weeklySegment);
-
       sessionData['currentSegments'] = segments
       await setGlobal({ sessionData })
-
-      setGlobal({ loading: false })
-    } else {
-      setGlobal({ loading: false })
     }
+    setGlobal({ loading: false })
   }
 
   async importWallets(anAppId, aContractAddress) {

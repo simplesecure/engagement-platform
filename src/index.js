@@ -60,8 +60,6 @@ setGlobal({
   emailData: {},
   web2Events: [],
   allFilters: [],
-  weekly: [],
-  monthly: [],
   loadingMessage: '',
   plan: process.env.REACT_APP_SID_ALL_FEATURES
 })
