@@ -83,21 +83,6 @@ export default class SideNav extends React.Component {
                 </Segment>
               </Link>
             </li>
-            <li className="nav-item Console">
-            <Link onClick={() => this.handleNotificationClick()} className={`nav-link ${pathname.includes('/console') && currentAppId !== undefined ? "active" : ""}`} to="/console">
-              <Segment basic>
-                <Header as='h3'>
-                  <Icon name='computer' />
-                  <Header.Content>
-                    Console
-                  </Header.Content>
-                  {showSegmentNotification && segmentProcessingDone && notificationsProcessed.length > 0 ? (
-                    <Label size="small" attached="top right" color='red'>{notificationsProcessed.length}</Label>
-                  ) : (null)}
-                </Header>
-              </Segment>
-            </Link>
-            </li>
             <li className="nav-item Segments">
               <Link onClick={() => this.setState({ pathname: '/segments' })} className={`nav-link ${pathname.includes('/segments') && currentAppId !== undefined ? "active" : ""}`} to="/segments">
                 <Segment basic>

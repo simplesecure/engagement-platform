@@ -7,7 +7,6 @@ import Notifications from '../components/Notifications'
 import Communications from '../components/Communications/Communications'
 import Segments from '../components/Segments'
 import Projects from '../components/Projects'
-import Jobs from '../components/Jobs'
 import BlockDiagram from '../components/BlockDiagram'
 import { Dimmer, Loader } from 'semantic-ui-react'
 import FlowyWorker from './FlowyWorker'
@@ -55,7 +54,6 @@ export default class Home extends React.Component {
       <Route path='/notifications' component={Notifications} />
       <Route path='/communications' component={Communications} />
       <Route path='/account' component={Projects} />
-      <Route path='/console' component={Jobs} />
       <Route path='/block' render={(props) => (
           <BlockDiagram {...props} flowy={this.flowy} />
         )}

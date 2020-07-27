@@ -346,6 +346,7 @@ export default class Projects extends React.Component {
                         floated="right"
                         onClick={this.createProject}
                         positive
+                        disabled={!this.state.projectName.length}
                       >
                         Create Project
                       </Button>

@@ -90,7 +90,6 @@ export const setupBlockOptions = (block) => {
           <Input
             action={
               <Dropdown
-                openOnFocus={false}
                 button
                 basic
                 floating
@@ -128,7 +127,6 @@ export const setupBlockOptions = (block) => {
         <p className="inputlabel">{labels[block]}</p>
         <div style={{marginRight: 15, marginBottom: 15}}>
           <Dropdown
-            openOnFocus={false}
             placeholder={placeholders[block]}
             fluid
             selection

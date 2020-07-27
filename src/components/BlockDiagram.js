@@ -87,6 +87,7 @@ export default class BlockDiagram extends React.Component {
           hasClose={false}
           confirmLabel='Save'
           width={640}
+          minHeightContent={200}
         >
           {setupBlockOptions(currentBlock)}
         </Dialog>
