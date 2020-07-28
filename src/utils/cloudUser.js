@@ -158,7 +158,7 @@ export async function runClientOperation(anOperation, anOrgId=undefined, anAppId
 
 
 async function getUsers(data) {
-  setGlobal({ orgData: data.appData, notificationId: data.appId }); // TODO: PB is this needed?
+  // setGlobal({ orgData: data.appData }); // TODO: PB is this needed?
 
   log.debug(data.app_id);
   try {
@@ -203,6 +203,7 @@ async function handleEmails(data, url) {
 }
 
 async function handleSegmentsUpdate(result) {
+  log.debug('cloudUser::handleSegmentsUpdate')
   const { sessionData } = await getGlobal();
   const oldSegments = sessionData.currentSegments
   const newSegments = result.currentSegments
@@ -218,7 +219,7 @@ async function handleSegmentsUpdate(result) {
     if (!newSeg) {
       const oldSeg = oldSegments.find(seg => seg.id === segId)
       if (oldSeg) {
-        newSegments.push(oldSeg)
+        newSegments.unshift(oldSeg)
       } else {
         log.error(`Couldn't find new or old all segment to use (id=${segId})`)
       }
@@ -346,11 +347,11 @@ class CloudServices {
                       `${fatalError}`)
     }
 
-    setGlobal({
+    await setGlobal({
+      org_id,
       plan: (appData.Item && appData.Item.plan) ? appData.Item.plan : process.env.REACT_APP_SID_ALL_FEATURES
-    });
+    })
 
-    await setGlobal({ org_id });
     if(appData && appData.Item && Object.keys(appData.Item.apps).length > 0) {
       const appKeys = Object.keys(appData.Item.apps);
       const allApps = appData.Item.apps;
@@ -365,7 +366,16 @@ class CloudServices {
         log.error(`Unable to fetch imported contracts.\n${loggedError}`)
       }
 
-      await setGlobal({ importedContracts, signedIn: true, currentAppId, projectFound: true, apps: allApps, sessionData: data, loading: false });
+      await this.addedAllUsersToSessionData(currentAppId, data /* sessionData */)
+      await setGlobal({ 
+        currentAppId,
+        importedContracts,
+        apps: allApps,
+        sessionData: data,
+        projectFound: true,
+        signedIn: true,
+        loading: false
+      });
 
       //  Fetch web2 analytics eventNames - we will fetch the actual event results in Segment handling
       let web2AnalyticsCmdObj = {
@@ -376,7 +386,6 @@ class CloudServices {
       }
 
       let web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
-
       setGlobal({ web2Events: web2Analytics.data ? web2Analytics.data : [] });
 
       //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to
@@ -387,49 +396,56 @@ class CloudServices {
       if (data.currentSegments && data.currentSegments > 0) {
         await handleSegmentsUpdate({ currentSegments: data.currentSegments })
       } else {
-        this.fetchUsersCount(appData)
+        await this.fetchUsersCount(appData)
       }
       setGlobal({ loading: false, projectFound: false })
     }
   }
 
-  async fetchUsersCount(appData) {
-    const { org_id, currentAppId, sessionData } = await getGlobal()
-    const payload = {
-      app_id: currentAppId,
-      appData,
-      org_id
-    }
+  /**
+   * @returns true if sessionData has been modified! <-- WARNING
+   * @param {*} currentAppId 
+   * @param {*} sessionData 
+   */
+  async addedAllUsersToSessionData(currentAppId, sessionData) {
+    let modifiedSessionData = false
+    const segments = (sessionData.currentSegments) ? sessionData.currentSegments : []
 
-    const updatedData = await getUsers(payload)
-    const { currentSegments } = sessionData
-    const defaultSegmentId = `1-${currentAppId}`
-    const matchingSegment = currentSegments ? currentSegments.filter(a => a.id === defaultSegmentId) : []
-    if(matchingSegment.length === 0) {
+    const allUsersSegId = `1-${currentAppId}`
+    const allUsersIndex = segments.findIndex(aSeg => aSeg.id === allUsersSegId)
+    if (allUsersIndex === -1) {
+      const updatedData = await getUsers({ app_id: currentAppId })
       const allUsersSegment = {
-        id: defaultSegmentId,
+        id: allUsersSegId,
         name: 'All Users',
         showOnDashboard: true,
         userCount: updatedData.length,
         users: updatedData
       }
-
-      let segments = []
-      if(currentSegments && currentSegments.length > 0) {
-        segments = currentSegments
-      }
-      segments.push(allUsersSegment)
-
+      segments.unshift(allUsersSegment)
       sessionData['currentSegments'] = segments
-      await setGlobal({ sessionData })
+      modifiedSessionData = true
     }
-    setGlobal({ loading: false })
+    return modifiedSessionData
+  }
+
+  async fetchUsersCount(appData) {
+    log.debug('cloudUser::fetchUsersCount')
+
+    const { currentAppId, sessionData } = await getGlobal()
+    const modifiedSessionData = await this.addedAllUsersToSessionData(currentAppId, sessionData)
+
+    const nextState = { loading: false }
+    if (modifiedSessionData) {
+      nextState['sessionData'] = sessionData
+    }
+    setGlobal(nextState)
   }
 
   async importWallets(anAppId, aContractAddress) {
     // TODO: Un-Justining. The following line likely needs to go away. When this works,
     //       remove and test.
-    setGlobal({ orgData: undefined, notificationId: anAppId})
+    setGlobal({ orgData: undefined })
 
     const orgId = undefined
     const operationData = {
@@ -439,7 +455,7 @@ class CloudServices {
   }
 
   async sendEmailMessaging(data) {
-    setGlobal({ orgData: data.appData, notificationId: data.appId });
+    setGlobal({ orgData: data.appData });
 
     //Here we will do something similar to segment data except we will send the appropriate message
     //Data should include the following:
@@ -500,7 +516,7 @@ class CloudServices {
   }
 
   async getEmailData(data) {
-    setGlobal({ orgData: data.appData, notificationId: data.appId });
+    setGlobal({ orgData: data.appData });
 
     const payload = {
       command: "getEmailData",
