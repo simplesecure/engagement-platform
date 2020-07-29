@@ -59,13 +59,8 @@ export default class Projects extends React.Component {
       project_name: projectName
     }
 
-    // History:  setGlobal( {..., notificationId: data.appId }) was at the
-    //           start of dataProcessing::handleData.  When called with create
-    //           project as the type, appId is undefined, so we preserve that
-    //           behavior here with notificationId --> undefined in case
-    //           it's required for side effects:
     // Recently refactored / merged from cloud user
-    this.setGlobal({ processing: true, orgData: newProject, notificationId: undefined })
+    this.setGlobal({ processing: true, orgData: newProject })
 
     try {
       const projectId = await getSidSvcs().createAppId(org_id, newProject)

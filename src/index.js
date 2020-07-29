@@ -53,7 +53,6 @@ setGlobal({
   orgData: {},
   jobs: [],
   notifications: [],
-  notificationId: '',
   onboardingComplete: false,
   emailEditor: false,
   templateToUpdate: {},

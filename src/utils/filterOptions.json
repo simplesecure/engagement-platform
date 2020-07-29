@@ -16,10 +16,6 @@
     "type": "Contract"
   },
   {
-    "filter": "Paste Addresses",
-    "type": "Paste"
-  },
-  {
     "filter": "Time Delay by Eth Blocks",
     "type": "Delay Range"
   },

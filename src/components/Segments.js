@@ -52,7 +52,6 @@ export default class Segments extends React.Component {
       segmentToShow: {},
       dashboardShow: "",
       loadingMessage: "Creating segment",
-      listOfAddresses: "",
       operator: "",
       conditions: {},
       condition: {},
@@ -142,9 +141,7 @@ export default class Segments extends React.Component {
         : tokenType,
       tokenAddress: thisSeg.numberRange
         ? thisSeg.numberRange.tokenAddress
-        : tokenAddress,
-      listOfAddresses:
-        thisSeg.filter.type === "Paste" ? thisSeg.users.join(",") : "",
+        : tokenAddress
     });
   };
 
@@ -291,7 +288,6 @@ export default class Segments extends React.Component {
       rangeType,
       operatorType,
       amount,
-      listOfAddresses,
       tokenType,
       tokenAddress,
       delayBlocks,
@@ -401,21 +397,6 @@ export default class Segments extends React.Component {
           ) : (
             <div />
           )}
-        </div>
-      )
-    } else if (type === "Paste") {
-      return (
-        <div className="col-lg-12 col-md-12 col-sm-12 mb-4">
-          <label htmlFor="pastedAddress">
-            Paste comma delimited list of wallet addresses
-          </label>
-          <Input
-            type="text"
-            placeholder="Enter addresses..."
-            fluid
-            value={listOfAddresses}
-            onChange={(e, {value}) => this.setState({ listOfAddresses: value })}
-          />
         </div>
       )
     } else if (type === "Delay Range") {
@@ -570,7 +551,6 @@ export default class Segments extends React.Component {
         </div>
         {filterToUse ? this.renderFilterConditions(filterToUse) : null}
         {filterToUse &&
-        filterToUse.type !== "Paste" &&
         filterToUse.type !== "web2" ? (
           <div className="form-group col-md-12">
             <Button onClick={() => {

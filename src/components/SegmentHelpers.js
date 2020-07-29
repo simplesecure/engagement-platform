@@ -4,8 +4,6 @@ import { toast } from "react-toastify"
 import { getWeb2Analytics } from "../utils/web2Analytics"
 import { runClientOperation } from "../utils/cloudUser.js"
 
-const listToArray = require("list-to-array")
-
 export const clearState = (that, filter=false) => {
   if (!filter) {
     that.setState({
@@ -22,7 +20,6 @@ export const clearState = (that, filter=false) => {
     operatorType: "",
     date: new Date(),
     amount: 0,
-    listOfAddresses: "",
     showSegmentModal: false,
     editSegment: false,
     isCreateSegment: false
@@ -33,7 +30,6 @@ export const createSegment = async (that) => {
   const { sessionData, apps, allFilters } = that.global
   const { currentSegments, network } = sessionData
   const {
-    listOfAddresses,
     newSegName,
     tokenType,
     tokenAddress,
@@ -53,10 +49,6 @@ export const createSegment = async (that) => {
 
   const filterToUse = allFilters.filter((a) => a.filter === filterType)[0]
   const segId = uuid()
-  let addrArray = []
-  if (listOfAddresses) {
-    addrArray = listToArray(listOfAddresses)
-  }
   const segmentCriteria = {
     firstRun: true,
     appId: sessionData.id,
@@ -86,7 +78,7 @@ export const createSegment = async (that) => {
           }
         : null,
     contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
-    userCount: addrArray.length > 0 ? addrArray.length : null,
+    userCount: null,
   }
 
   setGlobal({
@@ -111,37 +103,31 @@ export const createSegment = async (that) => {
     //  TODO handle multiple conditions that include web2 analytics
   }
 
-  if (addrArray.length === 0) {
-    //  Quick solution for the web2 analytics stuff. Will break on multiple conditions though. See todo above
-    if (segmentCriteria.filter.type === "web2") {
-      //  Send request to web2 analytics handler
-      const web2AnalyticsCmdObj = {
-        command: "getWeb2Analytics",
-        data: {
-          appId: sessionData.id,
-          event: segmentCriteria.filter.filter.split("Web2: ")[1],
-        },
-      }
-
-      const web2AnalyticsData = await getWeb2Analytics(web2AnalyticsCmdObj)
-
-      const data = web2AnalyticsData.data
-      let userCount
-      let users
-      if (data) {
-        userCount = data.length
-        users = data
-      } else {
-        userCount = 0
-        users = []
-      }
-      segmentCriteria.userCount = userCount
-      segmentCriteria.users = users
+  //  Quick solution for the web2 analytics stuff. Will break on multiple conditions though. See todo above
+  if (segmentCriteria.filter.type === "web2") {
+    //  Send request to web2 analytics handler
+    const web2AnalyticsCmdObj = {
+      command: "getWeb2Analytics",
+      data: {
+        appId: sessionData.id,
+        event: segmentCriteria.filter.filter.split("Web2: ")[1],
+      },
     }
-  } else {
-    clearState(that)
-    segmentCriteria.userCount = addrArray.length
-    segmentCriteria.users = addrArray
+
+    const web2AnalyticsData = await getWeb2Analytics(web2AnalyticsCmdObj)
+
+    const data = web2AnalyticsData.data
+    let userCount
+    let users
+    if (data) {
+      userCount = data.length
+      users = data
+    } else {
+      userCount = 0
+      users = []
+    }
+    segmentCriteria.userCount = userCount
+    segmentCriteria.users = users
   }
 
   try {
@@ -185,7 +171,6 @@ export const updateSegment = async (that) => {
   const { currentSegments } = sessionData
   const {
     conditions,
-    listOfAddresses,
     segmentToShow,
     newSegName,
     tokenType,
@@ -204,11 +189,6 @@ export const updateSegment = async (that) => {
   const filterToUse = allFilters.filter((a) => a.filter === filterType)[0]
 
   that.setState({ editSegment: false, showSegmentModal: false })
-
-  let addrArray = []
-  if (listOfAddresses) {
-    addrArray = listToArray(listOfAddresses)
-  }
 
   //First we set the segment criteria to be stored
   const segmentCriteria = {
@@ -239,8 +219,7 @@ export const updateSegment = async (that) => {
           }
         : null,
     contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
-    userCount:
-      addrArray.length > 0 ? addrArray.length : segmentToShow.userCount,
+    userCount: segmentToShow.userCount,
     users: segmentToShow.users,
   }
 
@@ -259,45 +238,38 @@ export const updateSegment = async (that) => {
   //Now we fetch the actual results
 
   //If the segment needs to be process via api, use the segments call
-  if (addrArray.length === 0) {
-    if (segmentCriteria.filter.type === "web2") {
-      //  Send request to web2 analytics handler
-      const web2AnalyticsCmdObj = {
-        command: "getWeb2Analytics",
-        data: {
-          appId: sessionData.id,
-          event: segmentCriteria.filter.filter.split("Web2: ")[1],
-        },
-      }
-      try {
-        const web2AnalyticsData = await getWeb2Analytics(web2AnalyticsCmdObj)
-        // console.log(web2AnalyticsData)
-        const data = web2AnalyticsData.data
-        let userCount
-        let users
-        if (data) {
-          userCount = data.length
-          users = data
-        } else {
-          userCount = 0
-          users = []
-        }
-        segmentCriteria.userCount = userCount
-        segmentCriteria.users = users
-      } catch (error) {
-        console.log(error)
-        toast.error(error.message, {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 2000,
-        })
-      }
+  if (segmentCriteria.filter.type === "web2") {
+    //  Send request to web2 analytics handler
+    const web2AnalyticsCmdObj = {
+      command: "getWeb2Analytics",
+      data: {
+        appId: sessionData.id,
+        event: segmentCriteria.filter.filter.split("Web2: ")[1],
+      },
     }
-  } else {
-    clearState(that)
-    segmentCriteria.userCount = addrArray.length
-    segmentCriteria.users = addrArray
+    try {
+      const web2AnalyticsData = await getWeb2Analytics(web2AnalyticsCmdObj)
+      // console.log(web2AnalyticsData)
+      const data = web2AnalyticsData.data
+      let userCount
+      let users
+      if (data) {
+        userCount = data.length
+        users = data
+      } else {
+        userCount = 0
+        users = []
+      }
+      segmentCriteria.userCount = userCount
+      segmentCriteria.users = users
+    } catch (error) {
+      console.log(error)
+      toast.error(error.message, {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 2000,
+      })
+    }
   }
-
 
   const segments = currentSegments ? currentSegments : []
 
@@ -399,7 +371,6 @@ export const addFilter = (that, condition) => {
   const {
     conditions,
     operator,
-    listOfAddresses,
     tokenType,
     tokenAddress,
     filterType,
@@ -414,11 +385,6 @@ export const addFilter = (that, condition) => {
   } = that.state
   const showOnDashboard = dashboardShow === "Yes" ? true : false
   const filterToUse = allFilters.filter((a) => a.filter === filterType)[0]
-  let addrArray = []
-
-  if (listOfAddresses) {
-    addrArray = listToArray(listOfAddresses)
-  }
 
   //First we set the segment criteria to be stored
   const segmentCriteria = {
@@ -444,7 +410,7 @@ export const addFilter = (that, condition) => {
           }
         : null,
     contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
-    userCount: addrArray.length > 0 ? addrArray.length : null,
+    userCount:  null
   }
   let { filterConditions } = conditions
   const thisOperator = operator ? operator : "And"
