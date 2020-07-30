@@ -95,13 +95,13 @@ export const createSegment = async (that) => {
     segmentName: segmentCriteria.name,
   })
 
-  toast.success(
-    "Creating Segments: you will see it go active below when it's finished processing.",
-    {
-      position: toast.POSITION.TOP_RIGHT,
-      autoClose: 3000,
-    }
-  )
+  // toast.success(
+  //   "Creating Segments: you will see it go active below when it's finished processing.",
+  //   {
+  //     position: toast.POSITION.TOP_RIGHT,
+  //     autoClose: 3000,
+  //   }
+  // )
 
   if (filterConditions && filterConditions.length > 0) {
     addFilter(that)
