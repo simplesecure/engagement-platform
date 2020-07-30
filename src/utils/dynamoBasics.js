@@ -43,7 +43,7 @@ export function dbRequestDebugLog(anOperation, params, error) {
 //      https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchGetItem.html).
 //      Specifically "A single operation can retrieve up to 16 MB of data, which can contain as many as 100 items."
 //    - Add ProjectionExpression to limit data fetched
-export async function tableBatchGet(aTable, anArrOfKeyValuePairs) {
+export async function tableBatchGet(aTable, anArrOfKeyValuePairs, aProjectionExpression=undefined) {
   const numItems = anArrOfKeyValuePairs.length
   const maxItemsPerIteration = 100
   const numIterations = Math.ceil(numItems / maxItemsPerIteration)
@@ -59,6 +59,8 @@ export async function tableBatchGet(aTable, anArrOfKeyValuePairs) {
   }
 
   while (iteration <= numIterations) {
+    console.log(`Batch get ${iteration} of ${numIterations}`)
+
     if (endIndex > numItems) {
       endIndex = numItems
     }
@@ -69,6 +71,9 @@ export async function tableBatchGet(aTable, anArrOfKeyValuePairs) {
           Keys: anArrOfKeyValuePairs.slice(startIndex, endIndex)
         }
       }
+    }
+    if (aProjectionExpression) {
+      params.RequestItems[aTable].ProjectionExpression = aProjectionExpression
     }
 
     try {
@@ -91,6 +96,14 @@ export async function tableBatchGet(aTable, anArrOfKeyValuePairs) {
       dbRequestDebugLog('tableBatchGet', params, `${error}\nError Processing [${startIndex} : ${endIndex}) of ${numItems} elements.`)
     }
 
+    // Temp. workaround until 2ndary index / server:
+    // Wait 500ms / request
+    const baseDelay = 150
+    const jitterDelay = Math.floor(100 * Math.random())
+    const totalDelay = baseDelay + jitterDelay
+    await new Promise((resolve, reject) => {
+      setTimeout(() => { resolve() }, totalDelay)
+    })
     iteration++
     startIndex += maxItemsPerIteration
     endIndex += maxItemsPerIteration

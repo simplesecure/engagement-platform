@@ -586,12 +586,29 @@ export class SidServices
    *        private key.
    */
   async getUuidsForWalletAddresses(data) {
+    const method = 'getUuidsForWalletAddresses'
     const { app_id, addresses } = data;
+
+    // 1. Fetch the private key required to decrypt the uuids:
+    //
+    let orgEcPriKey = undefined
+    try {
+      const orgCryptography = {
+        cryptography: await runClientOperation('getCryptography', this.persist.sid.org_id)
+      }
+      orgEcPriKey = await this.getOrgEcPriKey(orgCryptography)
+    } catch (error) {
+      throw new Error(`Failed to restore organization private key.\n` +
+                      `Please retry this operation and if it fails again, contact support@simpleid.xyz.\n` +
+                      `${error}`)
+    }
+
     let uuids = []
-    // 1. Fetch the encrypted uuids for the given wallet addresses and appID:
+    // 2. Fetch the encrypted uuids for the given wallet addresses and appID:
     //
     const encryptedUuids = []
     const encryptedUuidMaps = await walletToUuidMapTableGetUuids(addresses)
+    console.log(`${method}: received ${encryptedUuidMaps.length} possible encrypted uuids.`)
     for (const encryptedUuidMap of encryptedUuidMaps) {
       // SPEC Change:
       //    This data structure now features app_to_enc_uuid_map_v2, which
@@ -607,9 +624,9 @@ export class SidServices
       //
       try {
         const cipherObj = encryptedUuidMap.app_to_enc_uuid_map_v2[app_id][0]
-        console.log(cipherObj)
-        encryptedUuids.push(cipherObj)
-        log.debug(`Spec. Change Success.  Read first cipherObj from app_to_enc_uuid_map_v2.`)
+        if (cipherObj) {
+          encryptedUuids.push(cipherObj)
+        }
         continue
       } catch (suppressedSpecChangeError) {
         log.debug(`Spec. Change Fail.  Unable to read cipherObj from app_to_enc_uuid_map_v2. Trying to read app_to_enc_uuid_map. Reported error:\n${suppressedSpecChangeError}`)
@@ -617,27 +634,15 @@ export class SidServices
 
       try {
         const cipherObj = encryptedUuidMap.app_to_enc_uuid_map[app_id]
-        encryptedUuids.push(cipherObj)
+        if (cipherObj) {
+          encryptedUuids.push(cipherObj)
+        }
       } catch (suppressedError) {
         log.warn(`Unable to get uuid cipherObj from object:`, encryptedUuidMap)
         continue
       }
-
     }
-
-    // 2. Fetch the private key required to decrypt the uuids:
-    //
-    let orgEcPriKey = undefined
-    try {
-      const orgCryptography = {
-        cryptography: await runClientOperation('getCryptography', this.persist.sid.org_id)
-      }
-      orgEcPriKey = await this.getOrgEcPriKey(orgCryptography)
-    } catch (error) {
-      throw new Error(`Failed to restore organization private key.\n` +
-                      `Please retry this operation and if it fails again, contact support@simpleid.xyz.\n` +
-                      `${error}`)
-    }
+    console.log(`${method}: Found ${encryptedUuids.length} existing encrypted uuids.`)
 
     // 3. Decrypt the encrypted uuids and return them:
     //
@@ -646,6 +651,9 @@ export class SidServices
         //console.log(orgEcPriKey, encryptedUuidCipherText)
         if(encryptedUuidCipherText) {
           const uuid = await decryptWrapper(orgEcPriKey, encryptedUuidCipherText)
+          if (uuid && uuid.startsWith('ERROR:')) {
+            throw new Error(uuid)
+          }
           uuids.push(uuid.toString())
         }
       } catch (suppressedError) {

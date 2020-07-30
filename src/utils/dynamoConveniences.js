@@ -12,8 +12,10 @@ export async function walletToUuidMapTableGetUuids(anArrayOfWalletAddrs) {
     })
   }
 
-  const rawDataResults =
-    await tableBatchGet(process.env.REACT_APP_UUID_TABLE, arrOfKeyValuePairs)
+  const projectionExpression = "app_to_enc_uuid_map_v2, app_to_enc_uuid_map"
+
+  const rawDataResults = await tableBatchGet(
+    process.env.REACT_APP_UUID_TABLE, arrOfKeyValuePairs, projectionExpression)
 
   let walletToUuids = undefined
   try {

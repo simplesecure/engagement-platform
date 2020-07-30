@@ -3,6 +3,7 @@ import { getSidSvcs } from './sidServices.js'
 import { getLog } from './debugScopes.js'
 import { getWeb2Analytics } from './web2Analytics';
 import socketIOClient from "socket.io-client";
+import { toast } from "react-toastify";
 
 const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST);
 const log = getLog('cloudUser')
@@ -78,9 +79,13 @@ socket.on(RT_SEGMENT_UPDATE_EVENT, async (segmentUpdate) => {
     log.debug(`${method}(${Date.now() - startTimeMs}) ms: got current app id.`)
 
     if (appId === currentAppId) {
-      blockRangeStr = (blockRange.maxBlockId === blockRange.minBlockId) ?
-        `Segment updates for Ethereum block id ${blockRange.maxBlockId}.` :
-        `Segment updates for Ethereum block ids ${blockRange.maxBlockId} - ${blockRange.minBlockId}.`
+      if (blockRange.maxBlockId === blockRange.minBlockId) {
+        blockRangeStr = (blockRange.maxBlockId !== 0) ?
+          `Segment updates for Ethereum block id ${blockRange.maxBlockId}.` :
+          `Segment updates from API event.`
+      } else {
+        blockRangeStr = `Segment updates up to Ethereum block id ${blockRange.maxBlockId}.`
+      }
     }
   }
 
@@ -366,7 +371,7 @@ class CloudServices {
         log.error(`Unable to fetch imported contracts.\n${loggedError}`)
       }
 
-      await this.addedAllUsersToSessionData(currentAppId, data /* sessionData */)
+      await this.addAllUsersToSessionData(currentAppId, data /* sessionData */)
       await setGlobal({ 
         currentAppId,
         importedContracts,
@@ -407,24 +412,52 @@ class CloudServices {
    * @param {*} currentAppId 
    * @param {*} sessionData 
    */
-  async addedAllUsersToSessionData(currentAppId, sessionData) {
+  async addAllUsersToSessionData(currentAppId, sessionData) {
+    const method = 'addAllUsersToSessionData'
     let modifiedSessionData = false
     const segments = (sessionData.currentSegments) ? sessionData.currentSegments : []
 
     const allUsersSegId = `1-${currentAppId}`
     const allUsersIndex = segments.findIndex(aSeg => aSeg.id === allUsersSegId)
     if (allUsersIndex === -1) {
+      log.debug(`addAllUsersToSessionData: creating all users segment.`)
+      // The All Users segment does not exist so we'll create it here and push it to the server
+      // (whare it is needed for notifying all users and emailing all users).
       const updatedData = await getUsers({ app_id: currentAppId })
-      const allUsersSegment = {
+      const allUsersSegmentCriteria = {
+        firstRun: true,
+        appId: currentAppId,
+        showOnDashboard: true,
         id: allUsersSegId,
         name: 'All Users',
-        showOnDashboard: true,
         userCount: updatedData.length,
         users: updatedData
       }
-      segments.unshift(allUsersSegment)
+
+      try {
+        const operationData = {
+          segmentObj: allUsersSegmentCriteria
+        }
+        await runClientOperation('addSegment', undefined, currentAppId, operationData)
+      } catch (error) {
+        const errorMsg = `Creating the All Users segment failed. Please refresh the page and try again.\n` +
+                          `If that fails, contact support@simpleid.xyz.\n`
+        const userErrorMsg = errorMsg +
+                              `More detailed error information appears in the browser's console.\n`
+        const consoleErrorMsg = errorMsg +
+                                error.message
+        console.log(consoleErrorMsg)
+        toast.error(userErrorMsg, {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 2000,
+        })
+        return
+      }
+
+      segments.unshift(allUsersSegmentCriteria)
       sessionData['currentSegments'] = segments
       modifiedSessionData = true
+      log.debug(`addAllUsersToSessionData: success creating all users segment.`)
     }
     return modifiedSessionData
   }
@@ -433,7 +466,7 @@ class CloudServices {
     log.debug('cloudUser::fetchUsersCount')
 
     const { currentAppId, sessionData } = await getGlobal()
-    const modifiedSessionData = await this.addedAllUsersToSessionData(currentAppId, sessionData)
+    const modifiedSessionData = await this.addAllUsersToSessionData(currentAppId, sessionData)
 
     const nextState = { loading: false }
     if (modifiedSessionData) {
