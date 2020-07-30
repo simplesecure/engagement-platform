@@ -198,16 +198,6 @@ export default class Segments extends React.Component {
       this.setState({ importModalOpen: false, importAddress: "" });
     }
     else {
-      toast.success(
-        <div>
-          Importing users. You'll get a notification when it's complete. View
-          progress by clicking Job Queue on the sidebar.
-        </div>,
-        {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 10000,
-        }
-      );
       getAbiInformation(importAddress)
       getCloudServices().importWallets(sessionData.id, importAddress)
       this.setState({ importModalOpen: false, importAddress: "" });
@@ -648,7 +638,7 @@ export default class Segments extends React.Component {
   }
 
   render() {
-    const { sessionData, processing } = this.global;
+    const { sessionData, processing, anOrgStatusObj, currentAppId } = this.global;
     const { currentSegments } = sessionData;
     const {
       importAddress,
@@ -667,6 +657,20 @@ export default class Segments extends React.Component {
     } = this.state;
     const segments = currentSegments ? currentSegments : [];
     const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
+    const status = anOrgStatusObj[currentAppId]
+    let message = null
+    if (Object.keys(status).length) {
+      let data = status[Object.keys(status)[0]]
+      message = (
+        <Message icon>
+          <Icon name='circle notched' loading />
+          <Message.Content>
+            <Message.Header>{data.status}</Message.Header>
+            {data.description}
+          </Message.Content>
+        </Message>
+      )
+    }
     return (
       <div>
         <SideNav />
@@ -679,9 +683,16 @@ export default class Segments extends React.Component {
                   Group Wallets Using Your App{" "}
                 </h3>
               </div>
-              <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
-                <ProcessingBlock />
-              </div>
+              {
+                message ? (
+                <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                {message}
+                </div> ) : (
+                <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
+                  <ProcessingBlock />
+                </div>
+                )
+              }
             </div>
             <Grid stackable columns={1}>
               <Grid.Column key='datainput'>
@@ -689,20 +700,20 @@ export default class Segments extends React.Component {
                   <Grid.Column width={12} key='segment creation'>
                     <Header as='h3'>Create a Segment</Header>
                     <Button
-                      content='Create Simple Segment'
+                      content='Create User Segment'
                       icon='write'
                       labelPosition='left'
                       onClick={() => this.setState({isCreateSegment: true})}
                       primary
                     />
-                    <Link to="/block">
+                    {/*<Link to="/block">
                       <Button
                         color='orange'
                         icon='sitemap'
                         labelPosition='left'
                         content='Create Advanced Segment'
                       />
-                    </Link>
+                    </Link>*/}
                   </Grid.Column>
                   <Grid.Column width={4} key='import users'>
                     <Header as='h3'>Import Users</Header>
