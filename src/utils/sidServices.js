@@ -651,9 +651,9 @@ export class SidServices
         //console.log(orgEcPriKey, encryptedUuidCipherText)
         if(encryptedUuidCipherText) {
           const uuid = await decryptWrapper(orgEcPriKey, encryptedUuidCipherText)
-          if (uuid && uuid.startsWith('ERROR:')) {
-            throw new Error(uuid)
-          }
+          // if (uuid && uuid.startsWith('ERROR:')) {
+          //   throw new Error(uuid)
+          // }
           uuids.push(uuid.toString())
         }
       } catch (suppressedError) {

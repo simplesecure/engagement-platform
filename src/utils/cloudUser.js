@@ -420,7 +420,7 @@ class CloudServices {
     const allUsersSegId = `1-${currentAppId}`
     const allUsersIndex = segments.findIndex(aSeg => aSeg.id === allUsersSegId)
     if (allUsersIndex === -1) {
-      log.debug(`addAllUsersToSessionData: creating all users segment.`)
+      log.debug(`${method}: creating all users segment.`)
       // The All Users segment does not exist so we'll create it here and push it to the server
       // (whare it is needed for notifying all users and emailing all users).
       const updatedData = await getUsers({ app_id: currentAppId })
@@ -457,7 +457,7 @@ class CloudServices {
       segments.unshift(allUsersSegmentCriteria)
       sessionData['currentSegments'] = segments
       modifiedSessionData = true
-      log.debug(`addAllUsersToSessionData: success creating all users segment.`)
+      log.debug(`${method}: success creating all users segment.`)
     }
     return modifiedSessionData
   }
