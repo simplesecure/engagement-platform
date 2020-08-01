@@ -19,6 +19,7 @@
     "grapesjs-preset-newsletter": "^0.2.20",
     "grapesjs-react": "^3.0.4",
     "jszip": "^3.3.0",
+    "list-to-array": "^1.1.0",
     "loglevel": "^1.6.6",
     "loglevel-plugin-prefix": "^0.8.4",
     "moment": "^2.24.0",
