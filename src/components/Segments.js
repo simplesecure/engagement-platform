@@ -659,7 +659,7 @@ export default class Segments extends React.Component {
     const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
     const status = anOrgStatusObj[currentAppId]
     let message = null
-    if (Object.keys(status).length) {
+    if (status && Object.keys(status).length) {
       let data = status[Object.keys(status)[0]]
       message = (
         <Message icon>
