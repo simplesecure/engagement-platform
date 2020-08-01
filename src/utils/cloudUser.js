@@ -39,11 +39,12 @@ const CLIENT_COMMAND_STATUS_EVENT = 'client command status'
 socket.on(CLIENT_COMMAND_STATUS_EVENT, async (anOrgStatusObj) => {
   log.debug(`Received ${CLIENT_COMMAND_STATUS_EVENT} event:\n` +
             `${JSON.stringify(anOrgStatusObj, null, 2)}\n`)
+  setGlobal({ anOrgStatusObj });
 })
 
 const CLIENT_COMMAND_SEGMENT_EVENT = 'client command segment'
 socket.on(CLIENT_COMMAND_SEGMENT_EVENT, async (aSegmentObj) => {
-  log.debug(`Received ${CLIENT_COMMAND_SEGMENT_EVENT} event for ` + 
+  log.debug(`Received ${CLIENT_COMMAND_SEGMENT_EVENT} event for ` +
             `segment ${(aSegmentObj) ? aSegmentObj.name : 'unknown'}`)
 
   await handleSegmentInitFinished(aSegmentObj)
@@ -51,7 +52,7 @@ socket.on(CLIENT_COMMAND_SEGMENT_EVENT, async (aSegmentObj) => {
 
 const CLIENT_COMMAND_IMPORT_EVENT = 'client command import'
 socket.on(CLIENT_COMMAND_IMPORT_EVENT, async (anImportResultObj) => {
-  log.debug(`Received ${CLIENT_COMMAND_IMPORT_EVENT} event:\n` + 
+  log.debug(`Received ${CLIENT_COMMAND_IMPORT_EVENT} event:\n` +
             `${(anImportResultObj) ? JSON.stringify(anImportResultObj, null, 2) : 'undefined'}`)
 
   await getCloudServices().fetchOrgDataAndUpdate();
@@ -262,7 +263,7 @@ async function handleSegmentsUpdate(result) {
 
 /**
  * handleSegmentInitFinished
- * 
+ *
  */
 async function handleSegmentInitFinished(aSegmentObj) {
   const method = 'cloudUser::handleSegmentInitFinished'
@@ -281,13 +282,13 @@ async function handleSegmentInitFinished(aSegmentObj) {
   const { currentSegments } = updatedSession;
   const segments = currentSegments ? currentSegments : [];
 
-  // If this segment exists already, clobber it, otherwise append it (segment init 
+  // If this segment exists already, clobber it, otherwise append it (segment init
   // happens if a segment is created or edited.):
-  let segIdx = segments.findIndex((segment) => {return segment.id === aSegmentObj.id}) 
+  let segIdx = segments.findIndex((segment) => {return segment.id === aSegmentObj.id})
   if (segIdx >= 0) {
     segments[segIdx] = aSegmentObj
   } else {
-    segments.push(aSegmentObj) 
+    segments.push(aSegmentObj)
   }
 
   apps[app_id].currentSegments = segments;
@@ -319,7 +320,7 @@ class CloudServices {
   }
 
   async fetchOrgDataAndUpdate(org) {
-    log.debug(`cloudUser::fetchOrgDataAndUpdate: called.\n` + 
+    log.debug(`cloudUser::fetchOrgDataAndUpdate: called.\n` +
                `********************************************************************************\n`)
     await setGlobal({ allFilters: [...filter] });
     let userData
@@ -372,7 +373,7 @@ class CloudServices {
       }
 
       await this.addAllUsersToSessionData(currentAppId, data /* sessionData */)
-      await setGlobal({ 
+      await setGlobal({
         currentAppId,
         importedContracts,
         apps: allApps,
@@ -409,8 +410,8 @@ class CloudServices {
 
   /**
    * @returns true if sessionData has been modified! <-- WARNING
-   * @param {*} currentAppId 
-   * @param {*} sessionData 
+   * @param {*} currentAppId
+   * @param {*} sessionData
    */
   async addAllUsersToSessionData(currentAppId, sessionData) {
     const method = 'addAllUsersToSessionData'

@@ -117,12 +117,12 @@ export default class SegmentTable extends React.Component {
             {items.map(item => this.renderRow({ user: item }))}
           </Table.VirtualBody>
         </Table>
-        <UserWallet
+        {/*<UserWallet
           showDialog={showDialog}
           walletAddr={walletAddr}
           walletType={walletType}
           toggleDialog={() => this.toggleDialog()}
-        />
+        />*/}
       </div>
     )
   }
