@@ -1,10 +1,9 @@
-import React, { setGlobal, getGlobal } from "reactn"
+import React, { setGlobal } from "reactn"
 import uuid from "uuid/v4"
 import Modal from "react-bootstrap/Modal"
 import EmailEditor from "./EmailEditor"
 import Charts from "./Charts"
 import Table from "react-bootstrap/Table"
-import Form from "react-bootstrap/Form"
 import Loader from "../Loader"
 import { getCloudServices } from "../../utils/cloudUser.js"
 import { toast } from "react-toastify"
@@ -45,9 +44,7 @@ export default class Communications extends React.Component {
       importModalOpen: false,
       fileName: "",
       allEmailsGroup: {},
-      includeImportedEmails: false,
     }
-    this.numImportedEmails = 0
     this.localBlockId = 0
     this.blockLabel = null
   }
@@ -181,8 +178,7 @@ export default class Communications extends React.Component {
       selectedSegment,
       selectedTemplate,
       campaignName,
-      fromAddress,
-      includeImportedEmails,
+      fromAddress
     } = this.state
     const { currentSegments, campaigns } = sessionData
     const seg = currentSegments.filter((a) => a.id === selectedSegment)[0]
@@ -216,7 +212,7 @@ export default class Communications extends React.Component {
         org_id,
         template_id: selectedTemplate,
         campaign_id: newCampaign.id,
-        include_imported_emails: includeImportedEmails,
+        include_imported_emails: false,
       }
 
       setGlobal({ processing: true })
@@ -284,36 +280,6 @@ export default class Communications extends React.Component {
     }
   }
 
-  getImportEmailsCheckbox(numImportedEmails = 0) {
-    if (numImportedEmails >= 0) {
-      const checkBoxLabel = `Include ${numImportedEmails} imported emails.`
-
-      return (
-        <Form.Group controlId="importedEmailsCheckbox">
-          <Form.Check
-            type="checkbox"
-            label={checkBoxLabel}
-            onChange={(evt) => {
-              const includeImportedEmails = evt.target.checked
-              this.setState({ includeImportedEmails })
-            }}
-          />
-        </Form.Group>
-      )
-    }
-
-    return undefined
-  }
-
-  getCampaignPossibleEmailCount() {
-    const { userCount, includeImportedEmails } = this.state
-    const possibleEmails = includeImportedEmails
-      ? userCount + this.numImportedEmails
-      : userCount
-
-    return possibleEmails
-  }
-
   copyTemplateData = (temp) => {
     const { org_id, currentAppId } = this.global
     const id = uuid()
@@ -346,12 +312,8 @@ export default class Communications extends React.Component {
       selectedTemplate,
       campaignName,
       confirmModal,
+      userCount
     } = this.state
-
-    try {
-      const { currentAppId, apps } = getGlobal()
-      this.numImportedEmails = apps[currentAppId].imports.email.count
-    } catch (suppressedError) {}
 
     const { sessionData, processing } = this.global
     const { currentSegments, currentTemplates } = sessionData
@@ -400,7 +362,6 @@ export default class Communications extends React.Component {
                       )
                     })}
                   </select>
-                  {this.getImportEmailsCheckbox(this.numImportedEmails)}
                 </div>
                 <div className="form-group col-md-12">
                   <label htmlFor="inputSeg">Next, Choose a Template</label>
@@ -533,7 +494,7 @@ export default class Communications extends React.Component {
             width={640}
           >
             Are you sure you want to send this email to up to{" "}
-            {this.getCampaignPossibleEmailCount()} people?* It can't be
+            {userCount} people?* It can't be
             undone. <br />
             <br />
             <span className="text-muted">

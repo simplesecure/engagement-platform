@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   Header,
   Icon,
-  Segment,
-  Label
+  Segment
 } from 'semantic-ui-react'
 import { getCloudServices } from "./../utils/cloudUser.js";
 
@@ -45,15 +44,7 @@ export default class SideNav extends React.Component {
   }
 
   render() {
-    const {
-      currentAppId,
-      notifications,
-      showSegmentNotification,
-      segmentProcessingDone
-    } = this.global
-    const notificationsProcessed = notifications.filter(
-      notification => notification.processingDone === true
-    )
+    const { currentAppId } = this.global
     const { pathname } = this.state
     return(
       <aside className="main-sidebar col-12 col-md-3 col-lg-2 px-0">

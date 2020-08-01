@@ -184,7 +184,7 @@ export default class Segments extends React.Component {
 
   importUsers = () => {
     const { sessionData } = this.global;
-    const { importAddress, network } = this.state;
+    const { importAddress } = this.state;
     if (!(importAddress.length > 10 && importAddress.length < 50)) {
       toast.error(
         <div>
