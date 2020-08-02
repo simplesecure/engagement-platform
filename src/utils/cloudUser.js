@@ -30,9 +30,19 @@ const registerOrg = async () => {
 
 socket.on('connect', async () => {
   await registerOrg()
+  await setGlobal({ connected: 'connect' })
 })
 socket.on('reconnect', async () => {
   await registerOrg()
+  await setGlobal({ connected: 'reconnect' })
+})
+socket.on('disconnect', async () => {
+  // await registerOrg()
+  await setGlobal({ connected: 'disconnect' })
+})
+socket.on('reconnecting', async () => {
+  // await registerOrg()
+  await setGlobal({ connected: 'reconnecting' })
 })
 
 const CLIENT_COMMAND_STATUS_EVENT = 'client command status'

@@ -36,6 +36,11 @@ export default class Home extends React.Component {
       <Loader inline='centered' indeterminate>{message}</Loader>
     </Dimmer>
   )
+  renderDisconnected = (message="Internet connection interrupted....") => (
+    <Dimmer active>
+      <Loader inline='centered' indeterminate>{message}</Loader>
+    </Dimmer>
+  )
   renderPublicDashboard = () => (
     <BrowserRouter>
       <Dashboard />
@@ -61,10 +66,12 @@ export default class Home extends React.Component {
     </BrowserRouter>
   )
   render() {
-    const { signedIn, sessionData, loading } = this.global
+    const { signedIn, sessionData, loading, connected } = this.global
     let element
     if(loading) {
       element = this.renderLoading()
+    } else if (connected === 'disconnect' || connected === 'reconnecting') {
+      element = this.renderDisconnected()
     } else if(signedIn && Object.keys(sessionData).length > 0 && loading === false) {
       element = this.renderSignedIn()
     } else if(signedIn && Object.keys(sessionData).length === 0 && loading === false) {

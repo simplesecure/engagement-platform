@@ -523,6 +523,7 @@ export default class Segments extends React.Component {
       filter.text = filter.filter
       filter.key = filter.filter
       filter.value = filter.filter
+      filter.disabled = !filter.enabled
     })
     return (
       <div>
@@ -657,19 +658,23 @@ export default class Segments extends React.Component {
     } = this.state;
     const segments = currentSegments ? currentSegments : [];
     const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
-    const status = anOrgStatusObj[currentAppId]
+    const status = anOrgStatusObj ? anOrgStatusObj[currentAppId] : null
     let message = null
-    if (Object.keys(status).length) {
-      let data = status[Object.keys(status)[0]]
-      message = (
-        <Message icon>
-          <Icon name='circle notched' loading />
-          <Message.Content>
-            <Message.Header>{data.status}</Message.Header>
-            {data.description}
-          </Message.Content>
-        </Message>
-      )
+    if (status && Object.keys(status).length) {
+      message = Object.keys(status).map((key, index) => {
+        let data = status[key]
+        return (
+          <div>
+            <Message icon>
+              <Icon name='circle notched' loading />
+              <Message.Content>
+                <Message.Header>{data.status}</Message.Header>
+                {data.description}
+              </Message.Content>
+            </Message>
+          </div>
+        )
+      })
     }
     return (
       <div>
@@ -722,7 +727,7 @@ export default class Segments extends React.Component {
                       positive
                       icon='download'
                       labelPosition='left'
-                      content='Import By Smart Contract'
+                      content='Import Smart Contract'
                     />
                   </Grid.Column>
                 </Grid>
@@ -749,7 +754,7 @@ export default class Segments extends React.Component {
                               </Label>
                             ) : (
                               <Label as='a' color='grey' attached='top right'>
-                                N/A
+                                0
                               </Label>
                             )
                             }
@@ -759,18 +764,18 @@ export default class Segments extends React.Component {
                               <Icon name='users' size='large' color='black' />
                               <p className='name'>Wallets</p>
                             </Button>
-                            <Button disabled={!disableButton} onClick={() => this.handleEditSegment(segment)} icon basic>
+                            {disableButton ? <Button onClick={() => this.handleEditSegment(segment)} icon basic>
                               <Icon name='edit' size='large' color='blue' />
                               <p className='name'>Edit</p>
-                            </Button>
-                            <Button disabled={disableWallets} icon basic>
+                            </Button> : null}
+                            <Button disabled={true} icon basic>
                               <Icon name='globe' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
                               <p className='name'>Connect</p>
                             </Button>
-                            <Button disabled={!disableButton} onClick={() => deleteSegment(this, segment, false)} icon basic>
+                            {disableButton ? <Button onClick={() => deleteSegment(this, segment, false)} icon basic>
                               <Icon color='red' name='trash alternate outline' size='large' />
                               <p className='name'>Delete</p>
-                            </Button>
+                            </Button> : null}
                           </Button.Group>
                         </Segment>
                       </Grid.Column>

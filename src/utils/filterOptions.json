@@ -1,34 +1,42 @@
 [
   {
-    "filter": "Last Seen",
-    "type": "Date Range"
-  },
-  {
     "filter": "Wallet Balance",
-    "type": "Number Range"
-  },
-  {
-    "filter": "Asset Price",
-    "type": "Number Range"
+    "type": "Number Range",
+    "enabled": true
   },
   {
     "filter": "Smart Contract Transactions",
-    "type": "Contract"
-  },
-  {
-    "filter": "Time Delay by Eth Blocks",
-    "type": "Delay Range"
-  },
-  {
-    "filter": "Wallet Type",
-    "type": "Selection"
+    "type": "Contract",
+    "enabled": true
   },
   {
     "filter": "Smart Contract Events",
-    "type": "Smart Contract Selection"
+    "type": "Smart Contract Selection",
+    "enabled": false
   },
   {
     "filter": "Web2 Events",
-    "type": "Web2 Selection"
+    "type": "Web2 Selection",
+    "enabled": false
+  },
+  {
+    "filter": "Asset Price",
+    "type": "Number Range",
+    "enabled": false
+  },
+  {
+    "filter": "Time Delay by Eth Blocks",
+    "type": "Delay Range",
+    "enabled": false
+  },
+  {
+    "filter": "Wallet Type",
+    "type": "Selection",
+    "enabled": false
+  },
+  {
+    "filter": "Last Seen",
+    "type": "Date Range",
+    "enabled": false
   }
 ]
