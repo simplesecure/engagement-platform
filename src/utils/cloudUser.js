@@ -24,6 +24,8 @@ const registerOrg = async () => {
   if (org_id) {
     socket.emit('org_id', org_id)
   } else {
+    // TODO: Prabhaav, set connected state to instruct the user to sign-out and sign back in
+    //       (Why would org id not be defined?  It comes from cognito gated dynamo for user on sign in.)
     log.warn(`Unable to register organization.`)
   }
 }
@@ -37,11 +39,9 @@ socket.on('reconnect', async () => {
   await setGlobal({ connected: 'reconnect' })
 })
 socket.on('disconnect', async () => {
-  // await registerOrg()
   await setGlobal({ connected: 'disconnect' })
 })
 socket.on('reconnecting', async () => {
-  // await registerOrg()
   await setGlobal({ connected: 'reconnecting' })
 })
 
@@ -277,7 +277,6 @@ async function handleSegmentsUpdate(result) {
  */
 async function handleSegmentInitFinished(aSegmentObj) {
   const method = 'cloudUser::handleSegmentInitFinished'
-
   if (!aSegmentObj) {
     throw new Error(`${method}: undefined segment argument.`)
   }
@@ -310,8 +309,6 @@ async function handleSegmentInitFinished(aSegmentObj) {
   }
 
   setGlobal({ sessionData, apps });
-
-  // TODO: Prabhaav, show a notification or something.
 }
 
 

@@ -3,6 +3,7 @@ import uuid from "uuid/v4"
 import { toast } from "react-toastify"
 import { getWeb2Analytics } from "../utils/web2Analytics"
 import { runClientOperation } from "../utils/cloudUser.js"
+import log from "loglevel"
 
 const listToArray = require("list-to-array")
 
@@ -143,7 +144,19 @@ export const createSegment = async (that) => {
     segmentCriteria.userCount = addrArray.length
     segmentCriteria.users = addrArray
   }
+  
+  const segments = currentSegments ? currentSegments : []
+  segments.push(segmentCriteria)
+  sessionData.currentSegments = segments
 
+  const thisApp = apps[sessionData.id]
+  thisApp.currentSegments = segments
+  apps[sessionData.id] = thisApp
+  clearState(that)
+  setGlobal({ sessionData, apps, showSegmentNotification: true, segmentProcessingDone: true })
+  
+  // Order is important here -- the code below modifies the empty segment we add above, if it were earlier,
+  // then you would see two segments until a real-time update or refresh.
   try {
     const operationData = {
       segmentObj: segmentCriteria
@@ -163,16 +176,6 @@ export const createSegment = async (that) => {
     })
     return
   }
-
-  const segments = currentSegments ? currentSegments : []
-  segments.push(segmentCriteria)
-  sessionData.currentSegments = segments
-
-  const thisApp = apps[sessionData.id]
-  thisApp.currentSegments = segments
-  apps[sessionData.id] = thisApp
-  clearState(that)
-  setGlobal({ sessionData, apps, showSegmentNotification: true, segmentProcessingDone: true })
 }
 
 
@@ -311,6 +314,23 @@ export const updateSegment = async (that) => {
                     `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n`)
   }
 
+  segments[index] = thisSegment
+  sessionData.currentSegments = segments
+
+  const thisApp = apps[sessionData.id]
+  thisApp.currentSegments = segments
+  apps[sessionData.id] = thisApp
+  clearState(that)
+
+  setGlobal({
+    sessionData, apps,
+    showSegmentNotification: true,
+    segmentProcessingDone: true,
+  })
+
+
+  // Order is important here for the same reason as in crete segment (see above comment in create segment)
+  //
   try {
     const operationData = {
       segmentObj: segmentCriteria
@@ -331,19 +351,6 @@ export const updateSegment = async (that) => {
     return
   }
 
-  segments[index] = thisSegment
-  sessionData.currentSegments = segments
-
-  const thisApp = apps[sessionData.id]
-  thisApp.currentSegments = segments
-  apps[sessionData.id] = thisApp
-  clearState(that)
-
-  setGlobal({
-    sessionData, apps,
-    showSegmentNotification: true,
-    segmentProcessingDone: true,
-  })
 }
 
 export const deleteSegment = async (that, seg, confirm) => {
