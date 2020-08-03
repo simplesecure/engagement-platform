@@ -17,18 +17,9 @@ export default class SegmentTable extends React.Component {
       showDialog: false,
       walletAddr: ''
     }
-    this.makerWallets = {}
-    this.instadappWallets = {}
-    this.setupUserWallets()
   }
   getUniqueKey() {
     return `DemoTable${this.keyIdx++}`
-  }
-  setupUserWallets() {
-    let makerData = require('../assets/wallets/maker.js')
-    // let instadappData = require('../assets/wallets/instadapp.js')
-    makerData.wallets.map(wallet => this.makerWallets[wallet.external_wallet] = wallet.proxy_wallet)
-    // instadappData.wallets.map(wallet => this.instadappWallets[wallet.external_wallet] = wallet.proxy_wallet)
   }
   // Filter the users based on the name property.
   filter = users => {
@@ -61,24 +52,15 @@ export default class SegmentTable extends React.Component {
   }
   renderRow = ({ user }) => {
     let name = user.substring(2)
-    let wallet = 'Unknown'
-    if (this.makerWallets.hasOwnProperty(user)) {
-      // console.log("Found Maker Proxy: ", user)
-      wallet = "Maker Proxy"
-    }
-    else if (this.instadappWallets.hasOwnProperty(user)) {
-      // console.log("Found Proxy: ", user)
-      wallet = "InstaDapp Proxy"
-    }
     return (
-      <Table.Row key={user} isSelectable onSelect={() => this.setState({ showDialog: true, walletAddr: user, walletType: wallet })}>
+      <Table.Row key={user} isSelectable onSelect={() => this.setState({ showDialog: true, walletAddr: user })}>
         <Table.Cell display="flex" alignItems="center" flexBasis={360} flexShrink={0} flexGrow={0}>
           <Avatar name={name} />
           <Text marginLeft={8} size={300} fontWeight={500}>
             {user}
           </Text>
         </Table.Cell>
-        <Table.TextCell>{wallet}</Table.TextCell>
+        {/*<Table.TextCell>{wallet}</Table.TextCell>*/}
         {/*<Table.TextCell isNumber>Pending...</Table.TextCell>
         <Table.Cell width={48} flex="none">
           <Popover
@@ -109,7 +91,7 @@ export default class SegmentTable extends React.Component {
               placeholder='Search by wallet...'
               flexBasis={360} flexShrink={0} flexGrow={0}
             />
-            <Table.TextCell>Wallet Proxy</Table.TextCell>
+            {/*<Table.TextCell>Wallet Proxy</Table.TextCell>*/}
             {/*<Table.TextCell>Proxy Wallet</Table.TextCell>
             <Table.HeaderCell width={48} flex="none" />*/}
           </Table.Head>

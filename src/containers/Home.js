@@ -11,6 +11,7 @@ import BlockDiagram from '../components/BlockDiagram'
 import { Dimmer, Loader } from 'semantic-ui-react'
 import FlowyWorker from './FlowyWorker'
 import { getCloudServices } from '../utils/cloudUser';
+import { Dialog } from 'evergreen-ui'
 const qs = require('query-string');
 
 export default class Home extends React.Component {
@@ -52,6 +53,22 @@ export default class Home extends React.Component {
       <Projects />
     </BrowserRouter>
   )
+  renderDisabledOrgId = (org) => (
+    <Dialog
+      isShown={true}
+      title="Your subscription has been disabled"
+      onConfirm={() => window.location.href = `mailto: hello@simpleid.xyz?subject=Enable Org: ${org}`}
+      onCancel={() => getCloudServices().signOut()}
+      onCloseComplete={() => getCloudServices().signOut()}
+      confirmLabel='Contact Us'
+      width={640}
+    >
+      Please contact us if you'd like to renew your subscription: {" "}
+      <strong>
+        <u>hello@simpleid.xyz</u>
+      </strong>
+    </Dialog>
+  )
   renderSignedIn = () => (
     <BrowserRouter>
       <Route exact path='/' component={Dashboard} />
@@ -66,12 +83,14 @@ export default class Home extends React.Component {
     </BrowserRouter>
   )
   render() {
-    const { signedIn, sessionData, loading, connected } = this.global
+    const { signedIn, sessionData, loading, connected, plan, org_id } = this.global
     let element
-    if(loading) {
-      element = this.renderLoading()
-    } else if (connected === 'disconnect' || connected === 'reconnecting') {
+    if (connected === 'disconnect' || connected === 'reconnecting') {
       element = this.renderDisconnected()
+    } else if(loading) {
+      element = this.renderLoading()
+    } else if (plan !== 'premium' && plan !== 'enterprise') {
+      element = this.renderDisabledOrgId(org_id)
     } else if(signedIn && Object.keys(sessionData).length > 0 && loading === false) {
       element = this.renderSignedIn()
     } else if(signedIn && Object.keys(sessionData).length === 0 && loading === false) {

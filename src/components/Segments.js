@@ -1,6 +1,6 @@
 import React from "reactn";
 import { Link } from "react-router-dom";
-import { Dialog } from 'evergreen-ui'
+import { Dialog, CornerDialog } from 'evergreen-ui'
 import {
   Button,
   Grid,
@@ -661,20 +661,27 @@ export default class Segments extends React.Component {
     const status = anOrgStatusObj ? anOrgStatusObj[currentAppId] : null
     let message = null
     if (status && Object.keys(status).length) {
-      message = Object.keys(status).map((key, index) => {
-        let data = status[key]
-        return (
-          <div>
-            <Message icon>
-              <Icon name='circle notched' loading />
-              <Message.Content>
-                <Message.Header>{data.status}</Message.Header>
-                {data.description}
-              </Message.Content>
-            </Message>
-          </div>
-        )
-      })
+      message = (
+        <React.Fragment>
+          <CornerDialog
+            title="SimpleID Data Processing"
+            isShown={true}
+          >
+          {
+            Object.keys(status).map((key, index) => {
+              let data = status[key]
+                return (
+                  <div>
+                    <h3>{data.status}</h3>
+                    <p>{data.description}</p>
+                  </div>
+                )
+              }
+            )
+          }
+          </CornerDialog>
+        </React.Fragment>
+      )
     }
     return (
       <div>
@@ -688,18 +695,12 @@ export default class Segments extends React.Component {
                   Group Wallets Using Your App{" "}
                 </h3>
               </div>
-              {
-                message ? (
-                <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-                {message}
-                </div> ) : (
-                <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
-                  <ProcessingBlock />
-                </div>
-                )
-              }
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4 text-right">
+                <ProcessingBlock />
+              </div>
             </div>
             <Grid stackable columns={1}>
+              {message}
               <Grid.Column key='datainput'>
                 <Grid stackable>
                   <Grid.Column width={12} key='segment creation'>
