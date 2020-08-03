@@ -18,15 +18,19 @@ const RT_SEGMENT_UPDATE_EVENT = "real time segment update"
 
 //////////////// Socket Stuff <-- TODO: move / encapsulate //////////////
 
-const registerOrg = async () => {
-  // TODO: the notion of a currently selected app may make this problematic.
+const registerOrg = async (anOrgId=undefined) => {
+  if (anOrgId) {
+    socket.emit('org_id', anOrgId)
+    return
+  }
+
   const { org_id } = await getGlobal()
   if (org_id) {
     socket.emit('org_id', org_id)
   } else {
     // TODO: Prabhaav, set connected state to instruct the user to sign-out and sign back in
     //       (Why would org id not be defined?  It comes from cognito gated dynamo for user on sign in.)
-    log.warn(`Unable to register organization.`)
+    log.warn(`Unable to register organization id with server.`)
   }
 }
 
@@ -326,7 +330,7 @@ class CloudServices {
     window.location.reload();
   }
 
-  async fetchOrgDataAndUpdate(org) {
+  async fetchOrgDataAndUpdate(anOrgId) {
     log.debug(`cloudUser::fetchOrgDataAndUpdate: called.\n` +
                `********************************************************************************\n`)
     await setGlobal({ allFilters: [...filter] });
@@ -343,13 +347,18 @@ class CloudServices {
 
     //Public Dashboard Check
     if (!org_id) {
-      org_id = org
+      org_id = anOrgId
     }
 
     //regardless of whether there is data in local storage, we need to fetch from db
     if (!org_id) {
       throw new Error(`Organization id is not defined. Please contact support@simpleid.xyz.`)
     }
+
+    // Make sure that the org id is registered with the server, otherwise commands
+    // will not appear and update the UX:
+    //
+    await registerOrg(org_id)
 
     let appData = undefined
     try {
