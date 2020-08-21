@@ -66,6 +66,7 @@ const SID_SVCS_LS_KEY = 'SID_SVCS'
 if (!process.env.REACT_APP_AWS_ACCESS_KEY_ID) {
   throw new Error('Cloud services provider not defined!')
 } else if (process.env.REACT_APP_AWS_ACCESS_KEY_ID !== 'AKIARVK4F3CUFEBZSRLS' &&    // Test account
+           process.env.REACT_APP_AWS_ACCESS_KEY_ID !== 'AKIAZKPB3EA6EOAJBCVL' &&    // Dev. on Prod. account
            process.env.REACT_APP_AWS_ACCESS_KEY_ID !== 'AKIAZKPB3EA6LGT6NUVN') {    // Prod. account
   //
   // DANGER:  If you get this it's because your .env file doen't have one of the
@@ -79,6 +80,7 @@ if (!process.env.REACT_APP_AWS_ACCESS_KEY_ID) {
 // TODO: Remove this soon.  #Bicycle
 function getKeyAssignments() {
   const AWS_TEST_ACCOUNT = (process.env.REACT_APP_AWS_ACCESS_KEY_ID === 'AKIARVK4F3CUFEBZSRLS')
+  const DEV_CONFIGURATION = (process.env.REACT_APP_AWS_ACCESS_KEY_ID === 'AKIAZKPB3EA6EOAJBCVL')
 
   let keyIds = {
     1 : '2fe4d745-6685-4581-93ca-6fd7aff92426',
@@ -105,6 +107,19 @@ function getKeyAssignments() {
       7: 'dbe0351b-887e-46fb-b0f5-d4da8691a71a',
       8: 'f770b6af-6268-443f-b34f-b5a2bb238ae3',
       9: 'dbe0351b-887e-46fb-b0f5-d4da8691a71a'
+    }
+  } else if (DEV_CONFIGURATION) {
+    keyIds = {
+      0: 'a5380c10-d393-4e0c-97dd-e97c1638e788',
+      1: '3744a180-507c-4890-8e15-91d8022687ab',
+      2: 'a5380c10-d393-4e0c-97dd-e97c1638e788',
+      3: '3744a180-507c-4890-8e15-91d8022687ab',
+      4: 'a5380c10-d393-4e0c-97dd-e97c1638e788',
+      5: '3744a180-507c-4890-8e15-91d8022687ab',
+      6: 'a5380c10-d393-4e0c-97dd-e97c1638e788',
+      7: '3744a180-507c-4890-8e15-91d8022687ab',
+      8: 'a5380c10-d393-4e0c-97dd-e97c1638e788',
+      9: '3744a180-507c-4890-8e15-91d8022687ab'
     }
   }
 
@@ -993,7 +1008,7 @@ export class SidServices
 
     const dbParams = {
       Key: {
-        sub: sub
+        [ process.env.REACT_APP_UD_TABLE_PK ]: sub
       },
       TableName: process.env.REACT_APP_UD_TABLE,
     }
@@ -1033,7 +1048,7 @@ export class SidServices
       { region: process.env.REACT_APP_REGION })
 
     const item = {
-      sub: sub
+      [ process.env.REACT_APP_UD_TABLE_PK ]: sub
     }
     for (const k in keyValueData) {
       item[k] = keyValueData[k]
