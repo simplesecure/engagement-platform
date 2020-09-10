@@ -388,6 +388,23 @@ class CloudServices {
         log.error(`Unable to fetch imported contracts.\n${loggedError}`)
       }
 
+      // Example call for PB to get contract data from pg:
+      //
+      if (appData) {
+        const values = (Array.isArray(importedContracts)) ?
+          Object.keys(importedContracts).map(contractAddr => contractAddr.toLowerCase()) : []
+        const operationData = {
+          getStr: "SELECT address, name, proxy_for, proxy_by, mappings FROM contracts WHERE address in ($1, $2);",
+          values
+        }
+        const contractData = await runClientOperation('getPg', org_id, currentAppId, operationData)
+        log.debug(`Fetched contract data from PG for contracts: "${values.join(', ')}":\n` +
+                  `--------------------------------------------------------------------------------\n` +
+                  `${JSON.stringify(contractData, null, 2)}` +
+                  `\n\n`)
+      }
+
+
       await this.addAllUsersToSessionData(currentAppId, data /* sessionData */)
       await setGlobal({
         currentAppId,
