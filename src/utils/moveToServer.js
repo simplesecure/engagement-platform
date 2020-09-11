@@ -16,11 +16,11 @@ const processABI = (data) => {
       abi.forEach(el => {
         const { type, name } = el
         if (type === 'event') {
-          // console.log('\t -    Event: ', name)
+          console.log('\t -    Event: ', name)
           events.push(name)
         }
         else if (type === 'function') {
-          // console.log('\t + Function: ', name)
+          console.log('\t + Function: ', name)
           functions.push(name)
         }
       })

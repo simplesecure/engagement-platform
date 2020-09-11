@@ -12,7 +12,7 @@
   {
     "filter": "Smart Contract Events",
     "type": "Smart Contract Selection",
-    "enabled": false
+    "enabled": true
   },
   {
     "filter": "Web2 Events",

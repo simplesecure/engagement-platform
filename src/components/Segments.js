@@ -282,10 +282,10 @@ export default class Segments extends React.Component {
       tokenAddress,
       delayBlocks,
       contractEvent,
-      contractName,
+      contractEventInput,
       web2Event
     } = this.state
-    const { abiInformation, web2Analytics } = this.global
+    const { abiInformation, web2Analytics, contractData } = this.global
     const { type } = filterToUse
     if (type === "Contract") {
       return (
@@ -403,31 +403,10 @@ export default class Segments extends React.Component {
         </div>
       )
     } else if (type === "Smart Contract Selection") {
-      let contractOptions = []
+      let contractOptions = {}
       let contracts = []
-      if (abiInformation && abiInformation.length > -1) {
-        Object.keys(abiInformation).forEach(item => {
-          contracts.push({
-            key: item,
-            text: item,
-            value: item
-          })
-        })
-      }
-      if (contractName) {
-        for (const [key, value] of Object.entries(abiInformation)) {
-          if (key === contractName) {
-            value.events.forEach((item) => {
-              contractOptions.push({
-                key: item,
-                text: item,
-                value: item
-              })
-            })
-          }
-        }
-      }
-      if (!contracts.length) {
+      let dataInputs = []
+      if (!contractData.length) {
         return (
           <Message>
             You haven't imported any smart contracts to trigger on.
@@ -435,30 +414,113 @@ export default class Segments extends React.Component {
         )
       }
       else {
+        contractData.forEach(element => {
+          const { address, mappings, name } = element
+          const contractValue = `${name}: ${address}`
+          contracts.push({
+            key: contractValue,
+            text: contractValue,
+            value: address
+          })
+          const { events, eventMap } = mappings
+          let options = []
+          events.forEach((item) => {
+            options.push({
+              key: item,
+              text: item,
+              value: item
+            })
+          })
+          contractOptions[address] = options
+          eventMap.forEach((item) => {
+            const nm = item.name
+            const { inputs } = item
+            let inputOptions = []
+            inputs.forEach((it) => {
+              if (!it.indexed || it.type === 'uint256') {
+                inputOptions.push({
+                  key: it.name,
+                  text: it.name,
+                  value: it.name
+                })
+              }
+            })
+            dataInputs[nm] = inputOptions
+          })
+        })
         return (
-          <div className="form-group col-md-12">
+          <div className="col-md-12">
             <label htmlFor="contractAddress">Pick Smart Contract</label>
             <Dropdown
               placeholder='Choose Contract...'
-              value={contractName}
-              onChange={(e, {value}) => this.setState({ contractName: value })}
+              value={contractAddress}
+              onChange={(e, {value}) => this.setState({ contractAddress: value })}
               openOnFocus={false}
               fluid
               selection
               options={contracts}
             />
             <br />
-            <label htmlFor="contractAddress">Pick Event or Function</label>
-            <Dropdown
-              placeholder='Choose Event or Function...'
-              value={contractEvent}
-              onChange={(e, {value}) => this.setState({ contractEvent: value })}
-              openOnFocus={false}
-              disabled={!contractName}
-              fluid
-              selection
-              options={contractOptions}
-            />
+            {contractAddress ? (
+              <div>
+                <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                  <label htmlFor="contractAddress">Pick Event</label>
+                  <Dropdown
+                    placeholder='Choose Event...'
+                    value={contractEvent}
+                    onChange={(e, {value}) => this.setState({ contractEvent: value })}
+                    openOnFocus={false}
+                    fluid
+                    selection
+                    options={contractOptions[contractAddress]}
+                  />
+                </div>
+                <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                  <label htmlFor="contractAddress">Pick Input To Track</label>
+                  <Dropdown
+                    placeholder='Choose Input...'
+                    value={contractEventInput}
+                    onChange={(e, {value}) => this.setState({ contractEventInput: value })}
+                    openOnFocus={false}
+                    fluid
+                    selection
+                    options={dataInputs[contractEvent]}
+                  />
+                </div>
+              </div>
+            ) : null}
+            {contractEventInput ? (
+              <div>
+                <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                  <label htmlFor="chartSty">Comparison Logic</label>
+                  <Dropdown
+                    placeholder='Range...'
+                    value={operatorType}
+                    onChange={(e, {value}) => this.setState({ operatorType: value })}
+                    openOnFocus={false}
+                    fluid
+                    selection
+                    options={[
+                      { key: 'choose...', text: 'Choose...', value: 'choose...' },
+                      { key: 'equal', text: 'Equal', value: '==' },
+                      { key: 'more than', text: 'More Than', value: '>' },
+                      { key: 'more than equal', text: 'More Than || Equal', value: '>=' },
+                      { key: 'less than', text: 'Less Than', value: '<' },
+                      { key: 'less than equal', text: 'Less Than || Equal', value: '<=' }
+                    ]}
+                  />
+                </div>
+                <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                  <label htmlFor="tileName">Enter Amount</label>
+                  <Input
+                    placeholder="Event Amount"
+                    type="number"
+                    value={amount}
+                    onChange={(e, {value}) => this.setState({ amount: value })}
+                  />
+                </div>
+              </div>
+            ) : null}
           </div>
         )
       }
@@ -666,6 +728,7 @@ export default class Segments extends React.Component {
           <CornerDialog
             title="SimpleID Data Processing"
             isShown={true}
+            hasFooter={false}
           >
           {
             Object.keys(status).map((key, index) => {
@@ -712,14 +775,14 @@ export default class Segments extends React.Component {
                       onClick={() => this.setState({isCreateSegment: true})}
                       primary
                     />
-                    {/*<Link to="/block">
+                    <Link to="/block">
                       <Button
                         color='orange'
                         icon='sitemap'
                         labelPosition='left'
                         content='Create Advanced Segment'
                       />
-                    </Link>*/}
+                    </Link>
                   </Grid.Column>
                   <Grid.Column width={4} key='import users'>
                     <Header as='h3'>Import Users</Header>

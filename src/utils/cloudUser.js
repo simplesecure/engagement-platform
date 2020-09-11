@@ -4,6 +4,7 @@ import { getLog } from './debugScopes.js'
 import { getWeb2Analytics } from './web2Analytics';
 import socketIOClient from "socket.io-client";
 import { toast } from "react-toastify";
+import { debug } from 'loglevel';
 
 const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST);
 const log = getLog('cloudUser')
@@ -391,7 +392,7 @@ class CloudServices {
       // Example call for PB to get contract data from pg:
       //
       if (appData) {
-        const values = (Array.isArray(importedContracts)) ?
+        const values = (importedContracts) ?
           Object.keys(importedContracts).map(contractAddr => contractAddr.toLowerCase()) : []
         const operationData = {
           getStr: "SELECT address, name, proxy_for, proxy_by, mappings FROM contracts WHERE address in ($1, $2);",
@@ -402,6 +403,7 @@ class CloudServices {
                   `--------------------------------------------------------------------------------\n` +
                   `${JSON.stringify(contractData, null, 2)}` +
                   `\n\n`)
+        await setGlobal({contractData})
       }
 
 

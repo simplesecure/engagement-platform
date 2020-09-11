@@ -5,6 +5,7 @@ import { getCloudServices } from '../utils/cloudUser';
 import { getSidSvcs } from '../utils/sidServices.js'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import Tooltip from 'react-bootstrap/Tooltip'
+const { isBurner } = require('../utils/burnerDomains.js');
 
 // eslint-disable-next-line
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/g
@@ -24,7 +25,10 @@ export default class Auth extends React.Component {
   // Event Handlers
   //////////////////////////////////////////////////////////////////////////////
   handleEmail = (e) => {
-    this.setState({ email: e.target.value });
+    const email = e.target.value;
+    const domain = email.replace(/.*@/, "");
+    const burner = email !== '' && isBurner.includes(domain)
+    this.setState({ email, burner })
   }
 
   handleCognitoPassword = (e) => {
@@ -131,12 +135,11 @@ export default class Auth extends React.Component {
   }
 
   renderPasswordFlow = () => {
-    const { found, email, errorMsg } = this.state
-
+    const { found, email, errorMsg, burner } = this.state
     return (
       <div>
         <h5>Sign Into Your SimpleID Account</h5>
-        <p>All you need is an email and password.</p>
+        {burner ? <p style={{color: 'red'}}>Please use a non-burner email domain</p> : <p>All you need is an email and password.</p>}
         <Form onSubmit={this.handleSignIn}>
           <Form.Group controlId="formBasicEmail">
             <Form.Control onChange={this.handleEmail} type="email" placeholder="your.email@email.com" autoComplete="username" />
@@ -153,7 +156,7 @@ export default class Auth extends React.Component {
               If it's your first time using SimpleID, a verification code will be emailed to you.
             </Form.Text>
           </Form.Group>
-          {(found && email) ? (
+          {(found && email && !burner) ? (
             <Button id="submit-sign-in" variant="primary" type="submit">
               Continue
             </Button>

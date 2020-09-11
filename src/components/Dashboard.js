@@ -73,11 +73,11 @@ export default class Dashboard extends React.Component {
               toggleShowContracts={this.toggleShowContracts}
             />
             <Grid>
-              {/*{getChartCard('Wallets by Smart Contracts', getDonutChart(importedContracts))}
+              {getChartCard('Wallets by Smart Contracts', getDonutChart(importedContracts))}
               {getChartCard('Weekly Active Wallets', get7DayChart())}
               {getChartCard('Monthly Active Wallets', getMonthChart())}
               {getChartCard('Top 10 Wallets by Assets', getBubbleChart())}
-              {getChartCard('Total Value Held In Smart Contracts', getCandleStickChart())}*/}
+              {/*{getChartCard('Total Value Held In Smart Contracts', getCandleStickChart())}*/}
             </Grid>
           </div>
           <Dialog
