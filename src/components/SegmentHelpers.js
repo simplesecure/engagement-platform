@@ -3,8 +3,9 @@ import uuid from "uuid/v4"
 import { toast } from "react-toastify"
 import { getWeb2Analytics } from "../utils/web2Analytics"
 import { runClientOperation } from "../utils/cloudUser.js"
-import log from "loglevel"
+import { getLog } from './../utils/debugScopes'
 
+const log = getLog('segmentHelpers')
 const listToArray = require("list-to-array")
 
 export const clearState = (that, filter=false) => {
@@ -196,7 +197,7 @@ export const createSegment = async (that) => {
                           `More detailed error information appears in the browser's console.\n`
     const consoleErrorMsg = errorMsg +
                             error.message
-    console.log(consoleErrorMsg)
+    log.error(consoleErrorMsg)
     toast.error(userErrorMsg, {
       position: toast.POSITION.TOP_RIGHT,
       autoClose: 2000,
@@ -301,7 +302,7 @@ export const updateSegment = async (that) => {
       }
       try {
         const web2AnalyticsData = await getWeb2Analytics(web2AnalyticsCmdObj)
-        // console.log(web2AnalyticsData)
+        // log.debug(web2AnalyticsData)
         const data = web2AnalyticsData.data
         let userCount
         let users
@@ -315,7 +316,7 @@ export const updateSegment = async (that) => {
         segmentCriteria.userCount = userCount
         segmentCriteria.users = users
       } catch (error) {
-        console.log(error)
+        log.error(error)
         toast.error(error.message, {
           position: toast.POSITION.TOP_RIGHT,
           autoClose: 2000,
@@ -370,7 +371,7 @@ export const updateSegment = async (that) => {
                         `More detailed error information appears in the browser's console.\n`
     const consoleErrorMsg = errorMsg +
                             error.message
-    console.log(consoleErrorMsg)
+    log.error(consoleErrorMsg)
     toast.error(userErrorMsg, {
       position: toast.POSITION.TOP_RIGHT,
       autoClose: 2000,
@@ -384,7 +385,7 @@ export const deleteSegment = async (that, seg, confirm) => {
   const method = 'SegmentHelpers::deleteSegment'
   const { sessionData, apps } = that.global
   const { currentSegments } = sessionData
-  // console.log(currentSegments)
+  // log.debug(currentSegments)
   that.setState({ seg })
   if (confirm) {
     const index = currentSegments.map((a) => a.id).indexOf(seg.id)
@@ -405,7 +406,7 @@ export const deleteSegment = async (that, seg, confirm) => {
                           `More detailed error information appears in the browser's console.\n`
       const consoleErrorMsg = errorMsg +
                               error.message
-      console.log(consoleErrorMsg)
+      log.error(consoleErrorMsg)
       toast.error(userErrorMsg, {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: 2000,
@@ -487,14 +488,14 @@ export const addFilter = (that, condition) => {
   conditions["operator"] = thisOperator
   conditions["showOnDashboard"] = showOnDashboard
   if (condition && condition.id) {
-    console.log(condition)
+    log.debug(condition)
     const index = filterConditions
       .map((condition) => condition.id)
       .indexOf(condition.id)
     if (index > -1) {
       filterConditions[index] = segmentCriteria
     } else {
-      console.log("Error with index")
+      log.error("Error with index")
     }
   } else {
     if (filterConditions) {

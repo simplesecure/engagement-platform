@@ -4,7 +4,6 @@ import { getLog } from './debugScopes.js'
 import { getWeb2Analytics } from './web2Analytics';
 import socketIOClient from "socket.io-client";
 import { toast } from "react-toastify";
-import { debug } from 'loglevel';
 
 const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST);
 const log = getLog('cloudUser')
@@ -399,10 +398,10 @@ class CloudServices {
           values
         }
         const contractData = await runClientOperation('getPg', org_id, currentAppId, operationData)
-        log.debug(`Fetched contract data from PG for contracts: "${values.join(', ')}":\n` +
-                  `--------------------------------------------------------------------------------\n` +
-                  `${JSON.stringify(contractData, null, 2)}` +
-                  `\n\n`)
+        // log.debug(`Fetched contract data from PG for contracts: "${values.join(', ')}":\n` +
+        //           `--------------------------------------------------------------------------------\n` +
+        //           `${JSON.stringify(contractData, null, 2)}` +
+        //           `\n\n`)
         await setGlobal({contractData})
       }
 
