@@ -150,16 +150,19 @@ export const createSegment = async (that) => {
 
   if (filterToUse.type === "Smart Contract Selection") {
     segmentCriteria = {
+      firstRun: true,
       version: '2.0',
       id: uuid(),
-      app_id: sessionData.id,
+      appId: sessionData.id,
+      showOnDashboard: showOnDashboard,
+      name: newSegName,
       filter: {
         children: undefined,
         filters: [
           {
             condition: 'event value',
             params: {
-              address: contractAddress.toLowerCase(),
+              contract_address: contractAddress.toLowerCase(),
               event_name: contractEvent,
               input_name: contractEventInput,
               operator: operatorType,
@@ -188,7 +191,7 @@ export const createSegment = async (that) => {
     const operationData = {
       segmentObj: segmentCriteria
     }
-    debugger
+    // debugger
     await runClientOperation('addSegment', undefined, sessionData.id, operationData)
   } catch (error) {
     const errorMsg = `Creating segment failed. Please refresh the page and try again.\n` +
