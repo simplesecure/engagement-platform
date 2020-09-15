@@ -286,6 +286,22 @@ async function handleSegmentInitFinished(aSegmentObj) {
   }
   log.debug(`${method}: Received initialized segment ${aSegmentObj.name}. (id=${aSegmentObj.id}, appId=${aSegmentObj.appId})`)
 
+  // TODO: Prabhaav the new segment object has a new property, resultData:
+  //
+  //     resultdata: {
+  //       version: '2.0',
+  //       count: usersToReturn.length,
+  //       block_id
+  //     }
+  //
+  // Detect this and show the block id. Also add a query to get the result when 
+  // clicked so we cans top storing the list and show more detailed info.
+  // TODO: pagination too.
+  //
+  if (aSegmentObj.hasOwnProperty('resultData')) {
+    log.debug(`Extended segment data received. resultData=\n${JSON.stringify(aSegmentObj.resultData, null, 2)}`)
+  }
+
   const { apps } = getGlobal();
   let { sessionData } = getGlobal();
 
