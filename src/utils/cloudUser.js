@@ -4,7 +4,6 @@ import { getLog } from './debugScopes.js'
 import { getWeb2Analytics } from './web2Analytics';
 import socketIOClient from "socket.io-client";
 import { toast } from "react-toastify";
-import { debug } from 'loglevel';
 
 const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST);
 const log = getLog('cloudUser')
@@ -287,6 +286,22 @@ async function handleSegmentInitFinished(aSegmentObj) {
   }
   log.debug(`${method}: Received initialized segment ${aSegmentObj.name}. (id=${aSegmentObj.id}, appId=${aSegmentObj.appId})`)
 
+  // TODO: Prabhaav the new segment object has a new property, resultData:
+  //
+  //     resultdata: {
+  //       version: '2.0',
+  //       count: usersToReturn.length,
+  //       block_id
+  //     }
+  //
+  // Detect this and show the block id. Also add a query to get the result when 
+  // clicked so we cans top storing the list and show more detailed info.
+  // TODO: pagination too.
+  //
+  if (aSegmentObj.hasOwnProperty('resultData')) {
+    log.debug(`Extended segment data received. resultData=\n${JSON.stringify(aSegmentObj.resultData, null, 2)}`)
+  }
+
   const { apps } = getGlobal();
   let { sessionData } = getGlobal();
 
@@ -399,10 +414,10 @@ class CloudServices {
           values
         }
         const contractData = await runClientOperation('getPg', org_id, currentAppId, operationData)
-        log.debug(`Fetched contract data from PG for contracts: "${values.join(', ')}":\n` +
-                  `--------------------------------------------------------------------------------\n` +
-                  `${JSON.stringify(contractData, null, 2)}` +
-                  `\n\n`)
+        // log.debug(`Fetched contract data from PG for contracts: "${values.join(', ')}":\n` +
+        //           `--------------------------------------------------------------------------------\n` +
+        //           `${JSON.stringify(contractData, null, 2)}` +
+        //           `\n\n`)
         await setGlobal({contractData})
       }
 

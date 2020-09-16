@@ -285,7 +285,7 @@ export default class Segments extends React.Component {
       contractEventInput,
       web2Event
     } = this.state
-    const { abiInformation, web2Analytics, contractData } = this.global
+    const { web2Analytics, contractData } = this.global
     const { type } = filterToUse
     if (type === "Contract") {
       return (
