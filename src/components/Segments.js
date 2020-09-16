@@ -406,7 +406,7 @@ export default class Segments extends React.Component {
       let contractOptions = {}
       let contracts = []
       let dataInputs = []
-      if (!contractData.length) {
+      if (!contractData) {
         return (
           <Message>
             You haven't imported any smart contracts to trigger on.
@@ -604,7 +604,7 @@ export default class Segments extends React.Component {
         </div>
         {filterToUse ? this.renderFilterConditions(filterToUse) : null}
         {filterToUse &&
-        filterToUse.type !== "web2" ? (
+        (filterType !=="Smart Contract Events") ? (
           <div className="form-group col-md-12">
             <Button onClick={() => {
               this.setState({filterType: null})
