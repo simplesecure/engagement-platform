@@ -191,7 +191,6 @@ export const createSegment = async (that) => {
     const operationData = {
       segmentObj: segmentCriteria
     }
-    // debugger
     await runClientOperation('addSegment', undefined, sessionData.id, operationData)
   } catch (error) {
     const errorMsg = `Creating segment failed. Please refresh the page and try again.\n` +
@@ -233,6 +232,8 @@ export const updateSegment = async (that) => {
     allUsers,
     existingSegmentToFilter,
     dashboardShow,
+    contractEventInput,
+    contractEvent
   } = that.state
   const showOnDashboard = dashboardShow === "Yes" ? true : false
   const filterToUse = allFilters.filter((a) => a.filter === filterType)[0]
@@ -245,7 +246,7 @@ export const updateSegment = async (that) => {
   }
 
   //First we set the segment criteria to be stored
-  const segmentCriteria = {
+  let segmentCriteria = {
     firstRun: true,
     appId: sessionData.id,
     showOnDashboard: showOnDashboard,
@@ -330,6 +331,33 @@ export const updateSegment = async (that) => {
     clearState(that)
     segmentCriteria.userCount = addrArray.length
     segmentCriteria.users = addrArray
+  }
+
+  if (filterToUse.type === "Smart Contract Selection") {
+    segmentCriteria = {
+      firstRun: true,
+      version: '2.0',
+      id: segmentToShow.id,
+      appId: sessionData.id,
+      showOnDashboard: showOnDashboard,
+      name: newSegName,
+      filter: {
+        children: undefined,
+        filters: [
+          {
+            condition: 'event value',
+            params: {
+              contract_address: contractAddress.toLowerCase(),
+              event_name: contractEvent,
+              input_name: contractEventInput,
+              operator: operatorType,
+              value: amount
+            }
+          }
+        ]
+      },
+      actions: undefined
+    }
   }
 
 

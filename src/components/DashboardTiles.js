@@ -48,7 +48,7 @@ export default class DashboardTiles extends React.Component {
     return tiles.map(tile => {
       return (
         <div
-          onClick={() => this.props.handleShowSegment(tile, true)}
+          onClick={() => (tile.version === '2.0') ? null : this.props.handleShowSegment(tile, true)}
           key={tile.id}
           className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
         >

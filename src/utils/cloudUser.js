@@ -175,11 +175,8 @@ export async function runClientOperation(anOperation, anOrgId=undefined, anAppId
   return result.data.obj
 }
 
-
-
 async function getUsers(data) {
   // setGlobal({ orgData: data.appData }); // TODO: PB is this needed?
-
   log.debug(data.app_id);
   try {
     const userAddrs = await runClientOperation('getUserWallets', undefined, data.app_id)
@@ -384,7 +381,6 @@ class CloudServices {
                       `Please reload the page. If that does not work, contact support@simpleid.xyz.\n` +
                       `${fatalError}`)
     }
-
     await setGlobal({
       org_id,
       plan: (appData.Item && appData.Item.plan) ? appData.Item.plan : process.env.REACT_APP_SID_ALL_FEATURES
@@ -409,17 +405,55 @@ class CloudServices {
       if (appData) {
         const values = (importedContracts) ?
           Object.keys(importedContracts).map(contractAddr => contractAddr.toLowerCase()) : []
+        // argumentStr is of the format $1, $2 ... based on the # of values in inportedContracts
+        // should check for empty--this may fail in that case
+        const argumentStr = values.map((value, index) => { return `\$${index + 1}`}).join(', ')
         const operationData = {
-          getStr: "SELECT address, name, proxy_for, proxy_by, mappings FROM contracts WHERE address in ($1, $2);",
+          getStr: `SELECT address, name, implementation_contract, proxy_contract, mappings FROM contracts WHERE address in (${argumentStr});`,
           values
         }
+        log.debug(`operationData:\n${JSON.stringify(operationData, null, 2)}`)
         const contractData = await runClientOperation('getPg', org_id, currentAppId, operationData)
-        // log.debug(`Fetched contract data from PG for contracts: "${values.join(', ')}":\n` +
-        //           `--------------------------------------------------------------------------------\n` +
-        //           `${JSON.stringify(contractData, null, 2)}` +
-        //           `\n\n`)
+        log.debug(`Fetched contract data from PG for contracts: "${values.join(', ')}":\n` +
+                  `--------------------------------------------------------------------------------\n` +
+                  `${JSON.stringify(contractData, null, 2)}` +
+                  `\n\n`)
         await setGlobal({contractData})
       }
+
+      // Get DAU/MAU Analytics Information
+      const values = [1, 2, 3, 4, 5, 6, 7, 14, 21, 28]
+      const analyticsTable = 'analytics_' + currentAppId
+      const argumentStr = values.map((value, index) => { return `\$${index + 1}`}).join(', ')
+      let getStr = `with analytics_stats as(
+          select
+            max(block_timestamp) as max_timestamp
+          from 
+            "${analyticsTable}"
+      )\n`
+      values.map(value => {
+        getStr += `select
+            count(address) as address_count,
+            ${value} as interval
+          from 
+            "${analyticsTable}"
+          where
+              block_timestamp > ((select max_timestamp from analytics_stats) - interval '${value} day')\n`
+        if (value !== 28) {
+          getStr += `union all\n`
+        }
+      })
+      const analyticsOpData = {
+        getStr,
+        values: []
+      }
+      log.debug(`analyticsOpData:\n${JSON.stringify(analyticsOpData, null, 2)}`)
+      const activeUsersData = await runClientOperation('getPg', org_id, currentAppId, analyticsOpData)
+      log.debug(`Fetched DAU/WAU/MAU data from PG\n` +
+                `--------------------------------------------------------------------------------\n` +
+                `${JSON.stringify(activeUsersData, null, 2)}` +
+                `\n\n`)
+      await setGlobal({activeUsersData})
 
 
       await this.addAllUsersToSessionData(currentAppId, data /* sessionData */)
@@ -532,10 +566,21 @@ class CloudServices {
     setGlobal({ orgData: undefined })
 
     const orgId = undefined
+    const contractAddress = aContractAddress.toLowerCase()
     const operationData = {
-      contractAddress: aContractAddress
+      contractAddress
     }
     await runClientOperation('importWallets', orgId, anAppId, operationData)
+  }
+
+  async findImplementation(aContractAddress) {
+    const contractAddress = aContractAddress.toLowerCase()
+    const operationData = {
+      contractAddress
+    }
+    const implementationAddress = await runClientOperation('findImplementation', undefined, undefined, operationData)
+    console.log(`==============================\n${JSON.stringify(implementationAddress, null, 2)}`)
+    return implementationAddress
   }
 
   async sendEmailMessaging(data) {

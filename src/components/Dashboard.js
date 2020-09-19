@@ -43,7 +43,8 @@ export default class Dashboard extends React.Component {
       sessionData,
       processing,
       importedContracts,
-      publicDashboard
+      publicDashboard,
+      activeUsersData
     } = this.global
     const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal } = this.state
     const { currentSegments } = sessionData
@@ -74,8 +75,8 @@ export default class Dashboard extends React.Component {
             />
             <Grid>
               {getChartCard('Wallets by Smart Contracts', getDonutChart(importedContracts))}
-              {getChartCard('Weekly Active Wallets', get7DayChart())}
-              {getChartCard('Monthly Active Wallets', getMonthChart())}
+              {(activeUsersData) ? getChartCard('Weekly Active Wallets', get7DayChart(activeUsersData)):null}
+              {(activeUsersData) ? getChartCard('Monthly Active Wallets', getMonthChart(activeUsersData)):null}
               {getChartCard('Top 10 Wallets by Assets', getBubbleChart())}
               {/*{getChartCard('Total Value Held In Smart Contracts', getCandleStickChart())}*/}
             </Grid>

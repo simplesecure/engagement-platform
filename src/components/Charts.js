@@ -130,19 +130,19 @@ export const getCandleStickChart = () => {
   )
 }
 
-export const get7DayChart = () => {
+export const get7DayChart = (activeUsersData) => {
   const data = [
     [
       'Days',
       'Wallets'
     ],
-    ['Mon', 139],
-    ['Tue', 86],
-    ['Wed', 223],
-    ['Thu', 300],
-    ['Fri', 175],
-    ['Sat', 207],
-    ['Sun', 264],
+    ['Sun', parseInt(activeUsersData[0]["address_count"])],
+    ['Mon', parseInt(activeUsersData[1]["address_count"])],
+    ['Tue', parseInt(activeUsersData[2]["address_count"])],
+    ['Wed', parseInt(activeUsersData[3]["address_count"])],
+    ['Thu', parseInt(activeUsersData[4]["address_count"])],
+    ['Fri', parseInt(activeUsersData[5]["address_count"])],
+    ['Sat', parseInt(activeUsersData[6]["address_count"])],
   ]
   const options = {
     legend: { position: 'none' },
@@ -166,17 +166,17 @@ export const get7DayChart = () => {
   )
 }
 
-export const getMonthChart = () => {
+export const getMonthChart = (activeUsersData) => {
   const data = [
     [
       'Weeks',
       'Wallets',
       { role: 'style' },
     ],
-    ['Week 1', 1039, '#4aaa50'],
-    ['Week 2', 860, '#e1634d'],
-    ['Week 3', 2230, '#983b98'],
-    ['Week 4', 3000, '#feae52']
+    ['Week 1', parseInt(activeUsersData[6]["address_count"]), '#4aaa50'],
+    ['Week 2', parseInt(activeUsersData[7]["address_count"]), '#e1634d'],
+    ['Week 3', parseInt(activeUsersData[8]["address_count"]), '#983b98'],
+    ['Week 4', parseInt(activeUsersData[9]["address_count"]), '#feae52']
   ]
   const options = {
     legend: { position: 'none' },

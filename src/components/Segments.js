@@ -28,7 +28,6 @@ import {
   clearState
 } from './SegmentHelpers'
 import ProcessingBlock from './ProcessingBlock'
-import { getAbiInformation } from './../utils/moveToServer'
 
 export default class Segments extends React.Component {
   constructor(props) {
@@ -57,6 +56,7 @@ export default class Segments extends React.Component {
       condition: {},
       importModalOpen: false,
       importAddress: "",
+      proxyAddress: "",
       selectedNetwork: "mainnet",
       webhookOpen: false,
       webhook: "",
@@ -130,7 +130,7 @@ export default class Segments extends React.Component {
       editSegment: true,
       newSegName: segmentToShow.name,
       contractAddress: thisSeg.contractAddress || contractAddress,
-      filterType: filterToUse.filter || filterType,
+      filterType: (filterToUse) ? filterToUse.filter || filterType : null,
       rangeType: thisSeg.dateRange ? thisSeg.dateRange.rangeType : rangeType,
       operatorType: thisSeg.numberRange
         ? thisSeg.numberRange.operatorType
@@ -182,26 +182,17 @@ export default class Segments extends React.Component {
     }
   };
 
-  importUsers = () => {
-    const { sessionData } = this.global;
-    const { importAddress } = this.state;
-    if (!(importAddress.length > 10 && importAddress.length < 50)) {
-      toast.error(
-        <div>
-          Invalid smart contract address. Please enter a proper address.
-        </div>,
-        {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 3000,
-        }
-      );
-      this.setState({ importModalOpen: false, importAddress: "" });
+  importUsers = async () => {
+    const { sessionData } = this.global
+    const { importAddress } = this.state
+    // debugger
+    const implementationAddress = await getCloudServices().findImplementation(importAddress)
+    await getCloudServices().importWallets(sessionData.id, importAddress)
+    
+    if (implementationAddress) {
+      getCloudServices().importWallets(sessionData.id, implementationAddress)
     }
-    else {
-      getAbiInformation(importAddress)
-      getCloudServices().importWallets(sessionData.id, importAddress)
-      this.setState({ importModalOpen: false, importAddress: "" });
-    }
+    this.setState({ importModalOpen: false, importAddress: "" })
   };
 
   renderMultipleConditions() {
@@ -462,7 +453,7 @@ export default class Segments extends React.Component {
             />
             <br />
             {contractAddress ? (
-              <div>
+              <div className="row form-group">
                 <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
                   <label htmlFor="contractAddress">Pick Event</label>
                   <Dropdown
@@ -490,7 +481,7 @@ export default class Segments extends React.Component {
               </div>
             ) : null}
             {contractEventInput ? (
-              <div>
+              <div className="row form-group">
                 <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
                   <label htmlFor="chartSty">Comparison Logic</label>
                   <Dropdown
@@ -514,6 +505,7 @@ export default class Segments extends React.Component {
                   <label htmlFor="tileName">Enter Amount</label>
                   <Input
                     placeholder="Event Amount"
+                    fluid
                     type="number"
                     value={amount}
                     onChange={(e, {value}) => this.setState({ amount: value })}
@@ -705,6 +697,7 @@ export default class Segments extends React.Component {
     const { currentSegments } = sessionData;
     const {
       importAddress,
+      proxyAddress,
       importModalOpen,
       loadingMessage,
       condition,
@@ -804,13 +797,19 @@ export default class Segments extends React.Component {
                   segments.map(segment => {
                     const disableButton = defaultSegments.indexOf(segment.name) < 0
                     const disableWallets = segment.userCount < 1
+                    let { blockId, version } = segment
+                    if (!blockId && version === '2.0') {
+                      if (segment.resultData) {
+                        blockId = segment.resultData.block_id
+                      }
+                    }
                     return (
                       <Grid.Column key={segment.id}>
                         <Segment raised padded>
                           <Header as='h3' dividing>
                             <Header.Content>{segment.name}</Header.Content>
                             <Header.Subheader color='grey' style={{marginTop: 5}}>
-                               Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${segment.blockId}`} target="_blank">{segment.blockId}</a>
+                               Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${blockId}`} target="_blank">{blockId}</a>
                             </Header.Subheader>
                             {!disableWallets && segment.hasOwnProperty('userCount')? (
                               <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal(segment)}>
@@ -824,7 +823,7 @@ export default class Segments extends React.Component {
                             }
                           </Header>
                           <Button.Group>
-                            <Button disabled={disableWallets} onClick={() => this.handleSegmentModal(segment)} icon basic>
+                            <Button disabled={disableWallets || version === '2.0'} onClick={() => this.handleSegmentModal(segment)} icon basic>
                               <Icon name='users' size='large' color='black' />
                               <p className='name'>Wallets</p>
                             </Button>
@@ -907,6 +906,10 @@ export default class Segments extends React.Component {
                 onCancel={() => this.setState({ importModalOpen: false })}
                 onCloseComplete={() => this.setState({ importModalOpen: false })}
                 confirmLabel='Import'
+                isConfirmDisabled={
+                  !importAddress ||
+                  !(importAddress.length > 10 && importAddress.length < 43)
+                }
                 width={640}
               >
                 You can import your users based on your smart contracts.
@@ -914,13 +917,23 @@ export default class Segments extends React.Component {
                 of the addresses that have interacted with that address.
                 <div>
                   <div className="top-15">
+                    <label htmlFor="chartSty">Enter <b>smart contract</b> address to import: </label>
                     <Input
                       fluid
                       value={importAddress}
                       onChange={(e, {value}) => this.setState({ importAddress: value })}
-                      placeholder="Enter smart contract to import: 0x..."
+                      placeholder="0xa1b2c3d4e5f6g7h8i9j..."
                     />
                   </div>
+                  {/* <div className="top-15">
+                    <label htmlFor="chartSty">Enter <b>proxy</b> smart contract to assocaite & import: </label>
+                    <Input
+                      fluid
+                      value={proxyAddress}
+                      onChange={(e, {value}) => this.setState({ proxyAddress: value })}
+                      placeholder="0x123456789..."
+                    />
+                  </div> */}
                 </div>
               </Dialog>
               <Dialog
