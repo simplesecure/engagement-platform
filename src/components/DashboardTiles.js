@@ -57,7 +57,7 @@ export default class DashboardTiles extends React.Component {
               <div className="d-flex flex-column m-auto">
                 <div className="stats-small__data text-center">
                   <span className="stats-small__label text-uppercase">
-                    {tile.name}
+                    {tile.name === 'All Users' ? "Tracked Wallets" : tile.name}
                   </span>
                   <h6 className="stats-small__value count my-3">
                     {tile.userCount ? tile.userCount : 0}

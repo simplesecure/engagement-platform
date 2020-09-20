@@ -768,14 +768,14 @@ export default class Segments extends React.Component {
                       onClick={() => this.setState({isCreateSegment: true})}
                       primary
                     />
-                    <Link to="/block">
+                    {/*<Link to="/block">
                       <Button
                         color='orange'
                         icon='sitemap'
                         labelPosition='left'
                         content='Create Advanced Segment'
                       />
-                    </Link>
+                    </Link>*/}
                   </Grid.Column>
                   <Grid.Column width={4} key='import users'>
                     <Header as='h3'>Import Users</Header>

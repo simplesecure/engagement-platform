@@ -63,8 +63,8 @@ export default class SideNav extends React.Component {
         <div className="nav-wrapper">
           <ul className="nav flex-column">
             <li className="nav-item Dashboard">
-              <Link onClick={() => this.setState({ pathname: '/' })} className={`nav-link ${pathname ==='/' && currentAppId !== undefined ? "active" : ""}`} to="/">
-                <Segment basic>
+              <Link onClick={() => (!currentAppId) ? null : this.setState({ pathname: '/' })} className={`nav-link ${pathname ==='/' && currentAppId !== undefined ? "active" : ""}`} to={(!currentAppId) ? "/account" : "/"}>
+                <Segment disabled={!currentAppId} basic>
                   <Header as='h3'>
                     <Icon name='dashboard' />
                     <Header.Content>
@@ -75,8 +75,8 @@ export default class SideNav extends React.Component {
               </Link>
             </li>
             <li className="nav-item Segments">
-              <Link onClick={() => this.setState({ pathname: '/segments' })} className={`nav-link ${pathname.includes('/segments') && currentAppId !== undefined ? "active" : ""}`} to="/segments">
-                <Segment basic>
+              <Link onClick={() => (!currentAppId) ? null : this.setState({ pathname: '/segments' })} className={`nav-link ${pathname.includes('/segments') && currentAppId !== undefined ? "active" : ""}`} to={(!currentAppId) ? "/account" : "/segments"}>
+                <Segment disabled={!currentAppId} basic>
                   <Header as='h3'>
                     <Icon name='cubes' />
                     <Header.Content>
@@ -87,8 +87,8 @@ export default class SideNav extends React.Component {
               </Link>
             </li>
             <li className="nav-item Notifications">
-              <Link onClick={() => this.setState({ pathname: '/notifications' })} className={`nav-link ${pathname.includes('/notifications') && currentAppId !== undefined ? "active" : ""}`} to="/notifications">
-                <Segment basic>
+              <Link onClick={() => (!currentAppId) ? null : this.setState({ pathname: '/notifications' })} className={`nav-link ${pathname.includes('/notifications') && currentAppId !== undefined ? "active" : ""}`} to={(!currentAppId) ? "/account" : "/notifications"}>
+                <Segment disabled={!currentAppId} basic>
                   <Header as='h3'>
                     <Icon name='bell' />
                     <Header.Content>
@@ -99,8 +99,8 @@ export default class SideNav extends React.Component {
               </Link>
             </li>
             <li className="nav-item Email">
-              <Link onClick={() => this.setState({ pathname: '/communications' })} className={`nav-link ${pathname.includes('/communications') && currentAppId !== undefined ? "active" : ""}`} to="/communications">
-                <Segment basic>
+              <Link onClick={() => (!currentAppId) ? null : this.setState({ pathname: '/communications' })} className={`nav-link ${pathname.includes('/communications') && currentAppId !== undefined ? "active" : ""}`} to={(!currentAppId) ? "/account" : "/communications"}>
+                <Segment disabled={!currentAppId} basic>
                   <Header as='h3'>
                     <Icon name='mail' />
                     <Header.Content>
@@ -110,18 +110,6 @@ export default class SideNav extends React.Component {
                 </Segment>
               </Link>
             </li>
-            {/*<li className="nav-item Projects">
-              <Link onClick={() => this.setState({ pathname: '/projects' })} className={`nav-link ${pathname.includes('/projects') && currentAppId !== undefined ? "active" : ""}`} to="/projects">
-                <Segment basic>
-                  <Header as='h3'>
-                    <Icon name='folder' />
-                    <Header.Content>
-                      Projects
-                    </Header.Content>
-                  </Header>
-                </Segment>
-              </Link>
-            </li>*/}
             <li className="nav-item Account">
               <Link onClick={() => this.setState({ pathname: '/account' })} className={`nav-link ${pathname.includes('/account') && currentAppId !== undefined ? "active" : ""}`} to="/account">
                 <Segment basic>
