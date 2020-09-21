@@ -488,8 +488,9 @@ class CloudServices {
       } else {
         await this.fetchUsersCount(appData)
       }
-      setGlobal({ loading: false, projectFound: false })
+      // setGlobal({ loading: false, projectFound: false })
     }
+    setGlobal({ loading: false, projectFound: false })
   }
 
   /**

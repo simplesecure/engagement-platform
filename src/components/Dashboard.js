@@ -73,13 +73,13 @@ export default class Dashboard extends React.Component {
               handleShowSegment={this.handleShowSegment}
               toggleShowContracts={this.toggleShowContracts}
             />
-            <Grid>
+            {currentSegments.length > 1 ? (<Grid>
               {getChartCard('Wallets by Smart Contracts', getDonutChart(importedContracts))}
               {(activeUsersData) ? getChartCard('Weekly Active Wallets', get7DayChart(activeUsersData)):null}
               {(activeUsersData) ? getChartCard('Monthly Active Wallets', getMonthChart(activeUsersData)):null}
               {getChartCard('Top 10 Wallets by Assets', getBubbleChart())}
               {/*{getChartCard('Total Value Held In Smart Contracts', getCandleStickChart())}*/}
-            </Grid>
+            </Grid>) : null}
           </div>
           <Dialog
             isShown={showContractsModal}
