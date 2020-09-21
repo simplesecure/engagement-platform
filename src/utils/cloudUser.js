@@ -402,7 +402,7 @@ class CloudServices {
 
       // Example call for PB to get contract data from pg:
       //
-      if (appData) {
+      if (appData && importedContracts && importedContracts.length) {
         const values = (importedContracts) ?
           Object.keys(importedContracts).map(contractAddr => contractAddr.toLowerCase()) : []
         // argumentStr is of the format $1, $2 ... based on the # of values in inportedContracts
@@ -456,13 +456,13 @@ class CloudServices {
         getStr,
         values: []
       }
-      log.debug(`analyticsOpData:\n${JSON.stringify(analyticsOpData, null, 2)}`)
-      const activeUsersData = await runClientOperation('getPg', org_id, currentAppId, analyticsOpData)
-      log.debug(`Fetched DAU/WAU/MAU data from PG\n` +
-                `--------------------------------------------------------------------------------\n` +
-                `${JSON.stringify(activeUsersData, null, 2)}` +
-                `\n\n`)
-      await setGlobal({activeUsersData})
+      // log.debug(`analyticsOpData:\n${JSON.stringify(analyticsOpData, null, 2)}`)
+      // const activeUsersData = await runClientOperation('getPg', org_id, currentAppId, analyticsOpData)
+      // log.debug(`Fetched DAU/WAU/MAU data from PG\n` +
+      //           `--------------------------------------------------------------------------------\n` +
+      //           `${JSON.stringify(activeUsersData, null, 2)}` +
+      //           `\n\n`)
+      // await setGlobal({activeUsersData})
 
 
       await this.addAllUsersToSessionData(currentAppId, data /* sessionData */)
