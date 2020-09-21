@@ -409,7 +409,16 @@ class CloudServices {
         // should check for empty--this may fail in that case
         const argumentStr = values.map((value, index) => { return `\$${index + 1}`}).join(', ')
         const operationData = {
-          getStr: `SELECT address, name, implementation_contract, proxy_contract, mappings FROM contracts WHERE address in (${argumentStr});`,
+          getStr: `
+            SELECT 
+              address, name, implementation_contract, proxy_contract, mappings 
+            FROM 
+              contracts 
+            WHERE 
+              (
+                proxy_contract IN (${argumentStr}) OR
+                ((address IN (${argumentStr})) AND implementation_contract IS NULL )
+              );`,
           values
         }
         log.debug(`operationData:\n${JSON.stringify(operationData, null, 2)}`)

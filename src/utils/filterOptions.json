@@ -6,12 +6,12 @@
   },
   {
     "filter": "Smart Contract Transactions",
-    "type": "Contract",
+    "type": "Smart Contract Transactions",
     "enabled": true
   },
   {
     "filter": "Smart Contract Events",
-    "type": "Smart Contract Selection",
+    "type": "Smart Contract Events",
     "enabled": true
   },
   {

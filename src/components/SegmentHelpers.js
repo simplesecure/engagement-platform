@@ -89,7 +89,7 @@ export const createSegment = async (that) => {
             amount,
           }
         : null,
-    contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
+    contractAddress: filterToUse.type === "Smart Contract Transactions" ? contractAddress : null,
     userCount: addrArray.length > 0 ? addrArray.length : null,
   }
 
@@ -148,7 +148,7 @@ export const createSegment = async (that) => {
     segmentCriteria.users = addrArray
   }
 
-  if (filterToUse.type === "Smart Contract Selection") {
+  if (filterToUse.type === "Smart Contract Events") {
     segmentCriteria = {
       firstRun: true,
       version: '2.0',

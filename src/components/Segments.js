@@ -28,6 +28,9 @@ import {
   clearState
 } from './SegmentHelpers'
 import ProcessingBlock from './ProcessingBlock'
+import MonitoredSmartContracts from './MonitoredSmartContracts'
+import contracts from './contracts.json'
+import erc20 from './erc20.json'
 
 export default class Segments extends React.Component {
   constructor(props) {
@@ -185,13 +188,12 @@ export default class Segments extends React.Component {
   importUsers = async () => {
     const { sessionData } = this.global
     const { importAddress } = this.state
-    // debugger
-    const implementationAddress = await getCloudServices().findImplementation(importAddress)
+    // const implementationAddress = await getCloudServices().findImplementation(importAddress)
     await getCloudServices().importWallets(sessionData.id, importAddress)
     
-    if (implementationAddress) {
-      getCloudServices().importWallets(sessionData.id, implementationAddress)
-    }
+    // if (implementationAddress) {
+    //   getCloudServices().importWallets(sessionData.id, implementationAddress)
+    // }
     this.setState({ importModalOpen: false, importAddress: "" })
   };
 
@@ -278,16 +280,27 @@ export default class Segments extends React.Component {
     } = this.state
     const { web2Analytics, contractData } = this.global
     const { type } = filterToUse
-    if (type === "Contract") {
+    const contractOptions = []
+    contracts.forEach(el => {
+      contractOptions.push({
+        key: el.address,
+        value: el.address,
+        text: `${el.name} (${el.account}): ${el.address}`
+      })
+    })
+    if (type === "Smart Contract Transactions") {
       return (
         <div className="form-group col-md-12">
-          <label htmlFor="contractAddress">Enter The Contract Address</label>
-          <Input
-            placeholder="Contract Address"
+          <label htmlFor="contractAddress">Select Smart Contract</label>
+          <Dropdown
+            placeholder='Choose contract...'
             fluid
-            type="text"
+            search
+            selection
+            openOnFocus={false}
             value={contractAddress}
             onChange={(e, {value}) => this.setState({ contractAddress: value })}
+            options={contractOptions}
           />
         </div>
       )
@@ -320,8 +333,29 @@ export default class Segments extends React.Component {
         </div>
       )
     } else if (type === "Number Range") {
+      const erc20Options = []
+      erc20.forEach(e => {
+        erc20Options.push({
+          key: e.address,
+          value: e.address,
+          text: e.name
+        })
+      })
       return (
         <div className="row form-group col-md-12">
+          <div className="col-12">
+            <label htmlFor="tileName">Choose Token Type</label>
+            <Dropdown
+              placeholder='Choose token...'
+              value={tokenType}
+              onChange={(e, {value}) => this.setState({ tokenAddress: value })}
+              openOnFocus={false}
+              fluid
+              selection
+              options={erc20Options}
+            />
+            <br/>
+          </div>
           <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
             <label htmlFor="chartSty">Make a Selection</label>
             <Dropdown
@@ -344,40 +378,10 @@ export default class Segments extends React.Component {
               placeholder="Wallet Balance Amount"
               type="number"
               value={amount}
+              fluid
               onChange={(e, {value}) => this.setState({ amount: value })}
             />
           </div>
-          <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-            <label htmlFor="tileName">Choose Token</label>
-            <Dropdown
-              placeholder='Token'
-              value={tokenType}
-              onChange={(e, {value}) => this.setState({ tokenType: value })}
-              openOnFocus={false}
-              fluid
-              selection
-              options={[
-                { key: 'choose...', text: 'Choose...', value: 'choose...' },
-                { key: 'ether', text: 'Ether', value: 'Ether' },
-                { key: 'erc-20', text: 'ERC-20', value: 'ERC-20' }
-              ]}
-            />
-          </div>
-          {tokenType === "ERC-20" ? (
-            <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-              <label htmlFor="erc20Address">Enter ERC-20 Token Address</label>
-              <Input
-                placeholder="Enter Token Address"
-                fluid
-                id="erc20Address"
-                type="text"
-                value={tokenAddress}
-                onChange={(e) => this.setState({ tokenAddress: e.target.value })}
-              />
-            </div>
-          ) : (
-            <div />
-          )}
         </div>
       )
     } else if (type === "Delay Range") {
@@ -393,7 +397,7 @@ export default class Segments extends React.Component {
           />
         </div>
       )
-    } else if (type === "Smart Contract Selection") {
+    } else if (type === "Smart Contract Events") {
       let contractOptions = {}
       let contracts = []
       let dataInputs = []
@@ -609,7 +613,7 @@ export default class Segments extends React.Component {
           <div />
         )}
 
-        <div className="form-group col-md-12">
+        {/*<div className="form-group col-md-12">
           <label htmlFor="dashboardShow">Show on Dashboard</label>
           <Dropdown
             value={dashboardShow}
@@ -625,8 +629,8 @@ export default class Segments extends React.Component {
               { key: 'no', text: 'No', value: 'No' }
             ]}
           />
-        </div>
-        {editSegment && !condition ? (
+          </div>*/}
+        {0 && editSegment && !condition ? (
           <div>
             <div className="form-group col-md-12">
               <label htmlFor="tileName">Update Segment Name</label>
@@ -778,20 +782,20 @@ export default class Segments extends React.Component {
                     </Link>*/}
                   </Grid.Column>
                   <Grid.Column width={4} key='import users'>
-                    <Header as='h3'>Import Users</Header>
+                    <Header as='h3'>Import Wallets</Header>
                     <Button
                       onClick={() => this.setState({ importModalOpen: true })}
                       positive
                       icon='download'
                       labelPosition='left'
-                      content='Import Smart Contract'
+                      content='Monitor Smart Contract'
                     />
                   </Grid.Column>
                 </Grid>
               </Grid.Column>
               <Grid.Column key='currsegs'>
                 <Header as='h3'>Current Segments</Header>
-                {segments.length > 0 ? (
+                {segments.length > 1 ? (
                 <Grid columns={2}>
                 {
                   segments.map(segment => {
@@ -803,6 +807,7 @@ export default class Segments extends React.Component {
                         blockId = segment.resultData.block_id
                       }
                     }
+                    if (segment.name === 'All Users') return null
                     return (
                       <Grid.Column key={segment.id}>
                         <Segment raised padded>
@@ -827,10 +832,11 @@ export default class Segments extends React.Component {
                               <Icon name='users' size='large' color='black' />
                               <p className='name'>Wallets</p>
                             </Button>
+                            {/* disable this feature for R1
                             {disableButton ? <Button onClick={() => this.handleEditSegment(segment)} icon basic>
                               <Icon name='edit' size='large' color='blue' />
                               <p className='name'>Edit</p>
-                            </Button> : null}
+                            </Button> : null}*/}
                             <Button disabled={true} icon basic>
                               <Icon name='globe' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
                               <p className='name'>Connect</p>
@@ -901,23 +907,20 @@ export default class Segments extends React.Component {
               </Dialog>
               <Dialog
                 isShown={importModalOpen}
-                title="Import Wallets via Smart Contract"
+                title="Monitor Smart Contract"
                 onConfirm={() => this.importUsers()}
                 onCancel={() => this.setState({ importModalOpen: false })}
                 onCloseComplete={() => this.setState({ importModalOpen: false })}
                 confirmLabel='Import'
-                isConfirmDisabled={
-                  !importAddress ||
-                  !(importAddress.length > 10 && importAddress.length < 43)
-                }
+                isConfirmDisabled={!importAddress}
                 width={640}
               >
-                You can import your users based on your smart contracts.
-                Simply enter a smart contract address and we will import all
-                of the addresses that have interacted with that address.
+                You can import wallets to monitor based on their interactions with smart contracts.
+                <MonitoredSmartContracts setImportAddress={(importAddress) => this.setState({importAddress})}/>
+                {/*
                 <div>
                   <div className="top-15">
-                    <label htmlFor="chartSty">Enter <b>smart contract</b> address to import: </label>
+                    <label htmlFor="chartSty">Enter <b>smart contract</b> address to monitor: </label>
                     <Input
                       fluid
                       value={importAddress}
@@ -933,8 +936,8 @@ export default class Segments extends React.Component {
                       onChange={(e, {value}) => this.setState({ proxyAddress: value })}
                       placeholder="0x123456789..."
                     />
-                  </div> */}
-                </div>
+                  </div>
+                </div> */}
               </Dialog>
               <Dialog
                 isShown={webhookOpen}

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Lending Pool",
+    "account": "Aave",
+    "address": "0x398ec7346dcd622edc5ae82352f02be94c62d119",
+    "proxy": "0x398ec7346dcd622edc5ae82352f02be94c62d119",
+    "implementation": "0x6d252baea75459ed0077410613c5f6e51cab4750"
+  },
+  {
+    "name": "Proxy",
+    "account": "Kyber",
+    "address": "0x818e6fecd516ecc3849daf6845e3ec868087b755",
+    "proxy": "",
+    "implementation": "0x818e6fecd516ecc3849daf6845e3ec868087b755"
+  },
+  {
+    "name": "Oasis Dex",
+    "account": "Maker",
+    "address": "0x794e6e91555438afc3ccf1c5076a74f42133d08d",
+    "proxy": "",
+    "implementation": "0x794e6e91555438afc3ccf1c5076a74f42133d08d"
+  },
+  {
+    "name": "Exchange",
+    "account": "Balancer",
+    "address": "0x6317c5e82a06e1d8bf200d21f4510ac2c038ac81",
+    "proxy": "",
+    "implementation": "0x6317c5e82a06e1d8bf200d21f4510ac2c038ac81"
+  }
+]

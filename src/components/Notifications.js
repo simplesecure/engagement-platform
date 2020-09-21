@@ -286,6 +286,16 @@ export default class Notifications extends React.Component {
     return(
       <div>
         <SideNav />
+        {/* Disabling these features for R1 */}
+        <Dimmer active={true} page>
+          <Icon name='cog' size="huge"/>
+          <Header as='h1' inverted>
+            Advanced Feature
+            <Header.Subheader>Please get in touch if you're interested</Header.Subheader>
+          </Header>
+          <Button primary as='a' href="mailto: hello@simpleid.xyz?subject=Enable Notification Service">Email Support</Button>
+          <Button as='a' href="https://t.me/joinchat/LUPfhRP2XZjenlEBPwEL4A" target="_blank">Telegram Message</Button>
+        </Dimmer>
         <main className="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
           {
             preview ?

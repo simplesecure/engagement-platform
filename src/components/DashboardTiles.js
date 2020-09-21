@@ -42,10 +42,10 @@ export default class DashboardTiles extends React.Component {
   getSegmentTiles = () => {
     const { currentSegments } = this.props
     const allTiles = currentSegments ? currentSegments : []
-    const tiles = allTiles.filter(
-      (a) => a.showOnDashboard === true
-    )
-    return tiles.map(tile => {
+    // const tiles = allTiles.filter(
+    //   (a) => a.showOnDashboard === true
+    // )
+    return allTiles.map(tile => {
       return (
         <div
           onClick={() => (tile.version === '2.0') ? null : this.props.handleShowSegment(tile, true)}
