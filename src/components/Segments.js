@@ -29,8 +29,6 @@ import {
 } from './SegmentHelpers'
 import ProcessingBlock from './ProcessingBlock'
 import MonitoredSmartContracts from './MonitoredSmartContracts'
-import contracts from './contracts.json'
-import erc20 from './erc20.json'
 
 export default class Segments extends React.Component {
   constructor(props) {
@@ -273,10 +271,10 @@ export default class Segments extends React.Component {
       contractEventInput,
       web2Event
     } = this.state
-    const { web2Analytics, contractData } = this.global
+    const { web2Analytics, contractData, tokenData } = this.global
     const { type } = filterToUse
     const contractOptions = []
-    contracts.forEach(el => {
+    contractData.forEach(el => {
       contractOptions.push({
         key: el.address,
         value: el.address,
@@ -328,9 +326,9 @@ export default class Segments extends React.Component {
         </div>
       )
     } else if (type === "Number Range") {
-      const erc20Options = []
-      erc20.forEach(e => {
-        erc20Options.push({
+      const tokenOptions = []
+      tokenData.forEach(e => {
+        tokenOptions.push({
           key: e.address,
           value: e.address,
           text: e.name
@@ -342,12 +340,12 @@ export default class Segments extends React.Component {
             <label htmlFor="tileName">Choose Token Type</label>
             <Dropdown
               placeholder='Choose token...'
-              value={tokenType}
+              value={tokenAddress}
               onChange={(e, {value}) => this.setState({ tokenAddress: value })}
               openOnFocus={false}
               fluid
               selection
-              options={erc20Options}
+              options={tokenOptions}
             />
             <br/>
           </div>
@@ -396,125 +394,120 @@ export default class Segments extends React.Component {
       let contractOptions = {}
       let contracts = []
       let dataInputs = []
-      if (!contractData) {
-        return (
-          <Message>
-            You haven't imported any smart contracts to trigger on.
-          </Message>
-        )
-      }
-      else {
-        contractData.forEach(element => {
-          const { address, mappings, name } = element
-          const contractValue = `${name}: ${address}`
-          contracts.push({
-            key: contractValue,
-            text: contractValue,
-            value: address
-          })
-          const { events, eventMap } = mappings
-          let options = []
-          events.forEach((item) => {
-            options.push({
-              key: item,
-              text: item,
-              value: item
-            })
-          })
-          contractOptions[address] = options
-          eventMap.forEach((item) => {
-            const nm = item.name
-            const { inputs } = item
-            let inputOptions = []
-            inputs.forEach((it) => {
-              if (!it.indexed || it.type === 'uint256') {
-                inputOptions.push({
-                  key: it.name,
-                  text: it.name,
-                  value: it.name
-                })
-              }
-            })
-            dataInputs[nm] = inputOptions
+      contractData.forEach(element => {
+        const { address, mappings, name, implementation_contract } = element
+        // dont care about these events for the proxy contract
+        if (implementation_contract) {
+          return
+        }
+        const contractValue = `${name}: ${address}`
+        contracts.push({
+          key: contractValue,
+          text: contractValue,
+          value: address
+        })
+        const { events, eventMap } = mappings
+        let options = []
+        events.forEach((item) => {
+          options.push({
+            key: item,
+            text: item,
+            value: item
           })
         })
-        return (
-          <div className="col-md-12">
-            <label htmlFor="contractAddress">Pick Smart Contract</label>
-            <Dropdown
-              placeholder='Choose Contract...'
-              value={contractAddress}
-              onChange={(e, {value}) => this.setState({ contractAddress: value })}
-              openOnFocus={false}
-              fluid
-              selection
-              options={contracts}
-            />
-            <br />
-            {contractAddress ? (
-              <div className="row form-group">
-                <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-                  <label htmlFor="contractAddress">Pick Event</label>
-                  <Dropdown
-                    placeholder='Choose Event...'
-                    value={contractEvent}
-                    onChange={(e, {value}) => this.setState({ contractEvent: value })}
-                    openOnFocus={false}
-                    fluid
-                    selection
-                    options={contractOptions[contractAddress]}
-                  />
-                </div>
-                <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-                  <label htmlFor="contractAddress">Pick Input To Track</label>
-                  <Dropdown
-                    placeholder='Choose Input...'
-                    value={contractEventInput}
-                    onChange={(e, {value}) => this.setState({ contractEventInput: value })}
-                    openOnFocus={false}
-                    fluid
-                    selection
-                    options={dataInputs[contractEvent]}
-                  />
-                </div>
+        contractOptions[address] = options
+        eventMap.forEach((item) => {
+          const nm = item.name
+          const { inputs } = item
+          let inputOptions = []
+          inputs.forEach((it) => {
+            if (!it.indexed || it.type === 'uint256') {
+              inputOptions.push({
+                key: it.name,
+                text: it.name,
+                value: it.name
+              })
+            }
+          })
+          dataInputs[nm] = inputOptions
+        })
+      })
+      return (
+        <div className="col-md-12">
+          <label htmlFor="contractAddress">Pick Smart Contract</label>
+          <Dropdown
+            placeholder='Choose Contract...'
+            value={contractAddress}
+            onChange={(e, {value}) => this.setState({ contractAddress: value })}
+            openOnFocus={false}
+            fluid
+            selection
+            options={contracts}
+          />
+          <br />
+          {contractAddress ? (
+            <div className="row form-group">
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                <label htmlFor="contractAddress">Pick Event</label>
+                <Dropdown
+                  placeholder='Choose Event...'
+                  value={contractEvent}
+                  onChange={(e, {value}) => this.setState({ contractEvent: value })}
+                  openOnFocus={false}
+                  fluid
+                  selection
+                  options={contractOptions[contractAddress]}
+                />
               </div>
-            ) : null}
-            {contractEventInput ? (
-              <div className="row form-group">
-                <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-                  <label htmlFor="chartSty">Comparison Logic</label>
-                  <Dropdown
-                    placeholder='Range...'
-                    value={operatorType}
-                    onChange={(e, {value}) => this.setState({ operatorType: value })}
-                    openOnFocus={false}
-                    fluid
-                    selection
-                    options={[
-                      { key: 'choose...', text: 'Choose...', value: 'choose...' },
-                      { key: 'equal', text: 'Equal', value: '==' },
-                      { key: 'more than', text: 'More Than', value: '>' },
-                      { key: 'more than equal', text: 'More Than || Equal', value: '>=' },
-                      { key: 'less than', text: 'Less Than', value: '<' },
-                      { key: 'less than equal', text: 'Less Than || Equal', value: '<=' }
-                    ]}
-                  />
-                </div>
-                <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-                  <label htmlFor="tileName">Enter Amount</label>
-                  <Input
-                    placeholder="Event Amount"
-                    fluid
-                    type="number"
-                    value={amount}
-                    onChange={(e, {value}) => this.setState({ amount: value })}
-                  />
-                </div>
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                <label htmlFor="contractAddress">Pick Input To Track</label>
+                <Dropdown
+                  placeholder='Choose Input...'
+                  value={contractEventInput}
+                  onChange={(e, {value}) => this.setState({ contractEventInput: value })}
+                  openOnFocus={false}
+                  fluid
+                  selection
+                  options={dataInputs[contractEvent]}
+                />
               </div>
-            ) : null}
-          </div>
-        )
-      }
+            </div>
+          ) : null}
+          {contractEventInput ? (
+            <div className="row form-group">
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                <label htmlFor="chartSty">Comparison Logic</label>
+                <Dropdown
+                  placeholder='Range...'
+                  value={operatorType}
+                  onChange={(e, {value}) => this.setState({ operatorType: value })}
+                  openOnFocus={false}
+                  fluid
+                  selection
+                  options={[
+                    { key: 'choose...', text: 'Choose...', value: 'choose...' },
+                    { key: 'equal', text: 'Equal', value: '==' },
+                    { key: 'more than', text: 'More Than', value: '>' },
+                    { key: 'more than equal', text: 'More Than || Equal', value: '>=' },
+                    { key: 'less than', text: 'Less Than', value: '<' },
+                    { key: 'less than equal', text: 'Less Than || Equal', value: '<=' }
+                  ]}
+                />
+              </div>
+              <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+                <label htmlFor="tileName">Enter Amount</label>
+                <Input
+                  placeholder="Event Amount"
+                  fluid
+                  type="number"
+                  value={amount}
+                  onChange={(e, {value}) => this.setState({ amount: value })}
+                />
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )
     } else if (type === "Web2 Selection") {
       let web2Events = []
       if (web2Analytics && web2Analytics.data) {

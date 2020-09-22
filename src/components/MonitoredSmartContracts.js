@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "reactn";
 import { filter } from 'fuzzaldrin-plus'
 import {
   Table,
@@ -9,7 +9,6 @@ import {
   IconButton,
   Position
 } from 'evergreen-ui'
-import contracts from './contracts.json'
 
 export default class MonitoredSmartContracts extends React.Component {
   constructor() {
@@ -54,28 +53,31 @@ export default class MonitoredSmartContracts extends React.Component {
     )
   }
   renderRow = ({ contract }) => {
+    const { account, address, name, implementation_contract } = contract
     return (
-    <Table.Row key={contract.address} isSelectable onSelect={() => this.props.setImportAddress(contract.address)}>
-      <Table.Cell display="flex" alignItems="center" flexBasis={360} flexShrink={0} flexGrow={0}>
-      <Avatar name={contract.name} />
-      <Text marginLeft={8} size={300} fontWeight={500}>
-        {contract.name}
-      </Text>
-      </Table.Cell>
-      <Table.TextCell>{contract.account}</Table.TextCell>
-      <Table.Cell width={48} flex="none">
-      <Popover
-        content={this.renderRowMenu(contract.address)}
-        position={Position.BOTTOM_RIGHT}
-      >
-        <IconButton icon="more" height={24} appearance="minimal" />
-      </Popover>
-      </Table.Cell>
-    </Table.Row>
+      <Table.Row key={address} isSelectable onSelect={() => this.props.setImportAddress(address)}>
+        <Table.Cell display="flex" alignItems="center" flexBasis={360} flexShrink={0} flexGrow={0}>
+        <Avatar name={name} />
+        <Text marginLeft={8} size={300} fontWeight={500}>
+          {name}
+        </Text>
+        </Table.Cell>
+        <Table.TextCell>{account}</Table.TextCell>
+        <Table.Cell width={48} flex="none">
+        <Popover
+          content={this.renderRowMenu(address)}
+          position={Position.BOTTOM_RIGHT}
+        >
+          <IconButton icon="more" height={24} appearance="minimal" />
+        </Popover>
+        </Table.Cell>
+      </Table.Row>
     )
   }
   render() {
-    const items = this.filter(contracts)
+    const { contractData } = this.global
+    const fItems = contractData.filter(contract => contract.proxy_contract === null)
+    const items = this.filter(fItems)
     return (
       <div>
         <Table border>

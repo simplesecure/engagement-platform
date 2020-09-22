@@ -402,33 +402,49 @@ class CloudServices {
 
       // Example call for PB to get contract data from pg:
       //
-      if (appData && importedContracts && importedContracts.length) {
-        const values = (importedContracts) ?
-          Object.keys(importedContracts).map(contractAddr => contractAddr.toLowerCase()) : []
-        // argumentStr is of the format $1, $2 ... based on the # of values in inportedContracts
-        // should check for empty--this may fail in that case
-        const argumentStr = values.map((value, index) => { return `\$${index + 1}`}).join(', ')
-        const operationData = {
-          getStr: `
-            SELECT 
-              address, name, implementation_contract, proxy_contract, mappings 
-            FROM 
-              contracts 
-            WHERE 
-              (
-                proxy_contract IN (${argumentStr}) OR
-                ((address IN (${argumentStr})) AND implementation_contract IS NULL )
-              );`,
-          values
-        }
-        log.debug(`operationData:\n${JSON.stringify(operationData, null, 2)}`)
-        const contractData = await runClientOperation('getPg', org_id, currentAppId, operationData)
-        log.debug(`Fetched contract data from PG for contracts: "${values.join(', ')}":\n` +
-                  `--------------------------------------------------------------------------------\n` +
-                  `${JSON.stringify(contractData, null, 2)}` +
-                  `\n\n`)
-        await setGlobal({contractData})
+      // if (appData && importedContracts && importedContracts.length) {
+      //   const values = (importedContracts) ?
+      //     Object.keys(importedContracts).map(contractAddr => contractAddr.toLowerCase()) : []
+      //   // argumentStr is of the format $1, $2 ... based on the # of values in inportedContracts
+      //   // should check for empty--this may fail in that case
+      //   const argumentStr = values.map((value, index) => { return `\$${index + 1}`}).join(', ')
+      //   const operationData = {
+      //     getStr: `
+      //       SELECT 
+      //         address, name, implementation_contract, proxy_contract, mappings 
+      //       FROM 
+      //         contracts 
+      //       WHERE 
+      //         (
+      //           proxy_contract IN (${argumentStr}) OR
+      //           ((address IN (${argumentStr})) AND implementation_contract IS NULL )
+      //         );`,
+      //     values
+      //   }
+      //   log.debug(`operationData:\n${JSON.stringify(operationData, null, 2)}`)
+      //   const contractData = await runClientOperation('getPg', org_id, currentAppId, operationData)
+      //   log.debug(`Fetched contract data from PG for contracts: "${values.join(', ')}":\n` +
+      //             `--------------------------------------------------------------------------------\n` +
+      //             `${JSON.stringify(contractData, null, 2)}` +
+      //             `\n\n`)
+      //   await setGlobal({contractData})
+      // }
+
+      // Get latest list of ERC20 tokens we support
+      const tokenOperationData = {
+        getStr: `SELECT * FROM tokens`,
+        values: []
       }
+      const tokenData = await runClientOperation('getPg', null, null, tokenOperationData)
+      await setGlobal({tokenData})
+
+      // Get latest list of ERC20 tokens we support
+      const contractOperationData = {
+        getStr: `SELECT * FROM contracts`,
+        values: []
+      }
+      const contractData = await runClientOperation('getPg', null, null, contractOperationData)
+      await setGlobal({contractData})
 
       // Get DAU/MAU Analytics Information
       const values = [1, 2, 3, 4, 5, 6, 7, 14, 21, 28]

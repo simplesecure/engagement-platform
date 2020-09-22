@@ -11,6 +11,7 @@ import {
   Dimmer,
   Loader
 } from 'semantic-ui-react'
+import { withRouter } from 'react-router-dom';
 import { Dialog } from 'evergreen-ui'
 import { runClientOperation,
          getCloudServices } from './../utils/cloudUser.js';
@@ -25,7 +26,7 @@ const ERROR_MSG =
   "Failed to create project, please try again. If this continues, please contact support@simpleid.xyz"
 const filter = require('../utils/filterOptions.json')
 
-export default class Projects extends React.Component {
+class Projects extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -83,6 +84,7 @@ export default class Projects extends React.Component {
         // TODO: the next call should really be removed and the model above should be updated
         //       with the appId returned (i.e. no need to call the server twice)
         getCloudServices().fetchOrgDataAndUpdate()
+        this.props.history.push('/segments')
       } else {
         setGlobal({ processing: false, error: "No app id returned" })
         console.log(`ERROR: no app id returned`)
@@ -409,3 +411,5 @@ export default class Projects extends React.Component {
     )
   }
 }
+
+export default withRouter(Projects);
