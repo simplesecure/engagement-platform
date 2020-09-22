@@ -1,5 +1,5 @@
 import React, { setGlobal } from "reactn"
-import { Link } from "react-router-dom"
+import { Link, withRouter } from "react-router-dom"
 import SideNav from './SideNav'
 import {
   Button,
@@ -11,7 +11,6 @@ import {
   Dimmer,
   Loader
 } from 'semantic-ui-react'
-import { withRouter } from 'react-router-dom';
 import { Dialog } from 'evergreen-ui'
 import { runClientOperation,
          getCloudServices } from './../utils/cloudUser.js';
