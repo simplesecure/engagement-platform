@@ -186,7 +186,7 @@ export default class Segments extends React.Component {
   importUsers = async () => {
     const { sessionData } = this.global
     const { importAddress } = this.state
-    await getCloudServices().importWallets(sessionData.id, importAddress)
+    const monitorResult = await getCloudServices().monitorContract(sessionData.id, importAddress)
     this.setState({ importModalOpen: false, importAddress: "" })
   };
 

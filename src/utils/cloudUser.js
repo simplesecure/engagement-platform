@@ -481,7 +481,8 @@ class CloudServices {
       // await setGlobal({activeUsersData})
 
 
-      await this.addAllUsersToSessionData(currentAppId, data /* sessionData */)
+      // TODO: DELETE COMMENTED BELOW
+      // await this.addAllUsersToSessionData(currentAppId, data /* sessionData */)
       await setGlobal({
         currentAppId,
         importedContracts,
@@ -577,16 +578,18 @@ class CloudServices {
     log.debug('cloudUser::fetchUsersCount')
 
     const { currentAppId, sessionData } = await getGlobal()
-    const modifiedSessionData = await this.addAllUsersToSessionData(currentAppId, sessionData)
+    // TODO: DELETE COMMENTED BELOW
+    // const modifiedSessionData = await this.addAllUsersToSessionData(currentAppId, sessionData)
 
     const nextState = { loading: false }
-    if (modifiedSessionData) {
-      nextState['sessionData'] = sessionData
-    }
+    // TODO: DELETE COMMENTED BELOW
+    // if (modifiedSessionData) {
+    //   nextState['sessionData'] = sessionData
+    // }
     setGlobal(nextState)
   }
 
-  async importWallets(anAppId, aContractAddress) {
+  async monitorContract(anAppId, aContractAddress) {
     // TODO: Un-Justining. The following line likely needs to go away. When this works,
     //       remove and test.
     setGlobal({ orgData: undefined })
@@ -596,7 +599,9 @@ class CloudServices {
     const operationData = {
       contractAddress
     }
-    await runClientOperation('importWallets', orgId, anAppId, operationData)
+    const monitorResult = await runClientOperation('monitorContract', orgId, anAppId, operationData)
+    console.log(`==============================\n${JSON.stringify(monitorResult, null, 2)}`)
+    return monitorResult
   }
 
   async findImplementation(aContractAddress) {
