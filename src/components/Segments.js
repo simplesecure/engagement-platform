@@ -78,74 +78,6 @@ export default class Segments extends React.Component {
     this.setState({ segmentToShow: seg, showSegmentModal: true });
   };
 
-  handleEditSegment = async (seg, singleCondition) => {
-    //  This function is re-used across both the edit segment functionality and the edit signle criteria functionality
-    //  So we need to know a few things:
-    //  We need to know if this is a singleCondition being edited (see singleCondition param)
-    //  We need to know the segment or condition (represented by seg param)
-    //  If this is a single condition in a filter, we need to set state appropriately (see the condition state variable below)
-    const { allFilters } = this.global;
-    await this.setState({
-      segmentToShow: seg,
-      condition: singleCondition ? seg : undefined,
-    });
-    const {
-      segmentToShow,
-      tokenAddress,
-      contractAddress,
-      filterType,
-      operatorType,
-      amount,
-      rangeType,
-      tokenType,
-    } = this.state;
-    let thisSeg = segmentToShow;
-    if (
-      seg.conditions &&
-      seg.conditions.filterConditions &&
-      seg.conditions.filterConditions.length > 0
-    ) {
-      await this.setState({ conditions: seg.conditions });
-      const { filterConditions } = seg.conditions;
-      const lastCondition = filterConditions[filterConditions.length - 1];
-      const index = filterConditions
-        .map((condition) => condition.id)
-        .indexOf(lastCondition.id);
-      thisSeg = lastCondition;
-      if (index > -1) {
-        filterConditions.splice(index, 1);
-        let conditions = seg.conditions;
-        conditions["filterConditions"] = filterConditions;
-        await this.setState({ conditions: conditions });
-      } else {
-        console.log("Error with index");
-      }
-    }
-
-    const filterToUse = allFilters.filter(
-      (a) => a.filter === thisSeg.filter.filter
-    )[0];
-
-    this.setState({
-      showSegmentModal: false,
-      editSegment: true,
-      newSegName: segmentToShow.name,
-      contractAddress: thisSeg.contractAddress || contractAddress,
-      filterType: (filterToUse) ? filterToUse.filter || filterType : null,
-      rangeType: thisSeg.dateRange ? thisSeg.dateRange.rangeType : rangeType,
-      operatorType: thisSeg.numberRange
-        ? thisSeg.numberRange.operatorType
-        : operatorType,
-      amount: thisSeg.numberRange ? thisSeg.numberRange.amount : amount,
-      tokenType: thisSeg.numberRange
-        ? thisSeg.numberRange.tokenType
-        : tokenType,
-      tokenAddress: thisSeg.numberRange
-        ? thisSeg.numberRange.tokenAddress
-        : tokenAddress
-    });
-  };
-
   handleCloseSegmentModal = () => {
     this.setState({
       showSegmentModal: false,
@@ -903,7 +835,7 @@ export default class Segments extends React.Component {
                 isConfirmDisabled={!importAddress}
                 width={640}
               >
-                You can import wallets to monitor based on their interactions with smart contracts.
+                {/* You can import wallets to monitor based on their interactions with smart contracts. */}
                 <MonitoredSmartContracts setImportAddress={(importAddress) => this.setState({importAddress})}/>
                 {/*
                 <div>
