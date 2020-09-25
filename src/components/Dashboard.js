@@ -61,7 +61,7 @@ class Dashboard extends React.Component {
         <main className={dynamicClass}>
           <div className="main-content-container container-fluid px-4">
           {
-            (!Object.keys(monitoring).length) ? (
+            (monitoring && !Object.keys(monitoring).length) ? (
                 <Dimmer active={true} page>
                   <Icon name='magic' size="huge"/>
                   <Header as='h1' inverted>

@@ -318,7 +318,7 @@ class Projects extends React.Component {
                   ) : (
                   <Message
                     header='No Projects Created Yet'
-                    content="Add a new project to get started. Once you do and once your app is integrated, you'll be able use SimpleID."
+                    content="Add a new project to start segmenting and understanding user engagement and retention."
                   />
                 )}
               </div>
@@ -400,12 +400,12 @@ class Projects extends React.Component {
                   <div />
                 }
               </Dialog>
-              <Dimmer active={processing}>
-                <Loader inline='centered' indeterminate>{"Creating project..."}</Loader>
-              </Dimmer>
             </div>
           </div>
         </main>
+        <Dimmer active={processing}>
+          <Loader inline='centered' indeterminate>{"Creating project..."}</Loader>
+        </Dimmer>
       </div>
     )
   }

@@ -701,7 +701,7 @@ export default class Segments extends React.Component {
                       labelPosition='left'
                       onClick={() => this.setState({isCreateSegment: true})}
                       primary
-                      disabled={!Object.keys(monitoring).length}
+                      disabled={monitoring && !Object.keys(monitoring).length}
                     />
                     {/*<Link to="/block">
                       <Button
@@ -726,7 +726,7 @@ export default class Segments extends React.Component {
               </Grid.Column>
               <Grid.Column key='curmonitored'>
                 <Header as='h3'>Monitored Contracts & Segments</Header>
-                {Object.keys(monitoring).length ? (
+                {monitoring && Object.keys(monitoring).length ? (
                 <Grid columns={2}>
                 {
                   Object.entries(monitoring).map(([key,value]) => {
@@ -837,7 +837,7 @@ export default class Segments extends React.Component {
                 </Grid>
               ) : null}
               {
-                (segments.length > 1 && !Object.keys(monitoring).length) ? (
+                ((!segments || !segments.length) && (!monitoring || !Object.keys(monitoring).length)) ? (
                   <Message>
                     You haven't created any segments or started monitoring contracts yet, let's do that now!
                   </Message>
