@@ -400,12 +400,12 @@ class CloudServices {
       const data = allApps[appKeys[0]];
       data['id'] = currentAppId
 
-      let importedContracts = undefined
-      try {
-        importedContracts = await runClientOperation('getImported', undefined, currentAppId)
-      } catch (loggedError) {
-        log.error(`Unable to fetch imported contracts.\n${loggedError}`)
-      }
+      // let importedContracts = undefined
+      // try {
+      //   importedContracts = await runClientOperation('getImported', undefined, currentAppId)
+      // } catch (loggedError) {
+      //   log.error(`Unable to fetch imported contracts.\n${loggedError}`)
+      // }
 
       // Example call for PB to get contract data from pg:
       //
@@ -492,7 +492,7 @@ class CloudServices {
       // await this.addAllUsersToSessionData(currentAppId, data /* sessionData */)
       await setGlobal({
         currentAppId,
-        importedContracts,
+        // importedContracts,
         apps: allApps,
         sessionData: data,
         projectFound: true,

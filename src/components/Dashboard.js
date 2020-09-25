@@ -30,6 +30,7 @@ class Dashboard extends React.Component {
       showSegmentModal: false,
       showContractsModal: false,
       segmentToShow: {},
+      currentContractAddr: ''
     }
     this.uniqueEleKey = Date.now()
   }
@@ -50,7 +51,7 @@ class Dashboard extends React.Component {
       publicDashboard,
       activeUsersData
     } = this.global
-    const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal } = this.state
+    const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal, currentContractAddr } = this.state
     const { currentSegments, monitoring } = sessionData
     const dynamicClass = !publicDashboard ?
     "main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3" :
@@ -86,14 +87,15 @@ class Dashboard extends React.Component {
                 <DashboardTiles
                   currentSegments={currentSegments}
                   importedContracts={monitoring}
+                  currentContractAddr={currentContractAddr}
                   handleShowSegment={this.handleShowSegment}
                   toggleShowContracts={this.toggleShowContracts}
                 />
                 {Object.keys(monitoring).length ? (<Grid>
-                  {getChartCard('Wallets by Smart Contracts', getDonutChart(monitoring))}
-                  {(activeUsersData) ? getChartCard('Weekly Active Wallets', get7DayChart(activeUsersData)):null}
-                  {(activeUsersData) ? getChartCard('Monthly Active Wallets', getMonthChart(activeUsersData)):null}
-                  {getChartCard('Top 10 Wallets by Assets', getBubbleChart())}
+                  {/* {getChartCard('Wallets by Smart Contracts', getDonutChart(monitoring))} */}
+                  {/* {getChartCard('Top 10 Wallets by Assets', getBubbleChart(currentContractAddr, monitoring))} */}
+                  {/* {getChartCard('Weekly Active Wallets', get7DayChart(currentContractAddr, monitoring))}
+                  {getChartCard('Monthly Active Wallets', getMonthChart(currentContractAddr, monitoring))} */}
                   {/*{getChartCard('Total Value Held In Smart Contracts', getCandleStickChart())}*/}
                 </Grid>) : null}
                 </div>
@@ -103,12 +105,15 @@ class Dashboard extends React.Component {
           <Dialog
             isShown={showContractsModal}
             title="Imported Smart Contracts"
-            onCloseComplete={() => this.toggleShowContracts()}
+            onConfirm={() => this.setState({ showContractsModal: false })}
             hasCancel={false}
             confirmLabel='Close'
             width={640}
           >
-            {showContractsModal ? <SmartContractTable contracts={monitoring} /> : '({close})'}
+            {showContractsModal ? <SmartContractTable 
+              onCloseComplete={() => this.setState({ showContractsModal: false })}
+              setCurrentContract={(key) => {this.setState({currentContractAddr: key})}} 
+              contracts={monitoring} /> : '({close})'}
           </Dialog>
           <Dialog
             isShown={showSegmentModal}

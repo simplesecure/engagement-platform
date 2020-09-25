@@ -22,7 +22,7 @@ export default class DashboardTiles extends React.Component {
             <div className="d-flex flex-column m-auto">
               <div className="stats-small__data text-center">
                 <span className="stats-small__label text-uppercase">
-                  Contracts
+                  Monitored Contracts
                 </span>
                 <h6 className="stats-small__value count my-3">
                   {Object.keys(importedContracts).length}
@@ -51,7 +51,7 @@ export default class DashboardTiles extends React.Component {
               <div className="d-flex flex-column m-auto">
                 <div className="stats-small__data text-center">
                   <span className="stats-small__label text-uppercase">
-                    {"Tracked Wallets"}
+                    Tracked Wallets
                   </span>
                   <h6 className="stats-small__value count my-3">
                     {totalTracked}
@@ -65,12 +65,39 @@ export default class DashboardTiles extends React.Component {
     }
     else return null
   }
+  getCurrentContract = () => {
+    const { importedContracts, currentContractAddr } = this.props
+    let currAddr = currentContractAddr
+    if (currAddr === '') {
+      currAddr = Object.keys(importedContracts)[0]
+    }
+    const name = importedContracts[currAddr].contract_name
+    return (
+      <div
+        onClick={() => this.props.toggleShowContracts()}
+        key={this.getUniqueKey()}
+        className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
+      >
+        <div className="stats-small stats-small--1 card card-small">
+          <div className="card-body p-0 d-flex">
+            <div className="d-flex flex-column m-auto">
+              <div className="stats-small__data text-center">
+                <span className="stats-small__label text-uppercase">
+                  Current Contract
+                </span>
+                <h6 className="stats-small__value count my-3">
+                  {name}
+                </h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
   getSegmentTiles = () => {
     const { currentSegments } = this.props
     const allTiles = currentSegments ? currentSegments : []
-    // const tiles = allTiles.filter(
-    //   (a) => a.showOnDashboard === true
-    // )
     return allTiles.map(tile => {
       return (
         <div
@@ -101,6 +128,7 @@ export default class DashboardTiles extends React.Component {
       <Grid>
         {this.getImportedContractTile()}
         {this.getTotalTracked()}
+        {this.getCurrentContract()}
         {this.getSegmentTiles()}
       </Grid>
     )

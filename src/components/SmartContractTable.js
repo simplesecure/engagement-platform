@@ -6,17 +6,17 @@ import {
 } from 'evergreen-ui'
 
 export default class SmartContractTable extends React.Component {
-  renderRow = ({ key, value, contractData }) => {
-    const contractDataKey = Object.keys(contractData).find(k => contractData[k].address === key)
-    const name = contractData[contractDataKey].name
-    const { latest_block_id, wallet_count, recent_wallets } = value
-    // let name = contract.substring(2)
+  renderRow = ({ key, value }) => {
+    const { latest_block_id, wallet_count, recent_wallets, contract_name } = value
     return (
-      <Table.Row key={key} isSelectable onSelect={() => this.setState({ contractAddr: key })}>
+      <Table.Row key={key} isSelectable onSelect={() => {
+        this.props.setCurrentContract(key)
+        this.props.onCloseComplete()
+      }}>
         <Table.Cell display="flex" alignItems="center" flexBasis={300} flexShrink={0} flexGrow={0}>
-          <Avatar name={name} />
+          <Avatar name={contract_name} />
           <Text marginLeft={8} size={300} fontWeight={500}>
-            {name}
+            {contract_name}
           </Text>
         </Table.Cell>
         <Table.TextCell isNumber>{wallet_count}</Table.TextCell>
@@ -25,7 +25,6 @@ export default class SmartContractTable extends React.Component {
     )
   }
   render() {
-    const { contractData } = this.global;
     const { contracts } = this.props
     return (
       <div>
@@ -36,7 +35,7 @@ export default class SmartContractTable extends React.Component {
             <Table.TextCell>Block Updated</Table.TextCell>
           </Table.Head>
           <Table.VirtualBody height={400}>
-            {Object.entries(contracts).map(([key,value]) => this.renderRow({ key, value, contractData }))}
+            {Object.entries(contracts).map(([key,value]) => this.renderRow({ key, value }))}
           </Table.VirtualBody>
         </Table>
       </div>

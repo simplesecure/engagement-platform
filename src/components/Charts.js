@@ -30,20 +30,33 @@ export const getDonutChart = (contracts) => {
     </div>
   )
 }
-export const getBubbleChart = () => {
-  const data = [
-    ["ID", "Eth in Contract", "Wallet Interactions", "Address", "Wallet Size"],
-    ["0x192", 8180.66, 300, "0x1929a0454cdd4d925e8fc9b6c366ecd7844866f2", 8180.66],
-    ["0xbbb", 7092.84, 833, "0xbbbfc46566e5f0302cef913af8c8f423070ce6a1", 7092.84],
-    ["0x011", 5478.60, 223, "0x011ebe45c131e87e187d185b842facad9e8e9dd9", 5478.60],
-    ["0x477", 3572.73, 1032, "0x4775e7f9fc258259e88ae6c6c245ad85def7fb3a", 3572.73],
-    ["0xaed", 2180.05, 267, "0xaedc687fa5376d2fe9d4b81ebfc8c2ba30ba54ae", 2180.05],
-    ["0xdb6", 1372.49, 981, "0xdb6189758f3cc6f0251b938c068a3ed1b0e86569", 1372.49],
-    ["0xf13", 1068.09, 123, "0xf1363d3d55d9e679cc6aa0a0496fd85bdfcf7464", 1068.09],
-    ["0x28e", 981.55, 813, "0x28e7a475ad492d5f5130c73cf8aeeae85fd79e4c", 981.55],
-    ["0x34a", 668.60, 90, "0x34aaa3d5a73d6f9594326d0422ce69748f09b14f", 668.60],
-    ["0x3e1", 578.09, 321, "0x3e10048efed71c56bae0c2e8dea106f53fae6422", 578.09]
+export const getBubbleChart = (currentContractAddr, monitoring) => {
+  let addr = currentContractAddr
+  const gwei = 0.000000001
+  if (addr === '') {
+    addr = Object.keys(monitoring)[0]
+  }
+  const walletData = monitoring[addr].most_valuable_wallets
+  debugger
+  return null
+  let data = [
+    ["ID", "Eth in Wallet", "Address", "Wallet Size"]
   ]
+  Object.entries(walletData).map(([key,value]) => {
+    // data.push
+  })
+  // ,
+  //   ["0x192", 8180.66, 300, "0x1929a0454cdd4d925e8fc9b6c366ecd7844866f2", 8180.66],
+  //   ["0xbbb", 7092.84, 833, "0xbbbfc46566e5f0302cef913af8c8f423070ce6a1", 7092.84],
+  //   ["0x011", 5478.60, 223, "0x011ebe45c131e87e187d185b842facad9e8e9dd9", 5478.60],
+  //   ["0x477", 3572.73, 1032, "0x4775e7f9fc258259e88ae6c6c245ad85def7fb3a", 3572.73],
+  //   ["0xaed", 2180.05, 267, "0xaedc687fa5376d2fe9d4b81ebfc8c2ba30ba54ae", 2180.05],
+  //   ["0xdb6", 1372.49, 981, "0xdb6189758f3cc6f0251b938c068a3ed1b0e86569", 1372.49],
+  //   ["0xf13", 1068.09, 123, "0xf1363d3d55d9e679cc6aa0a0496fd85bdfcf7464", 1068.09],
+  //   ["0x28e", 981.55, 813, "0x28e7a475ad492d5f5130c73cf8aeeae85fd79e4c", 981.55],
+  //   ["0x34a", 668.60, 90, "0x34aaa3d5a73d6f9594326d0422ce69748f09b14f", 668.60],
+  //   ["0x3e1", 578.09, 321, "0x3e10048efed71c56bae0c2e8dea106f53fae6422", 578.09]
+  // ]
   const options = {
   //   title: "Wallet Interactions vs Total Value Locked in Oasis - Top 20",
     hAxis: { title: "Assets in Contract ($)" },
@@ -130,75 +143,82 @@ export const getCandleStickChart = () => {
   )
 }
 
-export const get7DayChart = (activeUsersData) => {
-  const data = [
-    [
-      'Days',
-      'Wallets'
-    ],
-    ['Sun', parseInt(activeUsersData[0]["address_count"])],
-    ['Mon', parseInt(activeUsersData[1]["address_count"])],
-    ['Tue', parseInt(activeUsersData[2]["address_count"])],
-    ['Wed', parseInt(activeUsersData[3]["address_count"])],
-    ['Thu', parseInt(activeUsersData[4]["address_count"])],
-    ['Fri', parseInt(activeUsersData[5]["address_count"])],
-    ['Sat', parseInt(activeUsersData[6]["address_count"])],
-  ]
-  const options = {
-    legend: { position: 'none' },
-    hAxis: { title: "Unique wallets found in Smart Contracts" },
-    chartArea: {
-      top: '10%',
-      left: '10%',
-      width: '80%',
-      height: '70%'
-    }
-  }
-  return (
-    <Chart
-      loader={<Spinner name="circle" color="blue"/>}
-      width="100%"
-      height="100%"
-      chartType="BarChart"
-      data={data}
-      options={options}
-    />
-  )
+export const get7DayChart = (currentContractAddr, monitoring) => {
+  return null
+//   const data = [
+//     [
+//       'Days',
+//       'Wallets'
+//     ],
+//     ['Sun', parseInt(activeUsersData[0]["address_count"])],
+//     ['Mon', parseInt(activeUsersData[1]["address_count"])],
+//     ['Tue', parseInt(activeUsersData[2]["address_count"])],
+//     ['Wed', parseInt(activeUsersData[3]["address_count"])],
+//     ['Thu', parseInt(activeUsersData[4]["address_count"])],
+//     ['Fri', parseInt(activeUsersData[5]["address_count"])],
+//     ['Sat', parseInt(activeUsersData[6]["address_count"])],
+//   ]
+//   const options = {
+//     legend: { position: 'none' },
+//     hAxis: { title: "Unique wallets found in Smart Contracts" },
+//     chartArea: {
+//       top: '10%',
+//       left: '10%',
+//       width: '80%',
+//       height: '70%'
+//     }
+//   }
+//   return (
+//     <Chart
+//       loader={<Spinner name="circle" color="blue"/>}
+//       width="100%"
+//       height="100%"
+//       chartType="BarChart"
+//       data={data}
+//       options={options}
+//     />
+//   )
 }
 
-export const getMonthChart = (activeUsersData) => {
-  const data = [
-    [
-      'Weeks',
-      'Wallets',
-      { role: 'style' },
-    ],
-    ['Week 1', parseInt(activeUsersData[6]["address_count"]), '#4aaa50'],
-    ['Week 2', parseInt(activeUsersData[7]["address_count"]), '#e1634d'],
-    ['Week 3', parseInt(activeUsersData[8]["address_count"]), '#983b98'],
-    ['Week 4', parseInt(activeUsersData[9]["address_count"]), '#feae52']
-  ]
-  const options = {
-    legend: { position: 'none' },
-    hAxis: { title: "Unique wallets found in Smart Contracts" },
-    chartArea: {
-      top: '10%',
-      left: '10%',
-      width: '80%',
-      height: '70%'
-    },
-    style: { color: 'green'}
+export const getMonthChart = (currentContractAddr, monitoring) => {
+  let addr = currentContractAddr
+  if (addr === '') {
+    addr = Object.keys(monitoring)[0]
   }
-  return (
-    <Chart
-      loader={<Spinner name="circle" color="blue"/>}
-      width="100%"
-      height="100%"
-      chartType="BarChart"
-      data={data}
-      options={options}
-    />
-  )
+  const userData = monitoring[addr]
+  return null
+  // const data = [
+  //   [
+  //     'Weeks',
+  //     'Wallets',
+  //     { role: 'style' },
+  //   ],
+  //   ['Week 1', parseInt(activeUsersData[6]["address_count"]), '#4aaa50'],
+  //   ['Week 2', parseInt(activeUsersData[7]["address_count"]), '#e1634d'],
+  //   ['Week 3', parseInt(activeUsersData[8]["address_count"]), '#983b98'],
+  //   ['Week 4', parseInt(activeUsersData[9]["address_count"]), '#feae52']
+  // ]
+  // const options = {
+  //   legend: { position: 'none' },
+  //   hAxis: { title: "Unique wallets found in Smart Contracts" },
+  //   chartArea: {
+  //     top: '10%',
+  //     left: '10%',
+  //     width: '80%',
+  //     height: '70%'
+  //   },
+  //   style: { color: 'green'}
+  // }
+  // return (
+  //   <Chart
+  //     loader={<Spinner name="circle" color="blue"/>}
+  //     width="100%"
+  //     height="100%"
+  //     chartType="BarChart"
+  //     data={data}
+  //     options={options}
+  //   />
+  // )
 }
 
 export const getChartCard = (aTitle, theChart, minHeight=420) => {

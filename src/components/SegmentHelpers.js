@@ -106,8 +106,8 @@ export const createSegment = async (that) => {
   //     autoClose: 3000,
   //   }
   // )
-
   if (filterConditions && filterConditions.length > 0) {
+    debugger
     addFilter(that)
     conditions = that.state.conditions
     that.setState({ conditions })
@@ -148,32 +148,8 @@ export const createSegment = async (that) => {
     segmentCriteria.users = addrArray
   }
 
-  if (filterToUse.type === "Smart Contract Events") {
-    segmentCriteria = {
-      firstRun: true,
-      version: '2.0',
-      id: uuid(),
-      appId: sessionData.id,
-      showOnDashboard: showOnDashboard,
-      name: newSegName,
-      filter: {
-        children: undefined,
-        filters: [
-          {
-            condition: 'event value',
-            params: {
-              contract_address: contractAddress.toLowerCase(),
-              event_name: contractEvent,
-              input_name: contractEventInput,
-              operator: operatorType,
-              value: amount
-            }
-          }
-        ]
-      },
-      actions: undefined
-    }
-  } 
+  //should eventually move to this..........
+  segmentCriteria = createNewSegmentCriteria(that, segmentCriteria)
   
   const segments = currentSegments ? currentSegments : []
   segments.push(segmentCriteria)
@@ -208,208 +184,104 @@ export const createSegment = async (that) => {
   }
 }
 
-
-export const updateSegment = async (that) => {
+export const createNewSegmentCriteria = (that, segmentCriteria) => {
+  debugger
+  const { allFilters } = that.global
   const {
-    sessionData,
-    apps,
-    allFilters,
-  } = that.global
-  const { currentSegments } = sessionData
-  const {
-    conditions,
-    listOfAddresses,
-    segmentToShow,
-    newSegName,
-    tokenType,
     tokenAddress,
-    filterType,
-    rangeType,
     operatorType,
     amount,
-    date,
     contractAddress,
-    allUsers,
-    existingSegmentToFilter,
-    dashboardShow,
     contractEventInput,
-    contractEvent
+    contractEvent,
+    filterType
   } = that.state
-  const showOnDashboard = dashboardShow === "Yes" ? true : false
-  const filterToUse = allFilters.filter((a) => a.filter === filterType)[0]
-
-  that.setState({ editSegment: false, showSegmentModal: false })
-
-  let addrArray = []
-  if (listOfAddresses) {
-    addrArray = listToArray(listOfAddresses)
-  }
-
-  //First we set the segment criteria to be stored
-  let segmentCriteria = {
-    firstRun: true,
-    appId: sessionData.id,
-    showOnDashboard: showOnDashboard,
-    id: segmentToShow.id,
-    name: newSegName,
-    startWithExisting: !allUsers,
-    existingSegmentToFilter:
-      allUsers === false ? existingSegmentToFilter : null,
-    conditions: conditions && conditions.id ? conditions : undefined,
-    filter: filterToUse,
-    dateRange:
-      filterToUse.type === "Date Range"
-        ? {
-            rangeType,
-            date: Date.parse(date),
-          }
-        : null,
-    numberRange:
-      filterToUse.type === "Number Range"
-        ? {
-            operatorType,
-            tokenType,
-            tokenAddress: tokenType === "ERC-20" ? tokenAddress : undefined,
-            amount,
-          }
-        : null,
-    contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
-    userCount:
-      addrArray.length > 0 ? addrArray.length : segmentToShow.userCount,
-    users: segmentToShow.users,
-  }
-
+  let { conditions } = that.state
   const { filterConditions } = conditions
-  let updatedConditions
-  if (filterConditions && filterConditions.length > 0) {
-    addFilter(that)
-    updatedConditions = that.state.conditions
-    that.setState({ conditions: updatedConditions })
-    segmentCriteria.conditions = conditions
-  } else {
-    updatedConditions = {}
-    that.setState({ conditions: updatedConditions })
-  }
-  segmentCriteria["update"] = true
-  //Now we fetch the actual results
-
-  //If the segment needs to be process via api, use the segments call
-  if (addrArray.length === 0) {
-    if (segmentCriteria.filter.type === "web2") {
-      //  Send request to web2 analytics handler
-      const web2AnalyticsCmdObj = {
-        command: "getWeb2Analytics",
-        data: {
-          appId: sessionData.id,
-          event: segmentCriteria.filter.filter.split("Web2: ")[1],
-        },
-      }
-      try {
-        const web2AnalyticsData = await getWeb2Analytics(web2AnalyticsCmdObj)
-        // log.debug(web2AnalyticsData)
-        const data = web2AnalyticsData.data
-        let userCount
-        let users
-        if (data) {
-          userCount = data.length
-          users = data
-        } else {
-          userCount = 0
-          users = []
-        }
-        segmentCriteria.userCount = userCount
-        segmentCriteria.users = users
-      } catch (error) {
-        log.error(error)
-        toast.error(error.message, {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 2000,
-        })
-      }
-    }
-  } else {
-    clearState(that)
-    segmentCriteria.userCount = addrArray.length
-    segmentCriteria.users = addrArray
-  }
-
-  if (filterToUse.type === "Smart Contract Selection") {
-    segmentCriteria = {
-      firstRun: true,
-      version: '2.0',
-      id: segmentToShow.id,
-      appId: sessionData.id,
-      showOnDashboard: showOnDashboard,
-      name: newSegName,
-      filter: {
-        children: undefined,
-        filters: [
-          {
-            condition: 'event value',
-            params: {
-              contract_address: contractAddress.toLowerCase(),
-              event_name: contractEvent,
-              input_name: contractEventInput,
-              operator: operatorType,
-              value: amount
-            }
-          }
-        ]
-      },
-      actions: undefined
-    }
-  }
-
-
-  const segments = currentSegments ? currentSegments : []
-
-  let thisSegment = segments.filter((a) => a.id === segmentCriteria.id)[0]
-  if (thisSegment) {
-    thisSegment = segmentCriteria
-  }
-  const index = segments.findIndex((segment) => {return segment.id === segmentCriteria.id})
-  if (index <= -1) {
-    throw new Error(`SegmentHelpers::updateSegment: could not find segment to update in data model (id=${thisSegment.id}).\n` +
-                    `Please refresh the page and try again. If that fails contact support@simpleid.xyz.\n`)
-  }
-
-  segments[index] = thisSegment
-  sessionData.currentSegments = segments
-
-  const thisApp = apps[sessionData.id]
-  thisApp.currentSegments = segments
-  apps[sessionData.id] = thisApp
-  clearState(that)
-
-  setGlobal({
-    sessionData, apps,
-    showSegmentNotification: true,
-    segmentProcessingDone: true,
-  })
-
-
-  // Order is important here for the same reason as in crete segment (see above comment in create segment)
-  //
-  try {
-    const operationData = {
-      segmentObj: segmentCriteria
-    }
-    await runClientOperation('updateSegment', undefined, sessionData.id, operationData)
-  } catch (error) {
-    const errorMsg = `Updating segment failed. Please refresh the page and try again.\n` +
-                      `If that fails, contact support@simpleid.xyz.\n`
-    const userErrorMsg = errorMsg +
-                        `More detailed error information appears in the browser's console.\n`
-    const consoleErrorMsg = errorMsg +
-                            error.message
-    log.error(consoleErrorMsg)
-    toast.error(userErrorMsg, {
-      position: toast.POSITION.TOP_RIGHT,
-      autoClose: 2000,
+  const filterToUse = allFilters.filter((a) => a.filter === filterType)[0]
+  let filters = []
+  if (filterConditions && filterConditions.length) {
+    filterConditions.forEach(f => {
+      debugger
+      filters = addFiltersForNewSegmentCriteria(
+        filters,
+        f.filter.filter,
+        f.tokenAddress,
+        f.operatorType,
+        f.amount,
+        f.contractAddress,
+        f.contractEventInput,
+        f.contractEvent
+      )
     })
-    return
   }
+  else {
+    filters = addFiltersForNewSegmentCriteria(
+      filters,
+      filterToUse,
+      tokenAddress,
+      operatorType,
+      amount,
+      contractAddress,
+      contractEventInput,
+      contractEvent
+    )
+  }
+  segmentCriteria.version = '2.0'
+  segmentCriteria.logic = conditions.operator ? conditions.operator.toLowerCase() : 'and'
+  segmentCriteria.actions = undefined
+  segmentCriteria.filter = {
+    children: undefined
+  }
+  segmentCriteria.filters = filters
+  return segmentCriteria
+}
 
+export const addFiltersForNewSegmentCriteria = (
+  filters,
+  filterToUse,
+  tokenAddress,
+  operatorType,
+  amount,
+  contractAddress,
+  contractEventInput,
+  contractEvent ) => {
+  debugger
+  if (filterToUse.filter === "Smart Contract Selection") {
+    filters.push(
+      {
+        condition: 'event value',
+        params: {
+          contract_address: contractAddress.toLowerCase(),
+          event_name: contractEvent,
+          input_name: contractEventInput,
+          operator: operatorType,
+          value: amount
+        }
+      }
+    )
+  } else if (filterToUse.filter === "Wallet Balance") {
+    filters.push(
+      {
+        condition: 'balance',
+        params: {
+          tokenAddress,
+          operator: operatorType,
+          value: amount
+        }
+      }
+    )
+  } else if (filterToUse.filter === "Smart Contract Transactions") {
+    filters.push(
+      {
+        condition: 'transaction',
+        params: {
+          contract_address: contractAddress.toLowerCase()
+        }
+      }
+    )
+  }
+  return filters
 }
 
 export const deleteSegment = async (that, seg, confirm) => {

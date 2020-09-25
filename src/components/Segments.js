@@ -210,15 +210,18 @@ export default class Segments extends React.Component {
       contractEventInput,
       web2Event
     } = this.state
-    const { web2Analytics, contractData, tokenData } = this.global
+    const { web2Analytics, sessionData, contractData, tokenData } = this.global
+    const { monitoring } = sessionData;
     const { type } = filterToUse
     const contractOptions = []
     contractData.forEach(el => {
-      contractOptions.push({
-        key: el.address,
-        value: el.address,
-        text: `${el.name} (${el.account}): ${el.address}`
-      })
+      if (Object.keys(monitoring).find(key => el.address === key)) {
+        contractOptions.push({
+          key: el.address,
+          value: el.address,
+          text: `${el.name} (${el.account}): ${el.address}`
+        })
+      }
     })
     if (type === "Smart Contract Transactions") {
       return (
@@ -299,8 +302,11 @@ export default class Segments extends React.Component {
               selection
               options={[
                 { key: 'choose...', text: 'Choose...', value: 'choose...' },
-                { key: 'more than', text: 'More Than', value: 'More Than' },
-                { key: 'less than', text: 'Less Than', value: 'Less Than' }
+                { key: 'equal', text: 'Equal', value: '==' },
+                { key: 'more than', text: 'More Than', value: '>' },
+                { key: 'more than equal', text: 'More Than || Equal', value: '>=' },
+                { key: 'less than', text: 'Less Than', value: '<' },
+                { key: 'less than equal', text: 'Less Than || Equal', value: '<=' }
               ]}
             />
           </div>
@@ -337,6 +343,10 @@ export default class Segments extends React.Component {
         const { address, mappings, name, implementation_contract } = element
         // dont care about these events for the proxy contract
         if (implementation_contract) {
+          return
+        }
+        // if not monitoring the contract, then don't populate the events
+        else if (!Object.keys(monitoring).find(key => address === key)) {
           return
         }
         const contractValue = `${name}: ${address}`
@@ -747,26 +757,25 @@ export default class Segments extends React.Component {
                 <Grid columns={2}>
                 {
                   Object.entries(monitoring).map(([key,value]) => {
-                    const contractDataKey = Object.keys(contractData).find(k => contractData[k].address === key)
-                    const name = contractData[contractDataKey].name
                     const { latest_block_id, 
                             wallet_count,
                             recent_wallets,
                             most_valuable_wallets,
                             dau,
                             wau,
+                            contract_name,
                             mau } = value
                     const disableWallets = wallet_count < 1
                     return (
-                      <Grid.Column key={name}>
+                      <Grid.Column key={contract_name}>
                         <Segment color='green' raised padded>
                           <Header as='h3' dividing>
-                            <Header.Content>{name}</Header.Content>
+                            <Header.Content>{contract_name}</Header.Content>
                             <Header.Subheader color='grey' style={{marginTop: 5}}>
                                Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${latest_block_id}`} target="_blank">{latest_block_id}</a>
                             </Header.Subheader>
                             {!disableWallets && value.hasOwnProperty('wallet_count')? (
-                              <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal({name, wallets: recent_wallets})}>
+                              <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal({name: contract_name, wallets: recent_wallets})}>
                                 {wallet_count}
                               </Label>
                             ) : (
@@ -777,7 +786,7 @@ export default class Segments extends React.Component {
                             }
                           </Header>
                           <Button.Group>
-                            <Button disabled={disableWallets} onClick={() => this.handleSegmentModal({name, wallets: recent_wallets})} icon basic>
+                            <Button disabled={disableWallets} onClick={() => this.handleSegmentModal({name: contract_name, wallets: recent_wallets})} icon basic>
                               <Icon name='users' size='large' color='black' />
                               <p className='name'>Wallets</p>
                             </Button>
