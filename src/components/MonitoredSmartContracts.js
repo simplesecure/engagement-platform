@@ -63,14 +63,14 @@ export default class MonitoredSmartContracts extends React.Component {
         </Text>
         </Table.Cell>
         <Table.TextCell>{account}</Table.TextCell>
-        <Table.Cell width={48} flex="none">
+        {/*<Table.Cell width={48} flex="none">
         <Popover
           content={this.renderRowMenu(address)}
           position={Position.BOTTOM_RIGHT}
         >
           <IconButton icon="more" height={24} appearance="minimal" />
         </Popover>
-        </Table.Cell>
+    </Table.Cell>*/}
       </Table.Row>
     )
   }

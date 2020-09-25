@@ -116,10 +116,18 @@ export default class Segments extends React.Component {
   };
 
   importUsers = async () => {
-    const { sessionData } = this.global
+    const { sessionData, currentAppId } = this.global
     const { importAddress } = this.state
-    const monitorResult = await getCloudServices().monitorContract(sessionData.id, importAddress)
-    this.setState({ importModalOpen: false, importAddress: "" })
+    const orgData = await getCloudServices().monitorContract(sessionData.id, importAddress)
+    const appData = orgData.apps[currentAppId]
+    debugger
+    this.setState({
+      importModalOpen: false,
+      importAddress: "",
+    })
+    React.setGlobal({
+      sessionData: appData
+    })
   };
 
   renderMultipleConditions() {
