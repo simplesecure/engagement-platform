@@ -34,6 +34,37 @@ export default class DashboardTiles extends React.Component {
       </div>
     )
   }
+  getTotalTracked = () => {
+    const { importedContracts } = this.props
+    let totalTracked = 0
+    Object.entries(importedContracts).map(([key,value]) => {
+      totalTracked += parseInt(value.wallet_count)
+    })
+    if (totalTracked) {
+      return (
+        <div
+          key='totaltrackedwallets'
+          className="col-lg-4 col-md-6 col-sm-6 mb-4"
+        >
+          <div className="stats-small stats-small--1 card card-small" style={{backgroundColor: 'white'}}>
+            <div className="card-body p-0 d-flex">
+              <div className="d-flex flex-column m-auto">
+                <div className="stats-small__data text-center">
+                  <span className="stats-small__label text-uppercase">
+                    {"Tracked Wallets"}
+                  </span>
+                  <h6 className="stats-small__value count my-3">
+                    {totalTracked}
+                  </h6>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    else return null
+  }
   getSegmentTiles = () => {
     const { currentSegments } = this.props
     const allTiles = currentSegments ? currentSegments : []
@@ -69,6 +100,7 @@ export default class DashboardTiles extends React.Component {
     return (
       <Grid>
         {this.getImportedContractTile()}
+        {this.getTotalTracked()}
         {this.getSegmentTiles()}
       </Grid>
     )

@@ -75,8 +75,12 @@ export default class MonitoredSmartContracts extends React.Component {
     )
   }
   render() {
-    const { contractData } = this.global
-    const fItems = contractData.filter(contract => contract.proxy_contract === null)
+    const { contractData, sessionData } = this.global
+    const { monitoring } = sessionData
+    // remove proxy contracts
+    const pItems = contractData.filter(contract => contract.proxy_contract === null)
+    // remove already imported contracts
+    const fItems = pItems.filter(contract => !Object.keys(monitoring).includes(contract.address))
     const items = this.filter(fItems)
     return (
       <div>

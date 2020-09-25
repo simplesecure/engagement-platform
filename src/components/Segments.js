@@ -74,8 +74,8 @@ export default class Segments extends React.Component {
     this.setState({ date });
   };
 
-  handleSegmentModal = (seg) => {
-    this.setState({ segmentToShow: seg, showSegmentModal: true });
+  handleSegmentModal = (data) => {
+    this.setState({ segmentToShow: data, showSegmentModal: true });
   };
 
   handleCloseSegmentModal = () => {
@@ -615,10 +615,12 @@ export default class Segments extends React.Component {
       </div>
     );
   }
-
+  deleteMonitoredContract = (address, data) => {
+    alert(`ACTODODODOD: Delete contract: ${address}`)
+  }
   render() {
-    const { sessionData, processing, anOrgStatusObj, currentAppId } = this.global;
-    const { currentSegments } = sessionData;
+    const { sessionData, processing, anOrgStatusObj, currentAppId, contractData } = this.global;
+    const { currentSegments, monitoring } = sessionData;
     const {
       importAddress,
       proxyAddress,
@@ -684,13 +686,14 @@ export default class Segments extends React.Component {
               <Grid.Column key='datainput'>
                 <Grid stackable>
                   <Grid.Column width={12} key='segment creation'>
-                    <Header as='h3'>Create a Segment</Header>
+                    <Header as='h3'>Cohort Analysis</Header>
                     <Button
                       content='Create User Segment'
                       icon='write'
                       labelPosition='left'
                       onClick={() => this.setState({isCreateSegment: true})}
                       primary
+                      disabled={!Object.keys(monitoring).length}
                     />
                     {/*<Link to="/block">
                       <Button
@@ -702,43 +705,38 @@ export default class Segments extends React.Component {
                     </Link>*/}
                   </Grid.Column>
                   <Grid.Column width={4} key='import users'>
-                    <Header as='h3'>Import Wallets</Header>
+                    <Header as='h3'>Monitor Wallets</Header>
                     <Button
                       onClick={() => this.setState({ importModalOpen: true })}
                       positive
                       icon='download'
                       labelPosition='left'
-                      content='Monitor Smart Contract'
+                      content='Import Smart Contract'
                     />
                   </Grid.Column>
                 </Grid>
               </Grid.Column>
-              <Grid.Column key='currsegs'>
-                <Header as='h3'>Current Segments</Header>
-                {segments.length > 1 ? (
+              <Grid.Column key='curmonitored'>
+                <Header as='h3'>Monitored Contracts & Segments</Header>
+                {Object.keys(monitoring).length ? (
                 <Grid columns={2}>
                 {
-                  segments.map(segment => {
-                    const disableButton = defaultSegments.indexOf(segment.name) < 0
-                    const disableWallets = segment.userCount < 1
-                    let { blockId, version } = segment
-                    if (!blockId && version === '2.0') {
-                      if (segment.resultData) {
-                        blockId = segment.resultData.block_id
-                      }
-                    }
-                    if (segment.name === 'All Users') return null
+                  Object.entries(monitoring).map(([key,value]) => {
+                    const contractDataKey = Object.keys(contractData).find(k => contractData[k].address === key)
+                    const name = contractData[contractDataKey].name
+                    const { latest_block_id, wallet_count, recent_wallets } = value
+                    const disableWallets = wallet_count < 1
                     return (
-                      <Grid.Column key={segment.id}>
-                        <Segment raised padded>
+                      <Grid.Column key={name}>
+                        <Segment color='green' raised padded>
                           <Header as='h3' dividing>
-                            <Header.Content>{segment.name}</Header.Content>
+                            <Header.Content>{name}</Header.Content>
                             <Header.Subheader color='grey' style={{marginTop: 5}}>
-                               Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${blockId}`} target="_blank">{blockId}</a>
+                               Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${latest_block_id}`} target="_blank">{latest_block_id}</a>
                             </Header.Subheader>
-                            {!disableWallets && segment.hasOwnProperty('userCount')? (
-                              <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal(segment)}>
-                                {segment.userCount}
+                            {!disableWallets && value.hasOwnProperty('wallet_count')? (
+                              <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal({name, wallets: recent_wallets})}>
+                                {wallet_count}
                               </Label>
                             ) : (
                               <Label as='a' color='grey' attached='top right'>
@@ -748,7 +746,64 @@ export default class Segments extends React.Component {
                             }
                           </Header>
                           <Button.Group>
-                            <Button disabled={disableWallets || version === '2.0'} onClick={() => this.handleSegmentModal(segment)} icon basic>
+                            <Button disabled={disableWallets} onClick={() => this.handleSegmentModal({name, wallets: recent_wallets})} icon basic>
+                              <Icon name='users' size='large' color='black' />
+                              <p className='name'>Wallets</p>
+                            </Button>
+                            <Button disabled={true} icon basic>
+                              <Icon name='globe' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
+                              <p className='name'>Connect</p>
+                            </Button>
+                            <Button onClick={() => this.deleteMonitoredContract(key, value)} icon basic>
+                              <Icon color='red' name='trash alternate outline' size='large' />
+                              <p className='name'>Delete</p>
+                            </Button>
+                          </Button.Group>
+                        </Segment>
+                      </Grid.Column>
+                    )
+                  })
+                }
+                </Grid>
+              ) : null}
+              </Grid.Column>
+              <Grid.Column key='currsegs'>
+                {/* <Header as='h3'>Current Segments</Header> */}
+                {segments.length > 1 ? (
+                <Grid columns={2}>
+                {
+                  segments.map(segment => {
+                    const {name, users, userCount, version, id, resultData } = segment
+                    const disableButton = defaultSegments.indexOf(name) < 0
+                    const disableWallets = userCount < 1
+                    let { blockId } = segment
+                    if (!blockId && version === '2.0') {
+                      if (resultData) {
+                        blockId = resultData.block_id
+                      }
+                    }
+                    if (name === 'All Users') return null
+                    return (
+                      <Grid.Column key={id}>
+                        <Segment color='blue' raised padded>
+                          <Header as='h3' dividing>
+                            <Header.Content>{name}</Header.Content>
+                            <Header.Subheader color='grey' style={{marginTop: 5}}>
+                               Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${blockId}`} target="_blank">{blockId}</a>
+                            </Header.Subheader>
+                            {!disableWallets && segment.hasOwnProperty('userCount')? (
+                              <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal({name, wallets: users})}>
+                                {userCount}
+                              </Label>
+                            ) : (
+                              <Label as='a' color='grey' attached='top right'>
+                                0
+                              </Label>
+                            )
+                            }
+                          </Header>
+                          <Button.Group>
+                            <Button disabled={disableWallets || version === '2.0'} onClick={() => this.handleSegmentModal({name, wallets: users})} icon basic>
                               <Icon name='users' size='large' color='black' />
                               <p className='name'>Wallets</p>
                             </Button>
@@ -772,11 +827,14 @@ export default class Segments extends React.Component {
                   })
                 }
                 </Grid>
-              ) : (
-                <Message>
-                  You haven't created any segments yet, let's do that now!
-                </Message>
-              )}
+              ) : null}
+              {
+                (segments.length > 1 && !Object.keys(monitoring).length) ? (
+                  <Message>
+                    You haven't created any segments or started monitoring contracts yet, let's do that now!
+                  </Message>
+                ) : null
+              }
               <Dialog
                 isShown={show}
                 title="Delete Segment?"
@@ -801,7 +859,7 @@ export default class Segments extends React.Component {
                 hasCancel={false}
                 width={640}
               >
-                <SegmentTable segment={segmentToShow} />
+                <SegmentTable wallets={segmentToShow.wallets} />
               </Dialog>
               <Dialog
                 isShown={editSegment}
@@ -827,7 +885,7 @@ export default class Segments extends React.Component {
               </Dialog>
               <Dialog
                 isShown={importModalOpen}
-                title="Monitor Smart Contract"
+                title="Import Smart Contract"
                 onConfirm={() => this.importUsers()}
                 onCancel={() => this.setState({ importModalOpen: false })}
                 onCloseComplete={() => this.setState({ importModalOpen: false })}

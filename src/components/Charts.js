@@ -6,7 +6,7 @@ export const getDonutChart = (contracts) => {
   let data = [["Frontend", "Wallet Percentage"]]
   if (contracts) {
     for (const [key, value] of Object.entries(contracts)) {
-      data.push([key.substring(0, 10), value.wallets])
+      data.push([key.substring(0, 10), value.wallet_count])
     }
   }
   return (

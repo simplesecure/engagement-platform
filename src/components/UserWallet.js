@@ -81,10 +81,10 @@ export default class UserWallet extends React.Component {
     )
   }
   render() {
-    const { walletAddr, walletType, showDialog, toggleDialog } = this.props
-    const name = walletAddr[2] + " " + walletAddr[3]
-    const shortWalletAddr = walletAddr.substring(0, 30) + "...."
-    let link = 'https://etherscan.io/address/' + walletAddr
+    const { address, hash, walletType, showDialog, toggleDialog } = this.props
+    const name = address[2] + " " + address[3]
+    const shortWalletAddr = address.substring(0, 30) + "...."
+    let link = 'https://etherscan.io/tx/' + hash
     return (
       <div className="text-center">
         <SideSheet

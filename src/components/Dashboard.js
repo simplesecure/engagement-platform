@@ -40,7 +40,7 @@ class Dashboard extends React.Component {
     this.setState({ segmentToShow: segment, showSegmentModal: flag })
   }
   toggleShowContracts = () => {
-    this.setState({ showContractsModal: true })
+    this.setState({ showContractsModal: !this.state.showContractsModal })
   }
   render() {
     const {
@@ -51,7 +51,7 @@ class Dashboard extends React.Component {
       activeUsersData
     } = this.global
     const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal } = this.state
-    const { currentSegments } = sessionData
+    const { currentSegments, monitoring } = sessionData
     const dynamicClass = !publicDashboard ?
     "main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3" :
     "main-content col-lg-12 col-md-12 col-sm-12 p-0"
@@ -61,14 +61,14 @@ class Dashboard extends React.Component {
         <main className={dynamicClass}>
           <div className="main-content-container container-fluid px-4">
           {
-            (!importedContracts.length) ? (
+            (!Object.keys(monitoring).length) ? (
                 <Dimmer active={true} page>
                   <Icon name='magic' size="huge"/>
                   <Header as='h1' inverted>
                     Start Monitoring a Contract
                     <Header.Subheader>Features will unlock after you have imported a contract and created segments</Header.Subheader>
                   </Header>
-                  <Button color='green' onClick={() => this.props.history.push('/segments')}>Create Segments</Button>
+                  <Button color='green' onClick={() => this.props.history.push('/segments')}>Go to Segments</Button>
                 </Dimmer>
               ) : (
                 <div>
@@ -85,12 +85,12 @@ class Dashboard extends React.Component {
                 </div>
                 <DashboardTiles
                   currentSegments={currentSegments}
-                  importedContracts={importedContracts}
+                  importedContracts={monitoring}
                   handleShowSegment={this.handleShowSegment}
                   toggleShowContracts={this.toggleShowContracts}
                 />
-                {currentSegments.length > 1 ? (<Grid>
-                  {getChartCard('Wallets by Smart Contracts', getDonutChart(importedContracts))}
+                {Object.keys(monitoring).length ? (<Grid>
+                  {getChartCard('Wallets by Smart Contracts', getDonutChart(monitoring))}
                   {(activeUsersData) ? getChartCard('Weekly Active Wallets', get7DayChart(activeUsersData)):null}
                   {(activeUsersData) ? getChartCard('Monthly Active Wallets', getMonthChart(activeUsersData)):null}
                   {getChartCard('Top 10 Wallets by Assets', getBubbleChart())}
@@ -108,7 +108,7 @@ class Dashboard extends React.Component {
             confirmLabel='Close'
             width={640}
           >
-            {showContractsModal ? <SmartContractTable contracts={importedContracts} /> : '({close})'}
+            {showContractsModal ? <SmartContractTable contracts={monitoring} /> : '({close})'}
           </Dialog>
           <Dialog
             isShown={showSegmentModal}

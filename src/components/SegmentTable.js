@@ -4,7 +4,10 @@ import {
   Avatar,
   Table,
   Text,
-  Menu
+  Menu,
+  Popover,
+  Position,
+  IconButton
 } from 'evergreen-ui'
 import UserWallet from "./UserWallet";
 
@@ -15,7 +18,8 @@ export default class SegmentTable extends React.Component {
     this.state = {
       searchQuery: '',
       showDialog: false,
-      walletAddr: ''
+      address: '',
+      hash: ''
     }
   }
   getUniqueKey() {
@@ -35,8 +39,8 @@ export default class SegmentTable extends React.Component {
   handleFilterChange = value => {
     this.setState({ searchQuery: value })
   }
-  renderRowMenu = (user) => {
-    let link = `https://etherscan.io/address/` + user
+  renderRowMenu = (hash) => {
+    let link = `https://etherscan.io/tx/` + hash
     return (
       <Menu>
         <Menu.Group>
@@ -50,26 +54,27 @@ export default class SegmentTable extends React.Component {
       </Menu>
     )
   }
-  renderRow = ({ user }) => {
-    let name = user.substring(2)
+  renderRow = ({ wallet }) => {
+    const { address, block_id, block_timestamp, hash } = wallet
+    let name = address.substring(2)
     return (
-      <Table.Row key={user} isSelectable onSelect={() => this.setState({ showDialog: true, walletAddr: user })}>
-        <Table.Cell display="flex" alignItems="center" flexBasis={360} flexShrink={0} flexGrow={0}>
+      <Table.Row key={address} isSelectable onSelect={() => this.setState({ showDialog: true, address, hash })}>
+        <Table.Cell display="flex" alignItems="center" flexBasis={300} flexShrink={0} flexGrow={0}>
           <Avatar name={name} />
           <Text marginLeft={8} size={300} fontWeight={500}>
-            {user}
+            {address}
           </Text>
         </Table.Cell>
-        {/*<Table.TextCell>{wallet}</Table.TextCell>*/}
-        {/*<Table.TextCell isNumber>Pending...</Table.TextCell>
-        <Table.Cell width={48} flex="none">
+        <Table.TextCell>{block_timestamp}</Table.TextCell>
+        <Table.TextCell isNumber>{block_id}</Table.TextCell>
+        {/* <Table.Cell width={48} flex="none">
           <Popover
-            content={this.renderRowMenu(user)}
+            content={this.renderRowMenu(hash)}
             position={Position.BOTTOM_RIGHT}
           >
             <IconButton icon="more" height={24} appearance="minimal" />
           </Popover>
-        </Table.Cell>*/}
+        </Table.Cell> */}
       </Table.Row>
     )
   }
@@ -77,10 +82,9 @@ export default class SegmentTable extends React.Component {
     this.setState({showDialog: !this.state.showDialog})
   }
   render() {
-    const { segment } = this.props
-    const { showDialog, walletAddr, walletType } = this.state
-    let users = segment.users ? segment.users : []
-    const items = this.filter(users)
+    const { wallets } = this.props
+    const { showDialog, address, walletType, hash } = this.state
+    const items = this.filter(wallets)
     return (
       <div>
         <Table border>
@@ -89,20 +93,21 @@ export default class SegmentTable extends React.Component {
               onChange={this.handleFilterChange}
               value={this.state.searchQuery}
               placeholder='Search by wallet...'
-              flexBasis={360} flexShrink={0} flexGrow={0}
+              flexBasis={300} flexShrink={0} flexGrow={0}
             />
-            {/*<Table.TextCell>Wallet Proxy</Table.TextCell>*/}
-            {/*<Table.TextCell>Proxy Wallet</Table.TextCell>
-            <Table.HeaderCell width={48} flex="none" />*/}
+            <Table.TextCell>Timestamp</Table.TextCell>
+            <Table.TextCell>Ethereum Block</Table.TextCell>
+            {/* <Table.HeaderCell width={48} flex="none" /> */}
           </Table.Head>
           <Table.VirtualBody height={400}>
-            {items.map(item => this.renderRow({ user: item }))}
+            {items.map(item => this.renderRow({ wallet: item }))}
           </Table.VirtualBody>
         </Table>
         <UserWallet
           showDialog={showDialog}
-          walletAddr={walletAddr}
           walletType={walletType}
+          address={address}
+          hash={hash}
           toggleDialog={() => this.toggleDialog()}
         />
       </div>
