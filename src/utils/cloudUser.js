@@ -19,33 +19,40 @@ const RT_SEGMENT_UPDATE_EVENT = "real time segment update"
 //////////////// Socket Stuff <-- TODO: move / encapsulate //////////////
 
 const registerOrg = async (anOrgId=undefined) => {
-  if (anOrgId) {
-    socket.emit('org_id', anOrgId)
+  const method = 'registerOrg'
+
+  if (!anOrgId) {
+    const { org_id } = await getGlobal()
+    anOrgId = org_id
+  }
+
+  if (!anOrgId) {
+    // TODO: Prabhaav, set connected state to instruct the user to sign-out and sign back in
+    //       (Why would org id not be defined?  It comes from cognito gated dynamo for user on sign in.)
+    log.warn(`${method} Unable to register organization id with server.`)
     return
   }
 
-  const { org_id } = await getGlobal()
-  if (org_id) {
-    socket.emit('org_id', org_id)
-  } else {
-    // TODO: Prabhaav, set connected state to instruct the user to sign-out and sign back in
-    //       (Why would org id not be defined?  It comes from cognito gated dynamo for user on sign in.)
-    log.warn(`Unable to register organization id with server.`)
-  }
+  socket.emit('org_id', anOrgId)
+  log.info(`${method}: registered org id ${anOrgId} with server.`)
 }
 
 socket.on('connect', async () => {
+  log.debug('server connect')
   await registerOrg()
   await setGlobal({ connected: 'connect' })
 })
 socket.on('reconnect', async () => {
+  log.debug('server reconnect')
   await registerOrg()
   await setGlobal({ connected: 'reconnect' })
 })
 socket.on('disconnect', async () => {
+  log.debug('server disconnect')
   await setGlobal({ connected: 'disconnect' })
 })
 socket.on('reconnecting', async () => {
+  log.debug('server reconnecting')
   await setGlobal({ connected: 'reconnecting' })
 })
 
@@ -590,18 +597,25 @@ class CloudServices {
   }
 
   async monitorContract(anAppId, aContractAddress) {
-    // TODO: Un-Justining. The following line likely needs to go away. When this works,
-    //       remove and test.
-    setGlobal({ orgData: undefined })
-
     const orgId = undefined
     const contractAddress = aContractAddress.toLowerCase()
     const operationData = {
       contractAddress
     }
-    const monitorResult = await runClientOperation('monitorContract', orgId, anAppId, operationData)
-    console.log(`==============================\n${JSON.stringify(monitorResult, null, 2)}`)
-    return monitorResult
+    const orgData = await runClientOperation('monitorContract', orgId, anAppId, operationData)
+    // console.log(`==============================\n${JSON.stringify(orgData, null, 2)}`)
+    return orgData
+  }
+  
+  async unmonitorContract(anAppId, aContractAddress) {
+    const orgId = undefined
+    const contractAddress = aContractAddress.toLowerCase()
+    const operationData = {
+      contractAddress
+    }
+    const orgData = await runClientOperation('unmonitorContract', orgId, anAppId, operationData)
+    // console.log(`==============================\n${JSON.stringify(orgData, null, 2)}`)
+    return orgData
   }
 
   async findImplementation(aContractAddress) {

@@ -120,7 +120,6 @@ export default class Segments extends React.Component {
     const { importAddress } = this.state
     const orgData = await getCloudServices().monitorContract(sessionData.id, importAddress)
     const appData = orgData.apps[currentAppId]
-    debugger
     this.setState({
       importModalOpen: false,
       importAddress: "",
@@ -623,8 +622,26 @@ export default class Segments extends React.Component {
       </div>
     );
   }
-  deleteMonitoredContract = (address, data) => {
-    alert(`ACTODODODOD: Delete contract: ${address}`)
+  deleteMonitoredContract = async(address, data) => {
+    const { sessionData, currentAppId } = this.global
+    const orgData = await getCloudServices().unmonitorContract(sessionData.id, address)
+    // TODO: Segments might depend on this monitored contract--here is my TODO for that with scenarios 
+    //       from the server code that unmonitors a contract. <-- Prabhaav
+    //
+    //          2. TODO: Traverse the segements and if they depend upon this contract do one of the following:
+    //              i) disable them
+    //              ii) remove them
+    //              iii) return a warning listing them and ask for confirmation
+    //              iv) something else
+    //                  - thinking this through made me realize you don't even need to monitor contracts--you just
+    //                    need to select them in segments you create.
+    //
+    //              ... <-- code ... TODO
+    //
+    const appData = orgData.apps[currentAppId]
+    React.setGlobal({
+      sessionData: appData
+    })
   }
   render() {
     const { sessionData, processing, anOrgStatusObj, currentAppId, contractData } = this.global;
@@ -732,7 +749,13 @@ export default class Segments extends React.Component {
                   Object.entries(monitoring).map(([key,value]) => {
                     const contractDataKey = Object.keys(contractData).find(k => contractData[k].address === key)
                     const name = contractData[contractDataKey].name
-                    const { latest_block_id, wallet_count, recent_wallets } = value
+                    const { latest_block_id, 
+                            wallet_count,
+                            recent_wallets,
+                            most_valuable_wallets,
+                            dau,
+                            wau,
+                            mau } = value
                     const disableWallets = wallet_count < 1
                     return (
                       <Grid.Column key={name}>
