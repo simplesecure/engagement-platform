@@ -1,7 +1,7 @@
 [
   {
     "filter": "Wallet Balance",
-    "type": "Number Range",
+    "type": "Wallet Balance",
     "enabled": true
   },
   {

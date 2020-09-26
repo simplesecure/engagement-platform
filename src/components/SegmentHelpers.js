@@ -81,7 +81,7 @@ export const createSegment = async (that) => {
           }
         : null,
     numberRange:
-      filterToUse.type === "Number Range"
+      filterToUse.type === "Wallet Balance"
         ? {
             operatorType,
             tokenType,
@@ -107,7 +107,6 @@ export const createSegment = async (that) => {
   //   }
   // )
   if (filterConditions && filterConditions.length > 0) {
-    debugger
     addFilter(that)
     conditions = that.state.conditions
     that.setState({ conditions })
@@ -185,9 +184,8 @@ export const createSegment = async (that) => {
 }
 
 export const createNewSegmentCriteria = (that, segmentCriteria) => {
-  debugger
   const { allFilters } = that.global
-  const {
+  let {
     tokenAddress,
     operatorType,
     amount,
@@ -198,20 +196,35 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
   } = that.state
   let { conditions } = that.state
   const { filterConditions } = conditions
-  const filterToUse = allFilters.filter((a) => a.filter === filterType)[0]
+  let filterToUse = allFilters.filter((a) => a.filter === filterType)[0]
   let filters = []
   if (filterConditions && filterConditions.length) {
     filterConditions.forEach(f => {
-      debugger
+      filterToUse = f.filter
+      if (f.walletBalance) {
+        amount = f.walletBalance.amount
+        operatorType = f.walletBalance.operatorType
+        tokenAddress = f.walletBalance.tokenAddress
+      }
+      else if (f.contractEvent) {
+        amount = f.contractEvent.amount
+        operatorType = f.contractEvent.operatorType
+        contractEvent = f.contractEvent.contractEvent
+        contractEventInput = f.contractEvent.contractEventInput
+        contractAddress = f.contractEvent.contractAddress
+      }
+      else if (f.contractAddress) {
+        contractAddress = f.contractAddress
+      }
       filters = addFiltersForNewSegmentCriteria(
         filters,
-        f.filter.filter,
-        f.tokenAddress,
-        f.operatorType,
-        f.amount,
-        f.contractAddress,
-        f.contractEventInput,
-        f.contractEvent
+        filterToUse,
+        tokenAddress,
+        operatorType,
+        amount,
+        contractAddress,
+        contractEventInput,
+        contractEvent
       )
     })
   }
@@ -246,8 +259,7 @@ export const addFiltersForNewSegmentCriteria = (
   contractAddress,
   contractEventInput,
   contractEvent ) => {
-  debugger
-  if (filterToUse.filter === "Smart Contract Selection") {
+  if (filterToUse.filter === "Smart Contract Events") {
     filters.push(
       {
         condition: 'event value',
@@ -349,6 +361,8 @@ export const addFilter = (that, condition) => {
     allUsers,
     existingSegmentToFilter,
     dashboardShow,
+    contractEvent,
+    contractEventInput,
   } = that.state
   const showOnDashboard = dashboardShow === "Yes" ? true : false
   const filterToUse = allFilters.filter((a) => a.filter === filterType)[0]
@@ -372,16 +386,25 @@ export const addFilter = (that, condition) => {
             date: Date.parse(date),
           }
         : null,
-    numberRange:
-      filterToUse.type === "Number Range"
+    walletBalance:
+      filterToUse.type === "Wallet Balance"
         ? {
             operatorType,
             tokenType,
-            tokenAddress: tokenType === "ERC-20" ? tokenAddress : undefined,
+            tokenAddress,
             amount,
           }
         : null,
-    contractAddress: filterToUse.type === "Contract" ? contractAddress : null,
+    contractEvent:
+      filterToUse.type === "Smart Contract Events"
+        ? {
+          contractAddress,
+          contractEvent,
+          contractEventInput,
+          operatorType,
+          amount
+        } : null,
+    contractAddress: filterToUse.type === "Smart Contract Transactions" ? contractAddress : null,
     userCount: addrArray.length > 0 ? addrArray.length : null,
   }
   let { filterConditions } = conditions

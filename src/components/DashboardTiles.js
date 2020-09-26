@@ -1,19 +1,33 @@
 import React from "reactn"
 import { Grid } from 'semantic-ui-react'
+import SegmentTable from "./SegmentTable"
+import { Dialog } from 'evergreen-ui'
 
 export default class DashboardTiles extends React.Component {
   constructor(props) {
     super(props)
     this.uniqueEleKey = Date.now()
+    this.state = {
+      name: '',
+      wallets: '',
+      showTileModal: false
+    }
   }
   getUniqueKey() {
     return this.uniqueEleKey++
   }
-  getImportedContractTile = () => {
-    const { importedContracts } = this.props
+  getCurrentContractTile = () => {
+    const { importedContracts, currentContractAddr } = this.props
+    let currAddr = currentContractAddr
+    if (currAddr === '') {
+      currAddr = Object.keys(importedContracts)[0]
+    }
+    const name = importedContracts[currAddr].contract_name
+    const wallet_count = importedContracts[currAddr].wallet_count
+    const recent_wallets = importedContracts[currAddr].recent_wallets
     return (
       <div
-        onClick={() => this.props.toggleShowContracts()}
+        onClick={() => this.setState({showTileModal: true, name, wallets: recent_wallets})}
         key={this.getUniqueKey()}
         className="clickable col-lg-4 col-md-6 col-sm-6 mb-4"
       >
@@ -22,10 +36,10 @@ export default class DashboardTiles extends React.Component {
             <div className="d-flex flex-column m-auto">
               <div className="stats-small__data text-center">
                 <span className="stats-small__label text-uppercase">
-                  Monitored Contracts
+                  {`${name} wallets`}
                 </span>
                 <h6 className="stats-small__value count my-3">
-                  {Object.keys(importedContracts).length}
+                  {wallet_count}
                 </h6>
               </div>
             </div>
@@ -51,7 +65,7 @@ export default class DashboardTiles extends React.Component {
               <div className="d-flex flex-column m-auto">
                 <div className="stats-small__data text-center">
                   <span className="stats-small__label text-uppercase">
-                    Tracked Wallets
+                    Total Tracked Wallets
                   </span>
                   <h6 className="stats-small__value count my-3">
                     {totalTracked}
@@ -124,11 +138,22 @@ export default class DashboardTiles extends React.Component {
     })
   }
   render () {
+    const { name, wallets, showTileModal } = this.state
     return (
       <Grid>
-        {this.getImportedContractTile()}
+        <Dialog
+          isShown={showTileModal}
+          title={name}
+          onCloseComplete={() => this.setState({ showTileModal: false })}
+          confirmLabel='Close'
+          hasCancel={false}
+          width={640}
+        >
+          <SegmentTable wallets={wallets} />
+        </Dialog>
         {this.getTotalTracked()}
         {this.getCurrentContract()}
+        {this.getCurrentContractTile()}
         {this.getSegmentTiles()}
       </Grid>
     )

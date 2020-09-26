@@ -267,7 +267,7 @@ export default class Segments extends React.Component {
           </div>
         </div>
       )
-    } else if (type === "Number Range") {
+    } else if (type === "Wallet Balance") {
       const tokenOptions = []
       tokenData.forEach(e => {
         tokenOptions.push({
@@ -340,13 +340,14 @@ export default class Segments extends React.Component {
       let contracts = []
       let dataInputs = []
       contractData.forEach(element => {
-        const { address, mappings, name, implementation_contract } = element
+        const { address, mappings, name, proxy_contract, implementation_contract } = element
         // dont care about these events for the proxy contract
         if (implementation_contract) {
           return
         }
         // if not monitoring the contract, then don't populate the events
-        else if (!Object.keys(monitoring).find(key => address === key)) {
+        // if underlying implementation contract, thne we need to get those events
+        if (!Object.keys(monitoring).find(key => (address === key || key === (proxy_contract && proxy_contract.toLowerCase())))) {
           return
         }
         const contractValue = `${name}: ${address}`
