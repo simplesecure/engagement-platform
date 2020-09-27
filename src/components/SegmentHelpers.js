@@ -182,6 +182,30 @@ export const createSegment = async (that) => {
   }
 }
 
+function _ethToWei(anEthValue) {
+  // TODO: Prabhaav, is this correct:
+  //
+  //          weiPerEth =  1,000,000,000,000,000,000 
+  //
+  // TODO: Prabhaav, numbers this large have to use BigInt (the 'n' at the end
+  //       of the literal below signifies to js to type it as a bigint).
+  //       All the things downstream have to use BigInt to capture it and return
+  //       it or you get failures like:
+  //
+  //        Unhandled Rejection (TypeError): Cannot mix BigInt and other types, use explicit conversions
+  //
+  //  const weiPerEth =  1000000000000000000n 
+  //
+  //  If you're wondering why you need to use BigInt it's b/c:
+  //
+  //        Numeric literals with absolute values equal to 2^53 or greater are too large to be represented accurately as integers.ts(80008)
+  //
+  const wrongWeiPerEth = 1000     // <-- TODO Prabhaav make this the constant above and fix all errors
+  const weiPerEth = wrongWeiPerEth
+  const weiValue = anEthValue * weiPerEth
+  return weiValue
+}
+
 export const createNewSegmentCriteria = (that, segmentCriteria) => {
   const { allFilters, contractData } = that.global
   let {
@@ -205,8 +229,7 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
       filterToUse = f.filter
       if (f.walletBalance) {
         if (walletAmountType === 'eth') {
-          const wei = 0.000000000000000001
-          walletAmount = f.walletBalance.walletAmount * wei
+          walletAmount = _ethToWei(f.walletBalance.walletAmount)
         }
         else {
           walletAmount = f.walletBalance.walletAmount
@@ -217,8 +240,7 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
       }
       else if (f.contractEvent) {
         if (eventAmountType === 'eth') {
-          const wei = 0.000000000000000001
-          eventAmount = f.contractEvent.eventAmount * wei
+          eventAmount = _ethToWei(f.contractEvent.eventAmount)
         }
         else {
           eventAmount = f.contractEvent.eventAmount
@@ -250,12 +272,10 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
   }
   else {
     if (walletAmountType === 'eth') {
-      const wei = 0.000000000000000001
-      walletAmount = walletAmount * wei
+      walletAmount = _ethToWei(walletAmount)
     }
     if (eventAmountType === 'eth') {
-      const wei = 0.000000000000000001
-      eventAmount = eventAmount * wei
+      eventAmount = _ethToWei(eventAmount)
     }
     filters = addFiltersForNewSegmentCriteria(
       contractData,
@@ -309,7 +329,7 @@ export const addFiltersForNewSegmentCriteria = (
     }
     filters.push(
       {
-        condition: 'event value',
+        type: 'event',
         params: {
           contract_address: contractAddress.toLowerCase(),
           implementation_address,
@@ -325,7 +345,7 @@ export const addFiltersForNewSegmentCriteria = (
   } else if (filterToUse.filter === "Wallet Balance") {
     filters.push(
       {
-        condition: 'balance',
+        type: 'balance',
         params: {
           tokenAddress,
           operator: operatorType,
@@ -337,7 +357,7 @@ export const addFiltersForNewSegmentCriteria = (
   } else if (filterToUse.filter === "Smart Contract Transactions") {
     filters.push(
       {
-        condition: 'transaction',
+        type: 'transaction',
         params: {
           contract_address: contractAddress.toLowerCase()
         }

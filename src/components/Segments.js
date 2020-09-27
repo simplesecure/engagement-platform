@@ -97,7 +97,6 @@ export default class Segments extends React.Component {
 
   handleOperatorChange = (value) => {
     const { conditions } = this.state;
-    debugger
     const operatorType = value;
     conditions["operator"] = operatorType;
     this.setState({ conditions, operator: operatorType });

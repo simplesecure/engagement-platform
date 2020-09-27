@@ -37,7 +37,6 @@ export const getBubbleChart = (currentContractAddr, monitoring) => {
     addr = Object.keys(monitoring)[0]
   }
   const walletData = monitoring[addr].most_valuable_wallets
-  debugger
   return null
   let data = [
     ["ID", "Eth in Wallet", "Address", "Wallet Size"]
