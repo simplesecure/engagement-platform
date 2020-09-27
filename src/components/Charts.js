@@ -32,7 +32,7 @@ export const getDonutChart = (contracts) => {
 }
 export const getBubbleChart = (currentContractAddr, monitoring) => {
   let addr = currentContractAddr
-  const gwei = 0.000000001
+  const wei = 0.000000000000000001
   if (addr === '') {
     addr = Object.keys(monitoring)[0]
   }

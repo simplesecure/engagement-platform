@@ -23,7 +23,6 @@ export const clearState = (that, filter=false) => {
     rangeType: "",
     operatorType: "",
     date: new Date(),
-    amount: 0,
     listOfAddresses: "",
     showSegmentModal: false,
     editSegment: false,
@@ -42,7 +41,7 @@ export const createSegment = async (that) => {
     filterType,
     rangeType,
     operatorType,
-    amount,
+    walletAmount,
     date,
     contractAddress,
     allUsers,
@@ -86,7 +85,7 @@ export const createSegment = async (that) => {
             operatorType,
             tokenType,
             tokenAddress: tokenType === "ERC-20" ? tokenAddress : undefined,
-            amount,
+            walletAmount,
           }
         : null,
     contractAddress: filterToUse.type === "Smart Contract Transactions" ? contractAddress : null,
@@ -184,15 +183,18 @@ export const createSegment = async (that) => {
 }
 
 export const createNewSegmentCriteria = (that, segmentCriteria) => {
-  const { allFilters } = that.global
+  const { allFilters, contractData } = that.global
   let {
     tokenAddress,
     operatorType,
-    amount,
     contractAddress,
     contractEventInput,
     contractEvent,
-    filterType
+    filterType,
+    walletAmount,
+    walletAmountType,
+    eventAmount,
+    eventAmountType,
   } = that.state
   let { conditions } = that.state
   const { filterConditions } = conditions
@@ -202,12 +204,26 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
     filterConditions.forEach(f => {
       filterToUse = f.filter
       if (f.walletBalance) {
-        amount = f.walletBalance.amount
+        if (walletAmountType === 'eth') {
+          const wei = 0.000000000000000001
+          walletAmount = f.walletBalance.walletAmount * wei
+        }
+        else {
+          walletAmount = f.walletBalance.walletAmount
+        }
+        walletAmountType = f.walletBalance.walletAmountType
         operatorType = f.walletBalance.operatorType
         tokenAddress = f.walletBalance.tokenAddress
       }
       else if (f.contractEvent) {
-        amount = f.contractEvent.amount
+        if (eventAmountType === 'eth') {
+          const wei = 0.000000000000000001
+          eventAmount = f.contractEvent.eventAmount * wei
+        }
+        else {
+          eventAmount = f.contractEvent.eventAmount
+        }
+        eventAmountType = f.contractEvent.eventAmountType
         operatorType = f.contractEvent.operatorType
         contractEvent = f.contractEvent.contractEvent
         contractEventInput = f.contractEvent.contractEventInput
@@ -217,11 +233,15 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
         contractAddress = f.contractAddress
       }
       filters = addFiltersForNewSegmentCriteria(
+        contractData,
         filters,
         filterToUse,
         tokenAddress,
         operatorType,
-        amount,
+        walletAmount,
+        walletAmountType,
+        eventAmount,
+        eventAmountType,
         contractAddress,
         contractEventInput,
         contractEvent
@@ -229,12 +249,24 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
     })
   }
   else {
+    if (walletAmountType === 'eth') {
+      const wei = 0.000000000000000001
+      walletAmount = walletAmount * wei
+    }
+    if (eventAmountType === 'eth') {
+      const wei = 0.000000000000000001
+      eventAmount = eventAmount * wei
+    }
     filters = addFiltersForNewSegmentCriteria(
+      contractData,
       filters,
       filterToUse,
       tokenAddress,
       operatorType,
-      amount,
+      walletAmount,
+      walletAmountType,
+      eventAmount,
+      eventAmountType,
       contractAddress,
       contractEventInput,
       contractEvent
@@ -251,24 +283,42 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
 }
 
 export const addFiltersForNewSegmentCriteria = (
+  contractData,
   filters,
   filterToUse,
   tokenAddress,
   operatorType,
-  amount,
+  walletAmount,
+  walletAmountType,
+  eventAmount,
+  eventAmountType,
   contractAddress,
   contractEventInput,
   contractEvent ) => {
   if (filterToUse.filter === "Smart Contract Events") {
+    let implementation_address = ''
+    let proxy_address = ''
+    const idx = Object.keys(contractData).find(key => contractAddress === contractData[key].address)
+    if (contractData[idx] && contractData[idx].proxy_contract) {
+      implementation_address = contractAddress
+      proxy_address = contractData[idx].proxy_contract
+    }
+    else {
+      implementation_address = contractAddress
+      proxy_address = contractAddress
+    }
     filters.push(
       {
         condition: 'event value',
         params: {
           contract_address: contractAddress.toLowerCase(),
+          implementation_address,
+          proxy_address,
           event_name: contractEvent,
           input_name: contractEventInput,
           operator: operatorType,
-          value: amount
+          value: eventAmount,
+          eventAmountType
         }
       }
     )
@@ -279,7 +329,8 @@ export const addFiltersForNewSegmentCriteria = (
         params: {
           tokenAddress,
           operator: operatorType,
-          value: amount
+          value: walletAmount,
+          walletAmountType
         }
       }
     )
@@ -355,7 +406,6 @@ export const addFilter = (that, condition) => {
     filterType,
     rangeType,
     operatorType,
-    amount,
     date,
     contractAddress,
     allUsers,
@@ -363,6 +413,10 @@ export const addFilter = (that, condition) => {
     dashboardShow,
     contractEvent,
     contractEventInput,
+    walletAmount,
+    walletAmountType,
+    eventAmount,
+    eventAmountType,
   } = that.state
   const showOnDashboard = dashboardShow === "Yes" ? true : false
   const filterToUse = allFilters.filter((a) => a.filter === filterType)[0]
@@ -392,7 +446,8 @@ export const addFilter = (that, condition) => {
             operatorType,
             tokenType,
             tokenAddress,
-            amount,
+            walletAmount,
+            walletAmountType
           }
         : null,
     contractEvent:
@@ -402,13 +457,14 @@ export const addFilter = (that, condition) => {
           contractEvent,
           contractEventInput,
           operatorType,
-          amount
+          eventAmount,
+          eventAmountType
         } : null,
     contractAddress: filterToUse.type === "Smart Contract Transactions" ? contractAddress : null,
     userCount: addrArray.length > 0 ? addrArray.length : null,
   }
   let { filterConditions } = conditions
-  const thisOperator = operator ? operator : "And"
+  const thisOperator = operator ? operator : "and"
   that.setState({ operator: thisOperator })
 
   conditions["operator"] = thisOperator

@@ -95,9 +95,10 @@ export default class Segments extends React.Component {
     getCloudServices().fetchOrgDataAndUpdate();
   };
 
-  handleOperatorChange = (e) => {
+  handleOperatorChange = (value) => {
     const { conditions } = this.state;
-    const operatorType = e.target.value;
+    debugger
+    const operatorType = value;
     conditions["operator"] = operatorType;
     this.setState({ conditions, operator: operatorType });
   };
@@ -146,12 +147,12 @@ export default class Segments extends React.Component {
                       <Dropdown
                         placeholder='Operator...'
                         compact
-                        onChange={this.handleOperatorChange}
+                        onChange={(e, {value}) => this.handleOperatorChange(value)}
                         openOnFocus={false}
                         selection
                         options={[
-                          { key: 'and', text: 'And', value: 'And' },
-                          { key: 'or', text: 'Or', value: 'Or' }
+                          { key: 'and', text: 'And', value: 'and' },
+                          { key: 'or', text: 'Or', value: 'or' }
                         ]}
                       />
                       <br />
@@ -164,12 +165,12 @@ export default class Segments extends React.Component {
                       <Dropdown
                         placeholder='Operator...'
                         compact
-                        onChange={this.handleOperatorChange}
+                        onChange={(e, {value}) => this.handleOperatorChange(value)}
                         openOnFocus={false}
                         selection
                         options={[
-                          { key: 'and', text: 'And', value: 'And' },
-                          { key: 'or', text: 'Or', value: 'Or' }
+                          { key: 'and', text: 'And', value: 'and' },
+                          { key: 'or', text: 'Or', value: 'or' }
                         ]}
                       />
                       <br />
@@ -200,15 +201,18 @@ export default class Segments extends React.Component {
   renderFilterConditions(filterToUse) {
     const {
       contractAddress,
-      rangeType,
       operatorType,
-      amount,
-      tokenType,
       tokenAddress,
-      delayBlocks,
       contractEvent,
       contractEventInput,
-      web2Event
+      eventAmount,
+      eventAmountType,
+      walletAmount,
+      walletAmountType,
+      // web2Event,
+      // rangeType,
+      // delayBlocks,
+      // tokenType,
     } = this.state
     const { web2Analytics, sessionData, contractData, tokenData } = this.global
     const { monitoring } = sessionData;
@@ -239,34 +243,34 @@ export default class Segments extends React.Component {
           />
         </div>
       )
-    } else if (type === "Date Range") {
-      return (
-        <div className="row form-group col-md-12">
-          <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-            <label htmlFor="chartSty">Make a Selection</label>
-            <Dropdown
-              placeholder='Range...'
-              onChange={(e, {value}) => this.setState({ rangeType: value })}
-              value={rangeType}
-              openOnFocus={false}
-              fluid
-              selection
-              options={[
-                { key: 'choose...', text: 'Choose...', value: 'choose...' },
-                { key: 'before', text: 'Before', value: 'Before' },
-                { key: 'after', text: 'After', value: 'After' }
-              ]}
-            />
-          </div>
-          <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
-            <DatePicker
-              className="date-picker"
-              onChange={this.handleDateChange}
-              value={this.state.date}
-            />
-          </div>
-        </div>
-      )
+    // } else if (type === "Date Range") {
+    //   return (
+    //     <div className="row form-group col-md-12">
+    //       <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+    //         <label htmlFor="chartSty">Make a Selection</label>
+    //         <Dropdown
+    //           placeholder='Range...'
+    //           onChange={(e, {value}) => this.setState({ rangeType: value })}
+    //           value={rangeType}
+    //           openOnFocus={false}
+    //           fluid
+    //           selection
+    //           options={[
+    //             { key: 'choose...', text: 'Choose...', value: 'choose...' },
+    //             { key: 'before', text: 'Before', value: 'Before' },
+    //             { key: 'after', text: 'After', value: 'After' }
+    //           ]}
+    //         />
+    //       </div>
+    //       <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+    //         <DatePicker
+    //           className="date-picker"
+    //           onChange={this.handleDateChange}
+    //           value={this.state.date}
+    //         />
+    //       </div>
+    //     </div>
+    //   )
     } else if (type === "Wallet Balance") {
       const tokenOptions = []
       tokenData.forEach(e => {
@@ -291,7 +295,7 @@ export default class Segments extends React.Component {
             />
             <br/>
           </div>
-          <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+          <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
             <label htmlFor="chartSty">Make a Selection</label>
             <Dropdown
               placeholder='Range...'
@@ -310,31 +314,47 @@ export default class Segments extends React.Component {
               ]}
             />
           </div>
-          <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+          <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
             <label htmlFor="tileName">Enter Amount</label>
             <Input
               placeholder="Wallet Balance Amount"
               type="number"
-              value={amount}
+              value={walletAmount}
               fluid
-              onChange={(e, {value}) => this.setState({ amount: value })}
+              onChange={(e, {value}) => this.setState({ walletAmount: value })}
+            />
+          </div>
+          <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
+            <label htmlFor="tileName">Amount Type</label>
+            <Dropdown
+              placeholder='Choose...'
+              value={walletAmountType}
+              onChange={(e, {value}) => this.setState({ walletAmountType: value })}
+              openOnFocus={false}
+              fluid
+              selection
+              options={[
+                { key: 'choose...', text: 'Choose...', value: 'choose...' },
+                { key: 'eth', text: 'Eth/ERC-20', value: 'eth' },
+                { key: 'wei', text: 'Wei', value: 'wei' },
+              ]}
             />
           </div>
         </div>
       )
-    } else if (type === "Delay Range") {
-      return (
-        <div className="form-group col-md-12">
-          <label htmlFor="contractAddress">Enter The Number of Blocks</label>
-          <Input
-            placeholder="Number of Eth Blocks"
-            fluid
-            type="number"
-            value={delayBlocks}
-            onChange={(e, {value}) => this.setState({ delayBlocks: value })}
-          />
-        </div>
-      )
+    // } else if (type === "Delay Range") {
+    //   return (
+    //     <div className="form-group col-md-12">
+    //       <label htmlFor="contractAddress">Enter The Number of Blocks</label>
+    //       <Input
+    //         placeholder="Number of Eth Blocks"
+    //         fluid
+    //         type="number"
+    //         value={delayBlocks}
+    //         onChange={(e, {value}) => this.setState({ delayBlocks: value })}
+    //       />
+    //     </div>
+    //   )
     } else if (type === "Smart Contract Events") {
       let contractOptions = {}
       let contracts = []
@@ -425,7 +445,7 @@ export default class Segments extends React.Component {
           ) : null}
           {contractEventInput ? (
             <div className="row form-group">
-              <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+              <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
                 <label htmlFor="chartSty">Comparison Logic</label>
                 <Dropdown
                   placeholder='Range...'
@@ -444,53 +464,71 @@ export default class Segments extends React.Component {
                   ]}
                 />
               </div>
-              <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
+              <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
                 <label htmlFor="tileName">Enter Amount</label>
                 <Input
                   placeholder="Event Amount"
                   fluid
                   type="number"
-                  value={amount}
-                  onChange={(e, {value}) => this.setState({ amount: value })}
+                  value={eventAmount}
+                  onChange={(e, {value}) => this.setState({ eventAmount: value })}
+                />
+              </div>
+              <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
+                <label htmlFor="tileName">Amount Type</label>
+                <Dropdown
+                  placeholder='Choose...'
+                  value={eventAmountType}
+                  onChange={(e, {value}) => this.setState({ eventAmountType: value })}
+                  openOnFocus={false}
+                  fluid
+                  selection
+                  options={[
+                    { key: 'choose...', text: 'Choose...', value: 'choose...' },
+                    { key: 'eth', text: 'Eth/ERC-20', value: 'eth' },
+                    { key: 'wei', text: 'Wei', value: 'wei' },
+                    { key: 'other', text: 'Other', value: 'other' },
+                  ]}
                 />
               </div>
             </div>
           ) : null}
         </div>
       )
-    } else if (type === "Web2 Selection") {
-      let web2Events = []
-      if (web2Analytics && web2Analytics.data) {
-        const events = web2Analytics.data
-        events.forEach(it => {
-          web2Events.push({
-            key: it,
-            value: it,
-            text: it
-          })
-        })
-        return (
-          <div className="form-group col-md-12">
-            <label htmlFor="contractAddress">Pick Smart Contract</label>
-            <Dropdown
-              placeholder='Choose Contract...'
-              value={web2Event}
-              onChange={(e, {value}) => this.setState({ web2Event: value })}
-              openOnFocus={false}
-              fluid
-              selection
-              options={web2Events}
-            />
-          </div>
-        )
-      } else {
-        return (
-          <Message>
-            You haven't imported stored any Web2 events yet.
-          </Message>
-        )
-      }
     }
+    // } else if (type === "Web2 Selection") {
+    //   let web2Events = []
+    //   if (web2Analytics && web2Analytics.data) {
+    //     const events = web2Analytics.data
+    //     events.forEach(it => {
+    //       web2Events.push({
+    //         key: it,
+    //         value: it,
+    //         text: it
+    //       })
+    //     })
+    //     return (
+    //       <div className="form-group col-md-12">
+    //         <label htmlFor="contractAddress">Pick Smart Contract</label>
+    //         <Dropdown
+    //           placeholder='Choose Contract...'
+    //           value={web2Event}
+    //           onChange={(e, {value}) => this.setState({ web2Event: value })}
+    //           openOnFocus={false}
+    //           fluid
+    //           selection
+    //           options={web2Events}
+    //         />
+    //       </div>
+    //     )
+    //   } else {
+    //     return (
+    //       <Message>
+    //         You haven't imported stored any Web2 events yet.
+    //       </Message>
+    //     )
+    //   }
+    // }
   }
 
   renderCreateSegment(condition) {
