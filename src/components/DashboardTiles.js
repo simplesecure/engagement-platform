@@ -19,7 +19,7 @@ export default class DashboardTiles extends React.Component {
   getCurrentContractTile = () => {
     const { importedContracts, currentContractAddr } = this.props
     let currAddr = currentContractAddr
-    if (currAddr === '') {
+    if (currAddr === '' && importedContracts) {
       currAddr = Object.keys(importedContracts)[0]
     }
     const name = importedContracts[currAddr].contract_name
@@ -82,7 +82,7 @@ export default class DashboardTiles extends React.Component {
   getCurrentContract = () => {
     const { importedContracts, currentContractAddr } = this.props
     let currAddr = currentContractAddr
-    if (currAddr === '') {
+    if (currAddr === '' && importedContracts) {
       currAddr = Object.keys(importedContracts)[0]
     }
     const name = importedContracts[currAddr].contract_name

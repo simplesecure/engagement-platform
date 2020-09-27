@@ -2,41 +2,41 @@
   {
     "filter": "Wallet Balance",
     "type": "Wallet Balance",
-    "enabled": true
+    "disabled": false
   },
   {
     "filter": "Smart Contract Transactions",
     "type": "Smart Contract Transactions",
-    "enabled": true
+    "disabled": false
   },
   {
     "filter": "Smart Contract Events",
     "type": "Smart Contract Events",
-    "enabled": true
+    "disabled": false
   },
   {
     "filter": "Web2 Events",
     "type": "Web2 Selection",
-    "enabled": false
+    "disabled": true
   },
   {
     "filter": "Asset Price",
     "type": "Number Range",
-    "enabled": false
+    "disabled": true
   },
   {
     "filter": "Time Delay by Eth Blocks",
     "type": "Delay Range",
-    "enabled": false
+    "disabled": true
   },
   {
     "filter": "Wallet Type",
     "type": "Selection",
-    "enabled": false
+    "disabled": true
   },
   {
     "filter": "Last Seen",
     "type": "Date Range",
-    "enabled": false
+    "disabled": true
   }
 ]

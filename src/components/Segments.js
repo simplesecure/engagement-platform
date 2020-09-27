@@ -29,6 +29,7 @@ import {
 } from './SegmentHelpers'
 import ProcessingBlock from './ProcessingBlock'
 import MonitoredSmartContracts from './MonitoredSmartContracts'
+import uuid from 'uuid/v4'
 
 export default class Segments extends React.Component {
   constructor(props) {
@@ -61,7 +62,9 @@ export default class Segments extends React.Component {
       selectedNetwork: "mainnet",
       webhookOpen: false,
       webhook: "",
-      isCreateSegment: false
+      isCreateSegment: false,
+      walletAmount: 0,
+      eventAmount: 0
     }
   }
 
@@ -130,7 +133,7 @@ export default class Segments extends React.Component {
   };
 
   renderMultipleConditions() {
-    const { conditions, editSegment } = this.state;
+    const { conditions, editSegment, operator } = this.state;
     const { filterConditions } = conditions;
     if (filterConditions && filterConditions.length > 0) {
       return (
@@ -145,7 +148,9 @@ export default class Segments extends React.Component {
                     <div>
                       <Dropdown
                         placeholder='Operator...'
+                        value={operator}
                         compact
+                        disabled={operator !== ""}
                         onChange={(e, {value}) => this.handleOperatorChange(value)}
                         openOnFocus={false}
                         selection
@@ -163,7 +168,9 @@ export default class Segments extends React.Component {
                     <div>
                       <Dropdown
                         placeholder='Operator...'
+                        value={operator}
                         compact
+                        disabled={operator !== ""}
                         onChange={(e, {value}) => this.handleOperatorChange(value)}
                         openOnFocus={false}
                         selection
@@ -556,7 +563,7 @@ export default class Segments extends React.Component {
       filter.text = filter.filter
       filter.key = filter.filter
       filter.value = filter.filter
-      filter.disabled = !filter.enabled
+      filter.disabled = filter.disabled
     })
     return (
       <div>
@@ -806,7 +813,7 @@ export default class Segments extends React.Component {
                     const disableWallets = wallet_count < 1
                     return (
                       <Grid.Column key={contract_name}>
-                        <Segment color='green' raised padded>
+                        <Segment key={uuid()} color='green' raised padded>
                           <Header as='h3' dividing>
                             <Header.Content>{contract_name}</Header.Content>
                             <Header.Subheader color='grey' style={{marginTop: 5}}>
@@ -851,8 +858,8 @@ export default class Segments extends React.Component {
                 <Grid columns={2}>
                 {
                   segments.map(segment => {
+                    console.log("# of SEGMENTS", segments.length)
                     const {name, users, userCount, version, id, resultData } = segment
-                    const disableButton = defaultSegments.indexOf(name) < 0
                     const disableWallets = userCount < 1
                     let { blockId } = segment
                     if (!blockId && version === '2.0') {
@@ -860,10 +867,12 @@ export default class Segments extends React.Component {
                         blockId = resultData.block_id
                       }
                     }
+                    let sId = name + userCount
+                    console.log('SEGMENT CREATED', segment)
                     if (name === 'All Users') return null
                     return (
                       <Grid.Column key={id}>
-                        <Segment color='blue' raised padded>
+                        <Segment key={sId} color='blue' raised padded>
                           <Header as='h3' dividing>
                             <Header.Content>{name}</Header.Content>
                             <Header.Subheader color='grey' style={{marginTop: 5}}>
@@ -894,10 +903,10 @@ export default class Segments extends React.Component {
                               <Icon name='globe' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
                               <p className='name'>Connect</p>
                             </Button>
-                            {disableButton ? <Button onClick={() => deleteSegment(this, segment, false)} icon basic>
+                            <Button onClick={() => deleteSegment(this, segment, false)} icon basic>
                               <Icon color='red' name='trash alternate outline' size='large' />
                               <p className='name'>Delete</p>
-                            </Button> : null}
+                            </Button>
                           </Button.Group>
                         </Segment>
                       </Grid.Column>

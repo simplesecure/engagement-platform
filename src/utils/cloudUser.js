@@ -154,7 +154,7 @@ socket.on(RT_SEGMENT_UPDATE_EVENT, async (segmentUpdate) => {
 //
 export async function runClientOperation(anOperation, anOrgId=undefined, anAppId=undefined, theOperationData={}) {
   const method = 'cloudUser::runClientCommand'
-
+  debugger
   const cmdObj = {
     command: 'clientOperation',
     data: {

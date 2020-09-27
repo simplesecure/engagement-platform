@@ -56,7 +56,7 @@ export default class SegmentTable extends React.Component {
   }
   renderRow = ({ wallet }) => {
     const { address, block_id, block_timestamp, hash } = wallet
-    let name = address.substring(2)
+    let name = address ? address.substring(2) : ''
     return (
       <Table.Row key={address} isSelectable onSelect={() => this.setState({ showDialog: true, address, hash })}>
         <Table.Cell display="flex" alignItems="center" flexBasis={300} flexShrink={0} flexGrow={0}>

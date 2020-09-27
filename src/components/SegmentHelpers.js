@@ -53,6 +53,7 @@ export const createSegment = async (that) => {
   let { conditions } = that.state
   let { filterConditions } = conditions
   const showOnDashboard = dashboardShow === "Yes" ? true : false
+  debugger
 
   const filterToUse = allFilters.filter((a) => a.filter === filterType)[0]
   const segId = uuid()
@@ -161,6 +162,7 @@ export const createSegment = async (that) => {
   
   // Order is important here -- the code below modifies the empty segment we add above, if it were earlier,
   // then you would see two segments until a real-time update or refresh.
+  debugger
   try {
     const operationData = {
       segmentObj: segmentCriteria
@@ -201,6 +203,7 @@ function _ethToWei(anEthValue) {
   //        Numeric literals with absolute values equal to 2^53 or greater are too large to be represented accurately as integers.ts(80008)
   //
   const wrongWeiPerEth = 1000     // <-- TODO Prabhaav make this the constant above and fix all errors
+  // const weiPerEth = 1000000000000000000n
   const weiPerEth = wrongWeiPerEth
   const weiValue = anEthValue * weiPerEth
   return weiValue
@@ -293,7 +296,7 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
     )
   }
   segmentCriteria.version = '2.0'
-  segmentCriteria.logic = conditions.operator ? conditions.operator.toLowerCase() : 'and'
+  segmentCriteria.logic = conditions.operator ? conditions.operator : 'and'
   segmentCriteria.actions = undefined
   segmentCriteria.filter = {
     children: undefined
@@ -484,7 +487,7 @@ export const addFilter = (that, condition) => {
     userCount: addrArray.length > 0 ? addrArray.length : null,
   }
   let { filterConditions } = conditions
-  const thisOperator = operator ? operator : "and"
+  const thisOperator = operator
   that.setState({ operator: thisOperator })
 
   conditions["operator"] = thisOperator

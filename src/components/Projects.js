@@ -124,7 +124,6 @@ class Projects extends React.Component {
         setGlobal({ apps: updatedApps })
       }
 
-      this.setState({ show: false })
 
       try {
         const appKeys = Object.keys(updatedApps)
@@ -137,6 +136,7 @@ class Projects extends React.Component {
       } catch (suppressedError) {
         console.log(`ERROR: problem updating state and/or local store.\n${suppressedError}`)
       }
+      this.closeModal()
     }
   }
 

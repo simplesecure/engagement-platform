@@ -56,13 +56,14 @@ export default class MonitoredSmartContracts extends React.Component {
     const { account, address, name, implementation_contract } = contract
     return (
       <Table.Row key={address} isSelectable onSelect={() => this.props.setImportAddress(address)}>
-        <Table.Cell display="flex" alignItems="center" flexBasis={360} flexShrink={0} flexGrow={0}>
+        <Table.Cell display="flex" alignItems="center" flexBasis={300} flexShrink={0} flexGrow={0}>
         <Avatar name={name} />
         <Text marginLeft={8} size={300} fontWeight={500}>
           {name}
         </Text>
         </Table.Cell>
         <Table.TextCell>{account}</Table.TextCell>
+        <Table.TextCell isNumber>{`${address.substring(0, 10)}...`}</Table.TextCell>
         {/*<Table.Cell width={48} flex="none">
         <Popover
           content={this.renderRowMenu(address)}
@@ -90,9 +91,10 @@ export default class MonitoredSmartContracts extends React.Component {
             onChange={this.handleFilterChange}
             value={this.state.searchQuery}
             placeholder='Search by company...'
-            flexBasis={360} flexShrink={0} flexGrow={0}
+            flexBasis={300} flexShrink={0} flexGrow={0}
           />
           <Table.TextCell>Company</Table.TextCell>
+          <Table.TextCell>Address</Table.TextCell>
           {/*<Table.TextCell>More</Table.TextCell>
           <Table.HeaderCell width={48} flex="none" />*/}
         </Table.Head>
