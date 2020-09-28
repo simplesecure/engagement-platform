@@ -866,7 +866,6 @@ export default class Segments extends React.Component {
                     let { blockId, userCount } = segment
                     if (version === '2.0' && resultData) {
                       blockId = resultData.block_id
-                      userCount = resultData.userCount
                     }
                     const disableWallets = userCount < 1
                     let sId = name + userCount
