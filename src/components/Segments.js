@@ -699,7 +699,7 @@ export default class Segments extends React.Component {
     })
   }
   render() {
-    const { sessionData, processing, anOrgStatusObj, currentAppId, contractData } = this.global;
+    const { sessionData, processing, anOrgStatusObj, currentAppId } = this.global;
     const { currentSegments, monitoring } = sessionData;
     const {
       importAddress,
@@ -718,9 +718,13 @@ export default class Segments extends React.Component {
       isCreateSegment
     } = this.state;
     const segments = currentSegments ? currentSegments : [];
-    const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
+    // const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
     const status = anOrgStatusObj ? anOrgStatusObj[currentAppId] : null
     let message = null
+    // console.log("&&&&&&&&&&&&&&")
+    // console.log("&&&&&&&&&&&&&&Monitoring: ", monitoring)
+    // console.log("&&&&&&&&&&&&&&Segments: ", segments)
+    // console.log("&&&&&&&&&&&&&&SessionData: ", sessionData)
     if (status && Object.keys(status).length) {
       message = (
         <React.Fragment>
@@ -854,19 +858,17 @@ export default class Segments extends React.Component {
               </Grid.Column>
               <Grid.Column key='currsegs'>
                 {/* <Header as='h3'>Current Segments</Header> */}
-                {segments.length > 1 ? (
+                {segments.length > 0 ? (
                 <Grid columns={2}>
                 {
                   segments.map(segment => {
-                    console.log("# of SEGMENTS", segments.length)
-                    const {name, users, userCount, version, id, resultData } = segment
-                    const disableWallets = userCount < 1
-                    let { blockId } = segment
-                    if (!blockId && version === '2.0') {
-                      if (resultData) {
-                        blockId = resultData.block_id
-                      }
+                    const {name, users, version, id, resultData } = segment
+                    let { blockId, userCount } = segment
+                    if (version === '2.0' && resultData) {
+                      blockId = resultData.block_id
+                      userCount = resultData.userCount
                     }
+                    const disableWallets = userCount < 1
                     let sId = name + userCount
                     console.log('SEGMENT CREATED', segment)
                     if (name === 'All Users') return null
@@ -890,7 +892,7 @@ export default class Segments extends React.Component {
                             }
                           </Header>
                           <Button.Group>
-                            <Button disabled={disableWallets || version === '2.0'} onClick={() => this.handleSegmentModal({name, wallets: users})} icon basic>
+                            <Button disabled={version !== '2.0'} onClick={() => this.handleSegmentModal({name, wallets: users})} icon basic>
                               <Icon name='users' size='large' color='black' />
                               <p className='name'>Wallets</p>
                             </Button>

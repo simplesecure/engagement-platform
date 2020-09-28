@@ -53,7 +53,6 @@ export const createSegment = async (that) => {
   let { conditions } = that.state
   let { filterConditions } = conditions
   const showOnDashboard = dashboardShow === "Yes" ? true : false
-  debugger
 
   const filterToUse = allFilters.filter((a) => a.filter === filterType)[0]
   const segId = uuid()
@@ -162,7 +161,6 @@ export const createSegment = async (that) => {
   
   // Order is important here -- the code below modifies the empty segment we add above, if it were earlier,
   // then you would see two segments until a real-time update or refresh.
-  debugger
   try {
     const operationData = {
       segmentObj: segmentCriteria
