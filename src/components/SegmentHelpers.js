@@ -339,7 +339,7 @@ export const addFiltersForNewSegmentCriteria = (
           input_name: contractEventInput,
           operator: operatorType,
           value: eventAmount,
-          eventAmountType
+          valueType: eventAmountType
         }
       }
     )
@@ -348,10 +348,10 @@ export const addFiltersForNewSegmentCriteria = (
       {
         type: 'balance',
         params: {
-          tokenAddress,
+          token_address: tokenAddress,
           operator: operatorType,
           value: walletAmount,
-          walletAmountType
+          valueType: walletAmountType
         }
       }
     )
