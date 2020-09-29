@@ -869,7 +869,6 @@ export default class Segments extends React.Component {
                     }
                     const disableWallets = userCount < 1
                     let sId = name + userCount
-                    console.log('SEGMENT CREATED', segment)
                     if (name === 'All Users') return null
                     return (
                       <Grid.Column key={id}>
