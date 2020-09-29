@@ -20,9 +20,8 @@ import "react-toastify/dist/ReactToastify.css"
 import { getEmailData } from './../utils/emailData.js'
 import { getWeb2Analytics } from './../utils/web2Analytics'
 import { getSidSvcs } from "../utils/sidServices"
+import { createProject } from "../utils/projectUtils"
 const moment = require('moment')
-const ERROR_MSG =
-  "Failed to create project, please try again. If this continues, please contact support@simpleid.xyz"
 const filter = require('../utils/filterOptions.json')
 
 class Projects extends React.Component {
@@ -47,51 +46,6 @@ class Projects extends React.Component {
       if (redirectLink) {
         redirectLink.click()
       }
-    }
-  }
-
-  createProject = async () => {
-    const { apps, org_id } = this.global
-    const { projectName } = this.state
-
-    const newProject = {
-      date_created: Date.now(),
-      project_name: projectName
-    }
-
-    // Recently refactored / merged from cloud user
-    this.setGlobal({ processing: true, orgData: newProject })
-
-    try {
-      const projectId = await getSidSvcs().createAppId(org_id, newProject)
-
-      let data
-      if (projectId) {
-        apps[projectId] = newProject
-        const appKeys = Object.keys(apps)
-        const allApps = apps
-        const currentAppId = allApps[appKeys[0]]
-        data = allApps[appKeys[0]]
-        setGlobal({
-          currentAppId,
-          apps: allApps,
-          sessionData: data,
-          processing: false
-        })
-        this.setState({ projectName: "" })
-
-        // TODO: the next call should really be removed and the model above should be updated
-        //       with the appId returned (i.e. no need to call the server twice)
-        getCloudServices().fetchOrgDataAndUpdate()
-        this.props.history.push('/segments')
-      } else {
-        setGlobal({ processing: false, error: "No app id returned" })
-        console.log(`ERROR: no app id returned`)
-      }
-    } catch (suppressedError) {
-      console.log(`ERROR: problem writing to DB.\n${suppressedError}`)
-      setGlobal({ processing: false, error: ERROR_MSG })
-      // TODO: Justin ... (We should run these calls concurrent and retry on fail n times--then report the problem to the user)
     }
   }
 
@@ -132,7 +86,12 @@ class Projects extends React.Component {
           : ""
         const data = appKeys.length > 0 ? updatedApps[appKeys[0]] : {}
 
-        setGlobal({ currentAppId, sessionData: data, processing: false })
+        if (data.version === '2.0') {
+          setGlobal({ currentAppId, sessionData: data, processing: false })
+        }
+        else {
+          setGlobal({ currentAppId: '', sessionData: {name: data.name}, processing: false })
+        }
       } catch (suppressedError) {
         console.log(`ERROR: problem updating state and/or local store.\n${suppressedError}`)
       }
@@ -199,7 +158,8 @@ class Projects extends React.Component {
     const { apps } = this.global
 
     await setGlobal({ sessionData: apps[app.id], currentAppId: app.id, allFilters: [] })
-    getCloudServices().fetchUsersCount()
+    await getCloudServices().fetchUsersCount()
+    await getCloudServices().fetchOrgDataAndUpdate()
     //  Fetch web2 analytics eventNames - we will fetch the actual event results in Segment handling
     const web2AnalyticsCmdObj = {
       command: 'getWeb2Analytics',
@@ -291,7 +251,7 @@ class Projects extends React.Component {
                               </Grid.Column>
                               <Grid.Column width={8}>
                                 <Button.Group floated="right">
-                                  { activeProject ? (
+                                  { 1 ? (
                                       null
                                     ) : (
                                       <Button onClick={() => this.setProject(app)} icon basic>
@@ -324,7 +284,7 @@ class Projects extends React.Component {
               </div>
               <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
                 {
-                  (applications.length === 0 || plan === "enterprise") ?
+                  (applications.length < 2 || plan === "enterprise") ?
                   <div>
                     <h5>Add a Project</h5>
                     <div className="form-group col-md-12">
@@ -340,9 +300,9 @@ class Projects extends React.Component {
                     <div className="form-group col-md-12">
                       <Button
                         floated="right"
-                        onClick={this.createProject}
+                        onClick={() => createProject(this, projectName)}
                         positive
-                        disabled={!this.state.projectName.length}
+                        disabled={!projectName.length}
                       >
                         Create Project
                       </Button>

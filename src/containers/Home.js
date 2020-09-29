@@ -8,9 +8,10 @@ import Communications from '../components/Communications/Communications'
 import Segments from '../components/Segments'
 import Projects from '../components/Projects'
 import BlockDiagram from '../components/BlockDiagram'
-import { Dimmer, Loader } from 'semantic-ui-react'
+import { Dimmer, Loader, Input } from 'semantic-ui-react'
 import FlowyWorker from './FlowyWorker'
-import { getCloudServices } from '../utils/cloudUser';
+import { getCloudServices } from '../utils/cloudUser'
+import { createProject } from "../utils/projectUtils"
 import { Dialog } from 'evergreen-ui'
 const qs = require('query-string');
 
@@ -69,6 +70,21 @@ export default class Home extends React.Component {
       </strong>
     </Dialog>
   )
+  renderIncorrectVersionCheck = (newProjectName) => (
+    <Dialog
+      isShown={true}
+      title="SimpleID Version 2.0 Update"
+      onConfirm={() => createProject(this, newProjectName)}
+      onCancel={() => getCloudServices().signOut()}
+      confirmLabel='New Project'
+      cancelLabel='Logout'
+      width={640}
+      shouldCloseOnOverlayClick={false}
+      shouldCloseOnEscapePress={false}
+    >
+      Older versions of SimpleID Project's have been deprecated. Please click on <strong> new project </strong> to create a new 2.0 project
+    </Dialog>
+  )
   renderSignedIn = () => (
     <BrowserRouter>
       <Route exact path='/' component={Dashboard} />
@@ -83,12 +99,15 @@ export default class Home extends React.Component {
     </BrowserRouter>
   )
   render() {
-    const { signedIn, sessionData, loading, connected, plan, org_id } = this.global
+    const { currentAppId, signedIn, sessionData, loading, connected, plan, org_id, appVersion } = this.global
     let element
     if (connected === 'disconnect' || connected === 'reconnecting') {
       element = this.renderDisconnected()
     } else if(loading) {
       element = this.renderLoading()
+    } else if(!sessionData || (sessionData.project_name && appVersion !== '2.0')) {
+      const newProjectName = sessionData.project_name + '_v2.0'
+      element = this.renderIncorrectVersionCheck(newProjectName)
     } else if (plan !== 'premium' && plan !== 'enterprise') {
       element = this.renderDisabledOrgId(org_id)
     } else if(signedIn && Object.keys(sessionData).length > 0 && loading === false) {

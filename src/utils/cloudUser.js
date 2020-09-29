@@ -311,7 +311,7 @@ async function handleSegmentInitFinished(aSegmentObj) {
   //  First we need to check if the correct project is currently selected in state
   const app_id = aSegmentObj.appId
   const updatedSession = (sessionData.id !== app_id) ? apps[app_id] : sessionData
-  const { currentSegments } = updatedSession;
+  const { currentSegments, monitoring } = updatedSession;
   const segments = currentSegments ? currentSegments : [];
 
   // If this segment exists already, clobber it, otherwise append it (segment init
@@ -324,10 +324,12 @@ async function handleSegmentInitFinished(aSegmentObj) {
   }
 
   apps[app_id].currentSegments = segments;
+  apps[app_id].monitoring = monitoring;
 
   if (sessionData.id === app_id) {
     const thisApp = apps[sessionData.id];
     thisApp.currentSegments = segments;
+    thisApp.monitoring = monitoring
     sessionData = thisApp;
   }
 
@@ -363,7 +365,6 @@ class CloudServices {
     } catch(e) {
       log.debug("org id error: ", e)
     }
-
     //Public Dashboard Check
     if (!org_id) {
       org_id = anOrgId
@@ -395,9 +396,10 @@ class CloudServices {
     if(appData && appData.Item && Object.keys(appData.Item.apps).length > 0) {
       const appKeys = Object.keys(appData.Item.apps);
       const allApps = appData.Item.apps;
-      const currentAppId = appKeys[0]
-      const data = allApps[appKeys[0]];
+      const currentAppId = appKeys[appKeys.length - 1]
+      const data = allApps[currentAppId];
       data['id'] = currentAppId
+      const appVersion = appData.Item.apps[currentAppId].version
 
       // let importedContracts = undefined
       // try {
@@ -496,7 +498,8 @@ class CloudServices {
         sessionData: data,
         projectFound: true,
         signedIn: true,
-        loading: false
+        loading: false,
+        appVersion
       });
 
       //  Fetch web2 analytics eventNames - we will fetch the actual event results in Segment handling

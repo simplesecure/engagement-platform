@@ -44,8 +44,9 @@ export default class SideNav extends React.Component {
   }
 
   render() {
-    const { currentAppId } = this.global
+    const { currentAppId, appVersion } = this.global
     const { pathname } = this.state
+    const disableNavigation = (!currentAppId || appVersion !== '2.0')
     return(
       <aside className="main-sidebar col-12 col-md-3 col-lg-2 px-0">
         <div className="main-navbar">
@@ -63,8 +64,8 @@ export default class SideNav extends React.Component {
         <div className="nav-wrapper">
           <ul className="nav flex-column">
             <li className="nav-item Dashboard">
-              <Link onClick={() => (!currentAppId) ? null : this.setState({ pathname: '/' })} className={`nav-link ${pathname ==='/' && currentAppId !== undefined ? "active" : ""}`} to={(!currentAppId) ? "/account" : "/"}>
-                <Segment disabled={!currentAppId} basic>
+              <Link onClick={() => (disableNavigation) ? null : this.setState({ pathname: '/' })} className={`nav-link ${pathname ==='/' && currentAppId !== undefined ? "active" : ""}`} to={(disableNavigation) ? "/account" : "/"}>
+                <Segment disabled={disableNavigation} basic>
                   <Header as='h3'>
                     <Icon name='dashboard' />
                     <Header.Content>
@@ -75,8 +76,8 @@ export default class SideNav extends React.Component {
               </Link>
             </li>
             <li className="nav-item Segments">
-              <Link onClick={() => (!currentAppId) ? null : this.setState({ pathname: '/segments' })} className={`nav-link ${pathname.includes('/segments') && currentAppId !== undefined ? "active" : ""}`} to={(!currentAppId) ? "/account" : "/segments"}>
-                <Segment disabled={!currentAppId} basic>
+              <Link onClick={() => (disableNavigation) ? null : this.setState({ pathname: '/segments' })} className={`nav-link ${pathname.includes('/segments') && currentAppId !== undefined ? "active" : ""}`} to={(disableNavigation) ? "/account" : "/segments"}>
+                <Segment disabled={disableNavigation} basic>
                   <Header as='h3'>
                     <Icon name='cubes' />
                     <Header.Content>
@@ -87,8 +88,8 @@ export default class SideNav extends React.Component {
               </Link>
             </li>
             <li className="nav-item Notifications">
-              <Link onClick={() => (!currentAppId) ? null : this.setState({ pathname: '/notifications' })} className={`nav-link ${pathname.includes('/notifications') && currentAppId !== undefined ? "active" : ""}`} to={(!currentAppId) ? "/account" : "/notifications"}>
-                <Segment disabled={!currentAppId} basic>
+              <Link onClick={() => (disableNavigation) ? null : this.setState({ pathname: '/notifications' })} className={`nav-link ${pathname.includes('/notifications') && currentAppId !== undefined ? "active" : ""}`} to={(disableNavigation) ? "/account" : "/notifications"}>
+                <Segment disabled={disableNavigation} basic>
                   <Header as='h3'>
                     <Icon name='bell' />
                     <Header.Content>
@@ -99,8 +100,8 @@ export default class SideNav extends React.Component {
               </Link>
             </li>
             <li className="nav-item Email">
-              <Link onClick={() => (!currentAppId) ? null : this.setState({ pathname: '/communications' })} className={`nav-link ${pathname.includes('/communications') && currentAppId !== undefined ? "active" : ""}`} to={(!currentAppId) ? "/account" : "/communications"}>
-                <Segment disabled={!currentAppId} basic>
+              <Link onClick={() => (disableNavigation) ? null : this.setState({ pathname: '/communications' })} className={`nav-link ${pathname.includes('/communications') && currentAppId !== undefined ? "active" : ""}`} to={(disableNavigation) ? "/account" : "/communications"}>
+                <Segment disabled={disableNavigation} basic>
                   <Header as='h3'>
                     <Icon name='mail' />
                     <Header.Content>

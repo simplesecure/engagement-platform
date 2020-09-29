@@ -699,7 +699,7 @@ export default class Segments extends React.Component {
     })
   }
   render() {
-    const { sessionData, processing, anOrgStatusObj, currentAppId } = this.global;
+    const { sessionData, processing, anOrgStatusObj, currentAppId, appVersion } = this.global;
     const { currentSegments, monitoring } = sessionData;
     const {
       importAddress,
