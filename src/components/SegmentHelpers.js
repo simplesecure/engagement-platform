@@ -4,6 +4,7 @@ import { toast } from "react-toastify"
 import { getWeb2Analytics } from "../utils/web2Analytics"
 import { runClientOperation } from "../utils/cloudUser.js"
 import { getLog } from './../utils/debugScopes'
+import ReactGA from 'react-ga'
 
 const log = getLog('segmentHelpers')
 const listToArray = require("list-to-array")
@@ -148,6 +149,12 @@ export const createSegment = async (that) => {
 
   //should eventually move to this..........
   segmentCriteria = createNewSegmentCriteria(that, segmentCriteria)
+
+  ReactGA.event({
+    category: 'Segment',
+    action: 'Creating a new segment',
+    label: JSON.stringify(segmentCriteria.filters)
+  })
   
   const segments = currentSegments ? currentSegments : []
   segments.push(segmentCriteria)

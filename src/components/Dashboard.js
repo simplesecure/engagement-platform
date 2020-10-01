@@ -16,11 +16,13 @@ import {
   get7DayChart,
   getMonthChart,
   getDonutChart,
-  getBubbleChart,
+  getMvp30BubbleChart,
+  getMvpAllBubbleChart,
   getChartCard
 } from './Charts'
 import DashboardTiles from './DashboardTiles'
 import ProcessingBlock from './ProcessingBlock'
+import ReactGA from 'react-ga'
 
 class Dashboard extends React.Component {
   constructor(props) {
@@ -33,6 +35,7 @@ class Dashboard extends React.Component {
       currentContractAddr: ''
     }
     this.uniqueEleKey = Date.now()
+    ReactGA.pageview('/dashboard')
   }
   getUniqueKey() {
     return this.uniqueEleKey++
@@ -53,6 +56,24 @@ class Dashboard extends React.Component {
     } = this.global
     const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal, currentContractAddr } = this.state
     const { currentSegments, monitoring } = sessionData
+    let contractName = ''
+    let noMonitoring = true
+    if (!monitoring) {
+      noMonitoring = true
+    } else if (!Object.keys(monitoring).length) {
+      noMonitoring = true
+    }
+    else {
+      noMonitoring = false
+    }
+    if (!noMonitoring) {
+      if (currentContractAddr) {
+        contractName = monitoring[currentContractAddr].contract_name
+      }
+      else {
+        contractName = monitoring[Object.keys(monitoring)[0]].contract_name
+      }
+    }
     const dynamicClass = !publicDashboard ?
     "main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3" :
     "main-content col-lg-12 col-md-12 col-sm-12 p-0"
@@ -62,7 +83,7 @@ class Dashboard extends React.Component {
         <main className={dynamicClass}>
           <div className="main-content-container container-fluid px-4">
           {
-            (monitoring && !Object.keys(monitoring).length) ? (
+            (noMonitoring) ? (
                 <Dimmer active={true} page>
                   <Icon name='magic' size="huge"/>
                   <Header as='h1' inverted>
@@ -84,18 +105,19 @@ class Dashboard extends React.Component {
                     <ProcessingBlock />
                   </div>
                 </div>
-                <DashboardTiles
+                {(!noMonitoring) ? (<DashboardTiles
                   currentSegments={currentSegments}
                   importedContracts={monitoring}
                   currentContractAddr={currentContractAddr}
                   handleShowSegment={this.handleShowSegment}
                   toggleShowContracts={this.toggleShowContracts}
-                />
-                {Object.keys(monitoring).length ? (<Grid>
-                  {/* {getChartCard('Wallets by Smart Contracts', getDonutChart(monitoring))} */}
-                  {/* {getChartCard('Top 10 Wallets by Assets', getBubbleChart(currentContractAddr, monitoring))} */}
-                  {/* {getChartCard('Weekly Active Wallets', get7DayChart(currentContractAddr, monitoring))}
-                  {getChartCard('Monthly Active Wallets', getMonthChart(currentContractAddr, monitoring))} */}
+                />) : null}
+                {(!noMonitoring) ? (<Grid>
+                  {getChartCard('Wallets by Smart Contracts', getDonutChart(monitoring))}
+                  {getChartCard(`Top 10 Wallets in Last 30 days Transactions: ${contractName}`, getMvp30BubbleChart(currentContractAddr, monitoring))}
+                  {getChartCard(`Top Wallets All Time Transactions 30 days: ${contractName}`, getMvpAllBubbleChart(currentContractAddr, monitoring))}
+                  {getChartCard(`Daily Transactions: ${contractName}`, get7DayChart(currentContractAddr, monitoring))}
+                  {getChartCard(`Weekly Transactions: ${contractName}`, getMonthChart(currentContractAddr, monitoring))}
                   {/*{getChartCard('Total Value Held In Smart Contracts', getCandleStickChart())}*/}
                 </Grid>) : null}
                 </div>

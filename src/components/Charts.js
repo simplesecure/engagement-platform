@@ -3,10 +3,11 @@ import Chart from "react-google-charts"
 var Spinner = require('react-spinkit')
 
 export const getDonutChart = (contracts) => {
-  let data = [["Frontend", "Wallet Percentage"]]
+  let data = [["Contract", "Wallet Percentage"]]
   if (contracts) {
     for (const [key, value] of Object.entries(contracts)) {
-      data.push([key.substring(0, 10), value.wallet_count])
+      const { contract_name, wallet_count } = value
+      data.push([contract_name, parseInt(wallet_count)])
     }
   }
   return (
@@ -30,35 +31,68 @@ export const getDonutChart = (contracts) => {
     </div>
   )
 }
-export const getBubbleChart = (currentContractAddr, monitoring) => {
+export const getMvp30BubbleChart = (currentContractAddr, monitoring) => {
   let addr = currentContractAddr
   const wei = 0.000000000000000001
   if (addr === '') {
     addr = Object.keys(monitoring)[0]
   }
-  const walletData = monitoring[addr].most_valuable_wallets
-  return null
+  const walletData = monitoring[addr].mvp_30d_wallets
   let data = [
-    ["ID", "Eth in Wallet", "Address", "Wallet Size"]
+    ["ID", "Eth in Wallet", "TX Last Month", "Address", "Eth in Wallet"]
   ]
-  Object.entries(walletData).map(([key,value]) => {
-    // data.push
+  Object.entries(walletData).map(([key, value]) => {
+    const { address, ethereum, transactions_last_30d } = value
+    const ethValue = ethereum * wei
+    data.push([address.substr(0, 5), parseInt(ethValue), parseInt(transactions_last_30d), address, parseInt(ethValue)])
   })
-  // ,
-  //   ["0x192", 8180.66, 300, "0x1929a0454cdd4d925e8fc9b6c366ecd7844866f2", 8180.66],
-  //   ["0xbbb", 7092.84, 833, "0xbbbfc46566e5f0302cef913af8c8f423070ce6a1", 7092.84],
-  //   ["0x011", 5478.60, 223, "0x011ebe45c131e87e187d185b842facad9e8e9dd9", 5478.60],
-  //   ["0x477", 3572.73, 1032, "0x4775e7f9fc258259e88ae6c6c245ad85def7fb3a", 3572.73],
-  //   ["0xaed", 2180.05, 267, "0xaedc687fa5376d2fe9d4b81ebfc8c2ba30ba54ae", 2180.05],
-  //   ["0xdb6", 1372.49, 981, "0xdb6189758f3cc6f0251b938c068a3ed1b0e86569", 1372.49],
-  //   ["0xf13", 1068.09, 123, "0xf1363d3d55d9e679cc6aa0a0496fd85bdfcf7464", 1068.09],
-  //   ["0x28e", 981.55, 813, "0x28e7a475ad492d5f5130c73cf8aeeae85fd79e4c", 981.55],
-  //   ["0x34a", 668.60, 90, "0x34aaa3d5a73d6f9594326d0422ce69748f09b14f", 668.60],
-  //   ["0x3e1", 578.09, 321, "0x3e10048efed71c56bae0c2e8dea106f53fae6422", 578.09]
-  // ]
   const options = {
   //   title: "Wallet Interactions vs Total Value Locked in Oasis - Top 20",
-    hAxis: { title: "Assets in Contract ($)" },
+    hAxis: { title: "Assets in Wallet (Eth)" },
+    vAxis: { title: "Wallet Interacations" },
+    bubble: { textStyle: { fontSize: 11, color: 'none' } },
+    legend: {
+      position: 'none'
+    },
+    chartArea: {
+      top: '10%',
+      left: '20%',
+      width: '70%',
+      height: '70%'
+    }
+  }
+  return (
+    <div style={{flex:1, width:'100%'}}>
+      <Chart
+        loader={<Spinner name="circle" color="blue"/>}
+        chartType="BubbleChart"
+        height="100%"
+        data={data}
+        options={options}
+      />
+    </div>
+  )
+}
+
+export const getMvpAllBubbleChart = (currentContractAddr, monitoring) => {
+  let addr = currentContractAddr
+  const wei = 0.000000000000000001
+  if (addr === '') {
+    addr = Object.keys(monitoring)[0]
+  }
+  const walletData = monitoring[addr].mvp_all_time_wallets
+  let data = [
+    ["ID", "Eth in Wallet", "TX Last Month", "Address", "Eth in Wallet"]
+  ]
+  Object.entries(walletData).map(([key, value]) => {
+    const { address, ethereum, transactions_last_30d } = value
+    const ethValue = ethereum * wei
+    let txCount = transactions_last_30d ? transactions_last_30d : 0
+    data.push([address.substr(0, 5), parseInt(ethValue), parseInt(txCount), address, parseInt(ethValue)])
+  })
+  const options = {
+  //   title: "Wallet Interactions vs Total Value Locked in Oasis - Top 20",
+    hAxis: { title: "Assets in Wallet (Eth)" },
     vAxis: { title: "Wallet Interacations" },
     bubble: { textStyle: { fontSize: 11, color: 'none' } },
     legend: {
@@ -143,81 +177,115 @@ export const getCandleStickChart = () => {
 }
 
 export const get7DayChart = (currentContractAddr, monitoring) => {
-  return null
-//   const data = [
-//     [
-//       'Days',
-//       'Wallets'
-//     ],
-//     ['Sun', parseInt(activeUsersData[0]["address_count"])],
-//     ['Mon', parseInt(activeUsersData[1]["address_count"])],
-//     ['Tue', parseInt(activeUsersData[2]["address_count"])],
-//     ['Wed', parseInt(activeUsersData[3]["address_count"])],
-//     ['Thu', parseInt(activeUsersData[4]["address_count"])],
-//     ['Fri', parseInt(activeUsersData[5]["address_count"])],
-//     ['Sat', parseInt(activeUsersData[6]["address_count"])],
-//   ]
-//   const options = {
-//     legend: { position: 'none' },
-//     hAxis: { title: "Unique wallets found in Smart Contracts" },
-//     chartArea: {
-//       top: '10%',
-//       left: '10%',
-//       width: '80%',
-//       height: '70%'
-//     }
-//   }
-//   return (
-//     <Chart
-//       loader={<Spinner name="circle" color="blue"/>}
-//       width="100%"
-//       height="100%"
-//       chartType="BarChart"
-//       data={data}
-//       options={options}
-//     />
-//   )
+  let userData
+  if (currentContractAddr === '') {
+    userData = monitoring[Object.keys(monitoring)[0]].daily_transactions
+  } else {
+    userData = monitoring[currentContractAddr].daily_transactions
+  }
+  const daily = [0, 1, 2, 3, 4, 5, 6]
+  const dailyData = []
+  daily.forEach(idx => {
+    let dailyCount = 0
+    let dayName = ''
+    Object.keys(userData).map((key, index) => {
+      if (index === idx) {
+        dailyCount = parseInt(userData[key])
+        let d = new Date(key)
+        let dStr = d.toDateString()
+        let year = ' ' + d.getUTCFullYear()
+        dayName = dStr.substr(0, dStr.indexOf(year))
+      }
+    })
+    dailyData.push({idx, dayName, dailyCount})
+  })
+  const data = [
+    [
+      'Days',
+      'Transactions'
+    ],
+    [dailyData[0].dayName, dailyData[0].dailyCount],
+    [dailyData[1].dayName, dailyData[1].dailyCount],
+    [dailyData[2].dayName, dailyData[2].dailyCount],
+    [dailyData[3].dayName, dailyData[3].dailyCount],
+    [dailyData[4].dayName, dailyData[4].dailyCount],
+    [dailyData[5].dayName, dailyData[5].dailyCount],
+    [dailyData[6].dayName, dailyData[6].dailyCount],
+  ]
+  const options = {
+    legend: { position: 'none' },
+    hAxis: { title: "Transacations found in Smart Contract" },
+    chartArea: {
+      top: '10%',
+      left: '10%',
+      width: '80%',
+      height: '70%'
+    }
+  }
+  return (
+    <Chart
+      loader={<Spinner name="circle" color="blue"/>}
+      width="100%"
+      height="100%"
+      chartType="BarChart"
+      data={data}
+      options={options}
+    />
+  )
 }
 
 export const getMonthChart = (currentContractAddr, monitoring) => {
-  let addr = currentContractAddr
-  if (addr === '') {
-    addr = Object.keys(monitoring)[0]
+  let userData
+  if (currentContractAddr === '') {
+    userData = monitoring[Object.keys(monitoring)[0]].daily_transactions
+  } else {
+    userData = monitoring[currentContractAddr].daily_transactions
   }
-  const userData = monitoring[addr]
-  return null
-  // const data = [
-  //   [
-  //     'Weeks',
-  //     'Wallets',
-  //     { role: 'style' },
-  //   ],
-  //   ['Week 1', parseInt(activeUsersData[6]["address_count"]), '#4aaa50'],
-  //   ['Week 2', parseInt(activeUsersData[7]["address_count"]), '#e1634d'],
-  //   ['Week 3', parseInt(activeUsersData[8]["address_count"]), '#983b98'],
-  //   ['Week 4', parseInt(activeUsersData[9]["address_count"]), '#feae52']
-  // ]
-  // const options = {
-  //   legend: { position: 'none' },
-  //   hAxis: { title: "Unique wallets found in Smart Contracts" },
-  //   chartArea: {
-  //     top: '10%',
-  //     left: '10%',
-  //     width: '80%',
-  //     height: '70%'
-  //   },
-  //   style: { color: 'green'}
-  // }
-  // return (
-  //   <Chart
-  //     loader={<Spinner name="circle" color="blue"/>}
-  //     width="100%"
-  //     height="100%"
-  //     chartType="BarChart"
-  //     data={data}
-  //     options={options}
-  //   />
-  // )
+  const weeks = [7, 14, 21, 28]
+  const weeklyData = []
+  let startIdx = 0
+  weeks.forEach(idx => {
+    let weeklyCount = 0
+    Object.keys(userData).map((key, index) => {
+      if (index > startIdx && index < idx) {
+        weeklyCount += parseInt(userData[key])
+        startIdx = index
+      }
+    })
+    weeklyData.push({idx, weeklyCount})
+  })
+  const data = [
+    [
+      'Weeks',
+      'Transactions',
+      { role: 'style' },
+    ],
+    ['Week 1', weeklyData[0].weeklyCount, '#4aaa50'],
+    ['Week 2', weeklyData[1].weeklyCount, '#e1634d'],
+    ['Week 3', weeklyData[2].weeklyCount, '#983b98'],
+    ['Week 4', weeklyData[3].weeklyCount, '#feae52']
+  ]
+  const options = {
+    legend: { position: 'none' },
+    hAxis: { title: "Transactions found in Smart Contract" },
+    chartArea: {
+      top: '10%',
+      left: '10%',
+      width: '80%',
+      height: '70%'
+    },
+    style: { color: 'green'}
+  }
+  return (
+    <Chart
+      loader={<Spinner name="circle" color="blue"/>}
+      width="100%"
+      height="100%"
+      chartType="BarChart"
+      data={data}
+      options={options}
+    />
+  )
 }
 
 export const getChartCard = (aTitle, theChart, minHeight=420) => {
@@ -231,7 +299,7 @@ export const getChartCard = (aTitle, theChart, minHeight=420) => {
           <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
             <span
               className="text-uppercase"
-              style={{marginTop:32, textAlign:'center'}} >
+              style={{marginTop: 32, textAlign: 'center', fontWeight: 'bold'}} >
               {aTitle}
             </span>
             {theChart}

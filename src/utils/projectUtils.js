@@ -20,24 +20,23 @@ export const createProject = async (that, projectName) => {
     const projectId = await getSidSvcs().createAppId(org_id, newProject)
     let data
     if (projectId) {
-      apps[projectId] = newProject
-      const appKeys = Object.keys(apps)
-      const allApps = apps
-      const currentAppId = allApps[projectId]
-      data = allApps[projectId]
+      // apps[projectId] = newProject
+      // const appKeys = Object.keys(apps)
+      // const allApps = apps
+      // const currentAppId = allApps[projectId]
+      // data = allApps[projectId]
       
       // TODO: the next call should really be removed and the model above should be updated
       //       with the appId returned (i.e. no need to call the server twice)
+      await setGlobal({
+        currentAppId: projectId
+      })
       await getCloudServices().fetchOrgDataAndUpdate()
-      const { appVersion } = that.global;
-
-      setGlobal({
-          currentAppId,
-          apps: allApps,
-          sessionData: data,
-          processing: false
+      await setGlobal({
+        processing: false
       })
       that.setState({ projectName: "" })
+      const { appVersion } = that.global;
       if (appVersion === '2.0') {
         that.props.history.push('/segments')
       }

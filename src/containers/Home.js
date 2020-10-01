@@ -13,7 +13,9 @@ import FlowyWorker from './FlowyWorker'
 import { getCloudServices } from '../utils/cloudUser'
 import { createProject } from "../utils/projectUtils"
 import { Dialog } from 'evergreen-ui'
-const qs = require('query-string');
+import ReactGA from 'react-ga'
+const qs = require('query-string')
+const SIMPLEID_USER_SESSION = 'SID_SVCS';
 
 export default class Home extends React.Component {
   constructor (props) {
@@ -21,7 +23,7 @@ export default class Home extends React.Component {
     this.flowy = new FlowyWorker()
     const { org } = qs.parse(window.location.search);
     this.org = org
-    // "d4d9d63d-939c-4ace-b46b-00dcf1cf08ab"
+    this.gaInitialized = false
   }
   async componentDidMount() {
     if (this.org) {
@@ -111,6 +113,20 @@ export default class Home extends React.Component {
     } else if (plan !== 'premium' && plan !== 'enterprise') {
       element = this.renderDisabledOrgId(org_id)
     } else if(signedIn && Object.keys(sessionData).length > 0 && loading === false) {
+      if (!this.gaInitialized) {
+        const userData = JSON.parse(localStorage.getItem(SIMPLEID_USER_SESSION));
+        ReactGA.initialize('UA-164023333-2', {
+          debug: process.env.REACT_APP_SID_ALL_FEATURES,
+          titleCase: false,
+          gaOptions: {
+            orgId: org_id,
+            email: userData.email,
+            appId: sessionData.id,
+            plan
+          }
+        })
+        this.gaInitialized = true
+      }
       element = this.renderSignedIn()
     } else if(signedIn && Object.keys(sessionData).length === 0 && loading === false) {
       element = this.renderNoProjectsView()

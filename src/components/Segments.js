@@ -30,6 +30,7 @@ import {
 import ProcessingBlock from './ProcessingBlock'
 import MonitoredSmartContracts from './MonitoredSmartContracts'
 import uuid from 'uuid/v4'
+import ReactGA from 'react-ga'
 
 export default class Segments extends React.Component {
   constructor(props) {
@@ -40,15 +41,15 @@ export default class Segments extends React.Component {
       existingSeg: false,
       allUsers: true,
       filterType: "",
-      rangeType: "Before",
-      operatorType: "More Than",
+      rangeType: null,
+      operatorType: null,
       newSegName: "",
       date: new Date(),
       amount: 0,
-      contractAddress: "",
-      existingSegmentToFilter: "Choose...",
-      tokenType: "Ether",
-      tokenAddress: "",
+      contractAddress: null,
+      existingSegmentToFilter: null,
+      tokenType: null,
+      tokenAddress: null,
       showSegmentModal: false,
       segmentToShow: {},
       dashboardShow: "",
@@ -64,8 +65,9 @@ export default class Segments extends React.Component {
       webhook: "",
       isCreateSegment: false,
       walletAmount: 0,
-      eventAmount: 0
+      eventAmount: null
     }
+    ReactGA.pageview('/segments')
   }
 
   closeModal = () => {
@@ -120,6 +122,11 @@ export default class Segments extends React.Component {
 
   importUsers = async () => {
     const { sessionData, currentAppId } = this.global
+    ReactGA.event({
+      category: 'Import',
+      action: 'Adding a new smart contract to monitor',
+      label: importAddress
+    })
     const { importAddress } = this.state
     const orgData = await getCloudServices().monitorContract(sessionData.id, importAddress)
     const appData = orgData.apps[currentAppId]
@@ -311,7 +318,6 @@ export default class Segments extends React.Component {
               fluid
               selection
               options={[
-                { key: 'choose...', text: 'Choose...', value: 'choose...' },
                 { key: 'equal', text: 'Equal', value: '==' },
                 { key: 'more than', text: 'More Than', value: '>' },
                 { key: 'more than equal', text: 'More Than || Equal', value: '>=' },
@@ -333,14 +339,13 @@ export default class Segments extends React.Component {
           <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
             <label htmlFor="tileName">Amount Type</label>
             <Dropdown
-              placeholder='Choose...'
+              placeholder='Type...'
               value={walletAmountType}
               onChange={(e, {value}) => this.setState({ walletAmountType: value })}
               openOnFocus={false}
               fluid
               selection
               options={[
-                { key: 'choose...', text: 'Choose...', value: 'choose...' },
                 { key: 'eth', text: 'Eth/ERC-20', value: 'eth' },
                 { key: 'wei', text: 'Wei', value: 'wei' },
               ]}
@@ -408,6 +413,19 @@ export default class Segments extends React.Component {
           dataInputs[nm] = inputOptions
         })
       })
+      const isAmount = (eventAmountType === 'eth' || eventAmountType === 'wei')
+      const defaultOperatorTypes = [
+        { key: 'equal', text: 'Equal', value: '==' },
+        { key: 'more than', text: 'More Than', value: '>' },
+        { key: 'more than equal', text: 'More Than || Equal', value: '>=' },
+        { key: 'less than', text: 'Less Than', value: '<' },
+        { key: 'less than equal', text: 'Less Than || Equal', value: '<=' }
+      ]
+      const boolOperatorTypes = [
+        { key: 'equal', text: 'Equal', value: '==' },
+        { key: 'not equal', text: 'Not Equal', value: '!=' }
+      ]
+      const opertarorTypeOptions = isAmount ? defaultOperatorTypes : boolOperatorTypes
       return (
         <div className="col-md-12">
           <label htmlFor="contractAddress">Pick Smart Contract</label>
@@ -452,6 +470,31 @@ export default class Segments extends React.Component {
           {contractEventInput ? (
             <div className="row form-group">
               <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
+                <label htmlFor="tileName">Input Type</label>
+                <Dropdown
+                  placeholder='Choose...'
+                  value={eventAmountType}
+                  onChange={(e, {value}) => {
+                    if (value === 'boolean') {
+                      this.setState({ eventAmountType: value, eventAmount: 'true' })
+                    }
+                    else {
+                      this.setState({ eventAmountType: value, eventAmount: null })
+                    }
+                  }}
+                  openOnFocus={false}
+                  fluid
+                  selection
+                  options={[
+                    { key: 'eth', text: 'Eth/ERC-20', value: 'eth' },
+                    { key: 'wei', text: 'Wei', value: 'wei' },
+                    { key: 'addr', text: 'Address', value: 'address' },
+                    { key: 'bool', text: 'Boolean', value: 'boolean' },
+                    { key: 'other', text: 'Other', value: 'other' },
+                  ]}
+                />
+              </div>
+              <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
                 <label htmlFor="chartSty">Comparison Logic</label>
                 <Dropdown
                   placeholder='Range...'
@@ -460,41 +503,17 @@ export default class Segments extends React.Component {
                   openOnFocus={false}
                   fluid
                   selection
-                  options={[
-                    { key: 'choose...', text: 'Choose...', value: 'choose...' },
-                    { key: 'equal', text: 'Equal', value: '==' },
-                    { key: 'more than', text: 'More Than', value: '>' },
-                    { key: 'more than equal', text: 'More Than || Equal', value: '>=' },
-                    { key: 'less than', text: 'Less Than', value: '<' },
-                    { key: 'less than equal', text: 'Less Than || Equal', value: '<=' }
-                  ]}
+                  options={opertarorTypeOptions}
                 />
               </div>
               <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
-                <label htmlFor="tileName">Enter Amount</label>
+                <label htmlFor="tileName">Enter Value</label>
                 <Input
-                  placeholder="Event Amount"
+                  placeholder="Event Value"
                   fluid
-                  type="number"
+                  disabled={eventAmountType === 'boolean'}
                   value={eventAmount}
                   onChange={(e, {value}) => this.setState({ eventAmount: value })}
-                />
-              </div>
-              <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
-                <label htmlFor="tileName">Amount Type</label>
-                <Dropdown
-                  placeholder='Choose...'
-                  value={eventAmountType}
-                  onChange={(e, {value}) => this.setState({ eventAmountType: value })}
-                  openOnFocus={false}
-                  fluid
-                  selection
-                  options={[
-                    { key: 'choose...', text: 'Choose...', value: 'choose...' },
-                    { key: 'eth', text: 'Eth/ERC-20', value: 'eth' },
-                    { key: 'wei', text: 'Wei', value: 'wei' },
-                    { key: 'other', text: 'Other', value: 'other' },
-                  ]}
                 />
               </div>
             </div>
@@ -810,10 +829,8 @@ export default class Segments extends React.Component {
                             wallet_count,
                             recent_wallets,
                             most_valuable_wallets,
-                            dau,
-                            wau,
                             contract_name,
-                            mau } = value
+                            daily_transactions } = value
                     const disableWallets = wallet_count < 1
                     return (
                       <Grid.Column key={contract_name}>

@@ -4,7 +4,7 @@ import ReactJoyride, { STATUS } from 'react-joyride';
 
 const OnboardingSteps = () => {
   const joyride = {
-    run: true,
+    run: false,
     steps: [
       {
         title: "Welcome to SimpleID!",

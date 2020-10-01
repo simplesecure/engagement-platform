@@ -21,6 +21,7 @@ import { getEmailData } from './../utils/emailData.js'
 import { getWeb2Analytics } from './../utils/web2Analytics'
 import { getSidSvcs } from "../utils/sidServices"
 import { createProject } from "../utils/projectUtils"
+import ReactGA from 'react-ga'
 const moment = require('moment')
 const filter = require('../utils/filterOptions.json')
 
@@ -38,6 +39,7 @@ class Projects extends React.Component {
       updatedProjectName: '',
       editName: false
     }
+    ReactGA.pageview('/projects')
   }
 
   componentDidMount() {
