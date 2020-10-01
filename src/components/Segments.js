@@ -122,12 +122,12 @@ export default class Segments extends React.Component {
 
   importUsers = async () => {
     const { sessionData, currentAppId } = this.global
+    const { importAddress } = this.state
     ReactGA.event({
       category: 'Import',
-      action: 'Adding a new smart contract to monitor',
+      action: 'Adding New Smart Contract Import',
       label: importAddress
     })
-    const { importAddress } = this.state
     const orgData = await getCloudServices().monitorContract(sessionData.id, importAddress)
     const appData = orgData.apps[currentAppId]
     this.setState({
@@ -232,7 +232,7 @@ export default class Segments extends React.Component {
     const { type } = filterToUse
     const contractOptions = []
     contractData.forEach(el => {
-      if (Object.keys(monitoring).find(key => el.address === key)) {
+      if (Object.keys(monitoring).find(key => el.address !== key)) {
         contractOptions.push({
           key: el.address,
           value: el.address,
@@ -240,7 +240,7 @@ export default class Segments extends React.Component {
         })
       }
     })
-    if (type === "Smart Contract Transactions") {
+    if (type === "Smart Contract Intersection") {
       return (
         <div className="form-group col-md-12">
           <label htmlFor="contractAddress">Select Smart Contract</label>
@@ -713,6 +713,11 @@ export default class Segments extends React.Component {
     //              ... <-- code ... TODO
     //
     const appData = orgData.apps[currentAppId]
+    ReactGA.event({
+      category: 'Import',
+      action: 'Remove Smart Contract Import',
+      label: address
+    })
     React.setGlobal({
       sessionData: appData
     })
@@ -794,7 +799,13 @@ export default class Segments extends React.Component {
                       content='Create User Segment'
                       icon='write'
                       labelPosition='left'
-                      onClick={() => this.setState({isCreateSegment: true})}
+                      onClick={() => {
+                        ReactGA.event({
+                          category: 'Segment',
+                          action: 'Clicked Create User Segment Button',
+                        })
+                        this.setState({isCreateSegment: true})}
+                      }
                       primary
                       disabled={monitoring && !Object.keys(monitoring).length}
                     />
@@ -808,9 +819,15 @@ export default class Segments extends React.Component {
                     </Link>*/}
                   </Grid.Column>
                   <Grid.Column width={4} key='import users'>
-                    <Header as='h3'>Monitor Wallets</Header>
+                    <Header as='h3'>Add Users</Header>
                     <Button
-                      onClick={() => this.setState({ importModalOpen: true })}
+                      onClick={() => {
+                        ReactGA.event({
+                          category: 'Import',
+                          action: 'Clicked Import Smart Contract Button',
+                        })
+                        this.setState({ importModalOpen: true })}
+                      }
                       positive
                       icon='download'
                       labelPosition='left'
@@ -978,6 +995,13 @@ export default class Segments extends React.Component {
                 isShown={isCreateSegment}
                 title='New Segment'
                 onCloseComplete={() => {
+                  ReactGA.event({
+                    category: 'Segment',
+                    action: 'Cancelled Create User Segment',
+                  })
+                  this.handleCloseSegmentModal()
+                }}
+                onCancel={() => {
                   this.handleCloseSegmentModal()
                 }}
                 onConfirm={() => createSegment(this)}
@@ -991,7 +1015,13 @@ export default class Segments extends React.Component {
                 isShown={importModalOpen}
                 title="Import Smart Contract"
                 onConfirm={() => this.importUsers()}
-                onCancel={() => this.setState({ importModalOpen: false })}
+                onCancel={() => {
+                  ReactGA.event({
+                    category: 'Import',
+                    action: 'Cancelled Import Smart Contract',
+                  })
+                  this.setState({ importModalOpen: false })}
+                }
                 onCloseComplete={() => this.setState({ importModalOpen: false })}
                 confirmLabel='Import'
                 isConfirmDisabled={!importAddress}

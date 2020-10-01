@@ -89,7 +89,7 @@ export const createSegment = async (that) => {
             walletAmount,
           }
         : null,
-    contractAddress: filterToUse.type === "Smart Contract Transactions" ? contractAddress : null,
+    contractAddress: filterToUse.type === "Smart Contract Intersection" ? contractAddress : null,
     userCount: addrArray.length > 0 ? addrArray.length : null,
   }
 
@@ -152,7 +152,7 @@ export const createSegment = async (that) => {
 
   ReactGA.event({
     category: 'Segment',
-    action: 'Creating a new segment',
+    action: 'Creating New Segment',
     label: JSON.stringify(segmentCriteria.filters)
   })
   
@@ -321,7 +321,7 @@ export const addFiltersForNewSegmentCriteria = (
         }
       }
     )
-  } else if (filterToUse.filter === "Smart Contract Transactions") {
+  } else if (filterToUse.filter === "Smart Contract Intersection") {
     filters.push(
       {
         type: 'transaction',
@@ -447,7 +447,7 @@ export const addFilter = (that, condition) => {
           eventAmount,
           eventAmountType
         } : null,
-    contractAddress: filterToUse.type === "Smart Contract Transactions" ? contractAddress : null,
+    contractAddress: filterToUse.type === "Smart Contract Intersection" ? contractAddress : null,
     userCount: addrArray.length > 0 ? addrArray.length : null,
   }
   let { filterConditions } = conditions

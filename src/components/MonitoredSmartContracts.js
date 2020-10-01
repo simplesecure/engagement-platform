@@ -5,9 +5,7 @@ import {
   Menu,
   Avatar,
   Text,
-  Popover,
-  IconButton,
-  Position
+  Dialog
 } from 'evergreen-ui'
 
 export default class MonitoredSmartContracts extends React.Component {
@@ -83,27 +81,51 @@ export default class MonitoredSmartContracts extends React.Component {
     const iItems = pItems.filter(contract => contract.is_active === true)
     // remove already imported contracts
     const fItems = iItems.filter(contract => !Object.keys(monitoring).includes(contract.address))
-    const items = this.filter(fItems)
-    return (
-      <div>
-        <Table border>
-        <Table.Head>
-          <Table.SearchHeaderCell
-            onChange={this.handleFilterChange}
-            value={this.state.searchQuery}
-            placeholder='Search by company...'
-            flexBasis={300} flexShrink={0} flexGrow={0}
-          />
-          <Table.TextCell>Company</Table.TextCell>
-          <Table.TextCell>Address</Table.TextCell>
-          {/*<Table.TextCell>More</Table.TextCell>
-          <Table.HeaderCell width={48} flex="none" />*/}
-        </Table.Head>
-        <Table.VirtualBody height={400}>
-          {items.map(item => this.renderRow({ contract: item }))}
-        </Table.VirtualBody>
-        </Table>
-      </div>
-    )
+    // remove contracts from a different company
+    let items
+    let companyName
+    if (monitoring && Object.keys(monitoring)[0]) {
+      const idx = Object.keys(contractData).find(key => Object.keys(monitoring)[0] === contractData[key].address)
+      companyName = contractData[idx].account
+      const cItems = fItems.filter(contract => contract.account === companyName)
+      items = this.filter(cItems)
+    }
+    else {
+      items = this.filter(fItems)
+    }
+    if (items.length) {
+      return (
+        <div>
+          <Table border>
+          <Table.Head>
+            <Table.SearchHeaderCell
+              onChange={this.handleFilterChange}
+              value={this.state.searchQuery}
+              placeholder='Search by company...'
+              flexBasis={300} flexShrink={0} flexGrow={0}
+            />
+            <Table.TextCell>Company</Table.TextCell>
+            <Table.TextCell>Address</Table.TextCell>
+            {/*<Table.TextCell>More</Table.TextCell>
+            <Table.HeaderCell width={48} flex="none" />*/}
+          </Table.Head>
+          <Table.VirtualBody height={400}>
+            {items.map(item => this.renderRow({ contract: item }))}
+          </Table.VirtualBody>
+          </Table>
+        </div>
+      )
+    }
+    else {
+      return (
+        <div>
+          There are no contracts that match the account{" "}
+          <strong>
+            <u>{companyName}</u>
+          </strong>
+          . If you'd like to monitor other contracts, you will need to delete existing monitored contracts.
+        </div>
+      )
+    }
   }
 }

@@ -114,16 +114,17 @@ export default class Home extends React.Component {
       element = this.renderDisabledOrgId(org_id)
     } else if(signedIn && Object.keys(sessionData).length > 0 && loading === false) {
       if (!this.gaInitialized) {
-        const userData = JSON.parse(localStorage.getItem(SIMPLEID_USER_SESSION));
         ReactGA.initialize('UA-164023333-2', {
-          debug: process.env.REACT_APP_SID_ALL_FEATURES,
+          debug: true,
           titleCase: false,
           gaOptions: {
-            orgId: org_id,
-            email: userData.email,
-            appId: sessionData.id,
-            plan
+            userId: org_id
           }
+        })
+        ReactGA.event({
+          category: 'Login',
+          action: 'User App',
+          label: sessionData.id
         })
         this.gaInitialized = true
       }

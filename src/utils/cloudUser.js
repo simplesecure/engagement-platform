@@ -705,7 +705,7 @@ class CloudServices {
       },
     };
 
-    console.log(payload);
+    // console.log(payload);
 
     const resp = await fetch(process.env.REACT_APP_WEB_API_HOST, {
       method: "post",
