@@ -286,7 +286,7 @@ class Projects extends React.Component {
               </div>
               <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
                 {
-                  (applications.length < 2 || plan === "enterprise") ?
+                  (applications.length < 1 || plan === "enterprise") ?
                   <div>
                     <h5>Add a Project</h5>
                     <div className="form-group col-md-12">

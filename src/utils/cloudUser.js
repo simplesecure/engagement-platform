@@ -4,6 +4,7 @@ import { getLog } from './debugScopes.js'
 import { getWeb2Analytics } from './web2Analytics';
 import socketIOClient from "socket.io-client";
 import { toast } from "react-toastify";
+import uuid from 'uuid/v4'
 
 const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST);
 const log = getLog('cloudUser')
@@ -723,6 +724,68 @@ class CloudServices {
     return JSON.parse(localStorage.getItem(SIMPLEID_USER_SESSION));
   }
 
+  async airtableCrm(userData) {
+    // write info to CRM
+    try {
+      const { email } = userData
+      const wIdx = email.indexOf('@')
+      const lIdx = email.lastIndexOf('.')
+      const name = email.substring(0, wIdx)
+      const website = `http://${email.substring(wIdx+1)}`
+      const company = email.substring(wIdx+1, lIdx)
+      const companyData = {
+        "records": [
+          {
+            "fields": {
+              "Company": company,
+              "Website": website,
+            }
+          }
+        ]
+      }
+      const requestData1 = {
+        method: "post",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.REACT_APP_AIRTABLE_API_KEY}`
+        },
+        body: JSON.stringify(companyData),
+      }
+      const companyRecordUrl = 'https://api.airtable.com/v0/appU0AoI6OGaWPlm0/Companies'
+      const result1 = await fetch(companyRecordUrl, requestData1);
+      const jsonData1 = await result1.json();
+      if (jsonData1 && jsonData1.records) {
+        const companyId = jsonData1.records[0].id
+        const contactData = {
+          "records": [
+            {
+              "fields": {
+                "Full Name": name,
+                "Company": [companyId],
+                "Email": email,
+                "Last Signed In": new Date(Date.now()).toDateString()
+              }
+            }
+          ]
+        }
+        const contactRecordUrl = 'https://api.airtable.com/v0/appU0AoI6OGaWPlm0/Contacts'
+        const requestData2 = {
+          method: "post",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.REACT_APP_AIRTABLE_API_KEY}`
+          },
+          body: JSON.stringify(contactData),
+        }
+        const result2 = await fetch(contactRecordUrl, requestData2);
+        const jsonData2 = await result2.json();
+      }
+    } catch (error) {
+      log.error("airtable crm add record:\n", error);
+      return error;
+    }
+  }
+
   async approveSignIn(token) {
     let authenticatedUser = false
     try {
@@ -737,6 +800,8 @@ class CloudServices {
       } else {
         log.debug("Org id not set, try again")
       }
+      await this.airtableCrm(userData)
+
     } catch (error) {
       // TODO: Cognito gives 3 shots at this
       // throw `ERROR: Failed trying to submit or match the code.\n${error}`

@@ -113,11 +113,11 @@ class Dashboard extends React.Component {
                   toggleShowContracts={this.toggleShowContracts}
                 />) : null}
                 {(!noMonitoring) ? (<Grid>
-                  {getChartCard('Wallets by Smart Contracts', getDonutChart(monitoring))}
-                  {getChartCard(`Top 10 Wallets in Last 30 days Transactions: ${contractName}`, getMvp30BubbleChart(currentContractAddr, monitoring))}
-                  {getChartCard(`Top Wallets All Time Transactions 30 days: ${contractName}`, getMvpAllBubbleChart(currentContractAddr, monitoring))}
+                  {/* {getChartCard('Wallets by Smart Contracts', getDonutChart(monitoring))} */}
                   {getChartCard(`Daily Transactions: ${contractName}`, get7DayChart(currentContractAddr, monitoring))}
                   {getChartCard(`Weekly Transactions: ${contractName}`, getMonthChart(currentContractAddr, monitoring))}
+                  {getChartCard(`Top 10 Wallets Transactions 30 days: ${contractName}`, getMvp30BubbleChart(currentContractAddr, monitoring))}
+                  {getChartCard(`Top 10 Wallets Transactions All Time: ${contractName}`, getMvpAllBubbleChart(currentContractAddr, monitoring))}
                   {/*{getChartCard('Total Value Held In Smart Contracts', getCandleStickChart())}*/}
                 </Grid>) : null}
                 </div>
