@@ -65,9 +65,15 @@ export default class Segments extends React.Component {
       webhook: "",
       isCreateSegment: false,
       walletAmount: 0,
-      eventAmount: null
+      eventAmount: '',
+      contractEventInput: null,
+      eventAmountType: null
     }
     ReactGA.pageview('/segments')
+    this.contractOptions = {}
+    this.contracts = []
+    this.dataInputs = []
+    this.contractOptions = []
   }
 
   closeModal = () => {
@@ -230,16 +236,6 @@ export default class Segments extends React.Component {
     const { web2Analytics, sessionData, contractData, tokenData } = this.global
     const { monitoring } = sessionData;
     const { type } = filterToUse
-    const contractOptions = []
-    contractData.forEach(el => {
-      if (Object.keys(monitoring).find(key => el.address !== key)) {
-        contractOptions.push({
-          key: el.address,
-          value: el.address,
-          text: `${el.name} (${el.account}): ${el.address}`
-        })
-      }
-    })
     if (type === "Smart Contract Intersection") {
       return (
         <div className="form-group col-md-12">
@@ -252,7 +248,7 @@ export default class Segments extends React.Component {
             openOnFocus={false}
             value={contractAddress}
             onChange={(e, {value}) => this.setState({ contractAddress: value })}
-            options={contractOptions}
+            options={this.contractOptions}
           />
         </div>
       )
@@ -367,52 +363,6 @@ export default class Segments extends React.Component {
     //     </div>
     //   )
     } else if (type === "Smart Contract Events") {
-      let contractOptions = {}
-      let contracts = []
-      let dataInputs = []
-      contractData.forEach(element => {
-        const { address, mappings, name, proxy_contract, implementation_contract } = element
-        // dont care about these events for the proxy contract
-        if (implementation_contract) {
-          return
-        }
-        // if not monitoring the contract, then don't populate the events
-        // if underlying implementation contract, thne we need to get those events
-        if (!Object.keys(monitoring).find(key => (address === key || key === (proxy_contract && proxy_contract.toLowerCase())))) {
-          return
-        }
-        const contractValue = `${name}: ${address}`
-        contracts.push({
-          key: contractValue,
-          text: contractValue,
-          value: address
-        })
-        const { events, eventMap } = mappings
-        let options = []
-        events.forEach((item) => {
-          options.push({
-            key: item,
-            text: item,
-            value: item
-          })
-        })
-        contractOptions[address] = options
-        eventMap.forEach((item) => {
-          const nm = item.name
-          const { inputs } = item
-          let inputOptions = []
-          inputs.forEach((it) => {
-            if (!it.indexed || it.type === 'uint256') {
-              inputOptions.push({
-                key: it.name,
-                text: it.name,
-                value: it.name
-              })
-            }
-          })
-          dataInputs[nm] = inputOptions
-        })
-      })
       const isAmount = (eventAmountType === 'eth' || eventAmountType === 'wei')
       const defaultOperatorTypes = [
         { key: 'equal', text: 'Equal', value: '==' },
@@ -436,7 +386,7 @@ export default class Segments extends React.Component {
             openOnFocus={false}
             fluid
             selection
-            options={contracts}
+            options={this.contracts}
           />
           <br />
           {contractAddress ? (
@@ -450,7 +400,7 @@ export default class Segments extends React.Component {
                   openOnFocus={false}
                   fluid
                   selection
-                  options={contractOptions[contractAddress]}
+                  options={this.contractOptions[contractAddress]}
                 />
               </div>
               <div className="col-lg-6 col-md-6 col-sm-12 mb-4">
@@ -462,7 +412,7 @@ export default class Segments extends React.Component {
                   openOnFocus={false}
                   fluid
                   selection
-                  options={dataInputs[contractEvent]}
+                  options={this.dataInputs[contractEvent]}
                 />
               </div>
             </div>
@@ -556,6 +506,75 @@ export default class Segments extends React.Component {
     // }
   }
 
+  setFilterType = (value) => {
+    this.contractOptions = {}
+    this.contracts = []
+    this.dataInputs = []
+    this.contractOptions = []
+    const { contractData, sessionData } = this.global
+    const { monitoring } = sessionData
+    if (value === "Smart Contract Events") {
+      contractData.forEach(element => {
+        const { address, mappings, name, proxy_contract, implementation_contract } = element
+        // dont care about these events for the proxy contract
+        if (implementation_contract) {
+          return
+        }
+        // if not monitoring the contract, then don't populate the events
+        // if underlying implementation contract, thne we need to get those events
+        if (!Object.keys(monitoring).find(key => (address === key || key === (proxy_contract && proxy_contract.toLowerCase())))) {
+          return
+        }
+        const contractValue = `${name}: ${address}`
+        this.contracts.push({
+          key: contractValue,
+          text: contractValue,
+          value: address
+        })
+        const { events, eventMap } = mappings
+        let options = []
+        events.forEach((item) => {
+          options.push({
+            key: item,
+            text: item,
+            value: item
+          })
+        })
+        this.contractOptions[address] = options
+        eventMap.forEach((item) => {
+          const nm = item.name
+          const { inputs } = item
+          let inputOptions = []
+          inputs.forEach((it) => {
+            // enabling non uint256 types here
+            // if (!it.indexed || it.type === 'uint256') {
+            if (!it.indexed) {
+              inputOptions.push({
+                key: it.name,
+                text: it.name,
+                value: it.name
+              })
+            }
+          })
+          this.dataInputs[nm] = inputOptions
+        })
+      })
+      let defaultAddress = this.contracts.length ? this.contracts[0].value : ''
+      this.setState({ filterType: value, contractAddress: defaultAddress })
+    } else if (value === "Smart Contract Intersection") {
+      contractData.forEach(el => {
+        if (Object.keys(monitoring).indexOf(el.address) < 0) {
+          this.contractOptions.push({
+            key: el.address,
+            value: el.address,
+            text: `${el.name} (${el.account}): ${el.address}`
+          })
+        }
+      })
+      this.setState({ filterType: value })
+    }
+  }
+
   renderCreateSegment(condition) {
     const { allFilters } = this.global
     const {
@@ -592,7 +611,7 @@ export default class Segments extends React.Component {
           <Dropdown
             placeholder='Choose a Filter...'
             value={filterType}
-            onChange={(e, {value}) => this.setState({ filterType: value })}
+            onChange={(e, {value}) => this.setFilterType(value)}
             fluid
             openOnFocus={false}
             selection
