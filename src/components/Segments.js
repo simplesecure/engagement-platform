@@ -67,13 +67,15 @@ export default class Segments extends React.Component {
       walletAmount: 0,
       eventAmount: '',
       contractEventInput: null,
-      eventAmountType: null
+      eventAmountType: null,
+      contractEvent: null
     }
     ReactGA.pageview('/segments')
     this.contractOptions = {}
     this.contracts = []
     this.dataInputs = []
     this.contractOptions = []
+    this.tokenOptions = []
   }
 
   closeModal = () => {
@@ -281,14 +283,6 @@ export default class Segments extends React.Component {
     //     </div>
     //   )
     } else if (type === "Wallet Balance") {
-      const tokenOptions = []
-      tokenData.forEach(e => {
-        tokenOptions.push({
-          key: e.address,
-          value: e.address,
-          text: e.name
-        })
-      })
       return (
         <div className="row form-group col-md-12">
           <div className="col-12">
@@ -300,7 +294,7 @@ export default class Segments extends React.Component {
               openOnFocus={false}
               fluid
               selection
-              options={tokenOptions}
+              options={this.tokenOptions}
             />
             <br/>
           </div>
@@ -511,9 +505,19 @@ export default class Segments extends React.Component {
     this.contracts = []
     this.dataInputs = []
     this.contractOptions = []
-    const { contractData, sessionData } = this.global
+    this.tokenOptions = []
+    const { contractData, sessionData, tokenData } = this.global
     const { monitoring } = sessionData
-    if (value === "Smart Contract Events") {
+    if (value === "Wallet Balance") {
+      tokenData.forEach(e => {
+        this.tokenOptions.push({
+          key: e.address,
+          value: e.address,
+          text: e.name
+        })
+      })
+      this.setState({ filterType: value })
+    } else if (value === "Smart Contract Events") {
       contractData.forEach(element => {
         const { address, mappings, name, proxy_contract, implementation_contract } = element
         // dont care about these events for the proxy contract

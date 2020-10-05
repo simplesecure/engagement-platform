@@ -27,7 +27,25 @@ export const clearState = (that, filter=false) => {
     listOfAddresses: "",
     showSegmentModal: false,
     editSegment: false,
-    isCreateSegment: false
+    isCreateSegment: false,
+    date: new Date(),
+    amount: 0,
+    contractAddress: null,
+    existingSegmentToFilter: null,
+    segmentToShow: {},
+    dashboardShow: "",
+    operator: "",
+    conditions: {},
+    condition: {},
+    importAddress: "",
+    proxyAddress: "",
+    webhookOpen: false,
+    webhook: "",
+    walletAmount: 0,
+    eventAmount: '',
+    contractEventInput: null,
+    eventAmountType: null,
+    contractEvent: null
   });
 }
 
