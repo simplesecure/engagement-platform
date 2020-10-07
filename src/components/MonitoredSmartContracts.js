@@ -89,7 +89,10 @@ export default class MonitoredSmartContracts extends React.Component {
     // remove contracts from a different company
     let items
     let companyName
-    if (monitoring && Object.keys(monitoring)[0]) {
+    if (0) {
+      items = this.filter(iItems)
+    }
+    else if (monitoring && Object.keys(monitoring)[0]) {
       const idx = Object.keys(contractData).find(key => Object.keys(monitoring)[0] === contractData[key].address)
       companyName = contractData[idx].account
       const cItems = fItems.filter(contract => contract.account === companyName)

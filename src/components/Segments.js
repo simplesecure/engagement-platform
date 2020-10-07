@@ -49,7 +49,7 @@ export default class Segments extends React.Component {
       contractAddress: null,
       existingSegmentToFilter: null,
       tokenType: null,
-      tokenAddress: null,
+      tokenAddress: "0x0000000000000000000000000000000000000000",
       showSegmentModal: false,
       segmentToShow: {},
       dashboardShow: "",
@@ -65,10 +65,10 @@ export default class Segments extends React.Component {
       webhook: "",
       isCreateSegment: false,
       walletAmount: 0,
-      walletAmountType: null,
-      eventAmount: '',
+      walletAmountType: 'eth',
+      eventAmount: 0,
       contractEventInput: null,
-      eventAmountType: null,
+      eventAmountType: 'eth',
       contractEvent: null,
       isLoading: false
     }
@@ -340,8 +340,8 @@ export default class Segments extends React.Component {
               fluid
               selection
               options={[
-                { key: 'eth', text: 'Eth/ERC-20', value: 'eth' },
-                { key: 'wei', text: 'Wei', value: 'wei' },
+                { key: 'eth', text: 'eth/ERC-20', value: 'eth' },
+                { key: 'wei', text: 'wei', value: 'wei' },
               ]}
             />
           </div>
@@ -597,7 +597,7 @@ export default class Segments extends React.Component {
           this.contractOptions.push({
             key: el.address,
             value: el.address,
-            text: `${el.name} (${el.account}): ${el.address}`
+            text: `${el.name}: ${el.address}`
           })
         }
       })
@@ -605,7 +605,7 @@ export default class Segments extends React.Component {
     }
   }
 
-  renderCreateSegment(condition) {
+  renderCreateSegment(condition, disabled) {
     const { allFilters } = this.global
     const {
       tokenAddress,
@@ -652,7 +652,7 @@ export default class Segments extends React.Component {
         {filterToUse &&
         (filterType !=="Smart Contract Events") ? (
           <div className="form-group col-md-12">
-            <Button onClick={() => {
+            <Button disabled={disabled} onClick={() => {
               this.setState({filterType: null})
               addFilter(this)}
             } positive>
@@ -834,20 +834,26 @@ export default class Segments extends React.Component {
       )
     }
     let createSegmentDisabled = false
-    if (
-      !newSegName.length //give it a name
-      || !filterType // no filter
+    let addAnotherFilter = false
+    if (!newSegName.length) {
+      createSegmentDisabled = true
+    } //give it a name 
+    else if (
+      !filterType // no filter
       || (filterType === "Wallet Balance" && (!tokenAddress || !operatorType || walletAmount < 0 || !walletAmountType))
       || (filterType === "Smart Contract Intersection" && (!contractAddress))
       || (filterType === "Smart Contract Events" && (!eventAmountType || !contractEvent || !contractEventInput || !operatorType || !eventAmount))
     ) {
       createSegmentDisabled = true
+      addAnotherFilter = true
     }
     else if (eventAmountType === "address" && (eventAmount.length < 42 || eventAmount.length > 43)) {
       createSegmentDisabled = true
+      addAnotherFilter = true
     }
     else if ((eventAmountType === "eth" || eventAmountType === "wei") && isNaN(eventAmount)) {
       createSegmentDisabled = true
+      addAnotherFilter = true
     }
     return (
       <div>
@@ -1065,7 +1071,7 @@ export default class Segments extends React.Component {
                 hasFooter={false}
                 width={640}
               >
-                {editSegment ? this.renderCreateSegment(condition) : '({close})'}
+                {editSegment ? this.renderCreateSegment(condition, addAnotherFilter) : '({close})'}
               </Dialog>
               <Dialog
                 isShown={isCreateSegment}
@@ -1086,7 +1092,7 @@ export default class Segments extends React.Component {
                 width={640}
                 minHeightContent='40vh'
               >
-                {isCreateSegment ? this.renderCreateSegment(): '({close})'}
+                {isCreateSegment ? this.renderCreateSegment(null, addAnotherFilter): '({close})'}
               </Dialog>
               <Dialog
                 isShown={importModalOpen}
