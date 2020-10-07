@@ -362,6 +362,7 @@ export default class Segments extends React.Component {
     //   )
     } else if (type === "Smart Contract Events") {
       const isAmount = (eventAmountType === 'eth' || eventAmountType === 'wei')
+      const isAddress = eventAmountType === 'address'
       const defaultOperatorTypes = [
         { key: 'equal', text: 'Equal', value: '==' },
         { key: 'more than', text: 'More Than', value: '>' },
@@ -373,7 +374,13 @@ export default class Segments extends React.Component {
         { key: 'equal', text: 'Equal', value: '==' },
         { key: 'not equal', text: 'Not Equal', value: '!=' }
       ]
-      const opertarorTypeOptions = isAmount ? defaultOperatorTypes : boolOperatorTypes
+      const addrOperatorTypes = [
+        { key: 'equal', text: 'Equal', value: '==' },
+        { key: 'not equal', text: 'Not Equal', value: '!=' },
+        { key: 'all matches', text: 'All Matches', value: '!==' }
+      ]
+      const eventAmountValueDisabled = (eventAmountType === 'boolean') || (operatorType === '!==')
+      const opertarorTypeOptions = isAmount ? defaultOperatorTypes : isAddress ? addrOperatorTypes : boolOperatorTypes
       let eventAmountTypeOptions = []
       if (contractEventInput && contractEvent && this.dataInputTypes[contractEvent][contractEventInput]) {
         eventAmountTypeOptions = this.dataInputTypes[contractEvent][contractEventInput]
@@ -460,7 +467,16 @@ export default class Segments extends React.Component {
                 <Dropdown
                   placeholder='Range...'
                   value={operatorType}
-                  onChange={(e, {value}) => this.setState({ operatorType: value })}
+                  onChange={(e, {value}) => {
+                      if (eventAmountType === 'address') {
+                        if (value === '!==')
+                          this.setState({ eventAmount: "0x0000000000000000000000000000000000000000" })
+                        else
+                          this.setState({ eventAmount: 0})
+                      }
+                      this.setState({ operatorType: value})
+                    }
+                  }
                   openOnFocus={false}
                   fluid
                   selection
@@ -473,7 +489,7 @@ export default class Segments extends React.Component {
                   placeholder="Event Value"
                   fluid
                   type={isAmount ? 'number' : 'text'}
-                  disabled={eventAmountType === 'boolean'}
+                  disabled={eventAmountValueDisabled}
                   value={eventAmount}
                   onChange={(e, {value}) => this.setState({ eventAmount: value })}
                 />
