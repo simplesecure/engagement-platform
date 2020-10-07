@@ -7,6 +7,10 @@ import {
   Text,
   Dialog
 } from 'evergreen-ui'
+import {
+  Dimmer,
+  Loader,
+} from 'semantic-ui-react'
 
 export default class MonitoredSmartContracts extends React.Component {
   constructor() {
@@ -76,6 +80,7 @@ export default class MonitoredSmartContracts extends React.Component {
   render() {
     const { contractData, sessionData } = this.global
     const { monitoring } = sessionData
+    const { isLoading } = this.props
     // remove proxy contracts
     const pItems = contractData.filter(contract => contract.proxy_contract === null)
     const iItems = pItems.filter(contract => contract.is_active === true)
@@ -97,6 +102,9 @@ export default class MonitoredSmartContracts extends React.Component {
       return (
         <div>
           <Table border>
+          <Dimmer active={isLoading} inverted>
+            <Loader active={isLoading} inverted>Importing contract...</Loader>
+          </Dimmer>
           <Table.Head>
             <Table.SearchHeaderCell
               onChange={this.handleFilterChange}

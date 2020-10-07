@@ -65,15 +65,18 @@ export default class Segments extends React.Component {
       webhook: "",
       isCreateSegment: false,
       walletAmount: 0,
+      walletAmountType: null,
       eventAmount: '',
       contractEventInput: null,
       eventAmountType: null,
-      contractEvent: null
+      contractEvent: null,
+      isLoading: false
     }
     ReactGA.pageview('/segments')
     this.contractOptions = {}
     this.contracts = []
     this.dataInputs = []
+    this.dataInputTypes = []
     this.contractOptions = []
     this.tokenOptions = []
   }
@@ -141,6 +144,7 @@ export default class Segments extends React.Component {
     this.setState({
       importModalOpen: false,
       importAddress: "",
+      isLoading: false
     })
     React.setGlobal({
       sessionData: appData
@@ -370,6 +374,19 @@ export default class Segments extends React.Component {
         { key: 'not equal', text: 'Not Equal', value: '!=' }
       ]
       const opertarorTypeOptions = isAmount ? defaultOperatorTypes : boolOperatorTypes
+      let eventAmountTypeOptions = []
+      if (contractEventInput && contractEvent && this.dataInputTypes[contractEvent][contractEventInput]) {
+        eventAmountTypeOptions = this.dataInputTypes[contractEvent][contractEventInput]
+        if (eventAmountTypeOptions.key === 'uint256') {
+          eventAmountTypeOptions = [
+            { key: 'eth', text: 'eth/ERC-20', value: 'eth' },
+            { key: 'wei', text: 'wei', value: 'wei' }
+          ]
+        }
+        else {
+          eventAmountTypeOptions = [eventAmountTypeOptions]
+        }
+      }
       return (
         <div className="col-md-12">
           <label htmlFor="contractAddress">Pick Smart Contract</label>
@@ -402,7 +419,13 @@ export default class Segments extends React.Component {
                 <Dropdown
                   placeholder='Choose Input...'
                   value={contractEventInput}
-                  onChange={(e, {value}) => this.setState({ contractEventInput: value })}
+                  onChange={(e, {value}) => {
+                    this.setState({ contractEventInput: value })
+                    const opt = this.dataInputTypes[contractEvent][value]
+                    if (opt.key !== 'uint256') {
+                      this.setState({ eventAmountType: opt.key })
+                    }
+                  }}
                   openOnFocus={false}
                   fluid
                   selection
@@ -429,13 +452,7 @@ export default class Segments extends React.Component {
                   openOnFocus={false}
                   fluid
                   selection
-                  options={[
-                    { key: 'eth', text: 'Eth/ERC-20', value: 'eth' },
-                    { key: 'wei', text: 'Wei', value: 'wei' },
-                    { key: 'addr', text: 'Address', value: 'address' },
-                    { key: 'bool', text: 'Boolean', value: 'boolean' },
-                    { key: 'other', text: 'Other', value: 'other' },
-                  ]}
+                  options={eventAmountTypeOptions}
                 />
               </div>
               <div className="col-lg-4 col-md-4 col-sm-12 mb-4">
@@ -455,6 +472,7 @@ export default class Segments extends React.Component {
                 <Input
                   placeholder="Event Value"
                   fluid
+                  type={isAmount ? 'number' : 'text'}
                   disabled={eventAmountType === 'boolean'}
                   value={eventAmount}
                   onChange={(e, {value}) => this.setState({ eventAmount: value })}
@@ -504,6 +522,7 @@ export default class Segments extends React.Component {
     this.contractOptions = {}
     this.contracts = []
     this.dataInputs = []
+    this.dataInputTypes = []
     this.contractOptions = []
     this.tokenOptions = []
     const { contractData, sessionData, tokenData } = this.global
@@ -537,37 +556,44 @@ export default class Segments extends React.Component {
         })
         const { events, eventMap } = mappings
         let options = []
-        events.forEach((item) => {
-          options.push({
-            key: item,
-            text: item,
-            value: item
-          })
-        })
-        this.contractOptions[address] = options
         eventMap.forEach((item) => {
           const nm = item.name
           const { inputs } = item
           let inputOptions = []
+          let inputOptionTypes = {}
           inputs.forEach((it) => {
             // enabling non uint256 types here
             // if (!it.indexed || it.type === 'uint256') {
-            if (!it.indexed) {
+            if (!it.indexed && it.name !== "") {
               inputOptions.push({
                 key: it.name,
                 text: it.name,
                 value: it.name
               })
+              inputOptionTypes[it.name] = {
+                key: it.type,
+                text: it.type,
+                value: it.type
+              }
             }
           })
-          this.dataInputs[nm] = inputOptions
+          if (inputOptions.length) {
+            this.dataInputs[nm] = inputOptions
+            this.dataInputTypes[nm] = inputOptionTypes
+            options.push({
+              key: nm,
+              text: nm,
+              value: nm
+            })
+          }
         })
+        this.contractOptions[address] = options
       })
       let defaultAddress = this.contracts.length ? this.contracts[0].value : ''
       this.setState({ filterType: value, contractAddress: defaultAddress })
     } else if (value === "Smart Contract Intersection") {
       contractData.forEach(el => {
-        if (Object.keys(monitoring).indexOf(el.address) < 0) {
+        if (el.is_active && !el.proxy_contract && Object.keys(monitoring).indexOf(el.address) < 0) {
           this.contractOptions.push({
             key: el.address,
             value: el.address,
@@ -762,7 +788,18 @@ export default class Segments extends React.Component {
       newSegName,
       webhookOpen,
       webhook,
-      isCreateSegment
+      isCreateSegment,
+      filterType,
+      tokenAddress,
+      operatorType,
+      walletAmount,
+      walletAmountType,
+      contractAddress,
+      eventAmountType,
+      contractEvent,
+      contractEventInput,
+      eventAmount,
+      isLoading
     } = this.state;
     const segments = currentSegments ? currentSegments : [];
     // const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
@@ -795,6 +832,22 @@ export default class Segments extends React.Component {
           </CornerDialog>
         </React.Fragment>
       )
+    }
+    let createSegmentDisabled = false
+    if (
+      !newSegName.length //give it a name
+      || !filterType // no filter
+      || (filterType === "Wallet Balance" && (!tokenAddress || !operatorType || walletAmount < 0 || !walletAmountType))
+      || (filterType === "Smart Contract Intersection" && (!contractAddress))
+      || (filterType === "Smart Contract Events" && (!eventAmountType || !contractEvent || !contractEventInput || !operatorType || !eventAmount))
+    ) {
+      createSegmentDisabled = true
+    }
+    else if (eventAmountType === "address" && (eventAmount.length < 42 || eventAmount.length > 43)) {
+      createSegmentDisabled = true
+    }
+    else if ((eventAmountType === "eth" || eventAmountType === "wei") && isNaN(eventAmount)) {
+      createSegmentDisabled = true
     }
     return (
       <div>
@@ -1029,6 +1082,7 @@ export default class Segments extends React.Component {
                 }}
                 onConfirm={() => createSegment(this)}
                 confirmLabel="Create Segment"
+                isConfirmDisabled={createSegmentDisabled}
                 width={640}
                 minHeightContent='40vh'
               >
@@ -1037,7 +1091,10 @@ export default class Segments extends React.Component {
               <Dialog
                 isShown={importModalOpen}
                 title="Import Smart Contract"
-                onConfirm={() => this.importUsers()}
+                onConfirm={() => {
+                  this.setState({isLoading: true})
+                  this.importUsers()}
+                }
                 onCancel={() => {
                   ReactGA.event({
                     category: 'Import',
@@ -1050,29 +1107,7 @@ export default class Segments extends React.Component {
                 isConfirmDisabled={!importAddress}
                 width={640}
               >
-                {/* You can import wallets to monitor based on their interactions with smart contracts. */}
-                <MonitoredSmartContracts setImportAddress={(importAddress) => this.setState({importAddress})}/>
-                {/*
-                <div>
-                  <div className="top-15">
-                    <label htmlFor="chartSty">Enter <b>smart contract</b> address to monitor: </label>
-                    <Input
-                      fluid
-                      value={importAddress}
-                      onChange={(e, {value}) => this.setState({ importAddress: value })}
-                      placeholder="0xa1b2c3d4e5f6g7h8i9j..."
-                    />
-                  </div>
-                  {/* <div className="top-15">
-                    <label htmlFor="chartSty">Enter <b>proxy</b> smart contract to assocaite & import: </label>
-                    <Input
-                      fluid
-                      value={proxyAddress}
-                      onChange={(e, {value}) => this.setState({ proxyAddress: value })}
-                      placeholder="0x123456789..."
-                    />
-                  </div>
-                </div> */}
+                <MonitoredSmartContracts isLoading={isLoading} setImportAddress={(importAddress) => this.setState({importAddress})}/>
               </Dialog>
               <Dialog
                 isShown={webhookOpen}

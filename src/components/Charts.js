@@ -176,6 +176,45 @@ export const getCandleStickChart = () => {
   )
 }
 
+
+
+export const getMonitoredEventChart = (currentContractAddr, monitoring) => {
+  let userData
+  if (currentContractAddr === '') {
+    userData = monitoring[Object.keys(monitoring)[0]].daily_transactions
+  } else {
+    userData = monitoring[currentContractAddr].daily_transactions
+  }
+  const data = [
+    [
+      'Event Name',
+      'Count of times invoked'
+    ],
+    ["Transfer", 75733],
+    ["Approval", 39776]
+  ]
+  const options = {
+    legend: { position: 'none' },
+    hAxis: { title: "Popular events found in Smart Contract" },
+    chartArea: {
+      top: '10%',
+      left: '10%',
+      width: '80%',
+      height: '70%'
+    }
+  }
+  return (
+    <Chart
+      loader={<Spinner name="circle" color="blue"/>}
+      width="100%"
+      height="100%"
+      chartType="Bar"
+      data={data}
+      options={options}
+    />
+  )
+}
+
 export const get7DayChart = (currentContractAddr, monitoring) => {
   let userData
   if (currentContractAddr === '') {

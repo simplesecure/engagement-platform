@@ -114,7 +114,7 @@ export default class Home extends React.Component {
       element = this.renderDisabledOrgId(org_id)
     } else if(signedIn && Object.keys(sessionData).length > 0 && loading === false) {
       if (!this.gaInitialized) {
-        const debug = process.env.REACT_APP_GOOGLE_ANALYTICS_DEBUG
+        const debugflag = process.env.REACT_APP_GOOGLE_ANALYTICS_DEBUG
         ReactGA.initialize('UA-164023333-2', {
           debug: true,
           titleCase: false,
