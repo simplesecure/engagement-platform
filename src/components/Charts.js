@@ -118,81 +118,23 @@ export const getMvpAllBubbleChart = (currentContractAddr, monitoring) => {
   )
 }
 
-export const getCandleStickChart = () => {
-  const data = [
-    [
-      {
-        type: "string",
-        id: "Date"
-      },
-      {
-        type: "number",
-        label: "Something"
-      },
-      {
-        type: "number",
-        label: "Something"
-      },
-      {
-        type: "number",
-        label: "Something"
-      },
-      {
-        type: "number",
-        label: "Something"
-      }
-    ],
-    ["Jan", 20, 28, 38, 45],
-    ["Feb", 31, 38, 55, 66],
-    ["Mar", 50, 55, 77, 80],
-    ["Apr", 77, 77, 66, 50],
-    ["May", 68, 66, 22, 15],
-    ["Jun", 22, 42, 86, 100]
-  ]
-  const options = {
-    vAxis: { title: "Assets in Eth" },
-    legend: 'none',
-    bar: { groupWidth: '90%' }, // Remove space between bars.
-    candlestick: {
-      fallingColor: { strokeWidth: 0, fill: '#a52714' }, // red
-      risingColor: { strokeWidth: 0, fill: '#0f9d58' }, // green
-    },
-    chartArea: {
-      top: '10%',
-      left: '20%',
-      width: '70%',
-      height: '70%'
-    }
-  }
-  return (
-    <Chart
-     loader={<Spinner name="circle" color="blue"/>}
-     chartType="CandlestickChart"
-     width="100%"
-     height="100%"
-     data={data}
-     options={options}
-    />
-  )
-}
-
-
-
-export const getMonitoredEventChart = (currentContractAddr, monitoring) => {
-  let userData
+export const getMonitoredEventChart = (currentContractAddr, monitoring, eventData) => {
+  let eventCount
+  if (!eventData) return null
   if (currentContractAddr === '') {
-    userData = monitoring[Object.keys(monitoring)[0]].daily_transactions
+    eventCount = eventData[Object.keys(monitoring)[0]]
   } else {
-    userData = monitoring[currentContractAddr].daily_transactions
+    eventCount = eventData[currentContractAddr]
   }
   const data = [
     [
       'Event Name',
       'Count of times invoked'
-    ],
-    ["Transfer", 75733],
-    ["Approval", 39776]
+    ]
   ]
+  eventCount.forEach(idx => {
+    data.push([Object.keys(idx)[0], parseFloat(Object.values(idx)[0])])
+  })
   const options = {
     legend: { position: 'none' },
     hAxis: { title: "Popular events found in Smart Contract" },

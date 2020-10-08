@@ -51,9 +51,8 @@ class Dashboard extends React.Component {
     const {
       sessionData,
       processing,
-      importedContracts,
       publicDashboard,
-      activeUsersData
+      eventData
     } = this.global
     const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal, currentContractAddr } = this.state
     const { currentSegments, monitoring } = sessionData
@@ -117,9 +116,9 @@ class Dashboard extends React.Component {
                   {/* {getChartCard('Wallets by Smart Contracts', getDonutChart(monitoring))} */}
                   {getChartCard(`Daily Transactions: ${contractName}`, get7DayChart(currentContractAddr, monitoring))}
                   {getChartCard(`Weekly Transactions: ${contractName}`, getMonthChart(currentContractAddr, monitoring))}
-                  {/* {getChartCard(`Top Smart Contract Events: ${contractName}`, getMonitoredEventChart(currentContractAddr, monitoring))} */}
+                  {getChartCard(`Top Smart Contract Events: ${contractName}`, getMonitoredEventChart(currentContractAddr, monitoring, eventData))}
                   {getChartCard(`Top 10 Wallets Transactions 30 days: ${contractName}`, getMvp30BubbleChart(currentContractAddr, monitoring))}
-                  {getChartCard(`Top 10 Wallets Transactions All Time: ${contractName}`, getMvpAllBubbleChart(currentContractAddr, monitoring))}
+                  {/* {getChartCard(`Top 10 Wallets Transactions All Time: ${contractName}`, getMvpAllBubbleChart(currentContractAddr, monitoring))} */}
                   {/*{getChartCard('Total Value Held In Smart Contracts', getCandleStickChart())}*/}
                 </Grid>) : null}
                 </div>

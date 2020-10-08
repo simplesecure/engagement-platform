@@ -116,7 +116,7 @@ export default class Home extends React.Component {
       if (!this.gaInitialized) {
         const debugflag = process.env.REACT_APP_GOOGLE_ANALYTICS_DEBUG
         ReactGA.initialize('UA-164023333-2', {
-          debug: true,
+          debug: false,
           titleCase: false,
           gaOptions: {
             userId: org_id

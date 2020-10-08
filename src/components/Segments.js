@@ -132,7 +132,7 @@ export default class Segments extends React.Component {
   };
 
   importUsers = async () => {
-    const { sessionData, currentAppId } = this.global
+    const { sessionData, currentAppId, contractData } = this.global
     const { importAddress } = this.state
     ReactGA.event({
       category: 'Import',
@@ -140,6 +140,7 @@ export default class Segments extends React.Component {
       label: importAddress
     })
     const orgData = await getCloudServices().monitorContract(sessionData.id, importAddress)
+    await getCloudServices().getContractEventCount(sessionData.id, importAddress)
     const appData = orgData.apps[currentAppId]
     this.setState({
       importModalOpen: false,
@@ -377,9 +378,9 @@ export default class Segments extends React.Component {
       const addrOperatorTypes = [
         { key: 'equal', text: 'Equal', value: '==' },
         { key: 'not equal', text: 'Not Equal', value: '!=' },
-        { key: 'all matches', text: 'All Matches', value: '!==' }
+        { key: 'all matches', text: 'All Matches', value: '*' }
       ]
-      const eventAmountValueDisabled = (eventAmountType === 'boolean') || (operatorType === '!==')
+      const eventAmountValueDisabled = (eventAmountType === 'boolean') || (eventAmount === "0x0000000000000000000000000000000000000000")
       const opertarorTypeOptions = isAmount ? defaultOperatorTypes : isAddress ? addrOperatorTypes : boolOperatorTypes
       let eventAmountTypeOptions = []
       if (contractEventInput && contractEvent && this.dataInputTypes[contractEvent][contractEventInput]) {
@@ -469,12 +470,14 @@ export default class Segments extends React.Component {
                   value={operatorType}
                   onChange={(e, {value}) => {
                       if (eventAmountType === 'address') {
-                        if (value === '!==')
-                          this.setState({ eventAmount: "0x0000000000000000000000000000000000000000" })
+                        if (value === '*')
+                          this.setState({ eventAmount: "0x0000000000000000000000000000000000000000", operatorType: '!=' })
                         else
-                          this.setState({ eventAmount: 0})
+                          this.setState({ eventAmount: 0, operatorType: value})
                       }
-                      this.setState({ operatorType: value})
+                      else {
+                        this.setState({ operatorType: value})
+                      }
                     }
                   }
                   openOnFocus={false}
@@ -968,7 +971,7 @@ export default class Segments extends React.Component {
                           </Header>
                           <Button.Group>
                             <Button disabled={disableWallets} onClick={() => this.handleSegmentModal({name: contract_name, wallets: recent_wallets})} icon basic>
-                              <Icon name='users' size='large' color='black' />
+                              <Icon name='address book outline' size='large' color='black' />
                               <p className='name'>Wallets</p>
                             </Button>
                             <Button disabled={true} icon basic>
@@ -1023,8 +1026,8 @@ export default class Segments extends React.Component {
                           </Header>
                           <Button.Group>
                             <Button disabled={version !== '2.0'} onClick={() => this.handleSegmentModal({name, wallets: users})} icon basic>
-                              <Icon name='users' size='large' color='black' />
-                              <p className='name'>Wallets</p>
+                              <Icon name='list alternate outline' size='large' color='black' />
+                              <p className='name'>TX Hash</p>
                             </Button>
                             {/* disable this feature for R1
                             {disableButton ? <Button onClick={() => this.handleEditSegment(segment)} icon basic>
