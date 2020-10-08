@@ -586,8 +586,8 @@ class CloudServices {
       }
     }
     const eventCounts = await runClientOperation('askPg', orgId, anAppId, operationData)
-    log.debug(`Event counts for contract ${operationData.queryParams.impl_contract} = \n` +
-              `${JSON.stringify(eventCounts, null, 2)}`)
+    // log.debug(`Event counts for contract ${operationData.queryParams.impl_contract} = \n` +
+    //           `${JSON.stringify(eventCounts, null, 2)}`)
     if (eventCounts.length) {
       const { event_counts_arr } = eventCounts[0]
       newEventData[proxy_contract] = event_counts_arr

@@ -126,6 +126,7 @@ export const getMonitoredEventChart = (currentContractAddr, monitoring, eventDat
   } else {
     eventCount = eventData[currentContractAddr]
   }
+  if (!eventCount) return null
   const data = [
     [
       'Event Name',

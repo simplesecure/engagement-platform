@@ -824,10 +824,6 @@ export default class Segments extends React.Component {
     // const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
     const status = anOrgStatusObj ? anOrgStatusObj[currentAppId] : null
     let message = null
-    // console.log("&&&&&&&&&&&&&&")
-    // console.log("&&&&&&&&&&&&&&Monitoring: ", monitoring)
-    // console.log("&&&&&&&&&&&&&&Segments: ", segments)
-    // console.log("&&&&&&&&&&&&&&SessionData: ", sessionData)
     if (status && Object.keys(status).length) {
       message = (
         <React.Fragment>
