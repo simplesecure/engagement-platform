@@ -402,6 +402,19 @@ class CloudServices {
       data['id'] = currentAppId
       const appVersion = appData.Item.apps[currentAppId].version
 
+      // TODO: Monkey Business Development Activities
+      //
+      const operationData = {
+        queryName: 'getEventCount',
+        queryParams: {
+          impl_contract: '0x794e6e91555438afc3ccf1c5076a74f42133d08d',
+          proxy_contract: '0x794e6e91555438afc3ccf1c5076a74f42133d08d'
+        }
+      }
+      const eventCounts = await runClientOperation('askPg', org_id, currentAppId, operationData)
+      log.debug(`Event counts for contract ${operationData.queryParams.impl_contract} = \n` +
+                `${JSON.stringify(eventCounts, null, 2)}`)
+
       // let importedContracts = undefined
       // try {
       //   importedContracts = await runClientOperation('getImported', undefined, currentAppId)
