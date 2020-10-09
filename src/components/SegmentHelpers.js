@@ -301,7 +301,6 @@ export const addFiltersForNewSegmentCriteria = (
   contractEventInput,
   contractEvent ) => {
   if (filterToUse.filter === "Smart Contract Events") {
-    debugger
     let implementation_address = ''
     let proxy_address = ''
     const idx = Object.keys(contractData).find(key => contractAddress === contractData[key].address)

@@ -1002,6 +1002,7 @@ export default class Segments extends React.Component {
                     if (version === '2.0' && resultData) {
                       blockId = resultData.block_id
                     }
+                    if (!blockId) blockId = 'processing...'
                     const disableWallets = userCount < 1
                     let sId = name + userCount
                     if (name === 'All Users') return null
@@ -1013,13 +1014,17 @@ export default class Segments extends React.Component {
                             <Header.Subheader color='grey' style={{marginTop: 5}}>
                                Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${blockId}`} target="_blank">{blockId}</a>
                             </Header.Subheader>
-                            {!disableWallets && segment.hasOwnProperty('userCount')? (
+                            {!disableWallets && userCount ? (
                               <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal({name, wallets: users})}>
                                 {userCount}
                               </Label>
-                            ) : (
+                            ) : userCount === "0" ? (
                               <Label as='a' color='grey' attached='top right'>
                                 0
+                              </Label>
+                            ) : (
+                              <Label as='a' color='grey' attached='top right'>
+                                ....
                               </Label>
                             )
                             }

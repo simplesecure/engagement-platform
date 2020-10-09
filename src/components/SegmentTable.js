@@ -10,6 +10,7 @@ import {
   IconButton
 } from 'evergreen-ui'
 import UserWallet from "./UserWallet";
+import uuid from 'uuid/v4'
 
 export default class SegmentTable extends React.Component {
   constructor() {
@@ -64,7 +65,7 @@ export default class SegmentTable extends React.Component {
     }
     let name = address ? address.substring(2) : ''
     return (
-      <Table.Row key={address} isSelectable onSelect={() => window.open(link, "_blank")}>
+      <Table.Row key={uuid()} isSelectable onSelect={() => window.open(link, "_blank")}>
         <Table.Cell display="flex" alignItems="center" flexBasis={300} flexShrink={0} flexGrow={0}>
           <Avatar name={name} />
           <Text marginLeft={8} size={300} fontWeight={500}>
