@@ -4,7 +4,7 @@ const moment = require('moment')
 
 export async function getEmailData() {
   const { sessionData } = getGlobal()
-  console.log(`getEmailData: sessionData.id = ${sessionData.id}`);
+  // console.log(`getEmailData: sessionData.id = ${sessionData.id}`);
 
   //  Fetch email data global stats for the app
   const day30DaysAgo = moment().subtract(30, 'days').format("YYYY-MM-DD");

@@ -474,6 +474,8 @@ export default class Segments extends React.Component {
                           this.setState({ eventAmount: "0x0000000000000000000000000000000000000000", operatorType: '!=' })
                         else
                           this.setState({ eventAmount: 0, operatorType: value})
+                      } else if (eventAmountType === 'boolean') {
+                        this.setState({ eventAmount: 'true', operatorType: value })
                       }
                       else {
                         this.setState({ operatorType: value})
@@ -583,16 +585,18 @@ export default class Segments extends React.Component {
           inputs.forEach((it) => {
             // enabling non uint256 types here
             // if (!it.indexed || it.type === 'uint256') {
-            if (!it.indexed && it.name !== "") {
+            let { indexed, name, type } = it
+            if (!indexed && name !== "") {
               inputOptions.push({
-                key: it.name,
-                text: it.name,
-                value: it.name
+                key: name,
+                text: name,
+                value: name
               })
-              inputOptionTypes[it.name] = {
-                key: it.type,
-                text: it.type,
-                value: it.type
+              type = type === 'bool' ? 'boolean' : type
+              inputOptionTypes[name] = {
+                key: type,
+                text: type,
+                value: type
               }
             }
           })
@@ -970,7 +974,7 @@ export default class Segments extends React.Component {
                               <Icon name='address book outline' size='large' color='black' />
                               <p className='name'>Wallets</p>
                             </Button>
-                            <Button disabled={true} icon basic>
+                            <Button disabled={currentAppId !== '8d7312fa-5731-467b-bdd1-d18e5f84776a'} icon basic>
                               <Icon name='globe' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
                               <p className='name'>Connect</p>
                             </Button>
@@ -1030,7 +1034,7 @@ export default class Segments extends React.Component {
                               <Icon name='edit' size='large' color='blue' />
                               <p className='name'>Edit</p>
                             </Button> : null}*/}
-                            <Button disabled={true} icon basic>
+                            <Button disabled={currentAppId !== '8d7312fa-5731-467b-bdd1-d18e5f84776a'} icon basic>
                               <Icon name='globe' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
                               <p className='name'>Connect</p>
                             </Button>

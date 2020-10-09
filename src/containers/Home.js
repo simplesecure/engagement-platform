@@ -114,9 +114,9 @@ export default class Home extends React.Component {
       element = this.renderDisabledOrgId(org_id)
     } else if(signedIn && Object.keys(sessionData).length > 0 && loading === false) {
       if (!this.gaInitialized) {
-        const debugflag = process.env.REACT_APP_GOOGLE_ANALYTICS_DEBUG
+        const debugflag = process.env.REACT_APP_GOOGLE_ANALYTICS_DEBUG || currentAppId === '8d7312fa-5731-467b-bdd1-d18e5f84776a'
         ReactGA.initialize('UA-164023333-2', {
-          debug: true,
+          debug: debugflag,
           titleCase: false,
           gaOptions: {
             userId: org_id
