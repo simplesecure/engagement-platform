@@ -1,5 +1,4 @@
 import React from "reactn";
-import { Link } from "react-router-dom";
 import { Dialog, CornerDialog } from 'evergreen-ui'
 import {
   Button,
@@ -16,7 +15,6 @@ import {
 } from 'semantic-ui-react'
 import SideNav from '../components/SideNav';
 import SegmentTable from "./SegmentTable";
-import DatePicker from "react-date-picker";
 import { getCloudServices } from "../utils/cloudUser";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -70,7 +68,10 @@ export default class Segments extends React.Component {
       contractEventInput: null,
       eventAmountType: 'eth',
       contractEvent: null,
-      isLoading: false
+      isLoading: false,
+      showMonitoredDelete: false,
+      addressToUnmonitor: null,
+      dataToUnMonitor: null
     }
     ReactGA.pageview('/segments')
     this.contractOptions = {}
@@ -83,6 +84,10 @@ export default class Segments extends React.Component {
 
   closeModal = () => {
     this.setState({ show: false });
+  };
+
+  closeMonitoredModal = () => {
+    this.setState({ showMonitoredDelete: false });
   };
 
   handleDateChange = (date) => {
@@ -132,7 +137,7 @@ export default class Segments extends React.Component {
   };
 
   importUsers = async () => {
-    const { sessionData, currentAppId, contractData } = this.global
+    const { sessionData, currentAppId } = this.global
     const { importAddress } = this.state
     ReactGA.event({
       category: 'Import',
@@ -240,8 +245,6 @@ export default class Segments extends React.Component {
       // delayBlocks,
       // tokenType,
     } = this.state
-    const { web2Analytics, sessionData, contractData, tokenData } = this.global
-    const { monitoring } = sessionData;
     const { type } = filterToUse
     if (type === "Smart Contract Intersection") {
       return (
@@ -575,7 +578,7 @@ export default class Segments extends React.Component {
           text: contractValue,
           value: address
         })
-        const { events, eventMap } = mappings
+        const { eventMap } = mappings
         let options = []
         eventMap.forEach((item) => {
           const nm = item.name
@@ -634,7 +637,6 @@ export default class Segments extends React.Component {
       tokenAddress,
       tokenType,
       editSegment,
-      dashboardShow,
       filterType,
       newSegName
     } = this.state;
@@ -768,38 +770,51 @@ export default class Segments extends React.Component {
       </div>
     );
   }
-  deleteMonitoredContract = async(address, data) => {
-    const { sessionData, currentAppId } = this.global
-    const orgData = await getCloudServices().unmonitorContract(sessionData.id, address)
-    // TODO: Segments might depend on this monitored contract--here is my TODO for that with scenarios 
-    //       from the server code that unmonitors a contract. <-- Prabhaav
-    //
-    //          2. TODO: Traverse the segements and if they depend upon this contract do one of the following:
-    //              i) disable them
-    //              ii) remove them
-    //              iii) return a warning listing them and ask for confirmation
-    //              iv) something else
-    //                  - thinking this through made me realize you don't even need to monitor contracts--you just
-    //                    need to select them in segments you create.
-    //
-    //              ... <-- code ... TODO
-    //
-    const appData = orgData.apps[currentAppId]
-    ReactGA.event({
-      category: 'Import',
-      action: 'Remove Smart Contract Import',
-      label: address
-    })
-    React.setGlobal({
-      sessionData: appData
-    })
+  deleteMonitoredContract = async(address, data, confirm) => {
+    if (confirm) {
+      const { sessionData, currentAppId } = this.global
+      const orgData = await getCloudServices().unmonitorContract(sessionData.id, address)
+      // TODO: Segments might depend on this monitored contract--here is my TODO for that with scenarios 
+      //       from the server code that unmonitors a contract. <-- Prabhaav
+      //
+      //          2. TODO: Traverse the segements and if they depend upon this contract do one of the following:
+      //              i) disable them
+      //              ii) remove them
+      //              iii) return a warning listing them and ask for confirmation
+      //              iv) something else
+      //                  - thinking this through made me realize you don't even need to monitor contracts--you just
+      //                    need to select them in segments you create.
+      //
+      //              ... <-- code ... TODO
+      //
+      const appData = orgData.apps[currentAppId]
+      ReactGA.event({
+        category: 'Import',
+        action: 'Remove Smart Contract Import',
+        label: address
+      })
+      React.setGlobal({
+        sessionData: appData
+      })
+      this.setState({addressToUnmonitor: null, dataToUnMonitor: null, showMonitoredDelete: false})
+    }
+    else {
+      this.setState({showMonitoredDelete: true, addressToUnmonitor: address, dataToUnMonitor: data})
+    }
+  }
+  handleWebhookUrlWork = async () => {
+    const { webhook } = this.state
+    const url = `http://localhost:3003/?url=${webhook}`
+    await fetch(url);
+    // const jsonData = await result.json();
+    console.log("Webhook triggerred")
   }
   render() {
-    const { sessionData, processing, anOrgStatusObj, currentAppId, appVersion } = this.global;
+    const { sessionData, processing, anOrgStatusObj, currentAppId } = this.global;
     const { currentSegments, monitoring } = sessionData;
     const {
       importAddress,
-      proxyAddress,
+      // proxyAddress,
       importModalOpen,
       loadingMessage,
       condition,
@@ -807,6 +822,7 @@ export default class Segments extends React.Component {
       showSegmentModal,
       segmentToShow,
       show,
+      showMonitoredDelete,
       seg,
       newSegName,
       webhookOpen,
@@ -822,7 +838,9 @@ export default class Segments extends React.Component {
       contractEvent,
       contractEventInput,
       eventAmount,
-      isLoading
+      isLoading,
+      addressToUnmonitor, 
+      dataToUnMonitor
     } = this.state;
     const segments = currentSegments ? currentSegments : [];
     // const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
@@ -946,9 +964,9 @@ export default class Segments extends React.Component {
                     const { latest_block_id, 
                             wallet_count,
                             recent_wallets,
-                            most_valuable_wallets,
-                            contract_name,
-                            daily_transactions } = value
+                            // most_valuable_wallets,
+                            // daily_transactions,
+                            contract_name } = value
                     const disableWallets = wallet_count < 1
                     return (
                       <Grid.Column key={contract_name}>
@@ -978,7 +996,7 @@ export default class Segments extends React.Component {
                               <Icon name='globe' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
                               <p className='name'>Connect</p>
                             </Button>
-                            <Button onClick={() => this.deleteMonitoredContract(key, value)} icon basic>
+                            <Button onClick={() => this.deleteMonitoredContract(key, value, false)} icon basic>
                               <Icon color='red' name='trash alternate outline' size='large' />
                               <p className='name'>Delete</p>
                             </Button>
@@ -1030,7 +1048,7 @@ export default class Segments extends React.Component {
                             }
                           </Header>
                           <Button.Group>
-                            <Button disabled={version !== '2.0'} onClick={() => this.handleSegmentModal({name, wallets: users})} icon basic>
+                            <Button disabled={version !== '2.0' || !users} onClick={() => this.handleSegmentModal({name, wallets: users})} icon basic>
                               <Icon name='list alternate outline' size='large' color='black' />
                               <p className='name'>TX Hash</p>
                             </Button>
@@ -1039,7 +1057,7 @@ export default class Segments extends React.Component {
                               <Icon name='edit' size='large' color='blue' />
                               <p className='name'>Edit</p>
                             </Button> : null}*/}
-                            <Button disabled={currentAppId !== '8d7312fa-5731-467b-bdd1-d18e5f84776a'} icon basic>
+                            <Button disabled={currentAppId !== '8d7312fa-5731-467b-bdd1-d18e5f84776a' || !users} icon basic>
                               <Icon name='globe' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
                               <p className='name'>Connect</p>
                             </Button>
@@ -1062,6 +1080,21 @@ export default class Segments extends React.Component {
                   </Message>
                 ) : null
               }
+              <Dialog
+                isShown={showMonitoredDelete}
+                title="Remove Monitored Contract?"
+                onConfirm={() => this.deleteMonitoredContract(addressToUnmonitor, dataToUnMonitor, true)}
+                onCancel={() => this.closeMonitoredModal()}
+                onCloseComplete={() => this.closeMonitoredModal()}
+                confirmLabel='Delete'
+                intent="danger"
+                width={640}
+              >
+                You're about to remove the monitored contract{" "}
+                <strong>
+                  <u>{dataToUnMonitor ? dataToUnMonitor.contract_name : null}</u>
+                </strong>.
+              </Dialog>
               <Dialog
                 isShown={show}
                 title="Delete Segment?"
@@ -1144,6 +1177,7 @@ export default class Segments extends React.Component {
                 title="Setup a webhook URL for your segment"
                 onCancel={() => this.setState({ webhookOpen: false })}
                 confirmLabel='Save'
+                onCloseComplete={() => this.handleWebhookUrlWork()}
                 width={640}
               >
                 You can add a webhook url where we will send segment updates to.

@@ -4,10 +4,7 @@ import {
   Avatar,
   Table,
   Text,
-  Menu,
-  Popover,
-  Position,
-  IconButton
+  Menu
 } from 'evergreen-ui'
 import UserWallet from "./UserWallet";
 import uuid from 'uuid/v4'

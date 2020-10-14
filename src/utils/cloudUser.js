@@ -4,7 +4,6 @@ import { getLog } from './debugScopes.js'
 import { getWeb2Analytics } from './web2Analytics';
 import socketIOClient from "socket.io-client";
 import { toast } from "react-toastify";
-import uuid from 'uuid/v4'
 
 const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST);
 const log = getLog('cloudUser')
@@ -424,31 +423,31 @@ class CloudServices {
       })
 
       // Get DAU/MAU Analytics Information
-      const values = [1, 2, 3, 4, 5, 6, 7, 14, 21, 28]
-      const analyticsTable = 'analytics_' + currentAppId
-      const argumentStr = values.map((value, index) => { return `\$${index + 1}`}).join(', ')
-      let getStr = `with analytics_stats as(
-          select
-            max(block_timestamp) as max_timestamp
-          from 
-            "${analyticsTable}"
-      )\n`
-      values.map(value => {
-        getStr += `select
-            count(address) as address_count,
-            ${value} as interval
-          from 
-            "${analyticsTable}"
-          where
-              block_timestamp > ((select max_timestamp from analytics_stats) - interval '${value} day')\n`
-        if (value !== 28) {
-          getStr += `union all\n`
-        }
-      })
-      const analyticsOpData = {
-        getStr,
-        values: []
-      }
+      // const values = [1, 2, 3, 4, 5, 6, 7, 14, 21, 28]
+      // const analyticsTable = 'analytics_' + currentAppId
+      // const argumentStr = values.map((value, index) => { return `\$${index + 1}`}).join(', ')
+      // let getStr = `with analytics_stats as(
+      //     select
+      //       max(block_timestamp) as max_timestamp
+      //     from 
+      //       "${analyticsTable}"
+      // )\n`
+      // values.map(value => {
+      //   getStr += `select
+      //       count(address) as address_count,
+      //       ${value} as interval
+      //     from 
+      //       "${analyticsTable}"
+      //     where
+      //         block_timestamp > ((select max_timestamp from analytics_stats) - interval '${value} day')\n`
+      //   if (value !== 28) {
+      //     getStr += `union all\n`
+      //   }
+      // })
+      // const analyticsOpData = {
+      //   getStr,
+      //   values: []
+      // }
       // log.debug(`analyticsOpData:\n${JSON.stringify(analyticsOpData, null, 2)}`)
       // const activeUsersData = await runClientOperation('getPg', org_id, currentAppId, analyticsOpData)
       // log.debug(`Fetched DAU/WAU/MAU data from PG\n` +
@@ -555,7 +554,7 @@ class CloudServices {
   async fetchUsersCount(appData) {
     log.debug('cloudUser::fetchUsersCount')
 
-    const { currentAppId, sessionData } = await getGlobal()
+    // const { currentAppId, sessionData } = await getGlobal()
     // TODO: DELETE COMMENTED BELOW
     // const modifiedSessionData = await this.addAllUsersToSessionData(currentAppId, sessionData)
 
@@ -773,8 +772,8 @@ class CloudServices {
           },
           body: JSON.stringify(contactData),
         }
-        const result2 = await fetch(contactRecordUrl, requestData2);
-        const jsonData2 = await result2.json();
+        await fetch(contactRecordUrl, requestData2);
+        // const jsonData2 = await result2.json();
       }
     } catch (error) {
       log.error("airtable crm add record:\n", error);

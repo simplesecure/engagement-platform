@@ -4,8 +4,7 @@ import {
   Table,
   Menu,
   Avatar,
-  Text,
-  Dialog
+  Text
 } from 'evergreen-ui'
 import {
   Dimmer,

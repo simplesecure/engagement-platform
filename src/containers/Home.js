@@ -8,14 +8,13 @@ import Communications from '../components/Communications/Communications'
 import Segments from '../components/Segments'
 import Projects from '../components/Projects'
 import BlockDiagram from '../components/BlockDiagram'
-import { Dimmer, Loader, Input } from 'semantic-ui-react'
+import { Dimmer, Loader } from 'semantic-ui-react'
 import FlowyWorker from './FlowyWorker'
 import { getCloudServices } from '../utils/cloudUser'
 import { createProject } from "../utils/projectUtils"
 import { Dialog } from 'evergreen-ui'
 import ReactGA from 'react-ga'
 const qs = require('query-string')
-const SIMPLEID_USER_SESSION = 'SID_SVCS';
 
 export default class Home extends React.Component {
   constructor (props) {

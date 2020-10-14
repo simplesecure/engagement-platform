@@ -1,4 +1,4 @@
-import React, { setGlobal } from "reactn"
+import { setGlobal } from "reactn"
 import { getCloudServices } from './cloudUser.js'
 import { getSidSvcs } from "./sidServices"
 
@@ -6,7 +6,7 @@ const ERROR_MSG =
   "Failed to create project, please try again. If this continues, please contact support@simpleid.xyz"
 
 export const createProject = async (that, projectName) => {
-  const { apps, org_id } = that.global
+  const { org_id } = that.global
 
   const newProject = {
     date_created: Date.now(),
@@ -18,7 +18,6 @@ export const createProject = async (that, projectName) => {
 
   try {
     const projectId = await getSidSvcs().createAppId(org_id, newProject)
-    let data
     if (projectId) {
       // apps[projectId] = newProject
       // const appKeys = Object.keys(apps)

@@ -15,9 +15,9 @@ import {
 import {
   get7DayChart,
   getMonthChart,
-  getDonutChart,
+  // getDonutChart,
   getMvp30BubbleChart,
-  getMvpAllBubbleChart,
+  // getMvpAllBubbleChart,
   getMonitoredEventChart,
   getChartCard
 } from './Charts'

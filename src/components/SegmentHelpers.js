@@ -19,7 +19,6 @@ export const clearState = (that, filter=false) => {
     tokenType: "",
     newSegName: "",
     filterType: "",
-    contractAddress: "",
     tokenAddress: "",
     rangeType: "",
     operatorType: "",
@@ -28,7 +27,6 @@ export const clearState = (that, filter=false) => {
     showSegmentModal: false,
     editSegment: false,
     isCreateSegment: false,
-    date: new Date(),
     amount: 0,
     contractAddress: null,
     existingSegmentToFilter: null,
@@ -65,9 +63,7 @@ export const createSegment = async (that) => {
     contractAddress,
     allUsers,
     existingSegmentToFilter,
-    dashboardShow,
-    contractEventInput,
-    contractEvent
+    dashboardShow
   } = that.state
   let { conditions } = that.state
   let { filterConditions } = conditions

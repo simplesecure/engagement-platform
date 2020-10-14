@@ -13,7 +13,6 @@ import {
   Button,
   Message,
   Dimmer,
-  Image,
   Segment,
   Icon,
   Grid,

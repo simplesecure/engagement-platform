@@ -7,7 +7,7 @@ import {
 
 export default class SmartContractTable extends React.Component {
   renderRow = ({ key, value }) => {
-    const { latest_block_id, wallet_count, recent_wallets, contract_name } = value
+    const { latest_block_id, wallet_count, contract_name } = value
     return (
       <Table.Row key={key} isSelectable onSelect={() => {
         this.props.setCurrentContract(key)
