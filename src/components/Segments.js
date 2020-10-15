@@ -1059,7 +1059,7 @@ export default class Segments extends React.Component {
                               <p className='name'>TX Hash</p>
                             </Button>
                             <Button disabled={version !== '2.0' || !segment.filters} onClick={() => this.setState({showViewSegment: true, viewSegment: segment})} icon basic>
-                              <Icon name='edit' size='large' color='blue' />
+                              <Icon name='search' size='large' color='blue' />
                               <p className='name'>View</p>
                             </Button>
                             <Button disabled={currentAppId !== '8d7312fa-5731-467b-bdd1-d18e5f84776a' || !users} icon basic>
@@ -1199,7 +1199,7 @@ export default class Segments extends React.Component {
               </Dialog>
               {viewSegment ? <Dialog
                 isShown={showViewSegment}
-                title="Properties of Segment"
+                title={`Properties of Segment: ${viewSegment.name}`}
                 onCloseComplete={() => this.setState({ showViewSegment: false, viewSegment: null })}
                 hasCancel={false}
                 confirmLabel='Close'
@@ -1207,7 +1207,6 @@ export default class Segments extends React.Component {
               >
                 {
                   viewSegment.filters.map(filter => {
-                    debugger
                     return (
                       <div>
                           <h3>Segment Type: {filter.type.toUpperCase()}</h3>
