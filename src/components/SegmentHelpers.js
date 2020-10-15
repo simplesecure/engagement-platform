@@ -319,7 +319,7 @@ export const addFiltersForNewSegmentCriteria = (
           input_name: contractEventInput,
           operator: operatorType,
           value: eventAmount,
-          valueType: eventAmountType
+          valueType: eventAmountType === 'int' ? 'wei' : eventAmountType
         }
       }
     )

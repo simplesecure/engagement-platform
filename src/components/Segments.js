@@ -71,7 +71,9 @@ export default class Segments extends React.Component {
       isLoading: false,
       showMonitoredDelete: false,
       addressToUnmonitor: null,
-      dataToUnMonitor: null
+      dataToUnMonitor: null,
+      showViewSegment: false,
+      viewSegment: null
     }
     ReactGA.pageview('/segments')
     this.contractOptions = {}
@@ -365,10 +367,11 @@ export default class Segments extends React.Component {
     //     </div>
     //   )
     } else if (type === "Smart Contract Events") {
-      const isAmount = (eventAmountType === 'eth' || eventAmountType === 'wei')
+      const isAmount = (eventAmountType === 'eth' || eventAmountType === 'wei' || eventAmountType === 'int')
       const isAddress = eventAmountType === 'address'
       const defaultOperatorTypes = [
         { key: 'equal', text: 'Equal', value: '==' },
+        { key: 'not equal', text: 'Not Equal', value: '!=' },
         { key: 'more than', text: 'More Than', value: '>' },
         { key: 'more than equal', text: 'More Than || Equal', value: '>=' },
         { key: 'less than', text: 'Less Than', value: '<' },
@@ -391,7 +394,8 @@ export default class Segments extends React.Component {
         if (eventAmountTypeOptions.key === 'uint256') {
           eventAmountTypeOptions = [
             { key: 'eth', text: 'eth/ERC-20', value: 'eth' },
-            { key: 'wei', text: 'wei', value: 'wei' }
+            { key: 'wei', text: 'wei', value: 'wei' },
+            { key: 'int', text: 'int', value: 'int' }
           ]
         }
         else {
@@ -840,7 +844,9 @@ export default class Segments extends React.Component {
       eventAmount,
       isLoading,
       addressToUnmonitor, 
-      dataToUnMonitor
+      dataToUnMonitor,
+      showViewSegment,
+      viewSegment
     } = this.state;
     const segments = currentSegments ? currentSegments : [];
     // const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
@@ -1052,11 +1058,10 @@ export default class Segments extends React.Component {
                               <Icon name='list alternate outline' size='large' color='black' />
                               <p className='name'>TX Hash</p>
                             </Button>
-                            {/* disable this feature for R1
-                            {disableButton ? <Button onClick={() => this.handleEditSegment(segment)} icon basic>
+                            <Button disabled={version !== '2.0' || !segment.filters} onClick={() => this.setState({showViewSegment: true, viewSegment: segment})} icon basic>
                               <Icon name='edit' size='large' color='blue' />
-                              <p className='name'>Edit</p>
-                            </Button> : null}*/}
+                              <p className='name'>View</p>
+                            </Button>
                             <Button disabled={currentAppId !== '8d7312fa-5731-467b-bdd1-d18e5f84776a' || !users} icon basic>
                               <Icon name='globe' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
                               <p className='name'>Connect</p>
@@ -1192,6 +1197,31 @@ export default class Segments extends React.Component {
                   </div>
                 </div>
               </Dialog>
+              {viewSegment ? <Dialog
+                isShown={showViewSegment}
+                title="Properties of Segment"
+                onCloseComplete={() => this.setState({ showViewSegment: false, viewSegment: null })}
+                hasCancel={false}
+                confirmLabel='Close'
+                width={640}
+              >
+                {
+                  viewSegment.filters.map(filter => {
+                    debugger
+                    return (
+                      <div>
+                          <h3>Segment Type: {filter.type.toUpperCase()}</h3>
+                          <div><h3>Segment Properties: </h3>{
+                            Object.entries(filter.params).map
+                            ( ([key, value]) => <li><b>&nbsp;&nbsp;{key}</b>: {value}</li> )
+                            }
+                          </div>
+                          <br/>
+                      </div>
+                    )
+                  })
+                }
+              </Dialog> : null}
             </Grid.Column>
           </Grid>
           <Dimmer active={processing}>

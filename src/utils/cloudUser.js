@@ -402,7 +402,7 @@ class CloudServices {
       const appVersion = appData.Item.apps[currentAppId].version
       // Get latest list of ERC20 tokens we support
       const tokenOperationData = {
-        getStr: `SELECT * FROM tokens`,
+        getStr: `SELECT * FROM tokens ORDER BY name ASC`,
         values: []
       }
       const tokenData = await runClientOperation('getPg', null, null, tokenOperationData)
@@ -418,9 +418,7 @@ class CloudServices {
 
       const { monitoring } = data
       // get event count information
-      Object.keys(monitoring).map(async (key, index) => {
-        await getCloudServices().getContractEventCount(currentAppId, key)
-      })
+      await getCloudServices().getContractEventCount(currentAppId, monitoring)
 
       // Get DAU/MAU Analytics Information
       // const values = [1, 2, 3, 4, 5, 6, 7, 14, 21, 28]
@@ -566,31 +564,35 @@ class CloudServices {
     setGlobal(nextState)
   }
 
-  async getContractEventCount(anAppId, aContractAddress) {
+  async getContractEventCount(anAppId, monitoring) {
     const orgId = undefined
-    const proxy_contract = aContractAddress.toLowerCase()
-    const { contractData, eventData } = await getGlobal()
-    const idx = Object.keys(contractData).find(key => proxy_contract === contractData[key].address)
-    let { implementation_contract } = contractData[idx]
-    if (implementation_contract === "" || !implementation_contract) {
-      implementation_contract = proxy_contract
-    }
-    let newEventData = eventData ? eventData : {}
-    // TODO: Monkey Business Development Activities
-    const operationData = {
-      queryName: 'getEventCount',
-      queryParams: {
-        impl_contract: implementation_contract.toLowerCase(),
-        proxy_contract
+    let { contractData, eventData } = await getGlobal()
+    if (!eventData)
+      eventData = {}
+    const keys = Object.keys(monitoring)
+    for (let key of keys) {
+      const proxy_contract = key.toLowerCase()
+      const idx = Object.keys(contractData).find(key => proxy_contract === contractData[key].address)
+      let { implementation_contract } = contractData[idx]
+      if (implementation_contract === "" || !implementation_contract) {
+        implementation_contract = proxy_contract
       }
-    }
-    const eventCounts = await runClientOperation('askPg', orgId, anAppId, operationData)
-    // log.debug(`Event counts for contract ${operationData.queryParams.impl_contract} = \n` +
-    //           `${JSON.stringify(eventCounts, null, 2)}`)
-    if (eventCounts.length) {
-      const { event_counts_arr } = eventCounts[0]
-      newEventData[proxy_contract] = event_counts_arr
-      setGlobal({ eventData: newEventData })
+      // TODO: Monkey Business Development Activities
+      const operationData = {
+        queryName: 'getEventCount',
+        queryParams: {
+          impl_contract: implementation_contract.toLowerCase(),
+          proxy_contract
+        }
+      }
+      const eventCounts = await runClientOperation('askPg', orgId, anAppId, operationData)
+      // log.debug(`Event counts for contract ${operationData.queryParams.impl_contract} = \n` +
+      //           `${JSON.stringify(eventCounts, null, 2)}`)
+      if (eventCounts.length) {
+        const { event_counts_arr } = eventCounts[0]
+        eventData[proxy_contract] = event_counts_arr
+        await setGlobal({ eventData })
+      }
     }
   }
 
