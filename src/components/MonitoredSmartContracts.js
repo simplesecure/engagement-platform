@@ -134,7 +134,7 @@ export default class MonitoredSmartContracts extends React.Component {
     else {
       return (
         <div>
-          There are no contracts that match the account{" "}
+          There are no more contracts that match the account{" "}
           <strong>
             <u>{companyName}</u>
           </strong>

@@ -5,6 +5,7 @@ import { getWeb2Analytics } from "../utils/web2Analytics"
 import { runClientOperation } from "../utils/cloudUser.js"
 import { getLog } from './../utils/debugScopes'
 import ReactGA from 'react-ga'
+import { validURL } from "../utils/misc";
 
 const log = getLog('segmentHelpers')
 const listToArray = require("list-to-array")
@@ -216,6 +217,7 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
     walletAmountType,
     eventAmount,
     eventAmountType,
+    webhookUrl
   } = that.state
   let { conditions } = that.state
   const { filterConditions } = conditions
@@ -280,6 +282,10 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
     children: undefined
   }
   segmentCriteria.filters = filters
+  segmentCriteria.webHook = {
+    version: "1.0",
+		url: validURL(webhookUrl) ? webhookUrl : ''
+  }
   return segmentCriteria
 }
 

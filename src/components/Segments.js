@@ -29,6 +29,7 @@ import ProcessingBlock from './ProcessingBlock'
 import MonitoredSmartContracts from './MonitoredSmartContracts'
 import uuid from 'uuid/v4'
 import ReactGA from 'react-ga'
+import { validURL } from "../utils/misc";
 
 export default class Segments extends React.Component {
   constructor(props) {
@@ -60,7 +61,6 @@ export default class Segments extends React.Component {
       proxyAddress: "",
       selectedNetwork: "mainnet",
       webhookOpen: false,
-      webhook: "",
       isCreateSegment: false,
       walletAmount: 0,
       walletAmountType: 'eth',
@@ -73,7 +73,9 @@ export default class Segments extends React.Component {
       addressToUnmonitor: null,
       dataToUnMonitor: null,
       showViewSegment: false,
-      viewSegment: null
+      viewSegment: null,
+      showTransactions: false,
+      webhookUrl: ''
     }
     ReactGA.pageview('/segments')
     this.contractOptions = {}
@@ -97,8 +99,8 @@ export default class Segments extends React.Component {
     this.setState({ date });
   };
 
-  handleSegmentModal = (data) => {
-    this.setState({ segmentToShow: data, showSegmentModal: true });
+  handleSegmentModal = (data, showTransactions) => {
+    this.setState({ segmentToShow: data, showSegmentModal: true, showTransactions });
   };
 
   handleCloseSegmentModal = () => {
@@ -147,7 +149,7 @@ export default class Segments extends React.Component {
       label: importAddress
     })
     const orgData = await getCloudServices().monitorContract(sessionData.id, importAddress)
-    await getCloudServices().getContractEventCount(sessionData.id, importAddress)
+    await getCloudServices().getContractEventCount(sessionData.id, importAddress, false)
     const appData = orgData.apps[currentAppId]
     this.setState({
       importModalOpen: false,
@@ -642,7 +644,8 @@ export default class Segments extends React.Component {
       tokenType,
       editSegment,
       filterType,
-      newSegName
+      newSegName,
+      webhookUrl
     } = this.state;
     const filterToUse = allFilters.filter((a) => a.filter === filterType)[0];
     const erc20Balance = tokenType === "ERC-20";
@@ -691,86 +694,28 @@ export default class Segments extends React.Component {
         ) : (
           <div />
         )}
-
-        {/*<div className="form-group col-md-12">
-          <label htmlFor="dashboardShow">Show on Dashboard</label>
-          <Dropdown
-            value={dashboardShow}
-            placeholder='Show on dashboard...'
-            onChange={(e, { value }) => {
-              this.setState({ dashboardShow: value })
-            }}
-            openOnFocus={false}
-            fluid
-            selection
-            options={[
-              { key: 'yes', text: 'Yes', value: 'Yes' },
-              { key: 'no', text: 'No', value: 'No' }
-            ]}
-          />
-          </div>*/}
-        {0 && editSegment && !condition ? (
-          <div>
-            <div className="form-group col-md-12">
-              <label htmlFor="tileName">Update Segment Name</label>
-              <Input
-                placeholder="Give it a name"
-                fluid
-                onChange={(e, {value}) => this.setState({ newSegName: value })}
-                value={newSegName}
-                type="text"
-                id="tileName"
-              />
-            </div>
-            <div className="form-group col-md-12">
-              <label htmlFor="chartSty">Update The Segment</label>
-              <br />
-              {createCriteria ? (
-                <Button
-                  onClick={() => updateSegment(this)}
-                  primary
-                >
-                  Update Segment
-                </Button>
-              ) : (
-                <Button disabled>
-                  Update Segment
-                </Button>
-              )}
-            </div>
+        <div>
+          <div className="form-group col-md-12">
+            <label htmlFor="tileName">Specify a webhook URL</label>
+            <Input
+              placeholder="https://webhook.url"
+              fluid
+              type="url"
+              value={webhookUrl}
+              onChange={(e, {value}) => this.setState({ webhookUrl: value })}
+            />
           </div>
-        ) : editSegment && condition && condition.id ? (
-          <div>
-            <div className="form-group col-md-12">
-              <label htmlFor="chartSty">Update The Filter Condition</label>
-              <br />
-              {createCriteria ? (
-                <Button onClick={() => {
-                  addFilter(this, condition)}
-                } positive>
-                  Update Filter
-                </Button>
-              ) : (
-                <Button disabled>
-                  Update Filter
-                </Button>
-              )}
-            </div>
+          <div className="form-group col-md-12">
+            <label htmlFor="tileName">Then, Give It A Name</label>
+            <Input
+              placeholder="Give it a name"
+              fluid
+              type="text"
+              value={newSegName}
+              onChange={(e, {value}) => this.setState({ newSegName: value })}
+            />
           </div>
-        ) : (
-          <div>
-            <div className="form-group col-md-12">
-              <label htmlFor="tileName">Then, Give It A Name</label>
-              <Input
-                placeholder="Give it a name"
-                fluid
-                type="text"
-                value={newSegName}
-                onChange={(e, {value}) => this.setState({ newSegName: value })}
-              />
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -807,11 +752,12 @@ export default class Segments extends React.Component {
     }
   }
   handleWebhookUrlWork = async () => {
-    const { webhook } = this.state
-    const url = `http://localhost:3003/?url=${webhook}`
+    const { webhookUrl } = this.state
+    const url = `http://localhost:3003/?url=${webhookUrl}`
     await fetch(url);
     // const jsonData = await result.json();
     console.log("Webhook triggerred")
+    // this.setState({ webhookUrl: value })
   }
   render() {
     const { sessionData, processing, anOrgStatusObj, currentAppId } = this.global;
@@ -830,7 +776,7 @@ export default class Segments extends React.Component {
       seg,
       newSegName,
       webhookOpen,
-      webhook,
+      webhookUrl,
       isCreateSegment,
       filterType,
       tokenAddress,
@@ -846,7 +792,8 @@ export default class Segments extends React.Component {
       addressToUnmonitor, 
       dataToUnMonitor,
       showViewSegment,
-      viewSegment
+      viewSegment,
+      showTransactions
     } = this.state;
     const segments = currentSegments ? currentSegments : [];
     // const defaultSegments = ['All Users', 'Monthly Active Users', 'Weekly Active Users']
@@ -878,6 +825,7 @@ export default class Segments extends React.Component {
     }
     let createSegmentDisabled = false
     let addAnotherFilter = false
+    const isAmount = (eventAmountType === 'eth' || eventAmountType === 'wei' || eventAmountType === 'int')
     if (!newSegName.length) {
       createSegmentDisabled = true
     } //give it a name 
@@ -885,7 +833,8 @@ export default class Segments extends React.Component {
       !filterType // no filter
       || (filterType === "Wallet Balance" && (!tokenAddress || !operatorType || walletAmount < 0 || !walletAmountType))
       || (filterType === "Smart Contract Intersection" && (!contractAddress))
-      || (filterType === "Smart Contract Events" && (!eventAmountType || !contractEvent || !contractEventInput || !operatorType || !eventAmount))
+      || (filterType === "Smart Contract Events" && (!eventAmountType || !contractEvent || !contractEventInput || !operatorType
+       || (isAmount && eventAmount < 0) || (!isAmount && !eventAmount)))
     ) {
       createSegmentDisabled = true
       addAnotherFilter = true
@@ -894,7 +843,7 @@ export default class Segments extends React.Component {
       createSegmentDisabled = true
       addAnotherFilter = true
     }
-    else if ((eventAmountType === "eth" || eventAmountType === "wei") && isNaN(eventAmount)) {
+    else if (isAmount && isNaN(eventAmount)) {
       createSegmentDisabled = true
       addAnotherFilter = true
     }
@@ -978,12 +927,12 @@ export default class Segments extends React.Component {
                       <Grid.Column key={contract_name}>
                         <Segment key={uuid()} color='green' raised padded>
                           <Header as='h3' dividing>
-                            <Header.Content>{contract_name}</Header.Content>
+                            <Header.Content><u><a rel="noopener noreferrer" href={`https://etherscan.io/address/${key}`} target="_blank">{contract_name}</a></u></Header.Content>
                             <Header.Subheader color='grey' style={{marginTop: 5}}>
                                Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${latest_block_id}`} target="_blank">{latest_block_id}</a>
                             </Header.Subheader>
                             {!disableWallets && value.hasOwnProperty('wallet_count')? (
-                              <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal({name: contract_name, wallets: recent_wallets})}>
+                              <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal({name: contract_name, wallets: recent_wallets}, false)}>
                                 {wallet_count}
                               </Label>
                             ) : (
@@ -994,14 +943,14 @@ export default class Segments extends React.Component {
                             }
                           </Header>
                           <Button.Group>
-                            <Button disabled={disableWallets} onClick={() => this.handleSegmentModal({name: contract_name, wallets: recent_wallets})} icon basic>
+                            <Button disabled={disableWallets} onClick={() => this.handleSegmentModal({name: contract_name, wallets: recent_wallets}, false)} icon basic>
                               <Icon name='address book outline' size='large' color='black' />
                               <p className='name'>Wallets</p>
                             </Button>
-                            <Button disabled={currentAppId !== '8d7312fa-5731-467b-bdd1-d18e5f84776a'} icon basic>
+                            {/* <Button disabled={currentAppId !== '8d7312fa-5731-467b-bdd1-d18e5f84776a'} icon basic>
                               <Icon name='globe' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
                               <p className='name'>Connect</p>
-                            </Button>
+                            </Button> */}
                             <Button onClick={() => this.deleteMonitoredContract(key, value, false)} icon basic>
                               <Icon color='red' name='trash alternate outline' size='large' />
                               <p className='name'>Delete</p>
@@ -1039,7 +988,7 @@ export default class Segments extends React.Component {
                                Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${blockId}`} target="_blank">{blockId}</a>
                             </Header.Subheader>
                             {!disableWallets && userCount ? (
-                              <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal({name, wallets: users})}>
+                              <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal({name, wallets: users}, true)}>
                                 {userCount}
                               </Label>
                             ) : userCount === "0" ? (
@@ -1054,7 +1003,7 @@ export default class Segments extends React.Component {
                             }
                           </Header>
                           <Button.Group>
-                            <Button disabled={version !== '2.0' || !users} onClick={() => this.handleSegmentModal({name, wallets: users})} icon basic>
+                            <Button disabled={version !== '2.0' || !users} onClick={() => this.handleSegmentModal({name, wallets: users}, true)} icon basic>
                               <Icon name='list alternate outline' size='large' color='black' />
                               <p className='name'>TX Hash</p>
                             </Button>
@@ -1062,10 +1011,10 @@ export default class Segments extends React.Component {
                               <Icon name='search' size='large' color='blue' />
                               <p className='name'>View</p>
                             </Button>
-                            <Button disabled={currentAppId !== '8d7312fa-5731-467b-bdd1-d18e5f84776a' || !users} icon basic>
+                            {/* <Button disabled={currentAppId !== '8d7312fa-5731-467b-bdd1-d18e5f84776a' || !users} icon basic>
                               <Icon name='globe' size='large' color='green' onClick={() => this.setState({ webhookOpen: true })} />
                               <p className='name'>Connect</p>
-                            </Button>
+                            </Button> */}
                             <Button onClick={() => deleteSegment(this, segment, false)} icon basic>
                               <Icon color='red' name='trash alternate outline' size='large' />
                               <p className='name'>Delete</p>
@@ -1119,12 +1068,12 @@ export default class Segments extends React.Component {
               <Dialog
                 isShown={showSegmentModal}
                 title={segmentToShow.name}
-                onCloseComplete={() => this.setState({ showSegmentModal: false, segmentToShow: {} })}
+                onCloseComplete={() => this.setState({ showSegmentModal: false, segmentToShow: {}, showTransactions: false })}
                 confirmLabel='Close'
                 hasCancel={false}
                 width={640}
               >
-                <SegmentTable wallets={segmentToShow.wallets} />
+                <SegmentTable wallets={segmentToShow.wallets} showTransactions={showTransactions}  />
               </Dialog>
               <Dialog
                 isShown={editSegment}
@@ -1182,7 +1131,7 @@ export default class Segments extends React.Component {
                 title="Setup a webhook URL for your segment"
                 onCancel={() => this.setState({ webhookOpen: false })}
                 confirmLabel='Save'
-                onCloseComplete={() => this.handleWebhookUrlWork()}
+                onCloseComplete={() => console.log('blah')}
                 width={640}
               >
                 You can add a webhook url where we will send segment updates to.
@@ -1190,8 +1139,8 @@ export default class Segments extends React.Component {
                   <div className="top-15">
                     <Input
                       fluid
-                      value={webhook}
-                      onChange={(e, {value}) => this.setState({ webhook: value })}
+                      value={webhookUrl}
+                      onChange={(e, {value}) => this.setState({ webhookUrl: value })}
                       placeholder="Enter webhook url..."
                     />
                   </div>
@@ -1214,6 +1163,7 @@ export default class Segments extends React.Component {
                             Object.entries(filter.params).map
                             ( ([key, value]) => <li><b>&nbsp;&nbsp;{key}</b>: {value}</li> )
                             }
+                            <li><b>&nbsp;&nbsp;Webhook:</b> {viewSegment.webHook.url}</li>
                           </div>
                           <br/>
                       </div>

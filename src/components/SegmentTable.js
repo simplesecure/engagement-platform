@@ -52,7 +52,7 @@ export default class SegmentTable extends React.Component {
       </Menu>
     )
   }
-  renderRow = ({ wallet }) => {
+  renderRow = (wallet, showTransactions) => {
     const { address, block_id, block_timestamp, hash } = wallet
     let link = ''
     if (hash) {
@@ -60,13 +60,13 @@ export default class SegmentTable extends React.Component {
     } else {
       link = `https://etherscan.io/address/` + address
     }
-    let name = address ? address.substring(2) : ''
+    let name = showTransactions ? hash.substring(2) : address.substring(2)
     return (
       <Table.Row key={uuid()} isSelectable onSelect={() => window.open(link, "_blank")}>
         <Table.Cell display="flex" alignItems="center" flexBasis={300} flexShrink={0} flexGrow={0}>
           <Avatar name={name} />
           <Text marginLeft={8} size={300} fontWeight={500}>
-            {address}
+            {showTransactions ? hash : address}
           </Text>
         </Table.Cell>
         <Table.TextCell>{block_timestamp}</Table.TextCell>
@@ -86,25 +86,26 @@ export default class SegmentTable extends React.Component {
     this.setState({showDialog: !this.state.showDialog})
   }
   render() {
-    const { wallets } = this.props
+    const { wallets, showTransactions } = this.props
     const { showDialog, address, walletType, hash } = this.state
     const items = this.filter(wallets)
     return (
       <div>
         <Table border>
           <Table.Head>
-            <Table.SearchHeaderCell
+            {/* <Table.SearchHeaderCell
               onChange={this.handleFilterChange}
               value={this.state.searchQuery}
               placeholder='Search by wallet...'
               flexBasis={300} flexShrink={0} flexGrow={0}
-            />
+            /> */}
+            <Table.TextCell flexBasis={300} flexShrink={0} flexGrow={0}>{showTransactions ? 'Transactions' : 'Wallet Addresses'}</Table.TextCell>
             <Table.TextCell>Timestamp</Table.TextCell>
             <Table.TextCell>Ethereum Block</Table.TextCell>
             {/* <Table.HeaderCell width={48} flex="none" /> */}
           </Table.Head>
           <Table.VirtualBody height={400}>
-            {items.map(item => this.renderRow({ wallet: item }))}
+            {items.map(item => this.renderRow(item, showTransactions))}
           </Table.VirtualBody>
         </Table>
         <UserWallet

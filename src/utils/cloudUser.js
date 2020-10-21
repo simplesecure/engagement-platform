@@ -418,7 +418,7 @@ class CloudServices {
 
       const { monitoring } = data
       // get event count information
-      await getCloudServices().getContractEventCount(currentAppId, monitoring)
+      await getCloudServices().getContractEventCount(currentAppId, monitoring, true)
 
       // Get DAU/MAU Analytics Information
       // const values = [1, 2, 3, 4, 5, 6, 7, 14, 21, 28]
@@ -469,15 +469,15 @@ class CloudServices {
       });
 
       //  Fetch web2 analytics eventNames - we will fetch the actual event results in Segment handling
-      let web2AnalyticsCmdObj = {
-        command: 'getWeb2Analytics',
-            data: {
-             appId: currentAppId
-          }
-      }
+      // let web2AnalyticsCmdObj = {
+      //   command: 'getWeb2Analytics',
+      //       data: {
+      //        appId: currentAppId
+      //     }
+      // }
 
-      let web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
-      setGlobal({ web2Events: web2Analytics.data ? web2Analytics.data : [] });
+      // let web2Analytics = await getWeb2Analytics(web2AnalyticsCmdObj);
+      // setGlobal({ web2Events: web2Analytics.data ? web2Analytics.data : [] });
 
       //Check what pieces of data need to be processed. This looks at the segments, processes the data for the segments to
       //Get the correct results
@@ -564,12 +564,17 @@ class CloudServices {
     setGlobal(nextState)
   }
 
-  async getContractEventCount(anAppId, monitoring) {
+  async getContractEventCount(anAppId, monitoring, isArray) {
     const orgId = undefined
     let { contractData, eventData } = await getGlobal()
     if (!eventData)
       eventData = {}
-    const keys = Object.keys(monitoring)
+    let keys = []
+    if (isArray) {
+      keys = Object.keys(monitoring)
+    } else {
+      keys = [monitoring]
+    }
     for (let key of keys) {
       const proxy_contract = key.toLowerCase()
       const idx = Object.keys(contractData).find(key => proxy_contract === contractData[key].address)
