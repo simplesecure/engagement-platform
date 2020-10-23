@@ -43,8 +43,10 @@ export const clearState = (that, filter=false) => {
     walletAmount: 0,
     eventAmount: '',
     contractEventInput: null,
+    contractEventInputType: null,
     eventAmountType: null,
-    contractEvent: null
+    contractEvent: null,
+    webhookUrl: ''
   });
 }
 
@@ -211,6 +213,7 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
     operatorType,
     contractAddress,
     contractEventInput,
+    contractEventInputType,
     contractEvent,
     filterType,
     walletAmount,
@@ -238,6 +241,7 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
         operatorType = f.contractEvent.operatorType
         contractEvent = f.contractEvent.contractEvent
         contractEventInput = f.contractEvent.contractEventInput
+        contractEventInputType = f.contractEvent.contractEventInputType
         contractAddress = f.contractEvent.contractAddress
       }
       else if (f.contractAddress) {
@@ -255,6 +259,7 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
         eventAmountType,
         contractAddress,
         contractEventInput,
+        contractEventInputType,
         contractEvent
       )
     })
@@ -272,6 +277,7 @@ export const createNewSegmentCriteria = (that, segmentCriteria) => {
       eventAmountType,
       contractAddress,
       contractEventInput,
+      contractEventInputType,
       contractEvent
     )
   }
@@ -301,6 +307,7 @@ export const addFiltersForNewSegmentCriteria = (
   eventAmountType,
   contractAddress,
   contractEventInput,
+  contractEventInputType,
   contractEvent ) => {
   if (filterToUse.filter === "Smart Contract Events") {
     let implementation_address = ''
@@ -314,6 +321,7 @@ export const addFiltersForNewSegmentCriteria = (
       implementation_address = contractAddress
       proxy_address = contractAddress
     }
+    debugger
     filters.push(
       {
         type: 'event',
@@ -323,6 +331,7 @@ export const addFiltersForNewSegmentCriteria = (
           proxy_address,
           event_name: contractEvent,
           input_name: contractEventInput,
+          indexed: contractEventInputType,
           operator: operatorType,
           value: eventAmount,
           valueType: eventAmountType === 'int' ? 'wei' : eventAmountType
@@ -420,6 +429,7 @@ export const addFilter = (that, condition) => {
     dashboardShow,
     contractEvent,
     contractEventInput,
+    contractEventInputType,
     walletAmount,
     walletAmountType,
     eventAmount,
@@ -463,6 +473,7 @@ export const addFilter = (that, condition) => {
           contractAddress,
           contractEvent,
           contractEventInput,
+          contractEventInputType,
           operatorType,
           eventAmount,
           eventAmountType

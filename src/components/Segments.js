@@ -66,6 +66,7 @@ export default class Segments extends React.Component {
       walletAmountType: 'eth',
       eventAmount: 0,
       contractEventInput: null,
+      contractEventInputType: null,
       eventAmountType: 'eth',
       contractEvent: null,
       isLoading: false,
@@ -83,6 +84,7 @@ export default class Segments extends React.Component {
     this.dataInputs = []
     this.dataInputTypes = []
     this.contractOptions = []
+    this.dataInputIndexed = []
     this.tokenOptions = []
   }
 
@@ -240,6 +242,7 @@ export default class Segments extends React.Component {
       tokenAddress,
       contractEvent,
       contractEventInput,
+      contractEventInputType,
       eventAmount,
       eventAmountType,
       walletAmount,
@@ -437,8 +440,9 @@ export default class Segments extends React.Component {
                   placeholder='Choose Input...'
                   value={contractEventInput}
                   onChange={(e, {value}) => {
-                    this.setState({ contractEventInput: value })
+                    const type = this.dataInputIndexed[contractEvent][value]
                     const opt = this.dataInputTypes[contractEvent][value]
+                    this.setState({ contractEventInput: value, contractEventInputType: type.key })
                     if (opt.key !== 'uint256') {
                       this.setState({ eventAmountType: opt.key })
                     }
@@ -554,6 +558,7 @@ export default class Segments extends React.Component {
     this.dataInputs = []
     this.dataInputTypes = []
     this.contractOptions = []
+    this.dataInputIndexed = []
     this.tokenOptions = []
     const { contractData, sessionData, tokenData } = this.global
     const { monitoring } = sessionData
@@ -591,11 +596,14 @@ export default class Segments extends React.Component {
           const { inputs } = item
           let inputOptions = []
           let inputOptionTypes = {}
+          let inputOptionIndexed = {}
           inputs.forEach((it) => {
             // enabling non uint256 types here
             // if (!it.indexed || it.type === 'uint256') {
+            // enabling indexed types and disabling array events
+            // if (!indexed && name !== "") {
             let { indexed, name, type } = it
-            if (!indexed && name !== "") {
+            if (type !== 'array' && name !== "") {
               inputOptions.push({
                 key: name,
                 text: name,
@@ -607,11 +615,17 @@ export default class Segments extends React.Component {
                 text: type,
                 value: type
               }
+              inputOptionIndexed[name] = {
+                key: indexed,
+                text: indexed,
+                value: indexed
+              }
             }
           })
           if (inputOptions.length) {
             this.dataInputs[nm] = inputOptions
             this.dataInputTypes[nm] = inputOptionTypes
+            this.dataInputIndexed[nm] = inputOptionIndexed
             options.push({
               key: nm,
               text: nm,
@@ -787,6 +801,7 @@ export default class Segments extends React.Component {
       eventAmountType,
       contractEvent,
       contractEventInput,
+      contractEventInputType,
       eventAmount,
       isLoading,
       addressToUnmonitor, 
