@@ -152,6 +152,8 @@ export default class Segments extends React.Component {
     })
     const orgData = await getCloudServices().monitorContract(sessionData.id, importAddress)
     await getCloudServices().getContractEventCount(sessionData.id, importAddress, false)
+    await getCloudServices().getTokenTop50Wallets(importAddress, false)
+    await getCloudServices().getCustomChartData(importAddress, false)
     const appData = orgData.apps[currentAppId]
     this.setState({
       importModalOpen: false,

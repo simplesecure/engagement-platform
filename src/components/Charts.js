@@ -1,5 +1,11 @@
 import React from "reactn"
 import Chart from "react-google-charts"
+import {
+  Avatar,
+  Table,
+  Text
+} from 'evergreen-ui'
+import uuid from 'uuid/v4'
 var Spinner = require('react-spinkit')
 
 export const getDonutChart = (contracts) => {
@@ -31,7 +37,115 @@ export const getDonutChart = (contracts) => {
     </div>
   )
 }
-export const getMvp30BubbleChart = (currentContractAddr, monitoring) => {
+
+export const getCustomChart = (contractName, currentContractAddr, monitoring, customChartData) => {
+  let addr = currentContractAddr
+  const wei = 0.000000000000000001
+  const gwei = 0.00000001
+  if (addr === '') {
+    addr = Object.keys(monitoring)[0]
+  }
+  let data = null
+  if (customChartData)
+    data = customChartData[addr].data
+  let idx1 = contractName.indexOf('(') + 1
+  let idx2 = contractName.indexOf(')')
+  let assetType = (idx1 > -1 && idx2 > idx1) ? contractName.substring(idx1, idx2) : null
+  if (data) {
+    let aTitle = customChartData[addr].title + contractName
+    return (
+      <div className="col-lg-6 col-md-6 col-sm-6 mb-4">
+        <div className="stats-small stats-small--1 card card-small">
+          <span
+            className="text-uppercase"
+            style={{marginTop: 32, marginBottom: 12, textAlign: 'center', fontWeight: 'bold'}} >
+            {aTitle}
+          </span>
+          <div style={{width:'100%', justifyContent:'center'}}>
+            <Table>
+              <Table.Head>
+                <Table.TextHeaderCell>
+                  Wallet Address
+                </Table.TextHeaderCell>
+                <Table.TextHeaderCell>
+                  Asset Value
+                </Table.TextHeaderCell>
+              </Table.Head>
+              <Table.Body height={300}>
+                {data.map(wallet => (
+                  <Table.Row key={wallet.address} isSelectable onSelect={() => window.open(`https://etherscan.io/address/${wallet.address}`, "_blank")}>
+                    <Table.TextCell isNumber>
+                      <Avatar name={wallet.address.substr(2, 2)} />
+                      {wallet.address}
+                    </Table.TextCell>
+                    <Table.TextCell isNumber>
+                      {`${(Math.round(parseInt(wallet.amount)*gwei)).toLocaleString()} (${assetType})`}
+                    </Table.TextCell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table>
+          </div>
+        </div>
+      </div>
+    )
+  } else return null
+}
+
+export const getTop50Wallets = (aTitle, currentContractAddr, monitoring, tokenTop50Wallets) => {
+  let addr = currentContractAddr
+  const wei = 0.000000000000000001
+  const gwei = 0.00000001
+  if (addr === '') {
+    addr = Object.keys(monitoring)[0]
+  }
+  let data = null
+  if (tokenTop50Wallets)
+    data = tokenTop50Wallets[addr]
+  let idx1 = aTitle.indexOf('(') + 1
+  let idx2 = aTitle.indexOf(')')
+  let assetType = (idx1 > -1 && idx2 > idx1) ? aTitle.substring(idx1, idx2) : null
+  if (data) {
+    return (
+      <div className="col-lg-6 col-md-6 col-sm-6 mb-4">
+        <div className="stats-small stats-small--1 card card-small">
+          <span
+            className="text-uppercase"
+            style={{marginTop: 32, marginBottom: 12, textAlign: 'center', fontWeight: 'bold'}} >
+            {aTitle}
+          </span>
+          <div style={{width:'100%', justifyContent:'center'}}>
+            <Table>
+              <Table.Head>
+                <Table.TextHeaderCell>
+                  Wallet Address
+                </Table.TextHeaderCell>
+                <Table.TextHeaderCell>
+                  Asset Value
+                </Table.TextHeaderCell>
+              </Table.Head>
+              <Table.Body height={300}>
+                {data.map(wallet => (
+                  <Table.Row key={wallet.address} isSelectable onSelect={() => window.open(`https://etherscan.io/address/${wallet.address}`, "_blank")}>
+                    <Table.TextCell isNumber>
+                      <Avatar name={wallet.address.substr(2, 2)} />
+                      {wallet.address}
+                    </Table.TextCell>
+                    <Table.TextCell isNumber>
+                      {`${(parseInt(wallet.amount)*gwei).toLocaleString()} (${assetType})`}
+                    </Table.TextCell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table>
+          </div>
+        </div>
+      </div>
+    )
+  } else return null
+}
+
+export const getMvp30BubbleChart = (aTitle, currentContractAddr, monitoring) => {
   let addr = currentContractAddr
   const wei = 0.000000000000000001
   if (addr === '') {
@@ -62,19 +176,26 @@ export const getMvp30BubbleChart = (currentContractAddr, monitoring) => {
     }
   }
   return (
-    <div style={{flex:1, width:'100%'}}>
-      <Chart
-        loader={<Spinner name="circle" color="blue"/>}
-        chartType="BubbleChart"
-        height="100%"
-        data={data}
-        options={options}
-      />
+    <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
+      <span
+        className="text-uppercase"
+        style={{marginTop: 32, textAlign: 'center', fontWeight: 'bold'}} >
+        {aTitle}
+      </span>
+      <div style={{flex:1, width:'100%'}}>
+        <Chart
+          loader={<Spinner name="circle" color="blue"/>}
+          chartType="BubbleChart"
+          height="100%"
+          data={data}
+          options={options}
+        />
+      </div>
     </div>
   )
 }
 
-export const getMvpAllBubbleChart = (currentContractAddr, monitoring) => {
+export const getMvpAllBubbleChart = (aTitle, currentContractAddr, monitoring) => {
   let addr = currentContractAddr
   const wei = 0.000000000000000001
   if (addr === '') {
@@ -106,19 +227,26 @@ export const getMvpAllBubbleChart = (currentContractAddr, monitoring) => {
     }
   }
   return (
-    <div style={{flex:1, width:'100%'}}>
-      <Chart
-        loader={<Spinner name="circle" color="blue"/>}
-        chartType="BubbleChart"
-        height="100%"
-        data={data}
-        options={options}
-      />
+    <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
+      <span
+        className="text-uppercase"
+        style={{marginTop: 32, textAlign: 'center', fontWeight: 'bold'}} >
+        {aTitle}
+      </span>
+      <div style={{flex:1, width:'100%'}}>
+        <Chart
+          loader={<Spinner name="circle" color="blue"/>}
+          chartType="BubbleChart"
+          height="100%"
+          data={data}
+          options={options}
+        />
+      </div>
     </div>
   )
 }
 
-export const getMonitoredEventChart = (currentContractAddr, monitoring, eventData) => {
+export const getMonitoredEventChart = (aTitle, currentContractAddr, monitoring, eventData) => {
   let eventCount
   if (!eventData) return null
   if (currentContractAddr === '') {
@@ -147,18 +275,25 @@ export const getMonitoredEventChart = (currentContractAddr, monitoring, eventDat
     }
   }
   return (
-    <Chart
-      loader={<Spinner name="circle" color="blue"/>}
-      width="100%"
-      height="100%"
-      chartType="Bar"
-      data={data}
-      options={options}
-    />
+    <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
+      <span
+        className="text-uppercase"
+        style={{marginTop: 32, textAlign: 'center', fontWeight: 'bold'}} >
+        {aTitle}
+      </span>
+      <Chart
+        loader={<Spinner name="circle" color="blue"/>}
+        width="100%"
+        height="100%"
+        chartType="Bar"
+        data={data}
+        options={options}
+      />
+    </div>
   )
 }
 
-export const get7DayChart = (currentContractAddr, monitoring) => {
+export const get7DayChart = (aTitle, currentContractAddr, monitoring) => {
   let userData
   if (currentContractAddr === '') {
     userData = monitoring[Object.keys(monitoring)[0]].daily_transactions
@@ -205,18 +340,25 @@ export const get7DayChart = (currentContractAddr, monitoring) => {
     }
   }
   return (
-    <Chart
-      loader={<Spinner name="circle" color="blue"/>}
-      width="100%"
-      height="100%"
-      chartType="BarChart"
-      data={data}
-      options={options}
-    />
+    <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
+      <span
+        className="text-uppercase"
+        style={{marginTop: 32, textAlign: 'center', fontWeight: 'bold'}} >
+        {aTitle}
+      </span>
+      <Chart
+        loader={<Spinner name="circle" color="blue"/>}
+        width="100%"
+        height="100%"
+        chartType="BarChart"
+        data={data}
+        options={options}
+      />
+    </div>
   )
 }
 
-export const getMonthChart = (currentContractAddr, monitoring) => {
+export const getMonthChart = (aTitle, currentContractAddr, monitoring) => {
   let userData
   if (currentContractAddr === '') {
     userData = monitoring[Object.keys(monitoring)[0]].daily_transactions
@@ -259,33 +401,33 @@ export const getMonthChart = (currentContractAddr, monitoring) => {
     style: { color: 'green'}
   }
   return (
-    <Chart
-      loader={<Spinner name="circle" color="blue"/>}
-      width="100%"
-      height="100%"
-      chartType="BarChart"
-      data={data}
-      options={options}
-    />
+    <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
+      <span
+        className="text-uppercase"
+        style={{marginTop: 32, textAlign: 'center', fontWeight: 'bold'}} >
+        {aTitle}
+      </span>
+      <Chart
+        loader={<Spinner name="circle" color="blue"/>}
+        width="100%"
+        height="100%"
+        chartType="BarChart"
+        data={data}
+        options={options}
+      />
+    </div>
   )
 }
 
-export const getChartCard = (aTitle, theChart, minHeight=420) => {
+export const getChartCard = (theChart, minHeight=420) => {
   return (
     <div
-      key={aTitle}
+      key={uuid()}
       className="col-lg-6 col-md-6 col-sm-6 mb-4"
     >
       <div className="stats-small stats-small--1 card card-small">
         <div className="card-body p-0 d-flex" style={{width:'100%', justifyContent:'center', minHeight:420}}>
-          <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
-            <span
-              className="text-uppercase"
-              style={{marginTop: 32, textAlign: 'center', fontWeight: 'bold'}} >
-              {aTitle}
-            </span>
-            {theChart}
-          </div>
+          {theChart}
         </div>
       </div>
     </div>

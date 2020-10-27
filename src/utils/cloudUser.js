@@ -8,6 +8,9 @@ import { toast } from "react-toastify";
 const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST);
 const log = getLog('cloudUser')
 
+const { customCharts } = require('./customCharts')
+const { customChartsSQL } = require('./customChartsSQL')
+
 const filter = require('./filterOptions.json');
 
 const SIMPLEID_USER_SESSION = 'SID_SVCS';
@@ -419,7 +422,8 @@ class CloudServices {
       const { monitoring } = data
       // get event count information
       await getCloudServices().getContractEventCount(currentAppId, monitoring, true)
-
+      await getCloudServices().getTokenTop50Wallets(monitoring, true)
+      await getCloudServices().getCustomChartData(monitoring, true)
       // Get DAU/MAU Analytics Information
       // const values = [1, 2, 3, 4, 5, 6, 7, 14, 21, 28]
       // const analyticsTable = 'analytics_' + currentAppId
@@ -562,6 +566,71 @@ class CloudServices {
     //   nextState['sessionData'] = sessionData
     // }
     setGlobal(nextState)
+  }
+
+  async getTokenTop50Wallets(tokenAddress, isArray) {
+    let { tokenData, tokenTop50Wallets } = await getGlobal()
+    let keys = []
+    if (isArray) {
+      keys = Object.keys(tokenAddress)
+    } else {
+      keys = [tokenAddress]
+    }
+    for (let k of keys) {
+      const idx = Object.keys(tokenData).find(key => k === tokenData[key].address)
+      if (idx > -1 ) {
+        if (!tokenTop50Wallets)
+          tokenTop50Wallets = {}
+        // Get latest list of ERC20 tokens we support
+        const tokenOperationData = {
+          getStr: `SELECT 
+                    address,
+                    "${k}" AS amount
+                  FROM balances
+                  ORDER BY "${k}" DESC NULLS LAST
+                  LIMIT 50`,
+          values: []
+        }
+        const returnData = await runClientOperation('getPg', null, null, tokenOperationData)
+        if (returnData) {
+          tokenTop50Wallets[k] = returnData
+          await setGlobal({ tokenTop50Wallets })
+        }
+      }
+    }
+  }
+
+  async getCustomChartData(tokenAddress, isArray) {
+    let { customChartData } = await getGlobal()
+    let keys = []
+    if (isArray) {
+      keys = Object.keys(tokenAddress)
+    } else {
+      keys = [tokenAddress]
+    }
+    for (let k of keys) {
+      const idx = Object.keys(customCharts).find(key => k === customCharts[key].address)
+      if (idx > -1 ) {
+        if (!customChartData)
+          customChartData = {}
+        // Get latest list of ERC20 tokens we support
+        const getStr = customChartsSQL[customCharts[idx]["charts"]](k)
+        const tokenOperationData = {
+          getStr,
+          values: []
+        }
+        let returnData = await runClientOperation('getPg', null, null, tokenOperationData)
+        //hack to remove additional headers from SQL output
+        returnData.shift()
+        if (returnData) {
+          customChartData[k] = {
+            data: returnData,
+            title: customCharts[idx]["title"]
+          }
+          await setGlobal({ customChartData })
+        }
+      }
+    }
   }
 
   async getContractEventCount(anAppId, monitoring, isArray) {

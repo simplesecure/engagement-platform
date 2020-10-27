@@ -19,7 +19,9 @@ import {
   getMvp30BubbleChart,
   // getMvpAllBubbleChart,
   getMonitoredEventChart,
-  getChartCard
+  getChartCard,
+  getTop50Wallets,
+  getCustomChart
 } from './Charts'
 import DashboardTiles from './DashboardTiles'
 import ProcessingBlock from './ProcessingBlock'
@@ -52,7 +54,9 @@ class Dashboard extends React.Component {
       sessionData,
       processing,
       publicDashboard,
-      eventData
+      eventData,
+      tokenTop50Wallets,
+      customChartData
     } = this.global
     const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal, currentContractAddr } = this.state
     const { currentSegments, monitoring } = sessionData
@@ -114,10 +118,13 @@ class Dashboard extends React.Component {
                 />) : null}
                 {(!noMonitoring) ? (<Grid>
                   {/* {getChartCard('Wallets by Smart Contracts', getDonutChart(monitoring))} */}
-                  {getChartCard(`Daily Transactions: ${contractName}`, get7DayChart(currentContractAddr, monitoring))}
-                  {getChartCard(`Weekly Transactions: ${contractName}`, getMonthChart(currentContractAddr, monitoring))}
-                  {getChartCard(`Top Smart Contract Events: ${contractName}`, getMonitoredEventChart(currentContractAddr, monitoring, eventData))}
-                  {getChartCard(`Top 10 Wallets Transactions 30 days: ${contractName}`, getMvp30BubbleChart(currentContractAddr, monitoring))}
+                  {getChartCard(get7DayChart(`Daily Transactions: ${contractName}`, currentContractAddr, monitoring))}
+                  {getChartCard(getMonthChart(`Weekly Transactions: ${contractName}`, currentContractAddr, monitoring))}
+                  {getChartCard(getMonitoredEventChart(`Top Smart Contract Events: ${contractName}`, currentContractAddr, monitoring, eventData))}
+                  {getChartCard(getMvp30BubbleChart(`Monthly Wallet Retention: ${contractName}`, currentContractAddr, monitoring))}
+                  {getTop50Wallets(`Top 50 Wallets with Asset: ${contractName}`, currentContractAddr, monitoring, tokenTop50Wallets)}
+                  {getCustomChart(contractName, currentContractAddr, monitoring, customChartData)}
+                  {/* {getChartCard(getMvp30BubbleChart(`Top Wallets with Asset: ${contractName}`, currentContractAddr, monitoring, tokenTop50Wallets))} */}
                   {/* {getChartCard(`Top 10 Wallets Transactions All Time: ${contractName}`, getMvpAllBubbleChart(currentContractAddr, monitoring))} */}
                   {/*{getChartCard('Total Value Held In Smart Contracts', getCandleStickChart())}*/}
                 </Grid>) : null}
