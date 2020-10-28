@@ -581,10 +581,10 @@ export default class Segments extends React.Component {
           return
         }
         // if not monitoring the contract, then don't populate the events
-        // if underlying implementation contract, thne we need to get those events
-        if (!Object.keys(monitoring).find(key => (address === key || key === (proxy_contract && proxy_contract.toLowerCase())))) {
-          return
-        }
+        // if underlying implementation contract, then we need to get those events
+        // if (!Object.keys(monitoring).find(key => (address === key || key === (proxy_contract && proxy_contract.toLowerCase())))) {
+        //   return
+        // }
         const contractValue = `${name}: ${address}`
         this.contracts.push({
           key: contractValue,
@@ -949,7 +949,7 @@ export default class Segments extends React.Component {
                                Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${latest_block_id}`} target="_blank">{latest_block_id}</a>
                             </Header.Subheader>
                             {!disableWallets && value.hasOwnProperty('wallet_count')? (
-                              <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal({name: contract_name, wallets: recent_wallets}, false)}>
+                              <Label as='button' color='purple' attached='top right' onClick={() => this.handleSegmentModal({name: contract_name, wallets: recent_wallets}, false)}>
                                 {wallet_count}
                               </Label>
                             ) : (
@@ -987,7 +987,8 @@ export default class Segments extends React.Component {
                 <Grid columns={2}>
                 {
                   segments.map(segment => {
-                    const {name, users, version, id, resultData } = segment
+                    const {name, users, version, id, resultData, filters } = segment
+                    const isEvent = (filters && filters[0] && filters[0].type === 'event')
                     let { blockId, userCount } = segment
                     if (version === '2.0' && resultData) {
                       blockId = resultData.block_id
@@ -1005,7 +1006,7 @@ export default class Segments extends React.Component {
                                Updated at block: <a rel="noopener noreferrer" href={`https://etherscan.io/block/${blockId}`} target="_blank">{blockId}</a>
                             </Header.Subheader>
                             {!disableWallets && userCount ? (
-                              <Label as='button' color='red' attached='top right' onClick={() => this.handleSegmentModal({name, wallets: users}, true)}>
+                              <Label as='button' color={isEvent ? 'orange' : 'purple'} attached='top right' onClick={() => this.handleSegmentModal({name, wallets: users}, true)}>
                                 {userCount}
                               </Label>
                             ) : userCount === "0" ? (
@@ -1021,8 +1022,8 @@ export default class Segments extends React.Component {
                           </Header>
                           <Button.Group>
                             <Button disabled={version !== '2.0' || !users} onClick={() => this.handleSegmentModal({name, wallets: users}, true)} icon basic>
-                              <Icon name='list alternate outline' size='large' color='black' />
-                              <p className='name'>TX Hash</p>
+                              <Icon name={isEvent ? 'list alternate outline' : 'address book outline'} size='large' color='black' />
+                              <p className='name'>{isEvent ? 'TX Hash' : 'Wallets'}</p>
                             </Button>
                             <Button disabled={version !== '2.0' || !segment.filters} onClick={() => this.setState({showViewSegment: true, viewSegment: segment})} icon basic>
                               <Icon name='search' size='large' color='blue' />

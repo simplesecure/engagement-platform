@@ -46,7 +46,7 @@ export const getCustomChart = (contractName, currentContractAddr, monitoring, cu
     addr = Object.keys(monitoring)[0]
   }
   let data = null
-  if (customChartData)
+  if (customChartData && customChartData[addr])
     data = customChartData[addr].data
   let idx1 = contractName.indexOf('(') + 1
   let idx2 = contractName.indexOf(')')
@@ -79,7 +79,7 @@ export const getCustomChart = (contractName, currentContractAddr, monitoring, cu
                       {wallet.address}
                     </Table.TextCell>
                     <Table.TextCell isNumber>
-                      {`${(Math.round(parseInt(wallet.amount)*gwei)).toLocaleString()} (${assetType})`}
+                      {`${(Math.round(parseInt(wallet.amount)*wei)).toLocaleString()} (${assetType})`}
                     </Table.TextCell>
                   </Table.Row>
                 ))}
@@ -92,19 +92,22 @@ export const getCustomChart = (contractName, currentContractAddr, monitoring, cu
   } else return null
 }
 
-export const getTop50Wallets = (aTitle, currentContractAddr, monitoring, tokenTop50Wallets) => {
+export const getTop50Wallets = (aTitle, currentContractAddr, monitoring, tokenTop50Wallets, customChartData) => {
   let addr = currentContractAddr
   const wei = 0.000000000000000001
   const gwei = 0.00000001
+  let conv = wei
   if (addr === '') {
     addr = Object.keys(monitoring)[0]
   }
   let data = null
+  if (customChartData && customChartData[addr])
+    conv = gwei
   if (tokenTop50Wallets)
     data = tokenTop50Wallets[addr]
   let idx1 = aTitle.indexOf('(') + 1
   let idx2 = aTitle.indexOf(')')
-  let assetType = (idx1 > -1 && idx2 > idx1) ? aTitle.substring(idx1, idx2) : null
+  let assetType = (idx1 > -1 && idx2 > idx1) ? `(${aTitle.substring(idx1, idx2)})` : ``
   if (data) {
     return (
       <div className="col-lg-6 col-md-6 col-sm-6 mb-4">
@@ -132,7 +135,7 @@ export const getTop50Wallets = (aTitle, currentContractAddr, monitoring, tokenTo
                       {wallet.address}
                     </Table.TextCell>
                     <Table.TextCell isNumber>
-                      {`${(parseInt(wallet.amount)*gwei).toLocaleString()} (${assetType})`}
+                      {`${(Math.round(parseInt(wallet.amount)*conv)).toLocaleString()} ${assetType}`}
                     </Table.TextCell>
                   </Table.Row>
                 ))}

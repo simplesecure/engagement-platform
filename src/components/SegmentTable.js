@@ -60,13 +60,13 @@ export default class SegmentTable extends React.Component {
     } else {
       link = `https://etherscan.io/address/` + address
     }
-    let name = showTransactions ? hash.substring(2) : address.substring(2)
+    let name = (showTransactions && hash) ? hash.substring(2) : address.substring(2)
     return (
       <Table.Row key={uuid()} isSelectable onSelect={() => window.open(link, "_blank")}>
         <Table.Cell display="flex" alignItems="center" flexBasis={300} flexShrink={0} flexGrow={0}>
           <Avatar name={name} />
           <Text marginLeft={8} size={300} fontWeight={500}>
-            {showTransactions ? hash : address}
+            {(showTransactions && hash) ? hash : address}
           </Text>
         </Table.Cell>
         <Table.TextCell>{block_timestamp}</Table.TextCell>
@@ -99,7 +99,7 @@ export default class SegmentTable extends React.Component {
               placeholder='Search by wallet...'
               flexBasis={300} flexShrink={0} flexGrow={0}
             /> */}
-            <Table.TextCell flexBasis={300} flexShrink={0} flexGrow={0}>{showTransactions ? 'Transactions' : 'Wallet Addresses'}</Table.TextCell>
+            <Table.TextCell flexBasis={300} flexShrink={0} flexGrow={0}>{(showTransactions && hash) ? 'Transactions' : 'Wallet Addresses'}</Table.TextCell>
             <Table.TextCell>Timestamp</Table.TextCell>
             <Table.TextCell>Ethereum Block</Table.TextCell>
             {/* <Table.HeaderCell width={48} flex="none" /> */}

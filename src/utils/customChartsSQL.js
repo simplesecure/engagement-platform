@@ -1,6 +1,5 @@
 export const customChartsSQL = {
   topBorrowers: function(address) {
-    // do something
     return `WITH 
     unique_monitored_wallets as (
       SELECT

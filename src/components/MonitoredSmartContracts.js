@@ -80,10 +80,11 @@ export default class MonitoredSmartContracts extends React.Component {
     const { contractData, sessionData, currentAppId } = this.global
     const { monitoring } = sessionData
     const { isLoading } = this.props
+    const skipChecks = currentAppId === '8d7312fa-5731-467b-bdd1-d18e5f84776a' || currentAppId === '89bdb7c0-22d5-4782-969e-a8b82b20867c'
     // remove proxy contracts
     const pItems = contractData.filter(contract => contract.proxy_contract === null)
     let iItems
-    if (currentAppId === '8d7312fa-5731-467b-bdd1-d18e5f84776a') {
+    if (skipChecks) {
       iItems = pItems
     } else {
       iItems = pItems.filter(contract => contract.is_active === true)
@@ -93,7 +94,7 @@ export default class MonitoredSmartContracts extends React.Component {
     // remove contracts from a different company
     let items
     let companyName
-    if (0) {
+    if (skipChecks) {
       items = this.filter(iItems)
     }
     else if (monitoring && Object.keys(monitoring)[0]) {
