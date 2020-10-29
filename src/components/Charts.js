@@ -68,7 +68,7 @@ export const getCustomChart = (contractName, currentContractAddr, monitoring, cu
                   Wallet Address
                 </Table.TextHeaderCell>
                 <Table.TextHeaderCell>
-                  Asset Value
+                  # of Tokens
                 </Table.TextHeaderCell>
               </Table.Head>
               <Table.Body height={300}>
@@ -80,6 +80,62 @@ export const getCustomChart = (contractName, currentContractAddr, monitoring, cu
                     </Table.TextCell>
                     <Table.TextCell isNumber>
                       {`${(Math.round(parseInt(wallet.amount)*wei)).toLocaleString()} (${assetType})`}
+                    </Table.TextCell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table>
+          </div>
+        </div>
+      </div>
+    )
+  } else return null
+}
+
+export const getTopAssets = (aTitle, currentContractAddr, monitoring, topAssetsByContract) => {
+  let addr = currentContractAddr
+  if (addr === '') {
+    addr = Object.keys(monitoring)[0]
+  }
+  let data = null
+  if (topAssetsByContract)
+    data = topAssetsByContract[addr]
+  if (data) {
+    // Create items array
+    var items = Object.keys(data).map(function(key) {
+      return [key, parseFloat(data[key])];
+    })
+    // Sort the array based on the second element
+    items.sort(function(first, second) {
+      return second[1] - first[1];
+    })
+    return (
+      <div className="col-lg-6 col-md-6 col-sm-6 mb-4">
+        <div className="stats-small stats-small--1 card card-small">
+          <span
+            className="text-uppercase"
+            style={{marginTop: 32, marginBottom: 12, textAlign: 'center', fontWeight: 'bold'}} >
+            {aTitle}
+          </span>
+          <div style={{width:'100%', justifyContent:'center'}}>
+            <Table>
+              <Table.Head>
+                <Table.TextHeaderCell>
+                  Token Type
+                </Table.TextHeaderCell>
+                <Table.TextHeaderCell>
+                  # of Tokens
+                </Table.TextHeaderCell>
+              </Table.Head>
+              <Table.Body height={300}>
+                {items.map(it => (
+                  <Table.Row key={it[0]}>
+                    <Table.TextCell>
+                      <Avatar name={it[0].substr(0, 2)} />
+                      {it[0].toUpperCase()}
+                    </Table.TextCell>
+                    <Table.TextCell isNumber>
+                      {it[1].toLocaleString()}
                     </Table.TextCell>
                   </Table.Row>
                 ))}
@@ -124,7 +180,7 @@ export const getTop50Wallets = (aTitle, currentContractAddr, monitoring, tokenTo
                   Wallet Address
                 </Table.TextHeaderCell>
                 <Table.TextHeaderCell>
-                  Asset Value
+                  # of Tokens
                 </Table.TextHeaderCell>
               </Table.Head>
               <Table.Body height={300}>

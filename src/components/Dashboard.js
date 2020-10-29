@@ -21,7 +21,8 @@ import {
   getMonitoredEventChart,
   getChartCard,
   getTop50Wallets,
-  getCustomChart
+  getCustomChart,
+  getTopAssets
 } from './Charts'
 import DashboardTiles from './DashboardTiles'
 import ProcessingBlock from './ProcessingBlock'
@@ -56,7 +57,8 @@ class Dashboard extends React.Component {
       publicDashboard,
       eventData,
       tokenTop50Wallets,
-      customChartData
+      customChartData,
+      topAssetsByContract
     } = this.global
     const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal, currentContractAddr } = this.state
     const { currentSegments, monitoring } = sessionData
@@ -122,6 +124,7 @@ class Dashboard extends React.Component {
                   {getChartCard(getMonthChart(`Weekly Transactions: ${contractName}`, currentContractAddr, monitoring))}
                   {getChartCard(getMonitoredEventChart(`Top Smart Contract Events: ${contractName}`, currentContractAddr, monitoring, eventData))}
                   {getChartCard(getMvp30BubbleChart(`Monthly Wallet Retention: ${contractName}`, currentContractAddr, monitoring))}
+                  {getTopAssets(`Top Asset in Wallets: ${contractName}`, currentContractAddr, monitoring, topAssetsByContract)}
                   {getTop50Wallets(`Top 50 Wallets with Asset: ${contractName}`, currentContractAddr, monitoring, tokenTop50Wallets, customChartData)}
                   {getCustomChart(contractName, currentContractAddr, monitoring, customChartData)}
                   {/* {getChartCard(getMvp30BubbleChart(`Top Wallets with Asset: ${contractName}`, currentContractAddr, monitoring, tokenTop50Wallets))} */}

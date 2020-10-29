@@ -9,7 +9,6 @@ const socket = socketIOClient(process.env.REACT_APP_WEB_API_HOST);
 const log = getLog('cloudUser')
 
 const { customCharts } = require('./customCharts')
-const { customChartsSQL } = require('./customChartsSQL')
 
 const filter = require('./filterOptions.json');
 
@@ -422,8 +421,8 @@ class CloudServices {
       const { monitoring } = data
       // get event count information
       await getCloudServices().getContractEventCount(currentAppId, monitoring, true)
-      await getCloudServices().getTokenTop50Wallets(monitoring, true)
-      await getCloudServices().getCustomChartData(monitoring, true)
+      await getCloudServices().getTokenTop50Wallets(currentAppId, monitoring, true)
+      await getCloudServices().getCustomChartData(currentAppId, monitoring, true)
       // Get DAU/MAU Analytics Information
       // const values = [1, 2, 3, 4, 5, 6, 7, 14, 21, 28]
       // const analyticsTable = 'analytics_' + currentAppId
@@ -568,7 +567,7 @@ class CloudServices {
     setGlobal(nextState)
   }
 
-  async getTokenTop50Wallets(tokenAddress, isArray) {
+  async getTokenTop50Wallets(anAppId, tokenAddress, isArray) {
     let { tokenData, tokenTop50Wallets } = await getGlobal()
     let keys = []
     if (isArray) {
@@ -591,7 +590,7 @@ class CloudServices {
                   LIMIT 50`,
           values: []
         }
-        const returnData = await runClientOperation('getPg', null, null, tokenOperationData)
+        const returnData = await runClientOperation('getPg', null, anAppId, tokenOperationData)
         if (returnData) {
           tokenTop50Wallets[k] = returnData
           await setGlobal({ tokenTop50Wallets })
@@ -600,7 +599,7 @@ class CloudServices {
     }
   }
 
-  async getCustomChartData(tokenAddress, isArray) {
+  async getCustomChartData(anAppId, tokenAddress, isArray) {
     let { customChartData } = await getGlobal()
     let keys = []
     if (isArray) {
@@ -614,15 +613,17 @@ class CloudServices {
         if (!customChartData)
           customChartData = {}
         // Get latest list of ERC20 tokens we support
-        const getStr = customChartsSQL[customCharts[idx]["charts"]](k)
-        const tokenOperationData = {
-          getStr,
-          values: []
+        const getStr = customCharts[idx]["charts"]
+
+        let operationData = {
+          queryName: getStr,
+          queryParams: {
+            contract_address: k.toLowerCase(),
+          }
         }
-        let returnData = await runClientOperation('getPg', null, null, tokenOperationData)
+        const returnData = await runClientOperation('askPg', null, anAppId, operationData)
         //hack to remove additional headers from SQL output
-        returnData.shift()
-        if (returnData) {
+        if (returnData.length) {
           customChartData[k] = {
             data: returnData,
             title: customCharts[idx]["title"]
@@ -635,9 +636,11 @@ class CloudServices {
 
   async getContractEventCount(anAppId, monitoring, isArray) {
     const orgId = undefined
-    let { contractData, eventData } = await getGlobal()
+    let { contractData, eventData, topAssetsByContract } = await getGlobal()
     if (!eventData)
       eventData = {}
+    if (!topAssetsByContract)
+    topAssetsByContract = {}
     let keys = []
     if (isArray) {
       keys = Object.keys(monitoring)
@@ -652,7 +655,7 @@ class CloudServices {
         implementation_contract = proxy_contract
       }
       // TODO: Monkey Business Development Activities
-      const operationData = {
+      let operationData = {
         queryName: 'getEventCount',
         queryParams: {
           impl_contract: implementation_contract.toLowerCase(),
@@ -666,6 +669,20 @@ class CloudServices {
         const { event_counts_arr } = eventCounts[0]
         eventData[proxy_contract] = event_counts_arr
         await setGlobal({ eventData })
+      }
+      // TODO: Monkey Business Development Activities
+      operationData = {
+        queryName: 'topAssetsByContract',
+        queryParams: {
+          contract_address: proxy_contract.toLowerCase(),
+        }
+      }
+      const topAssetsByContractCmd = await runClientOperation('askPg', orgId, anAppId, operationData)
+      // log.debug(`Event counts for contract ${operationData.queryParams.impl_contract} = \n` +
+      //           `${JSON.stringify(topAssetsByContract, null, 2)}`)
+      if (topAssetsByContractCmd.length) {
+        topAssetsByContract[proxy_contract] = topAssetsByContractCmd[0]
+        await setGlobal({ topAssetsByContract })
       }
     }
   }

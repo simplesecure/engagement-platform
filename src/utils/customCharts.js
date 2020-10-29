@@ -38,5 +38,10 @@ export const customCharts = [
     "address": "0x39aa39c021dfbae8fac545936693ac917d5e7563",
     "charts": "topBorrowers",
     "title": "Top 50 Outstanding Borrowers: "
+  },
+  {
+    "address": "0xc00e94cb662c3520282e6f5717214004a7f26888",
+    "charts": "topBorrowers",
+    "title": "Top 50 Outstanding Borrowers: "
   }
 ]
