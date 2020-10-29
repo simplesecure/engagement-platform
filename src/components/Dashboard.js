@@ -124,8 +124,8 @@ class Dashboard extends React.Component {
                   {getChartCard(getMonthChart(`Weekly Transactions: ${contractName}`, currentContractAddr, monitoring))}
                   {getChartCard(getMonitoredEventChart(`Top Smart Contract Events: ${contractName}`, currentContractAddr, monitoring, eventData))}
                   {getChartCard(getMvp30BubbleChart(`Monthly Wallet Retention: ${contractName}`, currentContractAddr, monitoring))}
-                  {getTopAssets(`Top Asset in Wallets: ${contractName}`, currentContractAddr, monitoring, topAssetsByContract)}
-                  {getTop50Wallets(`Top 50 Wallets with Asset: ${contractName}`, currentContractAddr, monitoring, tokenTop50Wallets, customChartData)}
+                  {getTopAssets(`Top Tokens in Contract: ${contractName}`, currentContractAddr, monitoring, topAssetsByContract)}
+                  {getTop50Wallets(`Top 50 Wallets with Token: ${contractName}`, currentContractAddr, monitoring, tokenTop50Wallets, customChartData)}
                   {getCustomChart(contractName, currentContractAddr, monitoring, customChartData)}
                   {/* {getChartCard(getMvp30BubbleChart(`Top Wallets with Asset: ${contractName}`, currentContractAddr, monitoring, tokenTop50Wallets))} */}
                   {/* {getChartCard(`Top 10 Wallets Transactions All Time: ${contractName}`, getMvpAllBubbleChart(currentContractAddr, monitoring))} */}
