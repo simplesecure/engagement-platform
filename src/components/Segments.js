@@ -486,7 +486,7 @@ export default class Segments extends React.Component {
                   onChange={(e, {value}) => {
                       if (eventAmountType === 'address') {
                         if (value === '*')
-                          this.setState({ eventAmount: "0x0000000000000000000000000000000000000000", operatorType: '!=' })
+                          this.setState({ eventAmount: "0x0000000000000000000000000000000000000000", operatorType: value })
                         else
                           this.setState({ eventAmount: 0, operatorType: value})
                       } else if (eventAmountType === 'boolean') {
@@ -582,9 +582,9 @@ export default class Segments extends React.Component {
         }
         // if not monitoring the contract, then don't populate the events
         // if underlying implementation contract, then we need to get those events
-        // if (!Object.keys(monitoring).find(key => (address === key || key === (proxy_contract && proxy_contract.toLowerCase())))) {
-        //   return
-        // }
+        if (!Object.keys(monitoring).find(key => (address === key || key === (proxy_contract && proxy_contract.toLowerCase())))) {
+          return
+        }
         const contractValue = `${name}: ${address}`
         this.contracts.push({
           key: contractValue,
