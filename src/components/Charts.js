@@ -6,6 +6,7 @@ import {
   Text
 } from 'evergreen-ui'
 import uuid from 'uuid/v4'
+import RetentionChart from './RetentionChart'
 var Spinner = require('react-spinkit')
 
 export const getDonutChart = (contracts) => {
@@ -85,6 +86,38 @@ export const getCustomChart = (contractName, currentContractAddr, monitoring, cu
                 ))}
               </Table.Body>
             </Table>
+          </div>
+        </div>
+      </div>
+    )
+  } else return null
+}
+
+export const getRetentionChart = (contractName, currentContractAddr, monitoring, retentionForContract) => {
+  let addr = currentContractAddr
+  const wei = 0.000000000000000001
+  const gwei = 0.00000001
+  if (addr === '') {
+    addr = Object.keys(monitoring)[0]
+  }
+  let data = null
+  if (retentionForContract && retentionForContract[addr])
+    data = retentionForContract[addr]
+  let idx1 = contractName.indexOf('(') + 1
+  let idx2 = contractName.indexOf(')')
+  let assetType = (idx1 > -1 && idx2 > idx1) ? contractName.substring(idx1, idx2) : null
+  if (data) {
+    let aTitle = 'Weekly Retention Data: ' + contractName
+    return (
+      <div className="col-lg-12">
+        <div className="card">
+          <span
+            className="text-uppercase"
+            style={{marginTop: 32, marginBottom: 12, textAlign: 'center', fontWeight: 'bold'}} >
+            {aTitle}
+          </span>
+          <div style={{width:'100%', justifyContent:'center'}}>
+            <RetentionChart retentionData={retentionForContract[addr]}/>
           </div>
         </div>
       </div>
@@ -334,20 +367,29 @@ export const getMonitoredEventChart = (aTitle, currentContractAddr, monitoring, 
     }
   }
   return (
-    <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
-      <span
-        className="text-uppercase"
-        style={{marginTop: 32, textAlign: 'center', fontWeight: 'bold'}} >
-        {aTitle}
-      </span>
-      <Chart
-        loader={<Spinner name="circle" color="blue"/>}
-        width="100%"
-        height="100%"
-        chartType="Bar"
-        data={data}
-        options={options}
-      />
+    <div
+      key={uuid()}
+      className="col-lg-6 col-md-6 col-sm-6 mb-4"
+    >
+      <div className="stats-small stats-small--1 card card-small">
+        <div className="card-body p-0 d-flex" style={{width:'100%', justifyContent:'center', minHeight:420}}>
+          <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
+            <span
+              className="text-uppercase"
+              style={{marginTop: 32, textAlign: 'center', fontWeight: 'bold'}} >
+              {aTitle}
+            </span>
+            <Chart
+              loader={<Spinner name="circle" color="blue"/>}
+              width="100%"
+              height="100%"
+              chartType="Bar"
+              data={data}
+              options={options}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

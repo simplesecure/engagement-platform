@@ -39,10 +39,12 @@
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.2.0",
     "react-spinkit": "^3.0.0",
+    "react-table": "^7.6.1",
     "react-toastify": "^5.5.0",
     "reactn": "^2.2.4",
     "semantic-ui-react": "^0.88.2",
     "socket.io-client": "^2.3.0",
+    "styled-components": "^5.2.1",
     "uuid": "^3.4.0"
   },
   "scripts": {

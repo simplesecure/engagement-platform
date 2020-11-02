@@ -1,0 +1,215 @@
+import React from 'react'
+import styled from 'styled-components'
+import { useTable } from 'react-table'
+
+// import makeData from '../utils/makeData'
+
+const Styles = styled.div`
+  padding: 1rem;
+
+  .user {
+    background-color: white;
+    color: black;
+  }
+
+  table {
+    border-spacing: 0;
+    border: 1px solid black;
+
+    tr {
+      :last-child {
+        td {
+          border-bottom: 0;
+        }
+      }
+    }
+
+    th,
+    td {
+      margin: 0;
+      padding: 0.5rem;
+      border-bottom: 1px solid black;
+      border-right: 1px solid black;
+
+      :last-child {
+        border-right: 0;
+      }
+    }
+  }
+`
+
+// Create a default prop getter
+const defaultPropGetter = () => ({})
+
+// Expose some prop getters for headers, rows and cells, or more if you want!
+function Table({
+  columns,
+  data,
+  getHeaderProps = defaultPropGetter,
+  getColumnProps = defaultPropGetter,
+  getRowProps = defaultPropGetter,
+  getCellProps = defaultPropGetter,
+}) {
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    rows,
+    prepareRow,
+  } = useTable({
+    columns,
+    data,
+  })
+
+  return (
+    <table {...getTableProps()}>
+      <thead>
+        {headerGroups.map(headerGroup => (
+          <tr {...headerGroup.getHeaderGroupProps()}>
+            {headerGroup.headers.map(column => (
+              <th
+                // Return an array of prop objects and react-table will merge them appropriately
+                {...column.getHeaderProps([
+                  {
+                    className: column.className,
+                    style: column.style,
+                  },
+                  getColumnProps(column),
+                  getHeaderProps(column),
+                ])}
+              >
+                {column.render('Header')}
+              </th>
+            ))}
+          </tr>
+        ))}
+      </thead>
+      <tbody {...getTableBodyProps()}>
+        {rows.map((row, i) => {
+          prepareRow(row)
+          return (
+            // Merge user row props in
+            <tr {...row.getRowProps(getRowProps(row))}>
+              {row.cells.map(cell => {
+                return (
+                  <td
+                    // Return an array of prop objects and react-table will merge them appropriately
+                    {...cell.getCellProps([
+                      {
+                        className: cell.column.className,
+                        style: cell.column.style,
+                      },
+                      getColumnProps(cell.column),
+                      getCellProps(cell),
+                    ])}
+                  >
+                    {cell.render('Cell')}
+                  </td>
+                )
+              })}
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
+  )
+}
+
+function RetentionChart(rData) {
+  const columns = React.useMemo(
+    () => [
+      {
+        Header: 'Time Range',
+        columns: [
+          {
+            Header: 'Week N -> Week N+1',
+            accessor: 'cohort',
+            className: 'user',
+            style: {
+              fontWeight: 'bolder',
+            },
+          },
+        ],
+      },
+      {
+        Header: 'Users',
+        columns: [
+          {
+            Header: '# of Wallets',
+            accessor: 'total',
+            className: 'user',
+            style: {
+              fontWeight: 'bolder',
+            },
+          },
+        ],
+      },
+      {
+        Header: 'Retention Rate',
+        columns: [
+          {
+            Header: 'Week 0',
+            accessor: 'Week 0',
+          },
+          {
+            Header: 'Week 1',
+            accessor: 'Week 1',
+          },
+          {
+            Header: 'Week 2',
+            accessor: 'Week 2',
+          },
+          {
+            Header: 'Week 3',
+            accessor: 'Week 3',
+          },
+          {
+            Header: 'Week 4',
+            accessor: 'Week 4',
+          },
+          {
+            Header: 'Week 5',
+            accessor: 'Week 5',
+          },
+          {
+            Header: 'Week 6',
+            accessor: 'Week 6',
+          }
+        ]
+      }
+    ],
+    []
+  )
+
+  const { retentionData } = rData
+
+  // const data = React.useMemo(() => makeData(20), [])
+
+  return (
+    <Styles>
+      <Table
+        columns={columns}
+        data={retentionData}
+        // getHeaderProps={column => ({
+        //   onClick: () => alert('Header!'),
+        // })}
+        // getColumnProps={column => ({
+        //   onClick: () => alert('Column!'),
+        // })}
+        getRowProps={row => ({
+          style: {
+            background: row.index % 2 === 0 ? 'rgba(0,0,0,.1)' : 'white',
+          },
+        })}
+        getCellProps={cellInfo => ({
+          style: {
+            backgroundColor: (cellInfo.value) ? (cellInfo.value === "100.00") ? '#DCDCDC' : `hsl(${140 * ((140 - cellInfo.value) / 140) * -1 +
+              140}, 70%, 70%)` : '',
+          },
+        })}
+      />
+    </Styles>
+  )
+}
+
+export default RetentionChart

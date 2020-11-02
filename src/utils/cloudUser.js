@@ -636,11 +636,13 @@ class CloudServices {
 
   async getContractEventCount(anAppId, monitoring, isArray) {
     const orgId = undefined
-    let { contractData, eventData, topAssetsByContract } = await getGlobal()
+    let { contractData, eventData, topAssetsByContract, retentionForContract } = await getGlobal()
     if (!eventData)
       eventData = {}
     if (!topAssetsByContract)
     topAssetsByContract = {}
+    if (!retentionForContract)
+    retentionForContract = {}
     let keys = []
     if (isArray) {
       keys = Object.keys(monitoring)
@@ -654,7 +656,6 @@ class CloudServices {
       if (implementation_contract === "" || !implementation_contract) {
         implementation_contract = proxy_contract
       }
-      // TODO: Monkey Business Development Activities
       let operationData = {
         queryName: 'getEventCount',
         queryParams: {
@@ -663,14 +664,11 @@ class CloudServices {
         }
       }
       const eventCounts = await runClientOperation('askPg', orgId, anAppId, operationData)
-      // log.debug(`Event counts for contract ${operationData.queryParams.impl_contract} = \n` +
-      //           `${JSON.stringify(eventCounts, null, 2)}`)
       if (eventCounts.length) {
         const { event_counts_arr } = eventCounts[0]
         eventData[proxy_contract] = event_counts_arr
         await setGlobal({ eventData })
       }
-      // TODO: Monkey Business Development Activities
       operationData = {
         queryName: 'topAssetsByContract',
         queryParams: {
@@ -678,11 +676,20 @@ class CloudServices {
         }
       }
       const topAssetsByContractCmd = await runClientOperation('askPg', orgId, anAppId, operationData)
-      // log.debug(`Event counts for contract ${operationData.queryParams.impl_contract} = \n` +
-      //           `${JSON.stringify(topAssetsByContract, null, 2)}`)
       if (topAssetsByContractCmd.length) {
         topAssetsByContract[proxy_contract] = topAssetsByContractCmd[0]
         await setGlobal({ topAssetsByContract })
+      }
+      operationData = {
+        queryName: 'getRetentionData',
+        queryParams: {
+          contract: proxy_contract.toLowerCase()
+        }
+      }
+      const retentionData = await runClientOperation('askPg', orgId, anAppId, operationData)
+      if (retentionData.length) {
+        retentionForContract[proxy_contract] = retentionData
+        await setGlobal({ retentionForContract })
       }
     }
   }
