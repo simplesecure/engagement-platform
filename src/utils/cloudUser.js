@@ -622,8 +622,7 @@ class CloudServices {
           }
         }
         const returnData = await runClientOperation('askPg', null, anAppId, operationData)
-        //hack to remove additional headers from SQL output
-        if (returnData.length) {
+        if (returnData && returnData.length) {
           customChartData[k] = {
             data: returnData,
             title: customCharts[idx]["title"]
@@ -664,7 +663,7 @@ class CloudServices {
         }
       }
       const eventCounts = await runClientOperation('askPg', orgId, anAppId, operationData)
-      if (eventCounts.length) {
+      if (eventCounts && eventCounts.length) {
         const { event_counts_arr } = eventCounts[0]
         eventData[proxy_contract] = event_counts_arr
         await setGlobal({ eventData })
@@ -676,7 +675,7 @@ class CloudServices {
         }
       }
       const topAssetsByContractCmd = await runClientOperation('askPg', orgId, anAppId, operationData)
-      if (topAssetsByContractCmd.length) {
+      if (topAssetsByContractCmd && topAssetsByContractCmd.length) {
         topAssetsByContract[proxy_contract] = topAssetsByContractCmd[0]
         await setGlobal({ topAssetsByContract })
       }
@@ -687,7 +686,7 @@ class CloudServices {
         }
       }
       const retentionData = await runClientOperation('askPg', orgId, anAppId, operationData)
-      if (retentionData.length) {
+      if (retentionData && retentionData.length) {
         retentionForContract[proxy_contract] = retentionData
         await setGlobal({ retentionForContract })
       }

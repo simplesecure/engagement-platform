@@ -16,9 +16,10 @@ import {
   get7DayChart,
   getMonthChart,
   // getDonutChart,
-  getMvp30BubbleChart,
+  // getMvp30BubbleChart,
   // getMvpAllBubbleChart,
   getMonitoredEventChart,
+  getRetentionLineChart,
   getChartCard,
   getTop50Wallets,
   getCustomChart,
@@ -130,6 +131,7 @@ class Dashboard extends React.Component {
                   {getTop50Wallets(`Top 50 Wallets with Token: ${contractName}`, currentContractAddr, monitoring, tokenTop50Wallets, customChartData)}
                   {getCustomChart(contractName, currentContractAddr, monitoring, customChartData)}
                   {getRetentionChart(contractName, currentContractAddr, monitoring, retentionForContract)}
+                  {getRetentionLineChart(contractName, currentContractAddr, monitoring, retentionForContract)}
                   {/* {getChartCard(getMvp30BubbleChart(`Top Wallets with Asset: ${contractName}`, currentContractAddr, monitoring, tokenTop50Wallets))} */}
                   {/* {getChartCard(`Top 10 Wallets Transactions All Time: ${contractName}`, getMvpAllBubbleChart(currentContractAddr, monitoring))} */}
                   {/*{getChartCard('Total Value Held In Smart Contracts', getCandleStickChart())}*/}

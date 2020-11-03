@@ -41,6 +41,23 @@ const Styles = styled.div`
 // Create a default prop getter
 const defaultPropGetter = () => ({})
 
+function getBackgroundColor (number) {
+  if (!number) return null
+  const idx = number.lastIndexOf('%')
+  if (number === "100%") {
+    return '#DCDCDC'
+  }
+  else if (idx > 0) {
+    return `hsl(230, 90%, ${100-parseFloat(number.substring(0, idx))*1.2}%)`
+  }
+  else if (!isNaN(number)) {
+    return '#5598f6'
+  }
+  else {
+    return null
+  }
+}
+
 // Expose some prop getters for headers, rows and cells, or more if you want!
 function Table({
   columns,
@@ -116,13 +133,15 @@ function Table({
 }
 
 function RetentionChart(rData) {
+  const { retentionData, title } = rData
+
   const columns = React.useMemo(
     () => [
       {
         Header: 'Time Range',
         columns: [
           {
-            Header: 'Week N -> Week N+1',
+            Header: 'Cohort',
             accessor: 'cohort',
             className: 'user',
             style: {
@@ -135,7 +154,7 @@ function RetentionChart(rData) {
         Header: 'Users',
         columns: [
           {
-            Header: '# of Wallets',
+            Header: 'Count',
             accessor: 'total',
             className: 'user',
             style: {
@@ -145,7 +164,7 @@ function RetentionChart(rData) {
         ],
       },
       {
-        Header: 'Retention Rate',
+        Header: `Retention Data`,
         columns: [
           {
             Header: 'Week 0',
@@ -181,8 +200,6 @@ function RetentionChart(rData) {
     []
   )
 
-  const { retentionData } = rData
-
   // const data = React.useMemo(() => makeData(20), [])
 
   return (
@@ -203,8 +220,7 @@ function RetentionChart(rData) {
         })}
         getCellProps={cellInfo => ({
           style: {
-            backgroundColor: (cellInfo.value) ? (cellInfo.value === "100.00") ? '#DCDCDC' : `hsl(${140 * ((140 - cellInfo.value) / 140) * -1 +
-              140}, 70%, 70%)` : '',
+            backgroundColor: getBackgroundColor(cellInfo.value),
           },
         })}
       />

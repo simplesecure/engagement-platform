@@ -95,8 +95,6 @@ export const getCustomChart = (contractName, currentContractAddr, monitoring, cu
 
 export const getRetentionChart = (contractName, currentContractAddr, monitoring, retentionForContract) => {
   let addr = currentContractAddr
-  const wei = 0.000000000000000001
-  const gwei = 0.00000001
   if (addr === '') {
     addr = Object.keys(monitoring)[0]
   }
@@ -106,18 +104,107 @@ export const getRetentionChart = (contractName, currentContractAddr, monitoring,
   let idx1 = contractName.indexOf('(') + 1
   let idx2 = contractName.indexOf(')')
   let assetType = (idx1 > -1 && idx2 > idx1) ? contractName.substring(idx1, idx2) : null
-  if (data) {
-    let aTitle = 'Weekly Retention Data: ' + contractName
+  if (data && data.length === 6) {
+    let aTitle = 'Weekly Retention Table: ' + contractName
     return (
-      <div className="col-lg-12">
+      <div className="col-lg-6 col-md-12 col-sm-12 mb-4">
         <div className="card">
           <span
             className="text-uppercase"
             style={{marginTop: 32, marginBottom: 12, textAlign: 'center', fontWeight: 'bold'}} >
             {aTitle}
           </span>
-          <div style={{width:'100%', justifyContent:'center'}}>
-            <RetentionChart retentionData={retentionForContract[addr]}/>
+          <RetentionChart retentionData={retentionForContract[addr]}/>
+        </div>
+      </div>
+    )
+  } else return null
+}
+
+export const getRetentionLineChart = (contractName, currentContractAddr, monitoring, retentionForContract) => {
+  let addr = currentContractAddr
+  if (addr === '') {
+    addr = Object.keys(monitoring)[0]
+  }
+  let data = null
+  if (retentionForContract && retentionForContract[addr])
+    data = retentionForContract[addr]
+  let idx1 = contractName.indexOf('(') + 1
+  let idx2 = contractName.indexOf(')')
+  let assetType = (idx1 > -1 && idx2 > idx1) ? contractName.substring(idx1, idx2) : null
+  if (data && data.length === 6) {
+    let aTitle = 'Weekly Retention Chart: ' + contractName
+    const options = {
+      hAxis: {
+        title: 'Weeks',
+      },
+      vAxis: {
+        title: 'Retention %',
+      },
+      // legend: {
+      //   position: 'none'
+      // },
+      // chartArea: {
+      //   top: '10%',
+      //   left: '20%',
+      //   width: '70%',
+      //   height: '70%'
+      // }
+    }
+    const dataArray = []
+    let formatData = []
+    for (let i = 0; i < data.length; i++) {
+      formatData.push(parseFloat(data[0][`Week ${i+1}`]))
+      formatData.push(parseFloat(data[1][`Week ${i+1}`]))
+      formatData.push(parseFloat(data[2][`Week ${i+1}`]))
+      formatData.push(parseFloat(data[3][`Week ${i+1}`]))
+      formatData.push(parseFloat(data[4][`Week ${i+1}`]))
+      formatData.push(parseFloat(data[5][`Week ${i+1}`]))
+      if (formatData.length === 6) {
+        dataArray.push(formatData)
+        formatData = []
+      }
+    }
+    const chartData = [
+      [
+        'Weeks',
+        Object.values(data[0])[0],
+        Object.values(data[1])[0],
+        Object.values(data[2])[0],
+        Object.values(data[3])[0],
+        Object.values(data[4])[0],
+        Object.values(data[5])[0],
+      ],
+      [0, ...Array(6).fill(100)],
+      [1, ...dataArray[0]],
+      [2, ...dataArray[1]],
+      [3, ...dataArray[2]],
+      [4, ...dataArray[3]],
+      [5, ...dataArray[4]],
+      [6, ...dataArray[5]]
+    ]
+    return (
+      <div
+        key={uuid()}
+        className="col-lg-6 col-md-12 col-sm-12 mb-4"
+      >
+        <div className="stats-small stats-small--1 card card-small">
+          <div className="card-body p-0 d-flex" style={{width:'100%', justifyContent:'center', minHeight:500}}>
+            <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
+              <span
+                className="text-uppercase"
+                style={{marginTop: 32, marginBottom: 12, textAlign: 'center', fontWeight: 'bold'}} >
+                {aTitle}
+              </span>
+              <Chart
+                height="100%"
+                width="100%"
+                chartType="Line"
+                loader={<Spinner name="circle" color="blue"/>}
+                data={chartData}
+                options={options}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -372,7 +459,7 @@ export const getMonitoredEventChart = (aTitle, currentContractAddr, monitoring, 
       className="col-lg-6 col-md-6 col-sm-6 mb-4"
     >
       <div className="stats-small stats-small--1 card card-small">
-        <div className="card-body p-0 d-flex" style={{width:'100%', justifyContent:'center', minHeight:420}}>
+        <div className="card-body p-0 d-flex" style={{width:'100%', justifyContent:'center', minHeight:395}}>
           <div className="d-flex flex-column" style={{width:'100%', justifyContent:'center', flex:1}}>
             <span
               className="text-uppercase"
