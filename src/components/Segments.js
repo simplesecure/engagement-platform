@@ -396,8 +396,8 @@ export default class Segments extends React.Component {
       const eventAmountValueDisabled = (eventAmountType === 'boolean') || (eventAmount === "0x0000000000000000000000000000000000000000")
       const opertarorTypeOptions = isAmount ? defaultOperatorTypes : isAddress ? addrOperatorTypes : boolOperatorTypes
       let eventAmountTypeOptions = []
-      if (contractEventInput && contractEvent && this.dataInputTypes[contractEvent][contractEventInput]) {
-        eventAmountTypeOptions = this.dataInputTypes[contractEvent][contractEventInput]
+      if (contractEventInput && contractEvent && this.dataInputTypes[contractAddress][contractEvent][contractEventInput]) {
+        eventAmountTypeOptions = this.dataInputTypes[contractAddress][contractEvent][contractEventInput]
         if (eventAmountTypeOptions.key === 'uint256') {
           eventAmountTypeOptions = [
             { key: 'eth', text: 'eth/ERC-20', value: 'eth' },
@@ -442,8 +442,8 @@ export default class Segments extends React.Component {
                   placeholder='Choose Input...'
                   value={contractEventInput}
                   onChange={(e, {value}) => {
-                    const type = this.dataInputIndexed[contractEvent][value]
-                    const opt = this.dataInputTypes[contractEvent][value]
+                    const type = this.dataInputIndexed[contractAddress][contractEvent][value]
+                    const opt = this.dataInputTypes[contractAddress][contractEvent][value]
                     this.setState({ contractEventInput: value, contractEventInputType: type.key })
                     if (opt.key !== 'uint256') {
                       this.setState({ eventAmountType: opt.key })
@@ -452,7 +452,7 @@ export default class Segments extends React.Component {
                   openOnFocus={false}
                   fluid
                   selection
-                  options={this.dataInputs[contractEvent]}
+                  options={this.dataInputs[contractAddress][contractEvent]}
                 />
               </div>
             </div>
@@ -625,9 +625,14 @@ export default class Segments extends React.Component {
             }
           })
           if (inputOptions.length) {
-            this.dataInputs[nm] = inputOptions
-            this.dataInputTypes[nm] = inputOptionTypes
-            this.dataInputIndexed[nm] = inputOptionIndexed
+            if (!this.dataInputTypes[address]) {
+              this.dataInputs[address] = []
+              this.dataInputTypes[address] = []
+              this.dataInputIndexed[address] = []
+            }
+            this.dataInputs[address][nm] = inputOptions
+            this.dataInputTypes[address][nm] = inputOptionTypes
+            this.dataInputIndexed[address][nm] = inputOptionIndexed
             options.push({
               key: nm,
               text: nm,

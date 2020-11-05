@@ -321,7 +321,6 @@ export const addFiltersForNewSegmentCriteria = (
       implementation_address = contractAddress
       proxy_address = contractAddress
     }
-    debugger
     filters.push(
       {
         type: 'event',
