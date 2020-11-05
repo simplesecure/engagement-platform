@@ -53,7 +53,7 @@ export const getCustomChart = (contractName, currentContractAddr, monitoring, cu
   let idx2 = contractName.indexOf(')')
   let assetType = (idx1 > -1 && idx2 > idx1) ? contractName.substring(idx1, idx2) : null
   if (data) {
-    let aTitle = customChartData[addr].title + contractName
+    let aTitle = customChartData[addr].title + '(' + assetType + ')'
     return (
       <div className="col-lg-6 col-md-6 col-sm-6 mb-4">
         <div className="stats-small stats-small--1 card card-small">
@@ -69,7 +69,7 @@ export const getCustomChart = (contractName, currentContractAddr, monitoring, cu
                   Wallet Address
                 </Table.TextHeaderCell>
                 <Table.TextHeaderCell>
-                  # of Tokens
+                  {`# of Tokens (${assetType})`}
                 </Table.TextHeaderCell>
               </Table.Head>
               <Table.Body height={300}>
@@ -80,7 +80,7 @@ export const getCustomChart = (contractName, currentContractAddr, monitoring, cu
                       {wallet.address}
                     </Table.TextCell>
                     <Table.TextCell isNumber>
-                      {`${(Math.round(parseInt(wallet.amount)*wei)).toLocaleString()} (${assetType})`}
+                      {`${(Math.round(parseInt(wallet.amount)*wei)).toLocaleString()}`}
                     </Table.TextCell>
                   </Table.Row>
                 ))}
@@ -135,21 +135,7 @@ export const getRetentionLineChart = (contractName, currentContractAddr, monitor
   if (data && data.length === 6) {
     let aTitle = 'Weekly Retention Chart: ' + contractName
     const options = {
-      hAxis: {
-        title: 'Weeks',
-      },
-      vAxis: {
-        title: 'Retention %',
-      },
-      // legend: {
-      //   position: 'none'
-      // },
-      // chartArea: {
-      //   top: '10%',
-      //   left: '20%',
-      //   width: '70%',
-      //   height: '70%'
-      // }
+      legend: { position: "bottom"}
     }
     const dataArray = []
     let formatData = []
@@ -268,7 +254,7 @@ export const getTopAssets = (aTitle, currentContractAddr, monitoring, topAssetsB
   } else return null
 }
 
-export const getTop50Wallets = (aTitle, currentContractAddr, monitoring, tokenTop50Wallets, customChartData) => {
+export const getTop50Wallets = (aTitle, contractName, currentContractAddr, monitoring, tokenTop50Wallets, customChartData) => {
   let addr = currentContractAddr
   const wei = 0.000000000000000001
   const gwei = 0.00000001
@@ -281,9 +267,9 @@ export const getTop50Wallets = (aTitle, currentContractAddr, monitoring, tokenTo
     conv = gwei
   if (tokenTop50Wallets)
     data = tokenTop50Wallets[addr]
-  let idx1 = aTitle.indexOf('(') + 1
-  let idx2 = aTitle.indexOf(')')
-  let assetType = (idx1 > -1 && idx2 > idx1) ? `(${aTitle.substring(idx1, idx2)})` : ``
+  let idx1 = contractName.indexOf('(') + 1
+  let idx2 = contractName.indexOf(')')
+  let assetType = (idx1 > -1 && idx2 > idx1) ? `(${contractName.substring(idx1, idx2)})` : ``
   if (data) {
     return (
       <div className="col-lg-6 col-md-6 col-sm-6 mb-4">
@@ -291,7 +277,7 @@ export const getTop50Wallets = (aTitle, currentContractAddr, monitoring, tokenTo
           <span
             className="text-uppercase"
             style={{marginTop: 32, marginBottom: 12, textAlign: 'center', fontWeight: 'bold'}} >
-            {aTitle}
+            {`${aTitle} ${assetType}`}
           </span>
           <div style={{width:'100%', justifyContent:'center'}}>
             <Table>
@@ -300,7 +286,7 @@ export const getTop50Wallets = (aTitle, currentContractAddr, monitoring, tokenTo
                   Wallet Address
                 </Table.TextHeaderCell>
                 <Table.TextHeaderCell>
-                  # of Tokens
+                  {`# of ${assetType} Tokens`}
                 </Table.TextHeaderCell>
               </Table.Head>
               <Table.Body height={300}>
@@ -311,7 +297,7 @@ export const getTop50Wallets = (aTitle, currentContractAddr, monitoring, tokenTo
                       {wallet.address}
                     </Table.TextCell>
                     <Table.TextCell isNumber>
-                      {`${(Math.round(parseInt(wallet.amount)*conv)).toLocaleString()} ${assetType}`}
+                      {`${(Math.round(parseInt(wallet.amount)*conv)).toLocaleString()}`}
                     </Table.TextCell>
                   </Table.Row>
                 ))}
@@ -425,14 +411,20 @@ export const getMvpAllBubbleChart = (aTitle, currentContractAddr, monitoring) =>
   )
 }
 
-export const getMonitoredEventChart = (aTitle, currentContractAddr, monitoring, eventData) => {
-  let eventCount
+export const getMonitoredEventChart = (aTitle, currentContractAddr, monitoring, eventData, tokenData, customChartData) => {
   if (!eventData) return null
+  let addr = ''
   if (currentContractAddr === '') {
-    eventCount = eventData[Object.keys(monitoring)[0]]
+    addr = Object.keys(monitoring)[0]
   } else {
-    eventCount = eventData[currentContractAddr]
+    addr = currentContractAddr
   }
+  const idx = Object.keys(tokenData).find(key => addr === tokenData[key].address)
+  if (idx > -1 ) {
+    if (customChartData && !customChartData[addr])
+      return null
+  }
+  const eventCount = eventData[addr]
   if (!eventCount) return null
   const data = [
     [

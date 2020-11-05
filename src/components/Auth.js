@@ -63,7 +63,8 @@ export default class Auth extends React.Component {
       }
     } catch(e) {
       console.log("TOKEN ERROR: ", e)
-      setGlobal({ errorMsg: e, action: "" })
+      setGlobal({ errorMsg: e, action: 'sign-in-approval' })
+      this.setState({ errorMsg: "Trouble verifying, please enter the correct token", token: "" })
     }
   }
 
@@ -100,7 +101,7 @@ export default class Auth extends React.Component {
   // Renderers
   //////////////////////////////////////////////////////////////////////////////
   renderSignInApproval = () => {
-    const { token } = this.state
+    const { token, errorMsg } = this.state
     return (
       <div>
         <h5>Enter the code you received via email to continue</h5>
@@ -113,6 +114,7 @@ export default class Auth extends React.Component {
             Approve Sign In
           </Button>
         </Form>
+        <p style={{color: 'red'}}>{errorMsg}</p>
       </div>
     )
   }

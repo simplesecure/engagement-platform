@@ -901,6 +901,7 @@ class CloudServices {
       // throw `ERROR: Failed trying to submit or match the code.\n${error}`
       log.error(`ERROR: Failed trying to submit or match the code:\n`)
       log.error(error)
+      throw error
     }
 
     log.debug("AUTHENTICATED USER: ", authenticatedUser);

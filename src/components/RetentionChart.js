@@ -42,19 +42,19 @@ const Styles = styled.div`
 const defaultPropGetter = () => ({})
 
 function getBackgroundColor (number) {
-  if (!number) return null
+  if (!number) return 'white'
   const idx = number.lastIndexOf('%')
   if (number === "100%") {
-    return '#DCDCDC'
+    return `hsl(230, 80%, 70%)`
   }
   else if (idx > 0) {
-    return `hsl(230, 90%, ${100-parseFloat(number.substring(0, idx))*1.2}%)`
+    return `hsl(230, 90%, ${100-parseFloat(number.substring(0, idx))*0.8}%)`
   }
   else if (!isNaN(number)) {
-    return '#5598f6'
+    return '#DCDCDC'
   }
   else {
-    return null
+    return 'white'
   }
 }
 
@@ -138,7 +138,7 @@ function RetentionChart(rData) {
   const columns = React.useMemo(
     () => [
       {
-        Header: 'Time Range',
+        Header: '|--|--|',
         columns: [
           {
             Header: 'Cohort',
@@ -151,7 +151,7 @@ function RetentionChart(rData) {
         ],
       },
       {
-        Header: 'Users',
+        Header: 'Wallets',
         columns: [
           {
             Header: 'Count',

@@ -61,7 +61,8 @@ class Dashboard extends React.Component {
       tokenTop50Wallets,
       customChartData,
       topAssetsByContract,
-      retentionForContract
+      retentionForContract,
+      tokenData
     } = this.global
     const { loadingMessage, showSegmentModal, segmentToShow, showContractsModal, currentContractAddr } = this.state
     const { currentSegments, monitoring } = sessionData
@@ -125,10 +126,10 @@ class Dashboard extends React.Component {
                   {/* {getChartCard('Wallets by Smart Contracts', getDonutChart(monitoring))} */}
                   {getChartCard(get7DayChart(`Daily Transactions: ${contractName}`, currentContractAddr, monitoring))}
                   {getChartCard(getMonthChart(`Weekly Transactions: ${contractName}`, currentContractAddr, monitoring))}
-                  {getMonitoredEventChart(`Top Smart Contract Events: ${contractName}`, currentContractAddr, monitoring, eventData)}
+                  {/* {getMonitoredEventChart(`Top Smart Contract Events: ${contractName}`, currentContractAddr, monitoring, eventData, tokenData, customChartData)} */}
                   {/* {getChartCard(getMvp30BubbleChart(`Monthly Wallet Retention: ${contractName}`, currentContractAddr, monitoring))} */}
-                  {getTopAssets(`Top Tokens in Contract: ${contractName}`, currentContractAddr, monitoring, topAssetsByContract)}
-                  {getTop50Wallets(`Top 50 Wallets with Token: ${contractName}`, currentContractAddr, monitoring, tokenTop50Wallets, customChartData)}
+                  {getTopAssets(`Top Tokens Held by Wallets`, currentContractAddr, monitoring, topAssetsByContract)}
+                  {getTop50Wallets(`Top 50 Wallets with Token`, contractName, currentContractAddr, monitoring, tokenTop50Wallets, customChartData)}
                   {getCustomChart(contractName, currentContractAddr, monitoring, customChartData)}
                   {getRetentionChart(contractName, currentContractAddr, monitoring, retentionForContract)}
                   {getRetentionLineChart(contractName, currentContractAddr, monitoring, retentionForContract)}
